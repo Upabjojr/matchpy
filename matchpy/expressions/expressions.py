@@ -1,424 +1,387 @@
 # -*- coding: utf-8 -*-
-"""This module contains the expression classes.
+"""Expression classes for the MatchPy pattern matching library.
 
-`Expressions <Expression>` can be used to model any kind of tree-like data structure. They consist of `operations
-<Operation>` and `symbols <Symbol>`. In addition, `patterns <Pattern>` can be constructed, which may additionally,
-contain `wildcards <Wildcard>` and variables.
-
-You can define your own symbols and operations like this:
-
->>> f = Operation.new('f', Arity.variadic)
->>> a = Symbol('a')
->>> b = Symbol('b')
-
-Then you can compose expressions out of these:
-
->>> print(f(a, b))
-f(a, b)
-
-For more information on how to create you own `operations <Operation>` and `symbols <Symbol>` you can look at their
-documentation.
-
-Normal expressions are immutable and hence :term:`hashable`:
-
->>> expr = f(b, x_)
->>> print(expr)
-f(b, x_)
->>> hash(expr) == hash(expr)
-True
-
-Hence, some of the expression's properties are cached and nor updated when you modify them:
-
->>> expr.is_constant
-False
->>> expr.operands = [a]
->>> expr.is_constant
-False
->>> print(expr)
-f(a)
->>> f(a).is_constant
-True
-
-Therefore, you should modify an expression but rather create a new one:
-
->>> expr2 = type(expr)(*[a])
->>> expr2.is_constant
-True
->>> print(expr2)
-f(a)
+This refactored version uses:
+- Pydantic BaseModel for all expression types
+- OperationHead objects (instead of class-based Operation subclasses)
+- Singledispatch `to_expression` / `from_expression` for conversions
+- `Operation(head, *operands)` as raw constructor (normalize only, no one_identity)
+- `head(*operands)` as factory (applies one_identity, may return non-Operation)
 """
-from abc import ABCMeta
 import keyword
-from enum import Enum, EnumMeta
-# pylint: disable=unused-import
-from typing import Callable, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
-# pylint: enable=unused-import
+from enum import Enum
+from functools import singledispatch, cached_property
+from typing import Callable, Iterator, List, Optional, Set, Tuple, Type, Union, Any
 
 from multiset import Multiset
-
-from ..utils import cached_property
+from pydantic import BaseModel, ConfigDict
 
 __all__ = [
-    'Expression', 'Arity', 'Atom', 'Symbol', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern', 'make_dot_variable',
-    'make_plus_variable', 'make_star_variable', 'make_symbol_variable', 'AssociativeOperation', 'CommutativeOperation',
-    'OneIdentityOperation'
+    'Expression', 'Arity', 'Atom', 'Symbol', 'SymbolWrapper', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern',
+    'OperationHead', 'to_expression', 'from_expression',
+    'make_dot_variable', 'make_plus_variable', 'make_star_variable', 'make_symbol_variable',
+    'LIST_HEAD', 'TUPLE_HEAD', 'DICT_HEAD', 'DICT_PAIR_HEAD',
 ]
 
-ExprPredicate = Optional[Callable[['Expression'], bool]]
+ExprPredicate = Callable[['Expression'], bool]
 ExpressionsWithPos = Iterator[Tuple['Expression', Tuple[int, ...]]]
 
-MultisetOfStr = Multiset
-MultisetOfVariables = Multiset
 
+# ─── Base Expression ──────────────────────────────────────────────────────────
 
-class Expression:
-    """Base class for all expressions.
+class Expression(BaseModel):
+    """Base class for all MatchPy expressions.
 
-    Do not subclass this class directly but rather :class:`Symbol` or :class:`Operation`.
-    Creating a direct subclass of Expression might break several (matching) algorithms.
-
-    Attributes:
-        head (Optional[Union[type, Atom]]):
-            The head of the expression. For an operation, it is the type of the operation (i.e. a subclass of
-            :class:`Operation`). For wildcards, it is ``None``. For symbols, it is the symbol itself.
+    All expressions have:
+    - head: identifies the type (self for atoms, OperationHead for operations)
+    - variable_name: optional name when used as a pattern variable
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def __init__(self, variable_name):
-        super().__init__()
-        self.variable_name = variable_name
+    head: Any = None
+    variable_name: Optional[str] = None
 
-    @cached_property
-    def variables(self) -> MultisetOfVariables:
-        """A multiset of the variables occurring in the expression."""
-        variables = Multiset()
-        self.collect_variables(variables)
-        return variables
-
-    def collect_variables(self, variables: MultisetOfVariables) -> None:
-        """Recursively adds all variables occuring in the expression to the given multiset.
-
-        This is used internally by `variables`. Needs to be overwritten by inheriting container expression classes.
-        This method can be used when gathering the `variables` of multiple expressions, because only one multiset
-        needs to be created and that is more efficient.
-
-        Args:
-            variables:
-                Multiset of variables. All variables contained in the expression are recursively added to this multiset.
-        """
-        if self.variable_name is not None:
-            variables.add(self.variable_name)
-
-    @cached_property
-    def symbols(self) -> MultisetOfStr:
-        """A multiset of the symbol names occurring in the expression."""
-        symbols = Multiset()
-        self.collect_symbols(symbols)
-        return symbols
-
-    def collect_symbols(self, symbols: MultisetOfStr) -> None:
-        """Recursively adds all symbols occuring in the expression to the given multiset.
-
-        This is used internally by `symbols`. Needs to be overwritten by inheriting expression classes that
-        can contain symbols. This method can be used when gathering the `symbols` of multiple expressions, because only
-        one multiset needs to be created and that is more efficient.
-
-        Args:
-            symbols:
-                Multiset of symbols. All symbols contained in the expression are recursively added to this multiset.
-        """
+    def collect_symbols(self, symbols: Set[str]):
+        """Collect all symbol names in this expression into the given set."""
         pass
 
-    @cached_property
+    def with_renamed_vars(self, renaming: dict) -> 'Expression':
+        """Return a copy with variable names renamed according to the mapping."""
+        return self
+
+    @property
     def is_constant(self) -> bool:
-        """True, iff the expression does not contain any wildcards."""
-        return self._is_constant()
-
-    @staticmethod
-    def _is_constant() -> bool:
+        """True if this expression contains no wildcards (is fully ground)."""
+        for expr, _ in self.preorder_iter():
+            if isinstance(expr, Wildcard):
+                return False
+            if expr.variable_name is not None:
+                return False
         return True
 
-    @cached_property
+    @property
     def is_syntactic(self) -> bool:
-        """True, iff the expression does not contain any associative or commutative operations or sequence wildcards."""
-        return self._is_syntactic()
+        """True if this expression can be matched purely by structural comparison.
 
-    @staticmethod
-    def _is_syntactic() -> bool:
+        An expression is syntactic when it contains no sequence wildcards
+        and no commutative/associative operations.
+        """
+        for expr, _ in self.preorder_iter():
+            if isinstance(expr, Wildcard) and not expr.fixed_size:
+                return False
+            if isinstance(expr, Operation):
+                if expr.head.commutative or expr.head.associative:
+                    return False
         return True
 
-    def with_renamed_vars(self, renaming) -> 'Expression':
-        """Return a copy of the expression with renamed variables."""
-        raise NotImplementedError()
+    @property
+    def symbols(self) -> 'Multiset':
+        """Multiset of all symbol names in this expression (includes head names for operations)."""
+        result = []
+        for expr, _ in self.preorder_iter():
+            if isinstance(expr, Operation):
+                result.append(expr.head.name)
+            elif isinstance(expr, (Symbol, SymbolWrapper)) and not isinstance(expr, Wildcard):
+                result.append(expr.name)
+        return Multiset(result)
 
-    def preorder_iter(self, predicate: ExprPredicate=None) -> ExpressionsWithPos:
-        """Iterates over all subexpressions that match the (optional) `predicate`.
+    @property
+    def variables(self) -> 'Multiset':
+        """Multiset of all variable names in this expression."""
+        result = []
+        for expr, _ in self.preorder_iter():
+            if expr.variable_name is not None:
+                result.append(expr.variable_name)
+        return Multiset(result)
+
+    def preorder_iter(self, predicate=None) -> 'ExpressionsWithPos':
+        """Iterate over all subexpressions in preorder, yielding (expression, position).
 
         Args:
-            predicate:
-                A predicate to filter what expressions are yielded. It gets the expression and if it returns ``True``,
-                the expression is yielded.
-
-        Yields:
-            Every subexpression along with a position tuple. Each item in the tuple is the position of an operation
-            operand:
-
-                - ``()`` is the position of the root element
-                - ``(0, )`` that of its first operand
-                - ``(0, 1)`` the position of the second operand of the root's first operand.
-                - etc.
-
-            A variable's expression always has the position ``0`` relative to the variable, i.e. if the root is a
-            variable, then its expression has the position ``(0, )``.
+            predicate: If given, only yield expressions where predicate(expr) is True.
         """
-        yield from self._preorder_iter(predicate, ())
+        yield from self._preorder_iter((), predicate)
 
-    def _preorder_iter(self, predicate: ExprPredicate, position: Tuple[int, ...]) -> ExpressionsWithPos:
+    def _preorder_iter(self, position, predicate):
         if predicate is None or predicate(self):
-            yield self, position
+            yield (self, position)
+        if isinstance(self, Operation):
+            for i, operand in enumerate(self.operands):
+                yield from operand._preorder_iter(position + (i,), predicate)
 
-    def __getitem__(self, position: Union[Tuple[int, ...], slice]) -> 'Expression':
-        """Return the subexpression at the given position(s).
+    def __getitem__(self, position):
+        """Access subexpression by position tuple or slice.
 
-        It is also possible to use a slice notation to extract a sequence of subexpressions:
-
-        >>> expr = f(a, b, a, c)
-        >>> expr[(1, ):(2, )]
-        [Symbol('b'), Symbol('a')]
-
-        Args:
-            position:
-                The position as a tuple. See :meth:`preorder_iter` for its format.
-                Alternatively, a range of positions can be passed using the slice notation.
-
-        Returns:
-            The subexpression at the given position(s).
-
-        Raises:
-            IndexError: If the position is invalid, i.e. it refers to a non-existing subexpression.
+        position can be:
+        - A tuple of ints: path to subexpression (e.g., (1, 0))
+        - A slice with start/end position tuples: range of children
         """
         if isinstance(position, slice):
-            if len(position.start) != len(position.stop):
-                raise IndexError('Invalid slice: Start and stop must have the same length')
-            if len(position.start) == 0:
-                return [self]
-            raise IndexError('Invalid slice: Parent expression is not an operation')
+            return self._getitem_slice(position.start, position.stop)
+        # Tuple position access
         if len(position) == 0:
             return self
-        raise IndexError("Invalid position")
+        if not isinstance(self, Operation):
+            raise IndexError("Invalid position")
+        idx = position[0]
+        if idx < 0 or idx >= len(self.operands):
+            raise IndexError("Invalid position")
+        return self.operands[idx][position[1:]]
 
-    def __contains__(self, expression: 'Expression') -> bool:
-        return self == expression
+    def _getitem_slice(self, start, stop):
+        """Get a range of subexpressions."""
+        if len(start) != len(stop):
+            raise IndexError('Invalid slice: Start and stop must have the same length')
+        if len(start) == 0:
+            return [self]
+        if not isinstance(self, Operation):
+            raise IndexError('Invalid slice: Parent expression is not an operation')
+        if len(start) == 1:
+            s, e = start[0], stop[0]
+            if s > e:
+                raise IndexError('Invalid slice')
+            e = min(e + 1, len(self.operands))
+            return list(self.operands[s:e])
+        # Recurse into the child at start[0] (must equal stop[0])
+        if start[0] != stop[0]:
+            raise IndexError('Invalid slice: Start and stop must have the same length')
+        child_idx = start[0]
+        if child_idx < 0 or child_idx >= len(self.operands):
+            raise IndexError('Invalid position')
+        return self.operands[child_idx]._getitem_slice(start[1:], stop[1:])
 
-    def __hash__(self):
-        raise NotImplementedError()
-
-
-
-_ArityBase = NamedTuple('_ArityBase', [('min_count', int), ('fixed_size', bool)])
-
-
-class Arity(_ArityBase):
-    """Arity of an operator as (`int`, `bool`) tuple.
-
-    The first component is the minimum number of operands.
-    If the second component is ``True``, the operator has fixed width arity. In that case, the first component
-    describes the fixed number of operands required.
-    If it is ``False``, the operator has variable width arity.
-    """
-    pass
-
-
-Arity.nullary = Arity(0, True)
-Arity.unary = Arity(1, True)
-Arity.binary = Arity(2, True)
-Arity.ternary = Arity(3, True)
-Arity.polyadic = Arity(2, False)
-Arity.variadic = Arity(0, False)
-
-
-class _OperationMeta(ABCMeta):
-    """Metaclass for `Operation`
-
-    This metaclass is mainly used to override :meth:`__call__` to provide simplification when creating a
-    new operation expression. This is done to avoid problems when overriding ``__new__`` of the operation class.
-    """
-
-    def __init__(cls, name, bases, dct):
-        super(_OperationMeta, cls).__init__(name, bases, dct)
-
-        if cls.arity[1] and cls.one_identity:
-            raise TypeError('{}: An operation with fixed arity cannot have one_identity = True.'.format(name))
-
-        if cls.arity == Arity.unary and cls.infix:
-            raise TypeError('{}: Unary operations cannot use infix notation.'.format(name))
-
-        cls.head = cls
-
-    def __repr__(cls):
-        if cls is Operation:
-            return super().__repr__()
-        flags = []
-        if cls.associative:
-            flags.append('associative')
-        if cls.commutative:
-            flags.append('commutative')
-        if cls.one_identity:
-            flags.append('one_identity')
-        if cls.infix:
-            flags.append('infix')
-        return '{}[{!r}, {!r}, {}]'.format(cls.__name__, cls.name, cls.arity, ', '.join(flags))
-
-    def __str__(cls):
-        return cls.name
-
-    def __call__(cls, *operands: Expression, variable_name=None):
-        # __call__ is overridden, so that for one_identity operations with a single argument
-        # that argument can be returned instead
-        operands = list(operands)
-        one_identity_applies = cls._simplify(operands)
-        if one_identity_applies:
-            return operands[0]
-
-        operation = Expression.__new__(cls)
-        if not cls.unpacked_args_to_init:
-            operation.__init__(operands, variable_name=variable_name)
-        else:
-            operation.__init__(*operands, variable_name=variable_name)
-
-        return operation
-
-    def _simplify(cls, operands: List[Expression]) -> bool:
-        """Flatten/sort the operands of associative/commutative operations.
-
-        Returns:
-            True iff *one_identity* is True and the operation contains a single
-            argument that is not a sequence wildcard.
-        """
-
-        if cls.associative:
-            new_operands = []  # type: List[Expression]
-            for operand in operands:
-                if isinstance(operand, cls):
-                    new_operands.extend(operand.operands)  # type: ignore
-                else:
-                    new_operands.append(operand)
-            operands.clear()
-            operands.extend(new_operands)
-
-        if cls.one_identity and len(operands) == 1:
-            expr = operands[0]
-            if not isinstance(expr, Wildcard) or (expr.min_count == 1 and expr.fixed_size):
+    def __contains__(self, expression) -> bool:
+        """Check if expression is contained anywhere in this expression tree."""
+        for expr, _ in self.preorder_iter():
+            if expr == expression:
                 return True
-
-        if cls.commutative:
-            operands.sort()
-
         return False
 
 
-class Operation(Expression, metaclass=_OperationMeta):
-    """Base class for all operations.
+# ─── Arity enum ───────────────────────────────────────────────────────────────
 
-    Do not instantiate this class directly, but create a subclass for every operation in your domain.
-    You can use :meth:`new` as a shortcut for doing so.
+class Arity(Enum):
+    """Defines how many operands an operation accepts."""
+    nullary = (0, True)
+    unary = (1, True)
+    binary = (2, True)
+    ternary = (3, True)
+    variadic = (0, False)   # 0 or more operands
+
+    def __init__(self, min_count, fixed_size):
+        self.min_count = min_count
+        self.fixed_size = fixed_size
+
+    def __getitem__(self, index):
+        """Support arity[0] → min_count, arity[1] → fixed_size for backward compat."""
+        if index == 0:
+            return self.min_count
+        if index == 1:
+            return self.fixed_size
+        raise IndexError(index)
+
+
+# ─── OperationHead ────────────────────────────────────────────────────────────
+
+class OperationHead(BaseModel):
+    """Metadata describing an operation type.
+
+    An OperationHead defines the structural properties of an operation:
+    name, arity, whether it's commutative, associative, or one_identity.
+
+    OperationHead objects are callable — calling them is the factory that
+    applies one_identity logic (may return a non-Operation for single operands).
+    Use `Operation(head, *operands)` directly for the raw constructor that
+    only normalizes (flatten associative, sort commutative) without one_identity.
     """
+    model_config = ConfigDict(frozen=True)
 
-    name = None  # type: str
-    """str: Name or symbol for the operator.
+    name: str
+    arity: Arity = Arity.variadic
+    commutative: bool = False
+    associative: bool = False
+    one_identity: bool = False
+    infix: bool = False
 
-    This needs to be overridden in the subclass.
+    def __call__(self, *operands, variable_name=None):
+        """Factory: create an expression, applying one_identity if appropriate.
+
+        If one_identity is True and there's exactly one operand after normalization,
+        returns that operand directly (possibly with variable_name attached).
+        Otherwise creates an Operation.
+        """
+        result = _check_one_identity(self, list(operands))
+        if result is not None:
+            # one_identity collapsed to single operand
+            if variable_name and hasattr(result, 'variable_name'):
+                result = result.with_renamed_vars({result.variable_name: variable_name} if result.variable_name else {})
+                if hasattr(result, 'variable_name'):
+                    object.__setattr__(result, 'variable_name', variable_name)
+            return result
+        return Operation(self, *operands, variable_name=variable_name)
+
+    def __hash__(self):
+        return hash((self.name, self.arity, self.commutative, self.associative, self.one_identity))
+
+    def __eq__(self, other):
+        if not isinstance(other, OperationHead):
+            return NotImplemented
+        return (self.name == other.name and self.arity == other.arity and
+                self.commutative == other.commutative and self.associative == other.associative and
+                self.one_identity == other.one_identity)
+
+    def __repr__(self):
+        parts = [f"name={self.name!r}"]
+        if self.arity != Arity.variadic:
+            parts.append(f"arity={self.arity.name}")
+        if self.commutative:
+            parts.append("commutative=True")
+        if self.associative:
+            parts.append("associative=True")
+        if self.one_identity:
+            parts.append("one_identity=True")
+        return f"OperationHead({', '.join(parts)})"
+
+
+# ─── Helper functions for Operation construction ──────────────────────────────
+
+def _check_one_identity(head, operands):
+    """Check if one_identity should collapse the operation to a single operand.
+
+    Returns the single operand if collapsing should happen, None otherwise.
+    Called by OperationHead.__call__ (the factory), NOT by Operation.__init__ (the raw constructor).
     """
+    if not head.one_identity:
+        return None
+    # First normalize (flatten associative)
+    if head.associative:
+        flat = []
+        for op in operands:
+            if isinstance(op, Operation) and op.head == head and not op.variable_name:
+                flat.extend(op.operands)
+            else:
+                flat.append(op)
+        operands = flat
+    if len(operands) == 1:
+        return operands[0]
+    return None
 
-    arity = Arity.variadic  # type: Arity
-    """Arity: The arity of the operator.
 
-    Trying to construct an operation expression with a number of operands that does not fit its
-    operation's arity will result in an error.
+def _normalize_operands(head, operands):
+    """Normalize operands: flatten associative, sort commutative.
+
+    Modifies operands list in place. Called by Operation.__init__.
     """
+    # Flatten associative
+    if head.associative:
+        flat = []
+        for op in operands:
+            if isinstance(op, Operation) and op.head == head and not op.variable_name:
+                flat.extend(op.operands)
+            else:
+                flat.append(op)
+        operands.clear()
+        operands.extend(flat)
+    # Sort commutative
+    if head.commutative:
+        operands.sort()
 
-    associative = False
-    """bool: True if the operation is associative, i.e. `f(a, f(b, c)) = f(f(a, b), c)`.
 
-    This attribute is used to flatten nested associative operations of the same type.
-    Therefore, the `arity` of an associative operation has to have an unconstrained maximum
-    number of operand.
+def _check_arity(head, operands):
+    """Validate operand count against arity constraints.
+
+    Raises ValueError if the arity constraint is violated.
+    For non-fixed arity (variadic), no check is needed.
+    For fixed arity, wildcards with fixed_size=False (sequence wildcards) provide
+    flexibility: they count as their min_count contribution.
     """
+    if not head.arity.fixed_size:
+        return  # variadic — anything goes
+    required = head.arity.min_count
+    # Count how many positions the operands occupy
+    min_ops = 0
+    has_unbounded = False
+    for op in operands:
+        if isinstance(op, Wildcard) and not op.fixed_size:
+            min_ops += op.min_count
+            has_unbounded = True
+        else:
+            min_ops += 1
+    if has_unbounded:
+        # Sequence wildcards present: minimum must not exceed required
+        if min_ops > required:
+            raise ValueError(
+                f"Operation {head.name!r} with arity {head.arity.name} (requires {required} operands) "
+                f"got too many operands: minimum is {min_ops}")
+    else:
+        # All fixed: must be exact
+        if len(operands) != required:
+            raise ValueError(
+                f"Operation {head.name!r} with arity {head.arity.name} requires exactly {required} operands, "
+                f"got {len(operands)}")
 
-    commutative = False
-    """bool: True if the operation is commutative, i.e. `f(a, b) = f(b, a)`.
 
-    Note that commutative operations will always be converted into canonical
-    form with sorted operands.
+# ─── Operation ────────────────────────────────────────────────────────────────
+
+class Operation(Expression):
+    """A compound expression consisting of a head (OperationHead) and operands.
+
+    The raw constructor `Operation(head, *operands)` applies normalization
+    (flatten associative, sort commutative) but does NOT apply one_identity.
+    Use `head(*operands)` (OperationHead.__call__) for the full factory.
     """
+    operands: List[Expression] = []
 
-    one_identity = False
-    """bool: True if the operation with a single argument is equivalent to the identity function.
+    def __init__(self, head, *operands, variable_name=None, **kwargs) -> None:
+        # Auto-convert non-Expression operands to expressions
+        op_list = []
+        for op in operands:
+            if isinstance(op, Expression):
+                op_list.append(op)
+            elif isinstance(op, str):
+                op_list.append(Symbol(op))
+            else:
+                op_list.append(SymbolWrapper(op))
+        _normalize_operands(head, op_list)
+        _check_arity(head, op_list)
+        super().__init__(head=head, operands=op_list, variable_name=variable_name, **kwargs)
 
-    This property is used to simplify expressions, e.g. for ``f`` with ``f.one_identity = True``
-    the expression ``f(a)`` if simplified to ``a``.
-    """
+    @classmethod
+    def new(cls, name: str, arity: Arity = Arity.variadic, class_name: str = None, **kwargs) -> 'OperationHead':
+        """Create a new OperationHead (backward-compatible factory).
 
-    infix = False
-    """bool: True if the name of the operation should be used as an infix operator by str()."""
-
-
-    unpacked_args_to_init = False
-    """bool: True if the class must be instantiated with ``*operands`` instead of ``operands``."""
-
-    def __init__(self, operands: List[Expression], variable_name=None) -> None:
-        """Create an operation expression.
-
-        Args:
-            *operands
-                The operands for the operation expression.
+        Returns an OperationHead which is callable to create Operations.
+        The class_name parameter is accepted for backward compatibility but ignored.
 
         Raises:
-            ValueError:
-                if the operand count does not match the operation's arity.
-            ValueError:
-                if the operation contains conflicting variables, i.e. variables with the same name that match
-                different things. A common example would be mixing sequence and fixed variables with the same name in
-                one expression.
+            ValueError: If name is a Python keyword or not a valid identifier.
+            TypeError: If one_identity is used with non-variadic arity.
+            TypeError: If infix is used with unary arity.
         """
-        super().__init__(variable_name)
+        # Name validation: reject non-identifiers and statement keywords unless infix=True
+        _OPERATOR_KEYWORDS = {'and', 'or', 'not', 'in', 'is', 'True', 'False', 'None'}
+        if not kwargs.get('infix') and (not name.isidentifier() or (keyword.iskeyword(name) and name not in _OPERATOR_KEYWORDS)):
+            raise ValueError(f"Invalid operation name: {name!r}. Must be a valid non-keyword identifier, or use infix=True.")
+        if kwargs.get('one_identity') and arity != Arity.variadic:
+            raise TypeError("one_identity=True is only allowed for variadic operations.")
+        if kwargs.get('infix') and arity == Arity.unary:
+            raise TypeError("infix=True is not allowed for unary operations.")
+        return OperationHead(name=name, arity=arity, **kwargs)
 
-        operand_count, variable_count = self._count_operands(operands)
+    def collect_symbols(self, symbols):
+        for op in self.operands:
+            op.collect_symbols(symbols)
 
-        if not variable_count and operand_count < self.arity.min_count:
-            raise ValueError(
-                "Operation {!s} got arity {!s}, but got {:d} operands.".
-                format(type(self).__name__, self.arity, operand_count)
-            )
+    def with_renamed_vars(self, renaming) -> 'Operation':
+        new_operands = [op.with_renamed_vars(renaming) for op in self.operands]
+        new_vname = renaming.get(self.variable_name, self.variable_name)
+        return Operation(self.head, *new_operands, variable_name=new_vname)
 
-        if self.arity.fixed_size and operand_count > self.arity.min_count:
-            msg = "Operation {!s} got arity {!s}, but got {:d} operands.".format(
-                type(self).__name__, self.arity, operand_count
-            )
-            if self.associative:
-                msg += " Associative operations should have a variadic/polyadic arity."
-            raise ValueError(msg)
-
-        self.operands = operands
-
-    @staticmethod
-    def _count_operands(operands):
-        operand_count = 0
-        variable = False
-        for operand in operands:
-            if isinstance(operand, Wildcard):
-                operand_count += operand.min_count
-                if not operand.fixed_size:
-                    variable = True
-            else:
-                operand_count += 1
-        return operand_count, variable
+    def __copy__(self) -> 'Operation':
+        return Operation(self.head, *self.operands, variable_name=self.variable_name)
 
     def __str__(self):
-        if self.infix:
-            separator = ' {!s} '.format(self.name) if self.name else ''
-            value = '({!s})'.format(separator.join(str(o) for o in self.operands))
-        else:
-            value = '{!s}({!s})'.format(self.name, ', '.join(str(o) for o in self.operands))
+        value = '{!s}({!s})'.format(self.head.name, ', '.join(str(o) for o in self.operands))
         if self.variable_name:
             value = '{}: {}'.format(self.variable_name, value)
         return value
@@ -426,75 +389,16 @@ class Operation(Expression, metaclass=_OperationMeta):
     def __repr__(self):
         operand_str = ', '.join(map(repr, self.operands))
         if self.variable_name:
-            return '{!s}({!s}, variable_name={})'.format(type(self).__name__, operand_str, self.variable_name)
-        return '{!s}({!s})'.format(type(self).__name__, operand_str)
-
-    @staticmethod
-    def new(
-            name: str,
-            arity: Arity,
-            class_name: str=None,
-            *,
-            associative: bool=False,
-            commutative: bool=False,
-            one_identity: bool=False,
-            infix: bool=False
-    ) -> Type['Operation']:
-        """Utility method to create a new operation type.
-
-        Example:
-
-        >>> Times = Operation.new('*', Arity.polyadic, 'Times', associative=True, commutative=True, one_identity=True)
-        >>> Times
-        Times['*', Arity(min_count=2, fixed_size=False), associative, commutative, one_identity]
-        >>> str(Times(Symbol('a'), Symbol('b')))
-        '*(a, b)'
-
-        Args:
-            name:
-                Name or symbol for the operator. Will be used as name for the new class if
-                `class_name` is not specified.
-            arity:
-                The arity of the operator as explained in the documentation of `Operation`.
-            class_name:
-                Name for the new operation class to be used instead of name. This argument
-                is required if `name` is not a valid python identifier.
-
-        Keyword Args:
-            associative:
-                See :attr:`~Operation.associative`.
-            commutative:
-                See :attr:`~Operation.commutative`.
-            one_identity:
-                See :attr:`~Operation.one_identity`.
-            infix:
-                See :attr:`~Operation.infix`.
-
-        Raises:
-            ValueError: if the class name of the operation is not a valid class identifier.
-        """
-        class_name = class_name or name
-        if not class_name.isidentifier() or keyword.iskeyword(class_name):
-            raise ValueError("Invalid identifier for new operator class.")
-
-        return type(
-            class_name, (Operation, ), {
-                'name': name,
-                'arity': arity,
-                'associative': associative,
-                'commutative': commutative,
-                'one_identity': one_identity,
-                'infix': infix
-            }
-        )
+            return 'Operation({!s}, {!s}, variable_name={})'.format(self.head.name, operand_str, self.variable_name)
+        return 'Operation({!s}, {!s})'.format(self.head.name, operand_str)
 
     def __lt__(self, other):
         if not isinstance(other, Expression):
             return NotImplemented
-        if not isinstance(other, type(self)) and not isinstance(self, type(other)):
-            return type(self).__name__ < type(other).__name__
-        if self.name != other.name:
-            return self.name < other.name
+        if not isinstance(other, Operation):
+            return False  # Operations sort after all atoms (Symbol, Wildcard)
+        if self.head != other.head:
+            return self.head.name < other.head.name
         if len(self.operands) != len(other.operands):
             return len(self.operands) < len(other.operands)
         for left, right in zip(self.operands, other.operands):
@@ -505,159 +409,34 @@ class Operation(Expression, metaclass=_OperationMeta):
         return (self.variable_name or '') < (other.variable_name or '')
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
+        if not isinstance(other, Operation):
             return NotImplemented
         return (
-            len(self.operands) == len(other.operands) and all(x == y for x, y in zip(self.operands, other.operands)) and
+            self.head == other.head and
+            len(self.operands) == len(other.operands) and
+            all(x == y for x, y in zip(self.operands, other.operands)) and
             self.variable_name == other.variable_name
         )
 
-    def __iter__(self):
-        return iter(self.operands)
-
-    def __len__(self):
-        return len(self.operands)
-
-    def __getitem__(self, key: Union[Tuple[int, ...], slice]) -> Expression:
-        if isinstance(key, int):
-            return self.operands[key]
-        if isinstance(key, slice):
-            if len(key.start) != len(key.stop):
-                raise IndexError('Invalid slice: Start and stop must have the same length')
-            if len(key.start) == 0:
-                return [self]
-            if key.start > key.stop:
-                raise IndexError('Invalid slice: Start must come before stop')
-            if len(key.start) == 1:
-                return self.operands[key.start[0]:key.stop[0] + 1]
-            start, *new_start = key.start
-            stop, *new_stop = key.stop
-            if start != stop:
-                raise IndexError('Invalid slice: Start and stop must have the same parent')
-            return self.operands[start][new_start:new_stop]
-        if isinstance(key, (list, tuple)):
-            if len(key) == 0:
-                return self
-            head, *remainder = key
-            return self.operands[head][remainder]
-        raise TypeError('Invalid key: {}'.format(key))
-
-    __getitem__.__doc__ = Expression.__getitem__.__doc__
-
-    def __contains__(self, expression: 'Expression') -> bool:
-        if self == expression:
-            return True
-        for operand in self.operands:
-            if operand == expression:
-                return True
-            try:
-                if expression in operand:
-                    return True
-            except TypeError:
-                pass
-        return False
-
-    def _is_constant(self) -> bool:
-        return all(x.is_constant for x in self.operands)
-
-    def _is_syntactic(self) -> bool:
-        if self.associative or self.commutative:
-            return False
-        return all(o.is_syntactic for o in self.operands)
-
-    def collect_variables(self, variables) -> None:
-        if self.variable_name:
-            variables.add(self.variable_name)
-        for operand in self.operands:
-            operand.collect_variables(variables)
-
-    def collect_symbols(self, symbols) -> None:
-        symbols.add(self.name)
-        for operand in self.operands:
-            operand.collect_symbols(symbols)
-
-    def _preorder_iter(self, predicate: ExprPredicate=None, position: Tuple[int, ...]=()) -> ExpressionsWithPos:
-        if predicate is None or predicate(self):
-            yield self, position
-        for i, operand in enumerate(self.operands):
-            yield from operand._preorder_iter(predicate, position + (i, ))  # pylint: disable=protected-access
-
     def __hash__(self):
-        return hash((self.name, ) + tuple(self.operands))
-
-    def with_renamed_vars(self, renaming) -> 'Operation':
-        return type(self)(
-            *(o.with_renamed_vars(renaming) for o in self.operands),
-            variable_name=renaming.get(self.variable_name, self.variable_name)
-        )
-
-    def __copy__(self) -> 'Operation':
-        return type(self)(*self.operands, variable_name=self.variable_name)
+        return hash((Operation, self.head, tuple(self.operands), self.variable_name))
 
 
-Operation.register(list)
-Operation.register(tuple)
-Operation.register(set)
-Operation.register(frozenset)
-Operation.register(dict)
+# ─── Atom base ────────────────────────────────────────────────────────────────
 
-
-class AssociativeOperation(metaclass=ABCMeta):
-    @classmethod
-    def __subclasshook__(cls, C):
-        if cls is AssociativeOperation:
-            if issubclass(C, Operation) and hasattr(C, 'associative'):
-                return C.associative
-        return NotImplemented
-
-
-class CommutativeOperation(metaclass=ABCMeta):
-    @classmethod
-    def __subclasshook__(cls, C):
-        if cls is CommutativeOperation:
-            if issubclass(C, Operation) and hasattr(C, 'commutative'):
-                return C.commutative
-        return NotImplemented
-
-
-CommutativeOperation.register(set)
-CommutativeOperation.register(frozenset)
-CommutativeOperation.register(dict)
-
-
-class OneIdentityOperation(metaclass=ABCMeta):
-    @classmethod
-    def __subclasshook__(cls, C):
-        if cls is OneIdentityOperation:
-            if issubclass(C, Operation) and hasattr(C, 'one_identity'):
-                return C.one_identity
-        return NotImplemented
-
-
-class Atom(Expression):  # pylint: disable=abstract-method
-    """Base for all atomic expressions."""
-
+class Atom(Expression):
+    """Base for all atomic (leaf) expressions."""
     __iter__ = None
 
 
+# ─── Symbol ───────────────────────────────────────────────────────────────────
+
 class Symbol(Atom):
-    """An atomic constant expression term.
+    """An atomic constant expression term, uniquely identified by its name."""
+    name: str = ""
 
-    It is uniquely identified by its name.
-
-    Attributes:
-        name (str):
-            The symbol's name.
-    """
-
-    def __init__(self, name: str, variable_name=None) -> None:
-        """
-        Args:
-            name:
-                The name of the symbol that uniquely identifies it.
-        """
-        super().__init__(variable_name)
-        self.name = name
+    def __init__(self, name: str, variable_name=None, **kwargs) -> None:
+        super().__init__(variable_name=variable_name, name=name, **kwargs)
         self.head = self
 
     def __str__(self):
@@ -686,363 +465,411 @@ class Symbol(Atom):
             if self.name == other.name:
                 return (self.variable_name or '') < (other.variable_name or '')
             return self.name < other.name
-        return type(self).__name__ < type(other).__name__
+        if isinstance(other, SymbolWrapper):
+            return self.name < other.name
+        if isinstance(other, Wildcard):
+            return True  # Symbols sort before Wildcards
+        if isinstance(other, Operation):
+            return True  # Atoms sort before Operations
+        return NotImplemented
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return self.name == other.name and self.variable_name == other.variable_name
+        if isinstance(other, Symbol):
+            return self.name == other.name and self.variable_name == other.variable_name
+        if isinstance(other, SymbolWrapper):
+            return self.name == other.name and self.variable_name == other.variable_name
+        return NotImplemented
 
     def __hash__(self):
-        return hash((Symbol, self.name, self.variable_name))
+        return hash(('_named_atom_', self.name, self.variable_name))
 
 
-class Wildcard(Atom):
-    """A wildcard that matches any expression.
+# ─── SymbolWrapper ────────────────────────────────────────────────────────────
 
-    The wildcard will match any number of expressions between *min_count* and *fixed_size*.
-    Optionally, the wildcard can also be constrained to only match expressions satisfying a predicate.
+class SymbolWrapper(Atom):
+    """An atomic expression wrapping an arbitrary Python object.
 
-    Attributes:
-        min_count (int):
-            The minimum number of expressions this wildcard will match.
-        fixed_size (bool):
-            If ``True``, the wildcard matches exactly *min_count* expressions.
-            If ``False``, the wildcard is a sequence wildcard and can match *min_count* or more expressions.
+    Unlike Symbol (which stores a string name), SymbolWrapper stores the
+    original object directly. This enables lossless roundtripping when
+    converting expressions from external libraries (e.g. SymPy integers,
+    constants like I, pi) without string-based encoding/decoding.
+
+    SymbolWrapper is cross-compatible with Symbol for matching: a Symbol('x')
+    pattern will match a SymbolWrapper whose name property returns 'x'.
+    This allows patterns to be written with plain Symbol('2') and still match
+    against SymbolWrapper(Integer(2)).
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    head = None
+    value: object = None
 
-    def __init__(self, min_count: int, fixed_size: bool, variable_name=None, optional=None) -> None:
-        """
-        Args:
-            min_count:
-                The minimum number of expressions this wildcard will match. Must be a non-negative number.
-            fixed_size:
-                If ``True``, the wildcard matches exactly *min_count* expressions.
-                If ``False``, the wildcard is a sequence wildcard and can match *min_count* or more expressions.
+    def __init__(self, value, variable_name=None, **kwargs) -> None:
+        super().__init__(value=value, variable_name=variable_name, **kwargs)
+        self.head = self
 
-        Raises:
-            ValueError: if *min_count* is negative or when trying to create a fixed zero-length wildcard.
-        """
-        if min_count < 0:
-            raise ValueError("min_count cannot be negative")
-        if min_count == 0 and fixed_size:
-            raise ValueError("Cannot create a fixed zero length wildcard")
-
-        super().__init__(variable_name)
-        self.min_count = min_count
-        self.fixed_size = fixed_size
-        self.optional = optional
-
-    def _is_constant(self) -> bool:
-        return False
-
-    def _is_syntactic(self) -> bool:
-        return self.fixed_size
-
-    def with_renamed_vars(self, renaming) -> 'Wildcard':
-        return type(self)(
-            self.min_count, self.fixed_size, variable_name=renaming.get(self.variable_name, self.variable_name)
-        )
-
-    @staticmethod
-    def dot(name=None) -> 'Wildcard':
-        """Create a `Wildcard` that matches a single argument.
-
-        Args:
-            name: An optional name for the wildcard.
-
-        Returns:
-            A dot wildcard.
-        """
-        return Wildcard(min_count=1, fixed_size=True, variable_name=name)
-
-    @staticmethod
-    def optional(name, default) -> 'Wildcard':
-        """Create a `Wildcard` that matches a single argument with a default value.
-
-        If the wildcard does not match, the substitution will contain the
-        default value instead.
-
-        Args:
-            name:
-                The name for the wildcard.
-            default:
-                The default value of the wildcard.
-
-        Returns:
-            A n optional wildcard.
-        """
-        return Wildcard(min_count=1, fixed_size=True, variable_name=name, optional=default)
-
-    @staticmethod
-    def symbol(name: str=None, symbol_type: Type[Symbol]=Symbol) -> 'SymbolWildcard':
-        """Create a `SymbolWildcard` that matches a single `Symbol` argument.
-
-        Args:
-            name:
-                Optional variable name for the wildcard.
-            symbol_type:
-                An optional subclass of `Symbol` to further limit which kind of symbols are
-                matched by the wildcard.
-
-        Returns:
-            A `SymbolWildcard` that matches the *symbol_type*.
-        """
-        if isinstance(name, type) and issubclass(name, Symbol) and symbol_type is Symbol:
-            return SymbolWildcard(name)
-        return SymbolWildcard(symbol_type, variable_name=name)
-
-    @staticmethod
-    def star(name=None) -> 'Wildcard':
-        """Creates a `Wildcard` that matches any number of arguments.
-
-        Args:
-            name:
-                Optional variable name for the wildcard.
-
-        Returns:
-            A star wildcard.
-        """
-        return Wildcard(min_count=0, fixed_size=False, variable_name=name)
-
-    @staticmethod
-    def plus(name=None) -> 'Wildcard':
-        """Creates a `Wildcard` that matches at least one and up to any number of arguments
-
-        Args:
-            name:
-                Optional variable name for the wildcard.
-
-        Returns:
-            A plus wildcard.
-        """
-        return Wildcard(min_count=1, fixed_size=False, variable_name=name)
+    @cached_property
+    def name(self) -> str:
+        """String representation for display and cross-type matching with Symbol."""
+        return str(self.value)
 
     def __str__(self):
-        value = None
-        if not self.fixed_size:
-            if self.min_count == 0:
-                value = '___'
-            elif self.min_count == 1:
-                value = '__'
-        elif self.min_count == 1:
-            value = '_'
-        if value is None:
-            value = '_[{:d}{!s}]'.format(self.min_count, '' if self.fixed_size else '+')
         if self.variable_name:
-            value = '{}{}'.format(self.variable_name, value)
-        if self.optional is not None:
-            value += ': {}'.format(self.optional)
-        return value
+            return '{}: {}'.format(self.variable_name, self.value)
+        return self.name
 
     def __repr__(self):
         if self.variable_name:
-            if self.optional is not None:
-                return '{!s}({!r}, {!r}, variable_name={}, optional={})'.format(
-                    type(self).__name__, self.min_count, self.fixed_size, self.variable_name, self.optional
-                )
-            return '{!s}({!r}, {!r}, variable_name={})'.format(
-                type(self).__name__, self.min_count, self.fixed_size, self.variable_name
-            )
-        return '{!s}({!r}, {!r})'.format(type(self).__name__, self.min_count, self.fixed_size)
+            return 'SymbolWrapper({!r}, variable_name={!r})'.format(self.value, self.variable_name)
+        return 'SymbolWrapper({!r})'.format(self.value)
+
+    def collect_symbols(self, symbols):
+        symbols.add(self.name)
+
+    def with_renamed_vars(self, renaming) -> 'SymbolWrapper':
+        return SymbolWrapper(self.value, variable_name=renaming.get(self.variable_name, self.variable_name))
+
+    def __copy__(self) -> 'SymbolWrapper':
+        return SymbolWrapper(self.value, variable_name=self.variable_name)
 
     def __lt__(self, other):
         if not isinstance(other, Expression):
             return NotImplemented
-        if not isinstance(other, Wildcard):
-            return type(self).__name__ < type(other).__name__
-        if self.min_count != other.min_count or self.fixed_size != other.fixed_size:
-            return self.min_count < other.min_count or (self.fixed_size and not other.fixed_size)
-        if self.variable_name != other.variable_name:
-            return (self.variable_name or '') < (other.variable_name or '')
-        if not isinstance(self, SymbolWildcard):
-            return isinstance(other, SymbolWildcard)
-        if isinstance(other, SymbolWildcard):
-            return self.symbol_type.__name__ < other.symbol_type.__name__
-        return False
+        if isinstance(other, SymbolWrapper):
+            if self.name == other.name:
+                return (self.variable_name or '') < (other.variable_name or '')
+            return self.name < other.name
+        if isinstance(other, Symbol):
+            return self.name < other.name
+        if isinstance(other, Operation):
+            return True  # Atoms sort before Operations
+        return True  # Before Wildcards
 
     def __eq__(self, other):
-        if not isinstance(other, type(self)):
+        if isinstance(other, SymbolWrapper):
+            return self.value == other.value and self.variable_name == other.variable_name
+        if isinstance(other, Symbol):
+            return self.name == other.name and self.variable_name == other.variable_name
+        # Allow direct comparison with the wrapped value (e.g. SymbolWrapper(Integer(2)) == Integer(2))
+        if not isinstance(other, Expression) and self.variable_name is None:
+            return self.value == other
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(('_named_atom_', self.name, self.variable_name))
+
+    def __gt__(self, other):
+        if not isinstance(other, Expression):
+            return self.value > other
+        return NotImplemented
+
+    def __ge__(self, other):
+        if not isinstance(other, Expression):
+            return self.value >= other
+        return NotImplemented
+
+    def __le__(self, other):
+        if not isinstance(other, Expression):
+            return self.value <= other
+        return NotImplemented
+
+
+# ─── Wildcard ─────────────────────────────────────────────────────────────────
+
+class Wildcard(Atom):
+    """A wildcard that matches any expression.
+
+    Attributes:
+        min_count: Minimum number of expressions this wildcard matches.
+        fixed_size: If True, matches exactly min_count expressions.
+        default_value: Default value for optional wildcards.
+    """
+    min_count: int = 1
+    fixed_size: bool = True
+    default_value: object = None
+
+    def __init__(self, min_count=1, fixed_size=True, variable_name=None, default_value=None, **kwargs) -> None:
+        if min_count < 0:
+            raise ValueError("min_count must be non-negative")
+        if fixed_size and min_count == 0 and default_value is None:
+            raise ValueError("Wildcard with min_count=0 and fixed_size=True requires a default_value (use Wildcard.optional)")
+        super().__init__(min_count=min_count, fixed_size=fixed_size, variable_name=variable_name,
+                         default_value=default_value, **kwargs)
+        self.head = None
+
+    @staticmethod
+    def dot(name=None) -> 'Wildcard':
+        """Create a fixed-size wildcard (matches exactly one expression)."""
+        return Wildcard(min_count=1, fixed_size=True, variable_name=name)
+
+    @staticmethod
+    def star(name=None) -> 'Wildcard':
+        """Create a star wildcard (matches zero or more expressions)."""
+        return Wildcard(min_count=0, fixed_size=False, variable_name=name)
+
+    @staticmethod
+    def plus(name=None) -> 'Wildcard':
+        """Create a plus wildcard (matches one or more expressions)."""
+        return Wildcard(min_count=1, fixed_size=False, variable_name=name)
+
+    @staticmethod
+    def optional(name, default) -> 'Wildcard':
+        """Create an optional wildcard with a default value.
+
+        Optional wildcards match exactly 1 expression (like dot), but fall back
+        to the default_value when no subject is available in variadic operations.
+        """
+        return Wildcard(min_count=1, fixed_size=True, variable_name=name, default_value=default)
+
+    @staticmethod
+    def symbol(name_or_type=None, symbol_type=None) -> 'SymbolWildcard':
+        """Create a wildcard that only matches symbols of a given type.
+
+        Can be called as:
+            Wildcard.symbol()                  — matches any Symbol
+            Wildcard.symbol('name')            — named, matches any Symbol
+            Wildcard.symbol(SpecialSymbol)     — matches SpecialSymbol subclass
+            Wildcard.symbol('name', SpecialSymbol) — named, matches SpecialSymbol
+        """
+        if name_or_type is not None and isinstance(name_or_type, type):
+            # First arg is a type, not a name
+            return SymbolWildcard(variable_name=None, symbol_type=name_or_type)
+        name = name_or_type
+        return SymbolWildcard(variable_name=name, symbol_type=symbol_type or Symbol)
+
+    def __str__(self):
+        if self.variable_name:
+            if self.fixed_size:
+                return self.variable_name + '_'
+            elif self.min_count == 0:
+                return self.variable_name + '___'
+            else:
+                return self.variable_name + '__'
+        if not self.fixed_size:
+            if self.min_count == 0:
+                return '___'
+            return '__'
+        return '_'
+
+    def __repr__(self):
+        if self.variable_name:
+            suffix = 'dot' if self.fixed_size else ('star' if self.min_count == 0 else 'plus')
+            return f'Wildcard.{suffix}({self.variable_name!r})'
+        return f'Wildcard({self.min_count}, {self.fixed_size})'
+
+    def collect_symbols(self, symbols):
+        pass
+
+    def with_renamed_vars(self, renaming) -> 'Wildcard':
+        new_name = renaming.get(self.variable_name, self.variable_name)
+        return Wildcard(self.min_count, self.fixed_size, variable_name=new_name, default_value=self.default_value)
+
+    def __copy__(self) -> 'Wildcard':
+        return Wildcard(self.min_count, self.fixed_size, variable_name=self.variable_name,
+                        default_value=self.default_value)
+
+    def __lt__(self, other):
+        if not isinstance(other, Expression):
             return NotImplemented
-        return (
-            other.min_count == self.min_count and other.fixed_size == self.fixed_size and
-            self.variable_name == other.variable_name and
-            self.optional == other.optional
-        )
+        if isinstance(other, (Symbol, SymbolWrapper)) and not isinstance(other, Wildcard):
+            return False  # Wildcards sort after Symbols
+        if isinstance(other, Operation):
+            return True  # Atoms sort before Operations
+        if isinstance(other, Wildcard):
+            # Ordering: fixed_size → min_count → variable_name → SymbolWildcard-ness → symbol_type
+            if self.fixed_size != other.fixed_size:
+                return self.fixed_size  # True (dot) < False (sequence)
+            if self.min_count != other.min_count:
+                return self.min_count < other.min_count
+            if (self.variable_name or '') != (other.variable_name or ''):
+                return (self.variable_name or '') < (other.variable_name or '')
+            # Same variable_name: SymbolWildcard-ness
+            self_sw = isinstance(self, SymbolWildcard)
+            other_sw = isinstance(other, SymbolWildcard)
+            if self_sw != other_sw:
+                return not self_sw  # plain Wildcard < SymbolWildcard
+            if self_sw and other_sw:
+                return self.symbol_type.__name__ < other.symbol_type.__name__
+            return False  # equal
+        return NotImplemented
+
+    def __eq__(self, other):
+        if not isinstance(other, Wildcard):
+            return NotImplemented
+        return (self.min_count == other.min_count and self.fixed_size == other.fixed_size and
+                self.variable_name == other.variable_name and self.default_value == other.default_value)
 
     def __hash__(self):
         return hash((Wildcard, self.min_count, self.fixed_size, self.variable_name))
 
-    def __copy__(self) -> 'Wildcard':
-        return type(self)(self.min_count, self.fixed_size, variable_name=self.variable_name, optional=self.optional)
 
+# ─── SymbolWildcard ───────────────────────────────────────────────────────────
 
 class SymbolWildcard(Wildcard):
-    """A special `Wildcard` that matches a `Symbol`.
+    """A wildcard that only matches atoms of a specific type."""
+    symbol_type: type = Symbol
 
-    Attributes:
-        symbol_type:
-            A subclass of `Symbol` to constrain what the wildcard matches.
-            If not specified, the wildcard will match any `Symbol`.
-    """
-
-    def __init__(self, symbol_type: Type[Symbol]=Symbol, variable_name=None) -> None:
-        """
-        Args:
-            symbol_type:
-                A subclass of `Symbol` to constrain what the wildcard matches.
-                If not specified, the wildcard will match any `Symbol`.
-
-        Raises:
-            TypeError: if *symbol_type* is not a subclass of `Symbol`.
-        """
-        super().__init__(1, True, variable_name)
-
-        if not issubclass(symbol_type, Symbol):
-            raise TypeError("The type constraint must be a subclass of Symbol")
-
-        self.symbol_type = symbol_type
+    def __init__(self, variable_name_or_type=None, symbol_type=None, **kwargs):
+        # Handle multiple calling conventions:
+        #   SymbolWildcard(SpecialSymbol)       — type as first positional arg
+        #   SymbolWildcard(variable_name='x')   — named kwarg
+        #   SymbolWildcard('x', SpecialSymbol)  — name + type positional
+        if 'variable_name' in kwargs:
+            variable_name = kwargs.pop('variable_name')
+        elif variable_name_or_type is not None and isinstance(variable_name_or_type, type):
+            symbol_type = variable_name_or_type
+            variable_name = None
+        else:
+            variable_name = variable_name_or_type
+        st = symbol_type or Symbol
+        if not issubclass(st, Symbol):
+            raise TypeError(f"symbol_type must be a subclass of Symbol, got {st!r}")
+        BaseModel.__init__(self, min_count=1, fixed_size=True, variable_name=variable_name,
+                           default_value=None, symbol_type=st, **kwargs)
+        self.head = None
 
     def with_renamed_vars(self, renaming) -> 'SymbolWildcard':
-        return type(self)(self.symbol_type, variable_name=renaming.get(self.variable_name, self.variable_name))
+        new_name = renaming.get(self.variable_name, self.variable_name)
+        return SymbolWildcard(variable_name=new_name, symbol_type=self.symbol_type)
+
+    def __copy__(self) -> 'SymbolWildcard':
+        return SymbolWildcard(variable_name=self.variable_name, symbol_type=self.symbol_type)
 
     def __eq__(self, other):
-        return (
-            isinstance(other, type(self)) and self.symbol_type == other.symbol_type and
-            self.variable_name == other.variable_name
-        )
+        if not isinstance(other, SymbolWildcard):
+            return NotImplemented
+        return (self.symbol_type == other.symbol_type and
+                self.variable_name == other.variable_name)
 
     def __hash__(self):
         return hash((SymbolWildcard, self.symbol_type, self.variable_name))
 
     def __repr__(self):
-        if self.variable_name:
-            return '{!s}({!r}, variable_name={})'.format(type(self).__name__, self.symbol_type, self.variable_name)
-        return '{!s}({!r})'.format(type(self).__name__, self.symbol_type)
-
-    def __str__(self):
-        if self.variable_name:
-            return '{}_[{!s}]'.format(self.variable_name, self.symbol_type.__name__)
-        return '_[{!s}]'.format(self.symbol_type.__name__)
-
-    def __copy__(self) -> 'SymbolWildcard':
-        return type(self)(self.symbol_type, self.variable_name)
+        return f'SymbolWildcard(variable_name={self.variable_name!r}, symbol_type={self.symbol_type.__name__})'
 
 
-class Pattern:
-    """A pattern is a term that can be matched against another subject term.
+# ─── Pattern ──────────────────────────────────────────────────────────────────
 
-    A pattern can contain variables and can optionally have constraints attached to it.
-    Those constraints a predicates which limit what the pattern can match.
+class Pattern(BaseModel):
+    """A pattern wrapping an expression with constraints.
+
+    Attributes:
+        expression: The expression to match against.
+        constraints: Tuple of constraints that must be satisfied.
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    def __init__(self, expression, *constraints) -> None:
-        """
-        Args:
-            expression:
-                The term that forms the pattern.
-            *constraints:
-                Optional constraints for the pattern.
-        """
-        self.expression = expression
-        self.constraints = constraints
+    expression: Expression
+    constraints: Tuple['Constraint', ...] = ()
 
-    def __str__(self):
-        if not self.constraints:
-            return str(self.expression)
-        return '{} /; {}'.format(self.expression, ' and '.join(map(str, self.constraints)))
+    def __init__(self, expression, *constraints, **kwargs):
+        if 'constraints' in kwargs and not constraints:
+            # Reconstructing from serialized data — constraints already in kwargs
+            super().__init__(expression=expression, **kwargs)
+        elif constraints:
+            super().__init__(expression=expression, constraints=tuple(constraints), **kwargs)
+        else:
+            super().__init__(expression=expression, **kwargs)
 
-    def __repr__(self):
-        if not self.constraints:
-            return '{}({})'.format(type(self).__name__, self.expression)
-        return '{}({}, constraints={})'.format(type(self).__name__, self.expression, self.constraints)
+    @property
+    def head(self):
+        return self.expression.head
+
+    @property
+    def variable_name(self):
+        return self.expression.variable_name
+
+    @property
+    def local_constraints(self):
+        """Constraints that depend on pattern variables (checked during matching)."""
+        return tuple(c for c in self.constraints if c.variables)
+
+    @property
+    def global_constraints(self):
+        """Constraints with no variables (checked after matching completes)."""
+        return tuple(c for c in self.constraints if not c.variables)
 
     def __eq__(self, other):
         if not isinstance(other, Pattern):
             return NotImplemented
-        return self.expression == other.expression and self.constraints == other.constraints
+        return self.expression == other.expression and set(self.constraints) == set(other.constraints)
 
-    @property
-    def is_syntactic(self):
-        """True, iff the pattern is :term:`syntactic`."""
-        return self.expression.is_syntactic
+    def __hash__(self):
+        return hash((Pattern, self.expression, self.constraints))
 
-    @property
-    def local_constraints(self):
-        """The subset of the pattern constraints which are local.
+    def __repr__(self):
+        if self.constraints:
+            return f'Pattern({self.expression!r}, {", ".join(repr(c) for c in self.constraints)})'
+        return f'Pattern({self.expression!r})'
 
-        A local constraint has a defined non-empty set of dependency variables.
-        These constraints can be evaluated once their dependency variables have a substitution.
-        """
-        return [c for c in self.constraints if c.variables]
-
-    @property
-    def global_constraints(self):
-        """The subset of the pattern constraints which are global.
-
-        A global constraint does not define dependency variables and can only be evaluated, once the
-        match has been completed.
-        """
-        return [c for c in self.constraints if not c.variables]
+    def __str__(self):
+        return str(self.expression)
 
 
-def make_dot_variable(name):
-    """Create a new variable with the given name that matches a single term.
+# Resolve forward reference to Constraint (defined in .constraints module)
+from .constraints import Constraint  # noqa: E402
+Pattern.model_rebuild()
 
-    Args:
-        name:
-            The name of the variable
 
-    Returns:
-        The new dot variable.
+# ─── Built-in operation heads ─────────────────────────────────────────────────
+
+LIST_HEAD = OperationHead(name='list', arity=Arity.variadic)
+TUPLE_HEAD = OperationHead(name='tuple', arity=Arity.variadic)
+DICT_HEAD = OperationHead(name='dict', arity=Arity.variadic, commutative=True)
+DICT_PAIR_HEAD = OperationHead(name='dictpair', arity=Arity.binary)
+
+
+# ─── Singledispatch converters ────────────────────────────────────────────────
+
+@singledispatch
+def to_expression(obj) -> Expression:
+    """Convert a Python object to a MatchPy expression.
+
+    Register handlers for specific types using @to_expression.register(type).
     """
+    if isinstance(obj, Expression):
+        return obj
+    if isinstance(obj, dict):
+        pairs = []
+        for k, v in obj.items():
+            k_expr = to_expression(k) if not isinstance(k, Expression) else k
+            v_expr = to_expression(v) if not isinstance(v, Expression) else v
+            pairs.append(Operation(DICT_PAIR_HEAD, k_expr, v_expr))
+        return Operation(DICT_HEAD, *pairs)
+    if isinstance(obj, (list, tuple)):
+        head = LIST_HEAD if isinstance(obj, list) else TUPLE_HEAD
+        operands = [to_expression(item) for item in obj]
+        return Operation(head, *operands)
+    return Symbol(str(obj))
+
+
+@singledispatch
+def from_expression(expr):
+    """Convert a MatchPy expression back to a Python object.
+
+    Register handlers for specific types using @from_expression.register(type).
+    """
+    if isinstance(expr, Symbol) and not isinstance(expr, Wildcard):
+        return expr.name
+    return expr
+
+
+# ─── Factory helpers ──────────────────────────────────────────────────────────
+
+def make_dot_variable(name: str) -> Wildcard:
+    """Create a named dot wildcard (matches exactly one expression)."""
     return Wildcard.dot(name)
 
 
-def make_symbol_variable(name, symbol_type=Symbol):
-    """Create a new variable with the given name that matches a single symbol.
-
-    Optionally, a symbol type can be specified to further limit what the variable can match.
-
-    Args:
-        name:
-            The name of the variable
-        symbol_type:
-            The symbol type must be a subclass of `Symbol`. Defaults to `Symbol` itself.
-
-    Returns:
-        The new symbol variable.
-    """
-    return Wildcard.symbol(name, symbol_type)
+def make_plus_variable(name: str) -> Wildcard:
+    """Create a named plus wildcard (matches one or more expressions)."""
+    return Wildcard.plus(name)
 
 
-def make_star_variable(name):
-    """Create a new variable with the given name that matches any number of terms.
-
-    Can also match an empty argument sequence.
-
-    Args:
-        name:
-            The name of the variable
-
-    Returns:
-        The new star variable.
-    """
+def make_star_variable(name: str) -> Wildcard:
+    """Create a named star wildcard (matches zero or more expressions)."""
     return Wildcard.star(name)
 
 
-def make_plus_variable(name):
-    """Create a new variable with the given name that matches any number of terms.
-
-    Only matches sequences with at least one argument.
-
-    Args:
-        name:
-            The name of the variable
-
-    Returns:
-        The new plus variable.
-    """
-    return Wildcard.plus(name)
+def make_symbol_variable(name: str, symbol_type=None) -> SymbolWildcard:
+    """Create a named symbol wildcard (matches atoms of a specific type)."""
+    return SymbolWildcard(variable_name=name, symbol_type=symbol_type or Symbol)

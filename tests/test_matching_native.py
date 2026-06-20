@@ -5,28 +5,33 @@ import pytest
 from multiset import Multiset
 
 from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import Symbol, Wildcard, Pattern
+from matchpy.expressions.expressions import (
+    Symbol, Wildcard, Pattern, to_expression, from_expression,
+    Operation, OperationHead, Arity
+)
 from matchpy.matching.many_to_one import ManyToOneMatcher
+from matchpy.matching.one_to_one import match
 from matchpy.functions import substitute
 from .utils import MockConstraint
 from .common import *
+
 
 @pytest.mark.parametrize(
     '   expression,             pattern,            expected_matches',
     [
         ({'b': 0},              {'a': x_},          []),
         (('a', 0),              {'a': x_},          []),
-        ({'a': 0},              {'a': x_},          [{'x': 0}]),
-        ({'a': 0},              {x_: 0},            [{'x': 'a'}]),
-        ({'a': 0, 'b': 1},      {x_: 0, _: _},      [{'x': 'a'}]),
-        ({'a': 0, 'b': 0},      {x_: 0, _: _},      [{'x': 'a'}, {'x': 'b'}]),
+        ({'a': 0},              {'a': x_},          [{'x': Symbol('0')}]),
+        ({'a': 0},              {x_: 0},            [{'x': Symbol('a')}]),
+        ({'a': 0, 'b': 1},      {x_: 0, _: _},      [{'x': Symbol('a')}]),
+        ({'a': 0, 'b': 0},      {x_: 0, _: _},      [{'x': Symbol('a')}, {'x': Symbol('b')}]),
         ({'a': 0, 'b': 0},      {'a': _, 'b': _},   [{}]),
         ({'a': 0, 'b': 0},      {'a': _, 'c': _},   []),
     ]
 )  # yapf: disable
 def test_dict_match(match, expression, pattern, expected_matches):
-    expression = expression
-    pattern = Pattern(pattern)
+    expression = to_expression(expression)
+    pattern = Pattern(to_expression(pattern))
     result = list(match(expression, pattern))
     for expected_match in expected_matches:
         assert expected_match in result, "Expression {!s} and {!s} did not yield the match {!s} but were supposed to".format(
@@ -36,3 +41,130 @@ def test_dict_match(match, expression, pattern, expected_matches):
         assert result_match in expected_matches, "Expression {!s} and {!s} yielded the unexpected match {!s}".format(
             expression, pattern, result_match
         )
+
+
+# ── MySum singledispatch tests ───────────────────────────────────────────────
+# Demonstrates extending to_expression/from_expression with a user-defined class.
+
+class MySum:
+    """A plain Python class (not an Expression) representing a sum of terms."""
+    def __init__(self, *terms):
+        self.terms = terms
+
+    def __repr__(self):
+        return 'MySum({})'.format(', '.join(repr(t) for t in self.terms))
+
+    def __eq__(self, other):
+        return isinstance(other, MySum) and self.terms == other.terms
+
+
+# Register to_expression for MySum
+MYSUM_HEAD = OperationHead(name='MySum', arity=Arity.variadic, commutative=True)
+
+
+@to_expression.register(MySum)
+def _mysum_to_expression(obj: MySum):
+    return Operation(MYSUM_HEAD, *(to_expression(t) for t in obj.terms))
+
+
+def mysum_from_expression(expr):
+    """Convert a MYSUM_HEAD Operation back to MySum (local helper, not globally registered)."""
+    assert isinstance(expr, Operation) and expr.head == MYSUM_HEAD
+    return MySum(*(from_expression(op) for op in expr.operands))
+
+
+class TestMySumSingledispatch:
+    """Tests that a user-defined class can be registered with to_expression and used for matching."""
+
+    def test_to_expression_basic(self):
+        """MySum converts to a commutative Operation."""
+        expr = to_expression(MySum(1, 2, 3))
+        assert isinstance(expr, Operation)
+        assert expr.head == MYSUM_HEAD
+        # Commutative, so operands are sorted
+        assert len(expr.operands) == 3
+
+    def test_from_expression_roundtrip(self):
+        """to_expression and a custom from_expression are inverses (for string terms)."""
+        # Note: integers become Symbol(str(n)), so roundtrip only preserves string terms.
+        # Commutative operations sort operands, so use already-sorted terms.
+        original = MySum('a', 'b', 'c')
+        expr = to_expression(original)
+        recovered = mysum_from_expression(expr)
+        assert recovered == original
+
+    def test_match_wildcard(self):
+        """Wildcard matches inside MySum."""
+        subject = to_expression(MySum(1, 2))
+        pattern = Pattern(Operation(MYSUM_HEAD, Wildcard.dot('x'), Wildcard.dot('y')))
+        results = list(match(subject, pattern))
+        # Commutative: both orderings should match
+        assert len(results) >= 1
+        # Check that both values are found in some match
+        values = set()
+        for subst in results:
+            values.add(subst['x'])
+            values.add(subst['y'])
+        assert Symbol('1') in values
+        assert Symbol('2') in values
+
+    def test_match_specific_value(self):
+        """Match a specific symbol inside MySum."""
+        subject = to_expression(MySum(1, 2, 3))
+        # Pattern: MySum(1, x_, y_) — match with 1 as a fixed element
+        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('1'), Wildcard.dot('x'), Wildcard.dot('y')))
+        results = list(match(subject, pattern))
+        assert len(results) >= 1
+        # x and y should be 2 and 3 (in some order)
+        for subst in results:
+            matched = {subst['x'], subst['y']}
+            assert matched == {Symbol('2'), Symbol('3')}
+
+    def test_match_no_match(self):
+        """No match when a required element is missing."""
+        subject = to_expression(MySum(1, 2))
+        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('5'), Wildcard.dot('x')))
+        results = list(match(subject, pattern))
+        assert results == []
+
+    def test_match_sequence_variable(self):
+        """Sequence wildcard collects remaining terms."""
+        subject = to_expression(MySum(1, 2, 3))
+        # Pattern: MySum(1, ___) — match 1 and collect the rest
+        rest = Wildcard.star('rest')
+        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('1'), rest))
+        results = list(match(subject, pattern))
+        assert len(results) >= 1
+        # rest should be a multiset of {2, 3} (commutative)
+        for subst in results:
+            rest_val = subst['rest']
+            assert isinstance(rest_val, (Multiset, tuple, list, frozenset))
+            rest_set = set(rest_val) if not isinstance(rest_val, Multiset) else set(rest_val)
+            assert rest_set == {Symbol('2'), Symbol('3')}
+
+    def test_many_to_one_matching(self):
+        """MySum expressions work with the ManyToOneMatcher."""
+        pat1 = Pattern(Operation(MYSUM_HEAD, Symbol('1'), Wildcard.dot('x')))
+        pat2 = Pattern(Operation(MYSUM_HEAD, Symbol('2'), Wildcard.dot('y')))
+        matcher = ManyToOneMatcher(pat1, pat2)
+
+        subject = to_expression(MySum(1, 2))
+        results = list(matcher.match(subject))
+        # Both patterns should match
+        labels = [label for label, _ in results]
+        assert pat1 in labels
+        assert pat2 in labels
+
+    def test_nested_mysum(self):
+        """Nested MySum instances convert and match correctly."""
+        subject = to_expression(MySum(MySum(1, 2), 3))
+        # Pattern: MySum(MySum(x_, y_), z_)
+        inner_pat = Operation(MYSUM_HEAD, Wildcard.dot('x'), Wildcard.dot('y'))
+        outer_pat = Operation(MYSUM_HEAD, inner_pat, Wildcard.dot('z'))
+        pattern = Pattern(outer_pat)
+        results = list(match(subject, pattern))
+        assert len(results) >= 1
+        for subst in results:
+            assert subst['z'] == Symbol('3')
+            matched_inner = {subst['x'], subst['y']}
+            assert matched_inner == {Symbol('1'), Symbol('2')}

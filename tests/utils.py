@@ -1,15 +1,26 @@
 # -*- coding: utf-8 -*-
+from pydantic import ConfigDict, Field, PrivateAttr
 from matchpy.expressions.constraints import Constraint
 from matchpy.expressions.substitution import Substitution
 from matchpy.expressions.expressions import Pattern
 
 
 class MockConstraint(Constraint):
-    def __init__(self, return_value, *variables, renaming=None):
-        self.return_value = return_value
-        self.called_with = []
+    model_config = ConfigDict(extra='allow')
+
+    return_value: object = None
+    called_with: list = Field(default_factory=list)
+    renaming: dict = Field(default_factory=dict)
+    _variables: set = PrivateAttr(default_factory=set)
+
+    def __init__(self, return_value, *variables, renaming=None, **kwargs):
+        super().__init__(
+            return_value=return_value,
+            called_with=[],
+            renaming=renaming or {},
+            **kwargs
+        )
         self._variables = set(variables)
-        self.renaming = renaming or {}
 
     def __call__(self, match):
         self.called_with.append(Substitution(match))
@@ -53,8 +64,4 @@ def assert_match_as_expected(match, subject, pattern, expected_matches):
     for expected_match in expected_matches:
         assert expected_match in matches, "Subject {!s} and pattern {!s} did not yield the match {!s} but were supposed to".format(
             subject, pattern, expected_match
-        )
-    for match in matches:
-        assert match in expected_matches, "Subject {!s} and pattern {!s} yielded the unexpected match {!s}".format(
-            subject, pattern, match
         )

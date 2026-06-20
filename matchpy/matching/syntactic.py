@@ -20,7 +20,7 @@ except ImportError:
     Digraph = None
 
 from ..expressions.expressions import (
-    Expression, Operation, Symbol, SymbolWildcard, Wildcard, Pattern, AssociativeOperation, CommutativeOperation
+    Expression, Operation, OperationHead, Symbol, SymbolWildcard, Wildcard, Pattern
 )
 from ..expressions.substitution import Substitution
 from ..expressions.functions import is_syntactic, op_iter, op_len
@@ -38,8 +38,8 @@ EPSILON = 'ε'
 
 
 def is_operation(term: Any) -> bool:
-    """Return True iff the given term is a subclass of :class:`.Operation`."""
-    return isinstance(term, type) and issubclass(term, Operation)
+    """Return True iff the given term is an OperationHead or the Operation class itself."""
+    return isinstance(term, OperationHead) or term is Operation
 
 
 def is_symbol_wildcard(term: Any) -> bool:
@@ -52,8 +52,8 @@ def _get_symbol_wildcard_label(state: '_State', symbol: Symbol) -> Type[Symbol]:
     return next((t for t in state.keys() if is_symbol_wildcard(t) and isinstance(symbol, t)), None)
 
 
-TermAtom = Union[Symbol, Wildcard, Type[Operation], Type[Symbol], type(OPERATION_END)]
-TransitionLabel = Union[Symbol, Type[Operation], Type[Symbol], Type[Wildcard], type(OPERATION_END), type(EPSILON)]
+TermAtom = Union[Symbol, Wildcard, OperationHead, Type[Symbol], type(OPERATION_END)]
+TransitionLabel = Union[Symbol, OperationHead, Type[Symbol], Type[Wildcard], type(OPERATION_END), type(EPSILON)]
 
 
 class FlatTerm(Sequence[TermAtom]):
@@ -133,7 +133,7 @@ class FlatTerm(Sequence[TermAtom]):
         for term in self._terms:
             if isinstance(term, Wildcard) and not term.fixed_size:
                 return False
-            if is_operation(term) and issubclass(term, (AssociativeOperation, CommutativeOperation)):
+            if is_operation(term) and (term.associative or term.commutative):
                 return False
         return True
 
@@ -159,7 +159,7 @@ class FlatTerm(Sequence[TermAtom]):
     def _flatterm_iter(cls, expression: Expression) -> Iterator[TermAtom]:
         """Generator that yields the atoms of the expressions in prefix notation with operation end markers."""
         if isinstance(expression, Operation):
-            yield type(expression)
+            yield expression.head
             for operand in op_iter(expression):
                 yield from cls._flatterm_iter(operand)
             yield OPERATION_END
@@ -765,12 +765,12 @@ class SequenceMatcher:
         """
         inner = pattern.expression
         if self.operation is None:
-            if not isinstance(inner, Operation) or isinstance(inner, CommutativeOperation):
+            if not isinstance(inner, Operation) or inner.head.commutative:
                 raise TypeError("Pattern must be a non-commutative operation.")
-            self.operation = type(inner)
-        elif not isinstance(inner, self.operation):
+            self.operation = inner.head
+        elif not isinstance(inner, Operation) or inner.head != self.operation:
             raise TypeError(
-                "All patterns must be the same operation, expected {} but got {}".format(self.operation, type(inner))
+                "All patterns must be the same operation, expected {} but got {}".format(self.operation, inner.head)
             )
 
         if op_len(inner) < 3:
@@ -807,7 +807,7 @@ class SequenceMatcher:
         Returns:
             True, iff the pattern can be matched with a sequence matcher.
         """
-        if not isinstance(pattern.expression, Operation) or isinstance(pattern.expression, CommutativeOperation):
+        if not isinstance(pattern.expression, Operation) or pattern.expression.head.commutative:
             return False
 
         if op_len(pattern.expression) < 3:
@@ -833,7 +833,7 @@ class SequenceMatcher:
         Yields:
             A tuple :code:`(pattern, substitution)` for every matching pattern.
         """
-        if not isinstance(subject, self.operation):
+        if not isinstance(subject, Operation) or subject.head != self.operation:
             return
 
         subjects = list(op_iter(subject))

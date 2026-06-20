@@ -1,172 +1,176 @@
-from functools import singledispatch
-from typing import Dict
+# -*- coding: utf-8 -*-
+"""Utility functions for working with expression trees."""
+from typing import Iterator, Tuple, Set, Dict, Optional
 
-from .expressions import (
-    Expression, Operation, Wildcard, AssociativeOperation, CommutativeOperation, SymbolWildcard, Pattern, OneIdentityOperation
-)
+from .expressions import Expression, Operation, Wildcard, SymbolWildcard, Symbol, SymbolWrapper, Pattern
 
 __all__ = [
-    'is_constant', 'is_syntactic', 'get_head', 'match_head', 'preorder_iter', 'preorder_iter_with_position',
-    'is_anonymous', 'contains_variables_from_set', 'create_operation_expression',
-    'rename_variables', 'op_iter', 'op_len', 'get_variables'
+    'is_constant', 'is_syntactic', 'is_anonymous', 'contains_variables_from_set',
+    'create_operation_expression', 'preorder_iter_with_position', 'preorder_iter',
+    'rename_variables', 'op_iter', 'op_len', 'match_head', 'get_variables',
 ]
 
 
-def is_constant(expression):
-    """Check if the given expression is constant, i.e. it does not contain Wildcards."""
+def is_constant(expression: Expression) -> bool:
+    """Check if the expression is constant (contains no wildcards)."""
     if isinstance(expression, Wildcard):
         return False
-    if isinstance(expression, Expression):
-        return expression.is_constant
     if isinstance(expression, Operation):
-        return all(is_constant(o) for o in op_iter(expression))
+        return all(is_constant(o) for o in expression.operands)
     return True
 
 
-def is_syntactic(expression):
-    """
-    Check if the given expression is syntactic, i.e. it does not contain sequence wildcards or
-    associative/commutative operations.
-    """
-    if isinstance(expression, Wildcard):
-        return expression.fixed_size
-    if isinstance(expression, Expression):
-        return expression.is_syntactic
-    if isinstance(expression, (AssociativeOperation, CommutativeOperation)):
-        return False
+def is_syntactic(expression: Expression) -> bool:
+    """Check if the expression is syntactic (no associative/commutative/one_identity ops or sequence wildcards)."""
     if isinstance(expression, Operation):
-        return all(is_syntactic(o) for o in op_iter(expression))
+        if expression.head.associative or expression.head.commutative or expression.head.one_identity:
+            return False
+        return all(is_syntactic(o) for o in expression.operands)
+    if isinstance(expression, Wildcard) and not isinstance(expression, SymbolWildcard):
+        if not expression.fixed_size:
+            return False
     return True
 
 
-def get_head(expression):
-    """Returns the given expression's head."""
-    if isinstance(expression, Wildcard):
-        if isinstance(expression, SymbolWildcard):
-            return expression.symbol_type
-        return None
-    return type(expression)
-
-
-def match_head(subject, pattern):
-    """Checks if the head of subject matches the pattern's head."""
-    if isinstance(pattern, Pattern):
-        pattern = pattern.expression
-    pattern_head = get_head(pattern)
-    if pattern_head is None:
-        return True
-    if issubclass(pattern_head, OneIdentityOperation):
-        return True
-    subject_head = get_head(subject)
-    assert subject_head is not None
-    return issubclass(subject_head, pattern_head)
-
-
-def preorder_iter(expression):
-    """Iterate over the expression in preorder."""
-    yield expression
-    if isinstance(expression, Operation):
-        for operand in op_iter(expression):
-            yield from preorder_iter(operand)
-
-
-def preorder_iter_with_position(expression):
-    """Iterate over the expression in preorder.
-
-    Also yields the position of each subexpression.
-    """
-    yield expression, ()
-    if isinstance(expression, Operation):
-        for i, operand in enumerate(op_iter(expression)):
-            for child, pos in preorder_iter_with_position(operand):
-                yield child, (i, ) + pos
-
-
-def is_anonymous(expression):
-    """Returns True iff the expression does not contain any variables."""
-    if hasattr(expression, 'variable_name') and expression.variable_name:
+def is_anonymous(expression: Expression) -> bool:
+    """Check if the expression has no variable names."""
+    if getattr(expression, 'variable_name', None) is not None:
         return False
     if isinstance(expression, Operation):
-        return all(is_anonymous(o) for o in op_iter(expression))
+        return all(is_anonymous(o) for o in expression.operands)
     return True
 
 
-def contains_variables_from_set(expression, variables):
-    """Returns True iff the expression contains any of the variables from the given set."""
-    if hasattr(expression, 'variable_name') and expression.variable_name in variables:
+def contains_variables_from_set(expression: Expression, variables: Set[str]) -> bool:
+    """Check if the expression contains any variable from the given set."""
+    if getattr(expression, 'variable_name', None) in variables:
         return True
     if isinstance(expression, Operation):
-        return any(contains_variables_from_set(o, variables) for o in op_iter(expression))
+        return any(contains_variables_from_set(o, variables) for o in expression.operands)
     return False
 
 
-def get_variables(expression, variables=None):
-    """Returns the set of variable names in the given expression."""
-    if variables is None:
-        variables = set()
-    if hasattr(expression, 'variable_name') and expression.variable_name is not None:
-        variables.add(expression.variable_name)
+def create_operation_expression(old_operation, new_operands, variable_name=True):
+    """Create a new operation expression with the same head but different operands.
+
+    Uses the raw Operation constructor (associative flattening + commutative sorting
+    but NO one_identity). This preserves structure needed by the matching internals.
+    """
+    if variable_name is True:
+        variable_name = getattr(old_operation, 'variable_name', None)
+    return Operation(old_operation.head, *new_operands, variable_name=variable_name)
+
+
+def preorder_iter_with_position(expression, position=()):
+    """Iterate over all subexpressions with their positions (depth-first, pre-order).
+
+    Yields:
+        (expression, position) tuples.
+    """
+    yield expression, position
     if isinstance(expression, Operation):
-        for operand in op_iter(expression):
-            get_variables(operand, variables)
-    return variables
+        for i, operand in enumerate(expression.operands):
+            yield from preorder_iter_with_position(operand, position + (i,))
+
+
+def preorder_iter(expression, predicate=None):
+    """Iterate over all subexpressions (depth-first, pre-order).
+
+    Args:
+        expression: The root expression to iterate over.
+        predicate: Optional filter function. Only yields expressions matching the predicate.
+
+    Yields:
+        Subexpressions matching the predicate.
+    """
+    if predicate is None or predicate(expression):
+        yield expression
+    if isinstance(expression, Operation):
+        for operand in expression.operands:
+            yield from preorder_iter(operand, predicate)
 
 
 def rename_variables(expression: Expression, renaming: Dict[str, str]) -> Expression:
-    """Rename the variables in the expression according to the given dictionary.
-
-    Args:
-        expression:
-            The expression in which the variables are renamed.
-        renaming:
-            The renaming dictionary. Maps old variable names to new ones.
-            Variable names not occuring in the dictionary are left unchanged.
-
-    Returns:
-        The expression with renamed variables.
-    """
-    if isinstance(expression, Operation):
-        if hasattr(expression, 'variable_name'):
-            variable_name = renaming.get(expression.variable_name, expression.variable_name)
-            return create_operation_expression(
-                expression, [rename_variables(o, renaming) for o in op_iter(expression)], variable_name=variable_name
-            )
-        operands = [rename_variables(o, renaming) for o in op_iter(expression)]
-        return create_operation_expression(expression, operands)
-    elif isinstance(expression, Expression):
-        expression = expression.__copy__()
-        expression.variable_name = renaming.get(expression.variable_name, expression.variable_name)
-    return expression
+    """Return a copy of the expression with variables renamed according to the renaming dict."""
+    return expression.with_renamed_vars(renaming)
 
 
-@singledispatch
-def create_operation_expression(old_operation, new_operands, variable_name=True):
-    if variable_name is True:
-        variable_name = getattr(old_operation, 'variable_name', None)
-    if variable_name is False:
-        return operation(*new_operands)
-    return type(old_operation)(*new_operands, variable_name=variable_name)
-
-
-@create_operation_expression.register(list)
-@create_operation_expression.register(tuple)
-@create_operation_expression.register(set)
-@create_operation_expression.register(frozenset)
-@create_operation_expression.register(dict)
-def _(old_operation, new_operands, variable_name=True):
-    return type(old_operation)(new_operands)
-
-
-@singledispatch
 def op_iter(operation):
+    """Iterate over the operands of an Operation, or elements of a sequence.
+
+    For Operation objects, iterates over operation.operands.
+    For other iterables (deque, list, tuple, Multiset), iterates directly.
+    This dual-use pattern is needed because many_to_one.py calls op_iter(subjects)
+    where subjects can be either an Operation or a deque/Multiset of expressions.
+    """
+    if isinstance(operation, Operation):
+        return iter(operation.operands)
     return iter(operation)
 
 
-@op_iter.register(dict)
-def _(operation):
-    return iter(operation.items())
-
-
-@singledispatch
 def op_len(operation):
+    """Get the number of operands of an Operation, or length of a sequence.
+
+    For Operation objects, returns len(operation.operands).
+    For other sequences, returns len(operation).
+    This dual-use pattern matches op_iter.
+    """
+    if isinstance(operation, Operation):
+        return len(operation.operands)
     return len(operation)
+
+
+def match_head(subject, pattern) -> bool:
+    """Check if the subject could potentially match the pattern based on head type.
+
+    Used as a pre-filter before full matching. Returns True if the subject's head
+    is compatible with the pattern's head. Wildcards are compatible with any head.
+
+    Args:
+        subject: The subject expression.
+        pattern: A Pattern, Operation, Wildcard, or other Expression.
+
+    Returns:
+        True if the heads are compatible and full matching should be attempted.
+    """
+    # Extract expression from Pattern wrapper
+    if isinstance(pattern, Pattern):
+        pattern = pattern.expression
+
+    # Wildcards match any subject
+    if isinstance(pattern, Wildcard):
+        return True
+
+    # Operations: one_identity patterns can match any subject (collapse may occur)
+    if isinstance(pattern, Operation):
+        if pattern.head.one_identity:
+            return True
+        return isinstance(subject, Operation) and subject.head == pattern.head
+
+    # Symbols require subject to be the same symbol (or same type for SymbolWildcard)
+    if isinstance(pattern, Symbol):
+        return isinstance(subject, Symbol)
+
+    # SymbolWrappers match other SymbolWrappers
+    if isinstance(pattern, SymbolWrapper):
+        return isinstance(subject, SymbolWrapper)
+
+    # Fallback: type match
+    return type(subject) == type(pattern)
+
+
+def get_variables(expression: Expression) -> Set[str]:
+    """Get all variable names in the expression."""
+    variables = set()
+    _collect_variables(expression, variables)
+    return variables
+
+
+def _collect_variables(expression: Expression, variables: Set[str]) -> None:
+    """Recursively collect variable names."""
+    vname = getattr(expression, 'variable_name', None)
+    if vname is not None:
+        variables.add(vname)
+    if isinstance(expression, Operation):
+        for operand in expression.operands:
+            _collect_variables(operand, variables)

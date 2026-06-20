@@ -11,20 +11,58 @@ from types import LambdaType
 
 # pylint: disable=unused-import
 from typing import (Callable, Dict, Iterator, List, NamedTuple, Optional, Sequence, Tuple, TypeVar, cast, Union, Any)
+
+from pydantic import BaseModel, ConfigDict
 # pylint: enable=unused-import
 
 from multiset import Multiset
 
 __all__ = [
     'fixed_integer_vector_iter', 'weak_composition_iter', 'commutative_sequence_variable_partition_iter',
-    'get_short_lambda_source', 'solve_linear_diop', 'generator_chain', 'cached_property', 'slot_cached_property',
+    'get_short_lambda_source', 'solve_linear_diop', 'generator_chain', 'cached_property_custom', 'slot_cached_property',
     'extended_euclid', 'base_solution_linear'
 ]
 
 T = TypeVar('T')
-VariableWithCount = NamedTuple(
-    'VariableWithCount', [('name', str), ('count', int), ('minimum', int), ('default', Optional[Any])]
-)
+
+
+class VariableWithCount(BaseModel):
+    """Pydantic model replacing the former NamedTuple."""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    name: Optional[str] = None
+    count: int = 0
+    minimum: int = 0
+    default: Optional[Any] = None
+
+    def __init__(self, name=None, count=0, minimum=0, default=None, **kwargs):
+        # Support positional args like the old NamedTuple
+        super().__init__(name=name, count=count, minimum=minimum, default=default, **kwargs)
+
+    def __iter__(self):
+        return iter((self.name, self.count, self.minimum, self.default))
+
+    def __getitem__(self, index):
+        return (self.name, self.count, self.minimum, self.default)[index]
+
+    def __len__(self):
+        return 4
+
+    def __hash__(self):
+        return hash((self.name, self.count, self.minimum, self.default))
+
+    def __eq__(self, other):
+        if isinstance(other, VariableWithCount):
+            return (self.name, self.count, self.minimum, self.default) == (other.name, other.count, other.minimum, other.default)
+        return NotImplemented
+
+    def __lt__(self, other):
+        if isinstance(other, VariableWithCount):
+            return (self.name or '', self.count, self.minimum, self.default) < (other.name or '', other.count, other.minimum, other.default)
+        return NotImplemented
+
+    def __repr__(self):
+        return f"VariableWithCount(name={self.name!r}, count={self.count}, minimum={self.minimum}, default={self.default!r})"
 
 
 def fixed_integer_vector_iter(max_vector: Tuple[int, ...], vector_sum: int) -> Iterator[Tuple[int, ...]]:
@@ -532,7 +570,7 @@ def generator_chain(initial_data: T, *factories: Callable[[T], Iterator[T]]) -> 
                 break
 
 
-class cached_property(property):
+class cached_property_custom(property):
     """Property with caching.
 
     An extension of the builtin `property`, that caches the value after the first access.
@@ -545,7 +583,7 @@ class cached_property(property):
         First, create a class with a cached property:
 
         >>> class MyClass:
-        ...     @cached_property
+        ...     @cached_property_custom
         ...     def my_property(self):
         ...         print('my_property called')
         ...         return 42
@@ -568,7 +606,7 @@ class cached_property(property):
         Use it as a decorator:
 
         >>> class MyClass:
-        ...     @cached_property
+        ...     @cached_property_custom
         ...     def my_property(self):
         ...         return 42
 
@@ -647,6 +685,6 @@ def slot_cached_property(slot):
     """
 
     def _wrapper(getter):
-        return cached_property(getter, slot)
+        return cached_property_custom(getter, slot)
 
     return _wrapper

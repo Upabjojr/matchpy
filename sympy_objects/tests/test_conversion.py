@@ -1,0 +1,222 @@
+# -*- coding: utf-8 -*-
+"""Tests for SymPy ↔ MatchPy expression conversion."""
+import sys
+import os
+import importlib
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+import sympy
+from sympy import symbols, sin, cos, tan, exp, log, Eq, Integer, Rational, S
+
+from matchpy.expressions.expressions import Operation, Symbol, SymbolWrapper, to_expression
+from sympy_objects import to_expression, matchpy_to_sympy
+from sympy_objects.operations import (
+    ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY,
+    SYMPY_NODES, SYMPY_FUNC_TO_HEAD,
+)
+
+from sympy.functions.special.bessel import besselj, bessely, besseli, besselk
+from sympy.functions.special.bessel import hankel1, hankel2, airyai, airybi
+from sympy.functions.special.hyper import hyper, meijerg, appellf1
+from sympy.functions.special.gamma_functions import gamma, lowergamma, uppergamma, polygamma
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import erf, erfc, Ei, Si, Ci, fresnels, fresnelc
+from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_k
+from sympy.functions.special.delta_functions import DiracDelta, Heaviside
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.polynomials import legendre, chebyshevt, hermite
+from sympy.functions.special.zeta_functions import zeta, polylog, lerchphi
+from sympy.functions.combinatorial.factorials import factorial, binomial, RisingFactorial
+from sympy.functions.elementary.complexes import Abs, conjugate, arg as sympy_arg
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.trigonometric import atan, sec, csc, asin
+from sympy.functions.elementary.hyperbolic import sinh, cosh, tanh, asinh
+
+
+x, y, z = symbols('x y z')
+
+
+# ─── Argument recipes for multi-arg functions ─────────────────────────────────
+
+_ARG_OVERRIDES = {
+    'atan2': (x, y),
+    'appellf1': (S(1), S(2), S(3), S(4), x, y),
+    'elliptic_pi': (x, y, S(1)/2),
+    'expint': (S(1), x),
+    'polygamma': (S(1), x),
+    'zeta': (S(2), x),
+    'lerchphi': (x, S(2), y),
+    'RisingFactorial': (x, S(3)),
+    'FallingFactorial': (x, S(3)),
+    'legendre': (S(3), x),
+    'chebyshevt': (S(3), x),
+    'chebyshevu': (S(3), x),
+    'hermite': (S(3), x),
+    'laguerre': (S(3), x),
+    'besselj': (S(1), x),
+    'bessely': (S(0), x),
+    'besseli': (S(2), x),
+    'besselk': (S(1), x),
+    'hankel1': (S(1), x),
+    'hankel2': (S(1), x),
+    'jn': (S(1), x),
+    'yn': (S(1), x),
+}
+
+_XFAIL_NAMES = {'hyper', 'meijerg', 'Piecewise'}
+
+
+def _resolve(module_path, class_name):
+    mod = importlib.import_module(module_path)
+    return getattr(mod, class_name)
+
+
+def _build_roundtrip_cases():
+    """Build one test expression per SYMPY_NODES entry."""
+    cases = []
+    for module_path, class_name, arity_code in SYMPY_NODES:
+        try:
+            func = _resolve(module_path, class_name)
+        except (ImportError, AttributeError):
+            continue
+        if not isinstance(func, type):
+            continue
+        if class_name in _XFAIL_NAMES:
+            continue
+
+        try:
+            if class_name in _ARG_OVERRIDES:
+                expr = func(*_ARG_OVERRIDES[class_name])
+            elif arity_code == 'u':
+                expr = func(x)
+            elif arity_code == 'b':
+                expr = func(x, y)
+            else:
+                expr = func(x, y)
+        except Exception:
+            continue
+
+        if expr.is_Atom:
+            continue
+
+        cases.append(pytest.param(expr, id=class_name))
+    return cases
+
+
+# ─── Test cases ───────────────────────────────────────────────────────────────
+
+CASES = [
+    # Structural (SymPy expr, expected MatchPy expr)
+    (x, SymbolWrapper(x)),
+    (Integer(42), SymbolWrapper(Integer(42))),
+    (Integer(-3), SymbolWrapper(Integer(-3))),
+    (Rational(3, 2), SymbolWrapper(Rational(3, 2))),
+    (sympy.I, SymbolWrapper(sympy.I)),
+    (x + y, Operation(ADD, SymbolWrapper(x), SymbolWrapper(y))),
+    (x*y, Operation(MUL, SymbolWrapper(x), SymbolWrapper(y))),
+    (x**2, Operation(POW, SymbolWrapper(x), SymbolWrapper(2))),
+    (sin(x), Operation(SIN, SymbolWrapper(x))),
+    (cos(x), Operation(COS, SymbolWrapper(x))),
+    (tan(x), Operation(TAN, SymbolWrapper(x))),
+    (exp(x), Operation(EXP, SymbolWrapper(x))),
+    (log(x), Operation(LOG, SymbolWrapper(x))),
+    (Eq(x, 0), Operation(EQUALITY, SymbolWrapper(x), SymbolWrapper(0))),
+    (sin(x)**2, Operation(POW, Operation(SIN, SymbolWrapper(x)), SymbolWrapper(2))),
+    (sin(x)**2 + cos(x)**2, Operation(ADD, Operation(POW, Operation(COS, SymbolWrapper(x)), SymbolWrapper(2)), Operation(POW, Operation(SIN, SymbolWrapper(x)), SymbolWrapper(2)))),
+    (2*x*y, Operation(MUL, SymbolWrapper(2), SymbolWrapper(x), SymbolWrapper(y))),
+
+    (log(sin(x)), Operation(LOG, Operation(SIN, SymbolWrapper(x)))),
+
+    (2*x + 3*y, Operation(ADD, Operation(MUL, SymbolWrapper(2), SymbolWrapper(x)), Operation(MUL, SymbolWrapper(3), SymbolWrapper(y)))),
+    (exp(x) + 1, Operation(ADD, SymbolWrapper(1), Operation(EXP, SymbolWrapper(x)))),
+    (log(x * y), Operation(LOG, Operation(MUL, SymbolWrapper(x), SymbolWrapper(y)))),
+    (Eq(x, 0), Operation(EQUALITY, SymbolWrapper(x), SymbolWrapper(0))),
+]
+
+CASE_IDS = [str(c[0]) for c in CASES]
+
+ROUNDTRIP_CASES = _build_roundtrip_cases()
+
+
+# ─── Tests ────────────────────────────────────────────────────────────────────
+
+class TestConversions:
+
+    # ── Structural: verify exact MatchPy tree shape ───────────────────────────
+
+    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
+    def test_convert_sympy_to_matchpy(self, expr_sympy, expr_matchpy):
+        expr_matchpy_converted = to_expression(expr_sympy)
+        assert expr_matchpy_converted == expr_matchpy
+        if isinstance(expr_matchpy, Operation):
+            assert isinstance(expr_matchpy_converted, Operation)
+            assert expr_matchpy_converted.head == expr_matchpy.head
+            assert len(expr_matchpy_converted.operands) == len(expr_matchpy.operands)
+        if isinstance(expr_matchpy, SymbolWrapper):
+            assert isinstance(expr_matchpy_converted, SymbolWrapper)
+            assert expr_matchpy_converted.value == expr_matchpy.value
+            assert expr_matchpy_converted.name == expr_matchpy.name
+
+    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
+    def test_convert_matchpy_to_sympy(self, expr_sympy, expr_matchpy):
+        expr_sympy_converted = matchpy_to_sympy(expr_matchpy)
+        assert expr_sympy_converted == expr_sympy
+
+    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
+    def test_roundtrip_structural(self, expr_sympy, expr_matchpy):
+        """SymPy → MatchPy → SymPy preserves expressions (structural cases)."""
+        mp_expr = to_expression(expr_sympy)
+        result = matchpy_to_sympy(mp_expr)
+        if isinstance(expr_sympy, sympy.Eq):
+            assert result == expr_sympy
+        else:
+            assert sympy.simplify(result - expr_sympy) == 0 or result == expr_sympy
+
+    # ── Roundtrip: every registered SYMPY_NODES entry ─────────────────────────
+
+    @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
+    def test_roundtrip(self, expr):
+        """SymPy → MatchPy → SymPy roundtrip for every registered node."""
+        mp_expr = to_expression(expr)
+        result = matchpy_to_sympy(mp_expr)
+        assert result == expr
+
+    @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
+    def test_produces_operation(self, expr):
+        """to_expression produces an Operation for non-atom function calls."""
+        mp_expr = to_expression(expr)
+        assert isinstance(mp_expr, Operation)
+
+    @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
+    def test_head_is_registered(self, expr):
+        """Top-level head belongs to the registered set."""
+        mp_expr = to_expression(expr)
+        assert mp_expr.head in SYMPY_FUNC_TO_HEAD.values()
+
+    @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
+    def test_dispatch_is_direct(self, expr):
+        """Singledispatch routes directly, not through the SympyBasic fallback."""
+        handler = to_expression.dispatch(type(expr))
+        assert 'basic' not in handler.__name__.lower(), (
+            f"{type(expr).__name__} falls through to the generic handler"
+        )
+
+    # ── Known-broken roundtrips (TupleArg / ExprCondPair) ─────────────────────
+
+    @pytest.mark.xfail(reason="hyper uses TupleArg internally")
+    def test_hyper_roundtrip(self):
+        expr = hyper((S(1), S(2)), (S(3),), x)
+        assert matchpy_to_sympy(to_expression(expr)) == expr
+
+    @pytest.mark.xfail(reason="meijerg uses TupleArg internally")
+    def test_meijerg_roundtrip(self):
+        expr = meijerg((S(1),), (S(2),), (S(3),), (S(4),), x)
+        assert matchpy_to_sympy(to_expression(expr)) == expr
+
+    @pytest.mark.xfail(reason="Piecewise uses ExprCondPair internally")
+    def test_piecewise_roundtrip(self):
+        from sympy.functions.elementary.piecewise import Piecewise
+        expr = Piecewise((x, x > 0), (S(0), True))
+        assert matchpy_to_sympy(to_expression(expr)) == expr

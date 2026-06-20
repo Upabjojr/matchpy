@@ -4,7 +4,7 @@ from typing import Callable, Dict, Iterator, NamedTuple, Optional, Sequence, Typ
 
 from multiset import Multiset
 
-from ..expressions.expressions import Expression, Operation, Wildcard, CommutativeOperation
+from ..expressions.expressions import Expression, Operation, OperationHead, Wildcard
 from ..expressions.substitution import Substitution
 from ..expressions.functions import is_constant, is_syntactic, op_iter
 
@@ -29,47 +29,30 @@ class CommutativePatternsParts(object):
     This data structure is meant to be immutable, so do not change any of its attributes!
 
     Attributes:
-        operation (Type[Operation]):
-            The type of of the original pattern expression. Must be a subclass of
-            :class:`.Operation`.
+        operation (OperationHead):
+            The OperationHead of the original pattern expression.
 
         constant (Multiset):
             A :class:`~.Multiset` representing the constant operands of the pattern.
-            An expression is constant, if it does not contain variables or wildcards.
         syntactic (Multiset[Operation]):
             A :class:`.Multiset` representing the syntactic operands of the pattern.
-            An expression is syntactic, if it does contain neither associative nor commutative operations
-            nor sequence variables. Here, constant expressions and variables also get their own counters,
-            so they are not included in this counter.
         sequence_variables (Multiset[str]):
             A :class:`.Multiset` representing the sequence variables of the pattern.
-            Variables are represented by their name. Additional information is stored in
-            ``sequence_variable_infos``. For wildcards without variable, the name will be ``None``.
         sequence_variable_infos (Dict[str, VarInfo]):
-            A dictionary mapping sequence variable names to more information about the variable, i.e. its
-            ``min_count`` and ``constraint``.
-        fixed_variables (Multiset[VarInfo]):
+            A dictionary mapping sequence variable names to more information about the variable.
+        fixed_variables (Multiset[str]):
             A :class:`.Multiset` representing the fixed length variables of the pattern.
-            Here the key is a tuple of the form `(name, length)` of the variable.
-            For wildcards without variable, the name will be `None`.
         fixed_variable_infos (Dict[str, VarInfo]):
-            A dictionary mapping fixed variable names to more information about the variable, i.e. its
-            ``min_count`` and ``constraint``.
+            A dictionary mapping fixed variable names to more information about the variable.
         rest (Multiset):
-            A :class:`.Multiset` representing the operands of the pattern that do not fall
-            into one of the previous categories. That means it contains operation expressions, which
-            are not syntactic.
+            A :class:`.Multiset` representing the non-syntactic operation operands.
 
         length (int):
             The total count of operands of the commutative operation pattern.
         sequence_variable_min_length (int):
-            The total combined minimum length of all sequence variables in the commutative
-            operation pattern. This is the sum of the `min_count` attributes of the sequence
-            variables.
+            The total combined minimum length of all sequence variables.
         fixed_variable_length (int):
-            The total combined length of all fixed length variables in the commutative
-            operation pattern. This is the sum of the `min_count` attributes of the
-            variables.
+            The total combined length of all fixed length variables.
         wildcard_fixed (Optional[bool]):
             Iff none of the operands is an unnamed wildcards, it is ``None``.
             Iff there are any unnamed sequence wildcards, it is ``True``.
@@ -79,13 +62,12 @@ class CommutativePatternsParts(object):
             wildcards.
     """
 
-    def __init__(self, operation: Type[Operation], *expressions: Expression) -> None:
+    def __init__(self, operation, *expressions: Expression) -> None:
         """Create a CommutativePatternsParts instance.
 
         Args:
             operation:
-                The type of the commutative operation. Must be a subclass of :class:`.Operation` with
-                :attr:`~.Operation.commutative` set to ``True``.
+                The OperationHead of the commutative operation (must have commutative=True).
             *expressions:
                 The operands of the commutative operation.
         """
@@ -117,15 +99,15 @@ class CommutativePatternsParts(object):
                     if wc.fixed_size:
                         self.fixed_variables[name] += 1
                         symbol_type = getattr(wc, 'symbol_type', None)
-                        self._update_var_info(self.fixed_variable_infos, name, wc.min_count, symbol_type, wc.optional)
-                        if wc.optional is None:
+                        self._update_var_info(self.fixed_variable_infos, name, wc.min_count, symbol_type, wc.default_value)
+                        if wc.default_value is None:
                             self.fixed_variable_length += wc.min_count
                         else:
                             self.optional_count += 1
                     else:
                         self.sequence_variables[name] += 1
-                        self._update_var_info(self.sequence_variable_infos, name, wc.min_count, None, wc.optional)
-                        if wc.optional is None:
+                        self._update_var_info(self.sequence_variable_infos, name, wc.min_count, None, wc.default_value)
+                        if wc.default_value is None:
                             self.sequence_variable_min_length += wc.min_count
                 else:
                     self.wildcard_min_length += wc.min_count
@@ -160,7 +142,7 @@ class CommutativePatternsParts(object):
         for name, count in self.fixed_variables.items():
             parts.extend([name] * count)
 
-        return '{}({})'.format(getattr(self.operation, 'name', self.operation.__name__), ', '.join(parts))
+        return '{}({})'.format(self.operation.name if isinstance(self.operation, OperationHead) else str(self.operation), ', '.join(parts))
 
 def check_one_identity(operation):
     added_subst = Substitution()
@@ -168,11 +150,11 @@ def check_one_identity(operation):
     for operand in op_iter(operation):
         if isinstance(operand, Wildcard):
             try:
-                if operand.optional is not None:
-                    added_subst.try_add_variable(operand.variable_name, operand.optional)
+                if operand.default_value is not None:
+                    added_subst.try_add_variable(operand.variable_name, operand.default_value)
                     continue
                 elif operand.min_count == 0:
-                    value = Multiset() if isinstance(operation, CommutativeOperation) else ()
+                    value = Multiset() if (isinstance(operation, Operation) and operation.head.commutative) else ()
                     added_subst.try_add_variable(operand.variable_name, value)
                     continue
             except ValueError:
