@@ -16,3 +16,22 @@ from .mathematica_parser import (
     ffl_to_sympy_code,
     ffl_to_sympy_short_code,
 )
+from .mathematica_expressions import (
+    Block,
+    Catch,
+    CompoundExpression,
+    Do,
+    Head,
+    If,
+    List,
+    MathematicaExpr,
+    Module,
+    Null,
+    Reap,
+    Return,
+    Scan,
+    Set,
+    Sow,
+    Throw,
+    With,
+)
