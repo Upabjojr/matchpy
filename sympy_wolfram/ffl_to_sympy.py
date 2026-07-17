@@ -109,8 +109,8 @@ class FFLConverter:
         'EllipticE': 'sympy.elliptic_e', 'EllipticF': 'sympy.elliptic_f',
         'AppellF1': 'sympy.appellf1',
         # Calculus / algebra
-        'D': 'sympy.diff', 'Denominator': 'sympy.denom',
-        'Rt': 'sympy.root', 'Simplify': 'sympy.simplify',
+        'D': 'D', 'Denominator': 'sympy.denom',
+        'Rt': 'sympy.root', 'Simplify': 'Simplify',
         'FractionalPart': 'sympy.frac', 'IntegerPart': 'sympy.floor',
     }
 

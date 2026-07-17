@@ -16,7 +16,7 @@ import pytest
 import sympy
 from sympy import Symbol, Rational, simplify, symbols
 
-from rubi_rules.base_objects import build_replacer, _preprocess_integrate
+from rubi_rules.base_objects import _preprocess_integrate, build_tracing_replacer
 
 
 # ---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ from rubi_rules.base_objects import build_replacer, _preprocess_integrate
 def replacer():
     from rubi_rules.rules.r_1_algebraic_functions.r_1_1_binomial_products \
         .r_1_1_1_linear.r_1_1_1_1 import RULES
-    return build_replacer(RULES)
+    return build_tracing_replacer(RULES)
 
 
 # ---------------------------------------------------------------------------
@@ -46,11 +46,11 @@ def _integrate(expr, var, replacer):
     x_canonical = Symbol('x')
 
     if var == x_canonical:
-        return _preprocess_integrate(expr, x_canonical, replacer)
+        return _preprocess_integrate(expr, x_canonical, replacer)[0]
 
     dummy = sympy.Dummy('_x_var')
     expr_sub = expr.subs(x_canonical, dummy).subs(var, x_canonical)
-    result = _preprocess_integrate(expr_sub, x_canonical, replacer)
+    result, matched_rule = _preprocess_integrate(expr_sub, x_canonical, replacer)
     return result.subs(x_canonical, var).subs(dummy, x_canonical)
 
 

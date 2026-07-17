@@ -155,8 +155,8 @@ RULES = [
     # Rule 11
     RubiRulePattern(
         pattern=Int(1/(x**2*_c_ + x*_b_ + a_), x),
-        constraints=(FreeQ([a_, _b_, _c_], x), NeQ(-4*a_*_c_ + _b_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), (Integer(1) + (Integer(-1) * (Integer(4) * sympy.simplify((a_ * _c_ * ((_b_)**(Integer(2)))**(Integer(-1))))))))), Condition((Integer(-2) * (_b_)**(Integer(-1)) * Subst(Int(((Symbol('q') + (Integer(-1) * (x)**(Integer(2)))))**(Integer(-1)), x), x, (Integer(1) + (Integer(2) * _c_ * x * (_b_)**(Integer(-1)))))), And(RationalQ(Symbol('q')), Or(EqQ((Symbol('q'))**(Integer(2)), Integer(1)), Not(RationalQ(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * a_ * _c_))))))))),
+        constraints=(FreeQ([a_, _b_, _c_], x), NeQ(-4*a_*_c_ + _b_**2, 0), RationalQ(1 - 4*Simplify(a_*_c_/_b_**2)), Or(EqQ((1 - 4*Simplify(a_*_c_/_b_**2))**2, 1), Not(RationalQ(-4*a_*_c_ + _b_**2))),),
+        replacement=With(List(Set(Symbol('q'), (Integer(1) + (Integer(-1) * (Integer(4) * Simplify((a_ * _c_ * ((_b_)**(Integer(2)))**(Integer(-1))))))))), (Integer(-2) * (_b_)**(Integer(-1)) * Subst(Int(((Symbol('q') + (Integer(-1) * (x)**(Integer(2)))))**(Integer(-1)), x), x, (Integer(1) + (Integer(2) * _c_ * x * (_b_)**(Integer(-1))))))),
         module_name='1.2.1.1 (a+b x+c x^2)^p',
         rule_number=11,
     ),
@@ -203,8 +203,8 @@ RULES = [
     # Rule 17
     RubiRulePattern(
         pattern=Int((x**2*_c_ + x*_b_ + _a_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), RationalQ(p_),),
-        replacement=With(List(Set(Symbol('d'), Denominator(p_))), Condition((Symbol('d') * sympy.sqrt(((_b_ + (Integer(2) * _c_ * x)))**(Integer(2))) * ((_b_ + (Integer(2) * _c_ * x)))**(Integer(-1)) * Subst(Int(((x)**(((Symbol('d') * (p_ + Integer(1))) + Integer(-1))) * (sympy.sqrt(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_)) + (Integer(4) * _c_ * (x)**(Symbol('d'))))))**(Integer(-1))), x), x, ((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**((Symbol('d'))**(Integer(-1))))), And(sympy.Le(Integer(3), Symbol('d')), sympy.Le(Symbol('d'), Integer(4))))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), RationalQ(p_), And(3 <= Denominator(p_), Denominator(p_) <= 4),),
+        replacement=With(List(Set(Symbol('d'), Denominator(p_))), (Symbol('d') * sympy.sqrt(((_b_ + (Integer(2) * _c_ * x)))**(Integer(2))) * ((_b_ + (Integer(2) * _c_ * x)))**(Integer(-1)) * Subst(Int(((x)**(((Symbol('d') * (p_ + Integer(1))) + Integer(-1))) * (sympy.sqrt(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_)) + (Integer(4) * _c_ * (x)**(Symbol('d'))))))**(Integer(-1))), x), x, ((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**((Symbol('d'))**(Integer(-1)))))),
         module_name='1.2.1.1 (a+b x+c x^2)^p',
         rule_number=17,
     ),

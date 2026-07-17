@@ -89,7 +89,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sympy.Function('BesselJ')(n_, (_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_, n_], x),),
-        replacement=(((_a_ + (_b_ * x)))**((n_ + Integer(1))) * sympy.hyper(List(((n_ + Integer(1)) * (Integer(2))**(Integer(-1)))), List(((n_ + Integer(3)) * (Integer(2))**(Integer(-1))), (n_ + Integer(1))), (Integer(-1) * (Integer(4))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2)))) * (((Integer(2))**(n_) * _b_ * Gamma((n_ + Integer(2)))))**(Integer(-1))),
+        replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*Gamma(n_ + 2)),
         module_name='8.10 Bessel functions',
         rule_number=3,
     ),

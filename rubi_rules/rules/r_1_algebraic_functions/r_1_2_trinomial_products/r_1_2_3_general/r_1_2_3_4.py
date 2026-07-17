@@ -103,7 +103,7 @@ RULES = [
     # Rule 1
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_)**q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), IntegerQ((_m_ + 1)/n_),),
+        constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), IntegerQ(Simplify((_m_ + 1)/n_)),),
         replacement=_e_**(1 - (_m_ + 1)/n_)*_f_**_m_*Subst(Int((x*_e_)**(q_ - 1 + (_m_ + 1)/n_)*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=1,
@@ -111,7 +111,7 @@ RULES = [
     # Rule 2
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_)**q_*(x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), IntegerQ((_m_ + 1)/n_),),
+        constraints=(FreeQ([a_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), IntegerQ(Simplify((_m_ + 1)/n_)),),
         replacement=_e_**(1 - (_m_ + 1)/n_)*_f_**_m_*Subst(Int((x*_e_)**(q_ - 1 + (_m_ + 1)/n_)*(x**2*_c_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=2,
@@ -119,7 +119,7 @@ RULES = [
     # Rule 3
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_)**q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), Not(IntegerQ((_m_ + 1)/n_)),),
+        constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), Not(IntegerQ(Simplify((_m_ + 1)/n_))),),
         replacement=_e_**IntPart(q_)*_f_**_m_*(x**n_*_e_)**FracPart(q_)*Int(x**(_m_ + n_*q_)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**_p_, x)/x**(n_*FracPart(q_)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=3,
@@ -127,7 +127,7 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_)**q_*(x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), Not(IntegerQ((_m_ + 1)/n_)),),
+        constraints=(FreeQ([a_, _c_, _e_, _f_, _m_, n_, _p_, q_], x), EqQ(_n2_, 2*n_), Or(IntegerQ(_m_), GtQ(_f_, 0)), Not(IntegerQ(Simplify((_m_ + 1)/n_))),),
         replacement=_e_**IntPart(q_)*_f_**_m_*(x**n_*_e_)**FracPart(q_)*Int(x**(_m_ + n_*q_)*(x**(2*n_)*_c_ + a_)**_p_, x)/x**(n_*FracPart(q_)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=4,
@@ -151,7 +151,7 @@ RULES = [
     # Rule 7
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), EqQ(_m_ - n_ + 1, 0),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), EqQ(Simplify(_m_ - n_ + 1), 0),),
         replacement=Subst(Int((x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=7,
@@ -159,7 +159,7 @@ RULES = [
     # Rule 8
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), EqQ(_m_ - n_ + 1, 0),),
+        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), EqQ(Simplify(_m_ - n_ + 1), 0),),
         replacement=Subst(Int((x*_e_ + d_)**_q_*(x**2*_c_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=8,
@@ -199,23 +199,23 @@ RULES = [
     # Rule 13
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ((_m_ + 1)/n_),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify((_m_ + 1)/n_)),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=13,
     ),
     # Rule 14
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ((_m_ + 1)/n_),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(x*_e_ + d_)**_q_*(x**2*_c_ + a_)**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify((_m_ + 1)/n_)),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(x*_e_ + d_)**_q_*(x**2*_c_ + a_)**_p_, x), x, x**n_)/n_,
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=14,
     ),
     # Rule 15
     RubiRulePattern(
         pattern=Int((x*f_)**_m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, f_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ((_m_ + 1)/n_),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, f_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify((_m_ + 1)/n_)),),
         replacement=f_**IntPart(_m_)*(x*f_)**FracPart(_m_)*Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**_p_, x)/x**FracPart(_m_),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=15,
@@ -223,7 +223,7 @@ RULES = [
     # Rule 16
     RubiRulePattern(
         pattern=Int((x*f_)**_m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, f_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ((_m_ + 1)/n_),),
+        constraints=(FreeQ([a_, _c_, d_, _e_, f_, _m_, n_, _p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify((_m_ + 1)/n_)),),
         replacement=f_**IntPart(_m_)*(x*f_)**FracPart(_m_)*Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_)**_p_, x)/x**FracPart(_m_),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=16,
@@ -327,16 +327,16 @@ RULES = [
     # Rule 29
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), IntegerQ(_m_),),
-        replacement=With(List(Set(Symbol('k'), GCD((_m_ + Integer(1)), n_))), Condition(((Symbol('k'))**(Integer(-1)) * Subst(Int(((x)**((((_m_ + Integer(1)) * (Symbol('k'))**(Integer(-1))) + Integer(-1))) * ((d_ + (_e_ * (x)**((n_ * (Symbol('k'))**(Integer(-1)))))))**(_q_) * ((a_ + (_b_ * (x)**((n_ * (Symbol('k'))**(Integer(-1))))) + (_c_ * (x)**((Integer(2) * n_ * (Symbol('k'))**(Integer(-1)))))))**(p_)), x), x, (x)**(Symbol('k')))), sympy.Ne(Symbol('k'), Integer(1)))),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), IntegerQ(_m_), sympy.Ne(GCD((_m_ + Integer(1)), n_), Integer(1)),),
+        replacement=With(List(Set(Symbol('k'), GCD((_m_ + Integer(1)), n_))), ((Symbol('k'))**(Integer(-1)) * Subst(Int(((x)**((((_m_ + Integer(1)) * (Symbol('k'))**(Integer(-1))) + Integer(-1))) * ((d_ + (_e_ * (x)**((n_ * (Symbol('k'))**(Integer(-1)))))))**(_q_) * ((a_ + (_b_ * (x)**((n_ * (Symbol('k'))**(Integer(-1))))) + (_c_ * (x)**((Integer(2) * n_ * (Symbol('k'))**(Integer(-1)))))))**(p_)), x), x, (x)**(Symbol('k'))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=29,
     ),
     # Rule 30
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, p_, _q_], x), EqQ(_n2_, 2*n_), IGtQ(n_, 0), IntegerQ(_m_),),
-        replacement=With(List(Set(Symbol('k'), GCD((_m_ + Integer(1)), n_))), Condition(((Symbol('k'))**(Integer(-1)) * Subst(Int(((x)**((((_m_ + Integer(1)) * (Symbol('k'))**(Integer(-1))) + Integer(-1))) * ((d_ + (_e_ * (x)**((n_ * (Symbol('k'))**(Integer(-1)))))))**(_q_) * ((a_ + (_c_ * (x)**((Integer(2) * n_ * (Symbol('k'))**(Integer(-1)))))))**(p_)), x), x, (x)**(Symbol('k')))), sympy.Ne(Symbol('k'), Integer(1)))),
+        constraints=(FreeQ([a_, _c_, d_, _e_, p_, _q_], x), EqQ(_n2_, 2*n_), IGtQ(n_, 0), IntegerQ(_m_), sympy.Ne(GCD((_m_ + Integer(1)), n_), Integer(1)),),
+        replacement=With(List(Set(Symbol('k'), GCD((_m_ + Integer(1)), n_))), ((Symbol('k'))**(Integer(-1)) * Subst(Int(((x)**((((_m_ + Integer(1)) * (Symbol('k'))**(Integer(-1))) + Integer(-1))) * ((d_ + (_e_ * (x)**((n_ * (Symbol('k'))**(Integer(-1)))))))**(_q_) * ((a_ + (_c_ * (x)**((Integer(2) * n_ * (Symbol('k'))**(Integer(-1)))))))**(p_)), x), x, (x)**(Symbol('k'))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=30,
     ),
@@ -455,32 +455,32 @@ RULES = [
     # Rule 45
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(x**n_*_e_ + d_)/(x**n_*_b_ + x**n2_*_c_ + a_), x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), EqQ(n2_, 2*n_), LtQ(-4*a_*_c_ + _b_**2, 0), IntegersQ(m_, n_/2), LtQ(0, m_, n_), PosQ(a_*_c_),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), Condition(With(List(Set(Symbol('r'), sympy.root(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))), x) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))), x) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)))), Not(LtQ(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(0))))),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), EqQ(n2_, 2*n_), LtQ(-4*a_*_c_ + _b_**2, 0), IntegersQ(m_, n_/2), LtQ(0, m_, n_), PosQ(a_*_c_), Not(LtQ(-_b_*_c_ + 2*_c_*sqrt(a_*_c_), 0)),),
+        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), With(List(Set(Symbol('r'), sympy.root(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))), x) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))), x) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=45,
     ),
     # Rule 46
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(x**n_*_e_ + d_)/(x**n2_*_c_ + a_), x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), EqQ(n2_, 2*n_), GtQ(a_*_c_, 0), IntegersQ(m_, n_/2), LtQ(0, m_, n_),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), Condition(With(List(Set(Symbol('r'), sympy.root((Integer(2) * _c_ * Symbol('q')), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))), x) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))), x) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)))), Not(LtQ((Integer(2) * _c_ * Symbol('q')), Integer(0))))),
+        constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), EqQ(n2_, 2*n_), GtQ(a_*_c_, 0), IntegersQ(m_, n_/2), LtQ(0, m_, n_), Not(LtQ(2*_c_*sqrt(a_*_c_), 0)),),
+        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), With(List(Set(Symbol('r'), sympy.root((Integer(2) * _c_ * Symbol('q')), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))), x) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(m_) * Simp(((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))), x) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=46,
     ),
     # Rule 47
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_ + d_)/(x**n_*_b_ + x**n2_*_c_ + a_), x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), EqQ(n2_, 2*n_), LtQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_/2, 1), PosQ(a_*_c_),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), Condition(With(List(Set(Symbol('r'), sympy.root(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)))), Not(LtQ(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(0))))),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), EqQ(n2_, 2*n_), LtQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_/2, 1), PosQ(a_*_c_), Not(LtQ(-_b_*_c_ + 2*_c_*sqrt(a_*_c_), 0)),),
+        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), With(List(Set(Symbol('r'), sympy.root(((Integer(2) * _c_ * Symbol('q')) + (Integer(-1) * (_b_ * _c_))), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=47,
     ),
     # Rule 48
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**n_*_e_ + d_)/(x**n2_*_c_ + a_), x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), EqQ(n2_, 2*n_), IGtQ(n_/2, 1), GtQ(a_*_c_, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), Condition(With(List(Set(Symbol('r'), sympy.root((Integer(2) * _c_ * Symbol('q')), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)))), Not(LtQ((Integer(2) * _c_ * Symbol('q')), Integer(0))))),
+        constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), EqQ(n2_, 2*n_), IGtQ(n_/2, 1), GtQ(a_*_c_, 0), Not(LtQ(2*_c_*sqrt(a_*_c_), 0)),),
+        replacement=With(List(Set(Symbol('q'), sympy.root((a_ * _c_), Integer(2)))), With(List(Set(Symbol('r'), sympy.root((Integer(2) * _c_ * Symbol('q')), Integer(2)))), ((_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (Integer(-1) * (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1))))))) * ((Symbol('q') + (Integer(-1) * (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1)))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x)) + (_c_ * ((Integer(2) * Symbol('q') * Symbol('r')))**(Integer(-1)) * Int((((_f_ * x))**(_m_) * ((d_ * Symbol('r')) + (((_c_ * d_) + (Integer(-1) * (_e_ * Symbol('q')))) * (x)**((n_ * (Integer(2))**(Integer(-1)))))) * ((Symbol('q') + (Symbol('r') * (x)**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * (x)**(n_))))**(Integer(-1))), x))))),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=48,
     ),
@@ -823,23 +823,23 @@ RULES = [
     # Rule 91
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(n_/(_m_ + 1)), Not(IntegerQ(n_)),),
-        replacement=Subst(Int((x**(n_/(_m_ + 1))*_e_ + d_)**_q_*(x**(2*n_/(_m_ + 1))*_c_ + x**(n_/(_m_ + 1))*_b_ + a_)**p_, x), x, x**(_m_ + 1))/(_m_ + 1),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _m_, n_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(Simplify(n_/(_m_ + 1))), Not(IntegerQ(n_)),),
+        replacement=Subst(Int((x**Simplify(n_/(_m_ + 1))*_e_ + d_)**_q_*(x**Simplify(n_/(_m_ + 1))*_b_ + x**Simplify(2*n_/(_m_ + 1))*_c_ + a_)**p_, x), x, x**(_m_ + 1))/(_m_ + 1),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=91,
     ),
     # Rule 92
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(n_/(_m_ + 1)), Not(IntegerQ(n_)),),
-        replacement=Subst(Int((x**(n_/(_m_ + 1))*_e_ + d_)**_q_*(x**(2*n_/(_m_ + 1))*_c_ + a_)**p_, x), x, x**(_m_ + 1))/(_m_ + 1),
+        constraints=(FreeQ([a_, _c_, d_, _e_, _m_, n_, p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify(n_/(_m_ + 1))), Not(IntegerQ(n_)),),
+        replacement=Subst(Int((x**Simplify(n_/(_m_ + 1))*_e_ + d_)**_q_*(x**Simplify(2*n_/(_m_ + 1))*_c_ + a_)**p_, x), x, x**(_m_ + 1))/(_m_ + 1),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=92,
     ),
     # Rule 93
     RubiRulePattern(
         pattern=Int((x*f_)**m_*(x**n_*_e_ + d_)**_q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, f_, m_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(n_/(m_ + 1)), Not(IntegerQ(n_)),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, f_, m_, p_, _q_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(Simplify(n_/(m_ + 1))), Not(IntegerQ(n_)),),
         replacement=f_**IntPart(m_)*(x*f_)**FracPart(m_)*Int(x**m_*(x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x)/x**FracPart(m_),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=93,
@@ -847,7 +847,7 @@ RULES = [
     # Rule 94
     RubiRulePattern(
         pattern=Int((x*f_)**m_*(x**n_*_e_ + d_)**_q_*(x**_n2_*_c_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, f_, m_, p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(n_/(m_ + 1)), Not(IntegerQ(n_)),),
+        constraints=(FreeQ([a_, _c_, d_, _e_, f_, m_, p_, _q_], x), EqQ(_n2_, 2*n_), IntegerQ(Simplify(n_/(m_ + 1))), Not(IntegerQ(n_)),),
         replacement=f_**IntPart(m_)*(x*f_)**FracPart(m_)*Int(x**m_*(x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_)**p_, x)/x**FracPart(m_),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=94,

@@ -112,7 +112,7 @@ RULES = [
     # Rule 5
     RubiRulePattern(
         pattern=Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**m_, x),
-        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), EqQ(m_ + p_ + 1, 0), Not(ILtQ(p_, 0)),),
+        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), EqQ(Simplify(m_ + p_ + 1), 0), Not(ILtQ(p_, 0)),),
         replacement=_b_*(_g_*cos(x*_f_ + _e_))**(p_ + 1)*(a_ + _b_*sin(x*_f_ + _e_))**m_/(a_*_f_*_g_*m_),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=5,
@@ -120,8 +120,8 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**m_, x),
-        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), ILtQ(m_ + p_ + 1, 0), NeQ(2*m_ + p_ + 1, 0), Not(IGtQ(m_, 0)),),
-        replacement=_b_*(_g_*cos(x*_f_ + _e_))**(p_ + 1)*(a_ + _b_*sin(x*_f_ + _e_))**m_/(a_*_f_*_g_*(2*m_ + p_ + 1)) + (m_ + p_ + 1)*Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1), x)/(a_*(2*m_ + p_ + 1)),
+        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), ILtQ(Simplify(m_ + p_ + 1), 0), NeQ(2*m_ + p_ + 1, 0), Not(IGtQ(m_, 0)),),
+        replacement=_b_*(_g_*cos(x*_f_ + _e_))**(p_ + 1)*(a_ + _b_*sin(x*_f_ + _e_))**m_/(a_*_f_*_g_*Simplify(2*m_ + p_ + 1)) + Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1), x)*Simplify(m_ + p_ + 1)/(a_*Simplify(2*m_ + p_ + 1)),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=6,
     ),
@@ -136,7 +136,7 @@ RULES = [
     # Rule 8
     RubiRulePattern(
         pattern=Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**m_, x),
-        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), IGtQ(m_ + p_/2 + sympy.S(-1)/2, 0), NeQ(m_ + p_, 0),),
+        constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, p_], x), EqQ(a_**2 - _b_**2, 0), IGtQ(Simplify(m_ + p_/2 + sympy.S(-1)/2), 0), NeQ(m_ + p_, 0),),
         replacement=a_*(2*m_ + p_ - 1)*Int((_g_*cos(x*_f_ + _e_))**p_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ - 1), x)/(m_ + p_) - _b_*(_g_*cos(x*_f_ + _e_))**(p_ + 1)*(a_ + _b_*sin(x*_f_ + _e_))**(m_ - 1)/(_f_*_g_*(m_ + p_)),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=8,

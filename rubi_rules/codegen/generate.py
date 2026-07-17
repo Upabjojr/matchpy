@@ -15,6 +15,7 @@ Defaults:
     --filter   : no filter — generate everything
 """
 import argparse
+import copy
 import json
 import re
 import sys
@@ -23,7 +24,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 from collections import defaultdict
 
-from sympy_wolfram import FFLConverter
+from rubi_rules.utils import rubi_utils
+from sympy_wolfram import FFLConverter, mathematica_expressions
 from sympy_wolfram.mathematica_parser import ffl_to_sympy_short_code
 
 
@@ -70,6 +72,60 @@ def _collect_wildcards_from_rules(converter, rules):
         all_non_optional.update(converter.wildcards_non_optional)
         all_optional.update(converter.wildcards_optional)
     return all_non_optional, all_optional
+
+
+def _with_binding_substitutions(bindings_ffl) -> Dict[str, object]:
+    """Extract simple ``With[{x = value, ...}, ...]`` substitutions from FFL."""
+    subs: Dict[str, object] = {}
+    if not isinstance(bindings_ffl, list) or not bindings_ffl or bindings_ffl[0] != 'List':
+        return subs
+    for item in bindings_ffl[1:]:
+        if (
+            isinstance(item, list)
+            and len(item) >= 3
+            and item[0] == 'Set'
+            and isinstance(item[1], str)
+        ):
+            subs[item[1]] = item[2]
+    return subs
+
+
+def _ffl_substitute_symbols(expr, substitutions: Dict[str, object]):
+    """Recursively substitute simple symbol atoms in an FFL expression."""
+    if isinstance(expr, str):
+        if expr in substitutions:
+            return copy.deepcopy(substitutions[expr])
+        return expr
+    if isinstance(expr, list):
+        return [_ffl_substitute_symbols(part, substitutions) for part in expr]
+    return expr
+
+
+def _extract_nested_with_condition(result_ffl):
+    """Lift ``With[..., Condition(expr, test)]`` into an outer rule condition.
+
+    Returns ``(new_result_ffl, extra_conditions)``.
+    """
+    if not isinstance(result_ffl, list) or not result_ffl:
+        return result_ffl, []
+
+    head = result_ffl[0]
+    if head == 'Condition' and len(result_ffl) >= 3:
+        return result_ffl[1], [result_ffl[2]]
+
+    if head == 'With' and len(result_ffl) >= 3:
+        bindings_ffl = result_ffl[1]
+        body_ffl, extra_conditions = _extract_nested_with_condition(result_ffl[2])
+        if not extra_conditions:
+            return result_ffl, []
+        substitutions = _with_binding_substitutions(bindings_ffl)
+        lifted_conditions = [
+            _ffl_substitute_symbols(cond, substitutions)
+            for cond in extra_conditions
+        ]
+        return ['With', bindings_ffl, body_ffl], lifted_conditions
+
+    return result_ffl, []
 
 
 
@@ -150,6 +206,7 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'EllipticPi': 'EllipticPi',
     'NormalizePseudoBinomial': 'NormalizePseudoBinomial',
     'SubstFor': 'SubstFor',
+    "D": "D",
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',
     'SimplifyIntegrand': 'SimplifyIntegrand',
@@ -180,6 +237,7 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'NormalizeIntegrand': 'NormalizeIntegrand',
     'Exponent': 'Exponent',
     'FullSimplify': 'FullSimplify',
+    'Simplify': 'Simplify',
     'FunctionExpand': 'FunctionExpand',
     'ExpandLinearProduct': 'ExpandLinearProduct',
     'Divides': 'Divides',
@@ -282,16 +340,6 @@ def _constraint_codegen_target(head: str) -> tuple[str, object] | None:
     return head, _sympy.Function(head)
 
 
-class _FuncNamespace:
-    """Dummy namespace returning sympy.Function(name) for any attribute."""
-    def __getattr__(self, name):
-        import sympy
-        return sympy.Function(name)
-
-
-_RUBI_UTILS_NS = _FuncNamespace()
-
-
 def _build_replacement_custom_functions() -> dict:
     """Build custom_functions dict for replacement FFL processing.
 
@@ -314,7 +362,7 @@ def _build_replacement_custom_functions() -> dict:
         custom[head] = (code_str, obj)
     # Use sympy.Function so simplify_code round-trip works (eval→print→eval)
     custom['Int'] = ('Int', _sympy.Function('Int'))
-    custom['List'] = ('List', _RUBI_UTILS_NS)
+    custom['List'] = ('List', mathematica_expressions.List)
     return custom
 
 
@@ -585,12 +633,14 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 
         integrand_ffl = lhs[1]
 
-        # Extract condition if present
-        condition_ffl = None
+        # Extract top-level and nested replacement conditions.
+        condition_ffls: List[object] = []
         result_ffl = rhs
         if isinstance(rhs, list) and rhs[0] == 'Condition':
             result_ffl = rhs[1]
-            condition_ffl = rhs[2]
+            condition_ffls.append(rhs[2])
+        result_ffl, nested_condition_ffls = _extract_nested_with_condition(result_ffl)
+        condition_ffls.extend(nested_condition_ffls)
 
         # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---
         pattern_code, _ns, wild_defs, _symbols = ffl_to_sympy_short_code(
@@ -621,9 +671,9 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         # If condition is And[...], flatten into separate constraint items
         # (the constraints tuple already implies conjunction).
         constraint_parts: List[str] = []
-        if condition_ffl:
+        for condition_ffl in condition_ffls:
             if isinstance(condition_ffl, list) and condition_ffl[0] == 'And':
-                # Flatten top-level And into separate constraints
+                # Flatten top-level And into separate constraints.
                 for child in condition_ffl[1:]:
                     code, _, _, _symbols = ffl_to_sympy_short_code(
                         child,

@@ -618,7 +618,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(atan(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x),),
-        replacement=x*atan(u_) - Int(SimplifyIntegrand(0, x), x),
+        replacement=x*atan(u_) - Int(SimplifyIntegrand(x*D(u_, x)/(u_**2 + 1), x), x),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=69,
     ),
@@ -626,7 +626,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(acot(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x),),
-        replacement=x*acot(u_) + Int(SimplifyIntegrand(0, x), x),
+        replacement=x*acot(u_) + Int(SimplifyIntegrand(x*D(u_, x)/(u_**2 + 1), x), x),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=70,
     ),
@@ -634,7 +634,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atan(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), FalseQ(PowerVariableExpn(u_, _m_ + 1, x)),),
-        replacement=-_b_*Int(SimplifyIntegrand(0, x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*atan(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
+        replacement=-_b_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(u_**2 + 1), x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*atan(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=71,
     ),
@@ -642,30 +642,30 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acot(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), FalseQ(PowerVariableExpn(u_, _m_ + 1, x)),),
-        replacement=_b_*Int(SimplifyIntegrand(0, x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*acot(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
+        replacement=_b_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(u_**2 + 1), x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*acot(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=72,
     ),
     # Rule 73
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*atan(u_)), x),
-        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*atan(u_)), x)),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), Condition((Dist((_a_ + (_b_ * sympy.atan(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * sympy.diff(u_, x) * ((Integer(1) + (u_)**(Integer(2))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('w'), x))),
+        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*atan(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
+        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.atan(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (u_)**(Integer(2))))**(Integer(-1))), x), x))))),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=73,
     ),
     # Rule 74
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acot(u_)), x),
-        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*acot(u_)), x)),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), Condition((Dist((_a_ + (_b_ * sympy.acot(u_))), Symbol('w'), x) + (_b_ * Int(SimplifyIntegrand((Symbol('w') * sympy.diff(u_, x) * ((Integer(1) + (u_)**(Integer(2))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('w'), x))),
+        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*acot(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
+        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acot(u_))), Symbol('w'), x) + (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (u_)**(Integer(2))))**(Integer(-1))), x), x)))),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=74,
     ),
     # Rule 75
     RubiRulePattern(
         pattern=Int(log(w_)*atan(v_)/(x*_b_ + _a_), x),
-        constraints=(FreeQ([_a_, _b_], x), LinearQ(v_, x), LinearQ(w_, x), EqQ(-_b_*v_/(x*_b_ + _a_)**2, 0), EqQ(-_b_*w_/(x*_b_ + _a_)**2, 0),),
+        constraints=(FreeQ([_a_, _b_], x), LinearQ(v_, x), LinearQ(w_, x), EqQ(Simplify(D(v_/(x*_b_ + _a_), x)), 0), EqQ(Simplify(D(w_/(x*_b_ + _a_), x)), 0),),
         replacement=I*Int(log(w_)*log(-I*v_ + 1)/(x*_b_ + _a_), x)/2 - I*Int(log(w_)*log(I*v_ + 1)/(x*_b_ + _a_), x)/2,
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=75,
@@ -674,7 +674,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(log(w_)*atan(v_), x),
         constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x),),
-        replacement=x*log(w_)*atan(v_) - 2*Int(SimplifyIntegrand(0, x), x),
+        replacement=x*log(w_)*atan(v_) - Int(SimplifyIntegrand(x*D(w_, x)*atan(v_)/w_, x), x) - Int(SimplifyIntegrand(x*D(v_, x)*log(w_)/(v_**2 + 1), x), x),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=76,
     ),
@@ -682,23 +682,23 @@ RULES = [
     RubiRulePattern(
         pattern=Int(log(w_)*acot(v_), x),
         constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x),),
-        replacement=x*log(w_)*acot(v_),
+        replacement=x*log(w_)*acot(v_) - Int(SimplifyIntegrand(x*D(w_, x)*acot(v_)/w_, x), x) + Int(SimplifyIntegrand(x*D(v_, x)*log(w_)/(v_**2 + 1), x), x),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=77,
     ),
     # Rule 78
     RubiRulePattern(
         pattern=Int(u_*log(w_)*atan(v_), x),
-        constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x),),
-        replacement=With(List(Set(Symbol('z'), IntHide(u_, x))), Condition((Dist((sympy.atan(v_) * sympy.log(w_)), Symbol('z'), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.log(w_) * sympy.diff(v_, x) * ((Integer(1) + (v_)**(Integer(2))))**(Integer(-1))), x), x)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.atan(v_) * sympy.diff(w_, x) * (w_)**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('z'), x))),
+        constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('z'), IntHide(u_, x))), (Dist((sympy.atan(v_) * sympy.log(w_)), Symbol('z'), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.log(w_) * D(v_, x) * ((Integer(1) + (v_)**(Integer(2))))**(Integer(-1))), x), x)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.atan(v_) * D(w_, x) * (w_)**(Integer(-1))), x), x)))),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=78,
     ),
     # Rule 79
     RubiRulePattern(
         pattern=Int(u_*log(w_)*acot(v_), x),
-        constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x),),
-        replacement=With(List(Set(Symbol('z'), IntHide(u_, x))), Condition((Dist((sympy.acot(v_) * sympy.log(w_)), Symbol('z'), x) + Int(SimplifyIntegrand((Symbol('z') * sympy.log(w_) * sympy.diff(v_, x) * ((Integer(1) + (v_)**(Integer(2))))**(Integer(-1))), x), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.acot(v_) * sympy.diff(w_, x) * (w_)**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('z'), x))),
+        constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('z'), IntHide(u_, x))), (Dist((sympy.acot(v_) * sympy.log(w_)), Symbol('z'), x) + Int(SimplifyIntegrand((Symbol('z') * sympy.log(w_) * D(v_, x) * ((Integer(1) + (v_)**(Integer(2))))**(Integer(-1))), x), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.acot(v_) * D(w_, x) * (w_)**(Integer(-1))), x), x)))),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=79,
     ),

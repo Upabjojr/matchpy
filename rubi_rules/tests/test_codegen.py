@@ -151,6 +151,35 @@ class TestRuleTranslation:
         code = self.t._translate_rule(['SetDelayed', ['Foo', 'a'], 'b'], 1, "module_name")
         assert code is None
 
+    def test_with_condition_is_lifted_into_constraints(self):
+        """Condition nested inside With should become a rule constraint."""
+        ffl = [
+            'SetDelayed',
+            ['Int',
+             ['Times', ['Pattern', 'u', ['Blank']],
+              ['Power', ['Pattern', 'y', ['Blank']], ['Optional', ['Pattern', 'm', ['Blank']]]]],
+             ['Pattern', 'x', ['Blank', 'Symbol']]],
+            ['Condition',
+             ['With',
+              ['List',
+               ['Set', 'q', ['DerivativeDivides', ['ActivateTrig', 'y'], ['ActivateTrig', 'u'], 'x']]],
+              ['Condition',
+               ['Times', 'q',
+                ['Power', ['Plus', 'm', '1'], '-1'],
+                ['ActivateTrig', ['Power', 'y', ['Plus', 'm', '1']]]],
+               ['Not', ['FalseQ', 'q']]]],
+             ['And',
+              ['FreeQ', 'm', 'x'],
+              ['NeQ', 'm', '-1'],
+              ['Not', ['InertTrigFreeQ', 'u']]]],
+        ]
+
+        code = self.t._translate_rule(ffl, 54, "4.7.5 Inert trig functions")
+
+        assert code is not None
+        assert "constraints=(FreeQ(_m_, x), NeQ(_m_, -1), Not(InertTrigFreeQ(u_)), Not(FalseQ(DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x))),)," in code
+        assert "replacement=With(List(Set(Symbol('q'), DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x))), (Symbol('q') * ((_m_ + Integer(1)))**(Integer(-1)) * ActivateTrig((y_)**((_m_ + Integer(1))))))" in code
+
 
 # =============================================================================
 # Test: Module generation syntax

@@ -23,7 +23,7 @@ import sympy_objects  # registers json_ext handlers
 from matchpy.matching.json_serialization import serialize_wrapped_value, deserialize_wrapped_value
 from sympy_objects.json_ext import deserialize_sympy_expr
 
-from rubi_rules.base_objects import Int, RubiRulePattern, build_replacer, load_rules
+from rubi_rules.base_objects import Int, RubiRulePattern, _rubi_integrator, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ, PositiveQ, NegativeQ
 
 
@@ -297,10 +297,10 @@ class TestFunctionalRoundtrip:
         json_str = json.dumps(data)
         loaded = json.loads(json_str)
         rebuilt = self._deserialize_rules(loaded)
-        replacer = build_replacer(rebuilt)
+        replacer = build_tracing_replacer(rebuilt)
 
         int_expr = to_expression(Int(1/x, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr))
+        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - log(x)) == 0
 
     def test_power_rule_integrate(self, x, wild_symbols):
@@ -319,16 +319,16 @@ class TestFunctionalRoundtrip:
         json_str = json.dumps(data)
         loaded = json.loads(json_str)
         rebuilt = self._deserialize_rules(loaded)
-        replacer = build_replacer(rebuilt)
+        replacer = build_tracing_replacer(rebuilt)
 
         # Test x^2
         int_expr = to_expression(Int(x**2, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr))
+        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - x**3/3) == 0
 
         # Test x^(1/2)
         int_expr = to_expression(Int(sqrt(x), x))
-        result = matchpy_to_sympy(replacer.replace(int_expr))
+        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - 2*x**Rational(3, 2)/3) == 0
 
     def test_multiple_rules_integrate(self, x, wild_symbols):
@@ -355,20 +355,20 @@ class TestFunctionalRoundtrip:
         json_str = json.dumps(data)
         loaded = json.loads(json_str)
         rebuilt = self._deserialize_rules(loaded)
-        replacer = build_replacer(rebuilt)
+        replacer = build_tracing_replacer(rebuilt)
 
         a, b = sympy.symbols('a b')
 
         # int 1/x = log(x)
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/x, x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/x, x)))[0])
         assert sympy.simplify(result - log(x)) == 0
 
         # int x^2 = x^3/3
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(x**2, x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(x**2, x)))[0])
         assert sympy.simplify(result - x**3/3) == 0
 
         # int 1/(a+bx) = log(a+bx)/b
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/(a + b*x), x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/(a + b*x), x)))[0])
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
     def test_loaded_rules_roundtrip(self, x):
@@ -379,7 +379,7 @@ class TestFunctionalRoundtrip:
             pytest.skip("Generated rules not available")
 
         # Load rules from file (just 1.1.1.1 for speed)
-        replacer_orig = load_rules('r_1_algebraic/r_1_1_binomial_products/r_1_1_1_linear/r_1_1_1_1*')
+        replacer_orig = _rubi_integrator.load_rule_patterns('r_1_algebraic/r_1_1_binomial_products/r_1_1_1_linear/r_1_1_1_1*')
 
         # Get the rules by loading the module
         import importlib.util
@@ -400,18 +400,18 @@ class TestFunctionalRoundtrip:
         # Deserialize
         loaded = json.loads(json_str)
         rebuilt = self._deserialize_rules(loaded)
-        replacer = build_replacer(rebuilt)
+        replacer = build_tracing_replacer(rebuilt)
 
         # Test integration
         a, b = sympy.symbols('a b')
 
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/x, x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/x, x)))[0])
         assert sympy.simplify(result - log(x)) == 0
 
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(x**2, x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(x**2, x)))[0])
         assert sympy.simplify(result - x**3/3) == 0
 
-        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/(a + b*x), x))))
+        result = matchpy_to_sympy(replacer.replace(to_expression(Int(1/(a + b*x), x)))[0])
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
 
@@ -461,7 +461,7 @@ class TestManyToOneReplacerSerialization:
                 rule_number=4,
             ),
         ]
-        return build_replacer(rules)
+        return build_tracing_replacer(rules)
 
     def _roundtrip_replacer(self, replacer):
         """Serialize and deserialize a replacer's matcher."""
@@ -516,14 +516,14 @@ class TestManyToOneReplacerSerialization:
     def test_roundtrip_integrate_sqrt(self, x, replacer_with_rules):
         """After roundtrip, int sqrt(x) dx = 2x^(3/2)/3."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(sqrt(x), x))))
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(sqrt(x), x)))[0])
         assert sympy.simplify(result - 2*x**Rational(3, 2)/3) == 0
 
     def test_roundtrip_integrate_linear(self, x, replacer_with_rules):
         """After roundtrip, int 1/(a+bx) dx = log(a+bx)/b."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
         a, b = sympy.symbols('a b')
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(1/(a + b*x), x))))
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(1/(a + b*x), x)))[0])
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
     def test_roundtrip_integrate_binomial_power(self, x, replacer_with_rules):
@@ -543,5 +543,5 @@ class TestManyToOneReplacerSerialization:
         matcher2 = from_json(json_str2)
         replacer2 = ManyToOneReplacer()
         replacer2.matcher = matcher2
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(x**2, x))))
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(x**2, x)))[0])
         assert sympy.simplify(result - x**3/3) == 0

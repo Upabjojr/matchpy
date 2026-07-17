@@ -98,7 +98,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('ExpIntegralE')(Integer(1), (_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=((_b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * _b_) * x))) + (Integer(-1) * (Symbol('EulerGamma') * sympy.log(x))) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2))))),
+        replacement=-EulerGamma*log(x) + x*_b_*hyper((1, 1, 1), (2, 2, 2), -x*_b_) - log(x*_b_)**2/2,
         module_name='8.3 Exponential integral functions',
         rule_number=3,
     ),
@@ -114,7 +114,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((((_d_ * x))**(m_) * sympy.Function('ExpIntegralE')(n_, (_b_ * x))), x),
         constraints=(FreeQ([_b_, _d_, m_, n_], x), EqQ(m_ + n_, 0), Not(IntegerQ(m_)),),
-        replacement=((((_d_ * x))**(m_) * Gamma((m_ + Integer(1))) * sympy.log(x) * ((_b_ * ((_b_ * x))**(m_)))**(Integer(-1))) + (Integer(-1) * (((_d_ * x))**((m_ + Integer(1))) * sympy.hyper(List((m_ + Integer(1)), (m_ + Integer(1))), List((m_ + Integer(2)), (m_ + Integer(2))), ((Integer(-1) * _b_) * x)) * ((_d_ * ((m_ + Integer(1)))**(Integer(2))))**(Integer(-1))))),
+        replacement=-(x*_d_)**(m_ + 1)*hyper((m_ + 1, m_ + 1), (m_ + 2, m_ + 2), -x*_b_)/(_d_*(m_ + 1)**2) + (x*_d_)**m_*Gamma(m_ + 1)*log(x)/(_b_*(x*_b_)**m_),
         module_name='8.3 Exponential integral functions',
         rule_number=5,
     ),

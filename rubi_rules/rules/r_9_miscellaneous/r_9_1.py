@@ -169,8 +169,8 @@ RULES = [
     # Rule 28
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
-        constraints=(PolyQ(Px_, x), Not(RationalQ(p_)), FreeQ(p_, x), RationalQ(p_),),
-        replacement=Int(Px_**p_*_u_, x),
+        constraints=(PolyQ(Px_, x), Not(RationalQ(p_)), FreeQ(p_, x), RationalQ(Simplify(p_)),),
+        replacement=Int(Px_**Simplify(p_)*_u_, x),
         module_name='9.1 Derivative integration rules',
         rule_number=28,
     ),

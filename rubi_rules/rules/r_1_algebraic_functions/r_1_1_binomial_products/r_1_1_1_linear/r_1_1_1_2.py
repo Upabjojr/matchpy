@@ -184,8 +184,8 @@ RULES = [
     # Rule 14
     RubiRulePattern(
         pattern=Int((x*_b_ + _a_)**m_*(x*_d_ + _c_)**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, m_, n_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), ILtQ(m_ + n_ + 2, 0), NeQ(m_, -1), Not(And(LtQ(m_, -1), LtQ(n_, -1), Or(EqQ(_a_, 0), And(NeQ(_c_, 0), LtQ(m_ - n_, 0), IntegerQ(n_))))), Or(SumSimplerQ(m_, 1), Not(SumSimplerQ(n_, 1))),),
-        replacement=-_d_*(m_ + n_ + 2)*Int((x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**n_, x)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)) + (x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(n_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, m_, n_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), ILtQ(Simplify(m_ + n_ + 2), 0), NeQ(m_, -1), Not(And(LtQ(m_, -1), LtQ(n_, -1), Or(EqQ(_a_, 0), And(NeQ(_c_, 0), LtQ(m_ - n_, 0), IntegerQ(n_))))), Or(SumSimplerQ(m_, 1), Not(SumSimplerQ(n_, 1))),),
+        replacement=-_d_*Int((x*_b_ + _a_)**Simplify(m_ + 1)*(x*_d_ + _c_)**n_, x)*Simplify(m_ + n_ + 2)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)) + (x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(n_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)),
         module_name='1.1.1.2 (a+b x)^m (c+d x)^n',
         rule_number=14,
     ),

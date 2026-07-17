@@ -343,16 +343,16 @@ RULES = [
     # Rule 33
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*asec(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.asec((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (Integer(-1) * (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1)))))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.asec((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (Integer(-1) * (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1)))))))**(Integer(-1))), x), x))))),
         module_name='5.5.1 u (a+b arcsec(c x))^n',
         rule_number=33,
     ),
     # Rule 34
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*acsc(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.acsc((_c_ * x)))), Symbol('v'), x) + (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (Integer(-1) * (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1)))))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.acsc((_c_ * x)))), Symbol('v'), x) + (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (Integer(-1) * (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1)))))))**(Integer(-1))), x), x)))),
         module_name='5.5.1 u (a+b arcsec(c x))^n',
         rule_number=34,
     ),

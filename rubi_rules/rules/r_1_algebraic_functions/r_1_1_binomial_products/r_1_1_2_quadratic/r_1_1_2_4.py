@@ -202,7 +202,7 @@ RULES = [
     # Rule 24
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(x**2*_b_ + a_)**_p_*(x**2*_d_ + c_), x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_, _p_], x), NeQ(-a_*_d_ + _b_*c_, 0), EqQ(m_ + 2*_p_ + 3, 0), NeQ(m_, -1),),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_, _p_], x), NeQ(-a_*_d_ + _b_*c_, 0), EqQ(Simplify(m_ + 2*_p_ + 3), 0), NeQ(m_, -1),),
         replacement=((c_ * ((_e_ * x))**((m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2)))))**((_p_ + Integer(1))) * ((a_ * _e_ * (m_ + Integer(1))))**(Integer(-1))) + (_d_ * ((_e_)**(sympy.Function('2')(Symbol('Star'))))**(Integer(-1)) * Int((((_e_ * x))**((m_ + Integer(2))) * ((a_ + (_b_ * (x)**(Integer(2)))))**(_p_)), x))),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=24,

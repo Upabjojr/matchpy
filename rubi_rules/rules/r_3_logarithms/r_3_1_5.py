@@ -269,32 +269,32 @@ RULES = [
     # Rule 21
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*log(x**_n_*_c_))*(x**_r_*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _q_, _r_], x), IntegerQ(2*_q_), Or(And(IntegerQ(_m_), IntegerQ(_r_)), IGtQ(_q_, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), Condition((Dist((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _n_ * Int(SimplifyIntegrand((Symbol('u') * (x)**(Integer(-1))), x), x)))), Or(And(Or(EqQ(_r_, Integer(1)), EqQ(_r_, Integer(2))), IntegerQ(_m_), IntegerQ((_q_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))), InverseFunctionFreeQ(Symbol('u'), x)))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _q_, _r_], x), IntegerQ(2*_q_), Or(And(IntegerQ(_m_), IntegerQ(_r_)), IGtQ(_q_, 0)), Or(And(Or(EqQ(_r_, 1), EqQ(_r_, 2)), IntegerQ(_m_), IntegerQ(_q_ + sympy.S(-1)/2)), InverseFunctionFreeQ(IntHide((x*_f_)**_m_*(x**_r_*_e_ + d_)**_q_, x), x)),),
+        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _n_ * Int(SimplifyIntegrand((Symbol('u') * (x)**(Integer(-1))), x), x))))),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=21,
     ),
     # Rule 22
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*log(x**_n_*_c_))*(x**_r_*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _q_, _r_], x), IntegerQ(_q_), Or(GtQ(_q_, 0), And(IntegerQ(_m_), IntegerQ(_r_))),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _q_, _r_], x), IntegerQ(_q_), Or(GtQ(_q_, 0), And(IntegerQ(_m_), IntegerQ(_r_))), SumQ(ExpandIntegrand(_a_ + _b_*log(x**_n_*_c_), (x*_f_)**_m_*(x**_r_*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=22,
     ),
     # Rule 23
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*log(x**n_*_c_))**_p_*(x**_r_*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_, _r_], x), IntegerQ(_q_), IntegerQ(_r_/n_), IntegerQ((_m_ + 1)/n_), Or(GtQ((_m_ + 1)/n_, 0), IGtQ(_p_, 0)),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(_a_ + _b_*log(x*_c_))**_p_*(x**(_r_/n_)*_e_ + d_)**_q_, x), x, x**n_)/n_,
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _m_, n_, _p_, _q_, _r_], x), IntegerQ(_q_), IntegerQ(_r_/n_), IntegerQ(Simplify((_m_ + 1)/n_)), Or(GtQ((_m_ + 1)/n_, 0), IGtQ(_p_, 0)),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(_a_ + _b_*log(x*_c_))**_p_*(x**(_r_/n_)*_e_ + d_)**_q_, x), x, x**n_)/n_,
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=23,
     ),
     # Rule 24
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*log(x**_n_*_c_))**_p_*(x**_r_*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _p_, _q_, _r_], x), IntegerQ(_q_), Or(GtQ(_q_, 0), And(IGtQ(_p_, 0), IntegerQ(_m_), IntegerQ(_r_))),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _n_, _p_, _q_, _r_], x), IntegerQ(_q_), Or(GtQ(_q_, 0), And(IGtQ(_p_, 0), IntegerQ(_m_), IntegerQ(_r_))), SumQ(ExpandIntegrand((_a_ + _b_*log(x**_n_*_c_))**_p_, (x*_f_)**_m_*(x**_r_*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(_r_))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=24,
     ),
@@ -325,16 +325,16 @@ RULES = [
     # Rule 28
     RubiRulePattern(
         pattern=Int(RFx_*(_a_ + _b_*log(x**_n_*_c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _n_], x), RationalFunctionQ(RFx_, x), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, _n_], x), RationalFunctionQ(RFx_, x), IGtQ(_p_, 0), SumQ(ExpandIntegrand((_a_ + _b_*log(x**_n_*_c_))**_p_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_), RFx_, x))), Int(Symbol('u'), x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=28,
     ),
     # Rule 29
     RubiRulePattern(
         pattern=Int(RFx_*(_a_ + _b_*log(x**_n_*_c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _n_], x), RationalFunctionQ(RFx_, x), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((RFx_ * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, _n_], x), RationalFunctionQ(RFx_, x), IGtQ(_p_, 0), SumQ(ExpandIntegrand(RFx_*(_a_ + _b_*log(x**_n_*_c_))**_p_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((RFx_ * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x))), Int(Symbol('u'), x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=29,
     ),
@@ -421,8 +421,8 @@ RULES = [
     # Rule 40
     RubiRulePattern(
         pattern=Int(u_**_m_*(_a_ + _b_*log(v_))**_p_*(_c_ + _d_*log(v_))**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _p_, _q_], x), LinearQ([u_, v_], x),),
-        replacement=With(List(Set(Symbol('e'), Coeff(u_, x, Integer(0))), Set(Symbol('f'), Coeff(u_, x, Integer(1))), Set(Symbol('g'), Coeff(v_, x, Integer(0))), Set(Symbol('h'), Coeff(v_, x, Integer(1)))), Condition(((Symbol('h'))**(Integer(-1)) * Subst(Int((((Symbol('f') * x * (Symbol('h'))**(Integer(-1))))**(_m_) * ((_a_ + (_b_ * sympy.log(x))))**(_p_) * ((_c_ + (_d_ * sympy.log(x))))**(_q_)), x), x, v_)), And(EqQ(((Symbol('f') * Symbol('g')) + (Integer(-1) * (Symbol('e') * Symbol('h')))), Integer(0)), NeQ(Symbol('g'), Integer(0))))),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _p_, _q_], x), LinearQ([u_, v_], x), EqQ(-Coeff(u_, x, 0)*Coeff(v_, x, 1) + Coeff(u_, x, 1)*Coeff(v_, x, 0), 0), NeQ(Coeff(v_, x, 0), 0),),
+        replacement=With(List(Set(Symbol('e'), Coeff(u_, x, Integer(0))), Set(Symbol('f'), Coeff(u_, x, Integer(1))), Set(Symbol('g'), Coeff(v_, x, Integer(0))), Set(Symbol('h'), Coeff(v_, x, Integer(1)))), ((Symbol('h'))**(Integer(-1)) * Subst(Int((((Symbol('f') * x * (Symbol('h'))**(Integer(-1))))**(_m_) * ((_a_ + (_b_ * sympy.log(x))))**(_p_) * ((_c_ + (_d_ * sympy.log(x))))**(_q_)), x), x, v_))),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=40,
     ),

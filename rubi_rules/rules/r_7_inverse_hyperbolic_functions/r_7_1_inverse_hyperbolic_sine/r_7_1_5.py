@@ -278,32 +278,32 @@ RULES = [
     # Rule 24
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*asinh(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.asinh((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.asinh((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.1.5 u (a+b arcsinh(c x))^n',
         rule_number=24,
     ),
     # Rule 25
     RubiRulePattern(
         pattern=Int(Px_*(_a_ + _b_*asinh(x*_c_))**n_*(x**2*_e_ + d_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, n_], x), PolynomialQ(Px_, x), EqQ(_e_, _c_**2*d_), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.asinh((_c_ * x)))))**(n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, n_], x), PolynomialQ(Px_, x), EqQ(_e_, _c_**2*d_), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand(Px_*(_a_ + _b_*asinh(x*_c_))**n_*(x**2*_e_ + d_)**p_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.asinh((_c_ * x)))))**(n_)), x))), Int(Symbol('u'), x)),
         module_name='7.1.5 u (a+b arcsinh(c x))^n',
         rule_number=25,
     ),
     # Rule 26
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*asinh(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_e_, _c_**2*d_), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.asinh((_c_ * x)))))**(_n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_e_, _c_**2*d_), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_), SumQ(ExpandIntegrand(_Px_*(_a_ + _b_*asinh(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.asinh((_c_ * x)))))**(_n_)), x))), Int(Symbol('u'), x)),
         module_name='7.1.5 u (a+b arcsinh(c x))^n',
         rule_number=26,
     ),
     # Rule 27
     RubiRulePattern(
         pattern=Int(RFx_*asinh(x*_c_)**_n_, x),
-        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.asinh((_c_ * x)))**(_n_), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), SumQ(ExpandIntegrand(asinh(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.asinh((_c_ * x)))**(_n_), RFx_, x))), Int(Symbol('u'), x)),
         module_name='7.1.5 u (a+b arcsinh(c x))^n',
         rule_number=27,
     ),
@@ -318,8 +318,8 @@ RULES = [
     # Rule 29
     RubiRulePattern(
         pattern=Int(RFx_*(x**2*_e_ + d_)**p_*asinh(x*_c_)**_n_, x),
-        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_e_, _c_**2*d_), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.asinh((_c_ * x)))**(_n_)), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_e_, _c_**2*d_), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand((x**2*_e_ + d_)**p_*asinh(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.asinh((_c_ * x)))**(_n_)), RFx_, x))), Int(Symbol('u'), x)),
         module_name='7.1.5 u (a+b arcsinh(c x))^n',
         rule_number=29,
     ),

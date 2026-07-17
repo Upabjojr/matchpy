@@ -111,8 +111,8 @@ RULES = [
     # Rule 5
     RubiRulePattern(
         pattern=Int(Pq_*(x*_d_)**_m_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _p_], x), PolyQ(Pq_, x**2), EqQ(Expon(Pq_, x), 4),),
-        replacement=With(List(Set(Symbol('e'), Coeff(Pq_, x, Integer(0))), Set(Symbol('f'), Coeff(Pq_, x, Integer(2))), Set(Symbol('g'), Coeff(Pq_, x, Integer(4)))), Condition((Symbol('e') * ((_d_ * x))**((_m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2))) + (_c_ * (x)**(Integer(4)))))**((_p_ + Integer(1))) * ((a_ * _d_ * (_m_ + Integer(1))))**(Integer(-1))), And(EqQ(((a_ * Symbol('f') * (_m_ + Integer(1))) + (Integer(-1) * (_b_ * Symbol('e') * (_m_ + (Integer(2) * _p_) + Integer(3))))), Integer(0)), EqQ(((a_ * Symbol('g') * (_m_ + Integer(1))) + (Integer(-1) * (_c_ * Symbol('e') * (_m_ + (Integer(4) * _p_) + Integer(5))))), Integer(0)), NeQ(_m_, Integer(-1))))),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _p_], x), PolyQ(Pq_, x**2), EqQ(Expon(Pq_, x), 4), EqQ(a_*(_m_ + 1)*Coeff(Pq_, x, 2) - _b_*(_m_ + 2*_p_ + 3)*Coeff(Pq_, x, 0), 0), EqQ(a_*(_m_ + 1)*Coeff(Pq_, x, 4) - _c_*(_m_ + 4*_p_ + 5)*Coeff(Pq_, x, 0), 0), NeQ(_m_, -1),),
+        replacement=With(List(Set(Symbol('e'), Coeff(Pq_, x, Integer(0))), Set(Symbol('f'), Coeff(Pq_, x, Integer(2))), Set(Symbol('g'), Coeff(Pq_, x, Integer(4)))), (Symbol('e') * ((_d_ * x))**((_m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2))) + (_c_ * (x)**(Integer(4)))))**((_p_ + Integer(1))) * ((a_ * _d_ * (_m_ + Integer(1))))**(Integer(-1)))),
         module_name='1.2.2.6 P(x) (d x)^m (a+b x^2+c x^4)^p',
         rule_number=5,
     ),

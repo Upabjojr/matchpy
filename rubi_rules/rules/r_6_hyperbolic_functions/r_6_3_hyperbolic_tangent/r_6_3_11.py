@@ -149,16 +149,16 @@ RULES = [
     # Rule 9
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*tanh(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IGtQ((_m_ + 1)/n_, 0), IntegerQ(_p_),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(_a_ + _b_*tanh(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IGtQ(Simplify((_m_ + 1)/n_), 0), IntegerQ(_p_),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(_a_ + _b_*tanh(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=9,
     ),
     # Rule 10
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*coth(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IGtQ((_m_ + 1)/n_, 0), IntegerQ(_p_),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(_a_ + _b_*coth(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IGtQ(Simplify((_m_ + 1)/n_), 0), IntegerQ(_p_),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(_a_ + _b_*coth(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=10,
     ),

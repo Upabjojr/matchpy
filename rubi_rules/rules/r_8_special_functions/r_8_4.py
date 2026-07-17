@@ -100,7 +100,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('SinIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=(((Integer(2))**(Integer(-1)) * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * sympy.I) * _b_ * x))) + ((Integer(2))**(Integer(-1)) * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), (sympy.I * _b_ * x)))),
+        replacement=x*_b_*hyper((1, 1, 1), (2, 2, 2), -I*x*_b_)/2 + x*_b_*hyper((1, 1, 1), (2, 2, 2), I*x*_b_)/2,
         module_name='8.4 Trig integral functions',
         rule_number=3,
     ),
@@ -108,7 +108,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('CosIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=((Integer(-1) * (Integer(2))**(Integer(-1)) * sympy.I * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * sympy.I) * _b_ * x))) + ((Integer(2))**(Integer(-1)) * sympy.I * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), (sympy.I * _b_ * x))) + (Symbol('EulerGamma') * sympy.log(x)) + ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2)))),
+        replacement=EulerGamma*log(x) - I*x*_b_*hyper((1, 1, 1), (2, 2, 2), -I*x*_b_)/2 + I*x*_b_*hyper((1, 1, 1), (2, 2, 2), I*x*_b_)/2 + log(x*_b_)**2/2,
         module_name='8.4 Trig integral functions',
         rule_number=4,
     ),

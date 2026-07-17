@@ -156,7 +156,7 @@ RULES = [
     # Rule 10
     RubiRulePattern(
         pattern=Int((a_ + _b_*sin(x*_f_ + _e_))**m_*(c_ + _d_*sin(x*_f_ + _e_))**n_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, m_, n_], x), EqQ(a_*_d_ + _b_*c_, 0), EqQ(a_**2 - _b_**2, 0), ILtQ(m_ + n_ + 1, 0), NeQ(m_, sympy.S(-1)/2), Or(SumSimplerQ(m_, 1), Not(SumSimplerQ(n_, 1))),),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, m_, n_], x), EqQ(a_*_d_ + _b_*c_, 0), EqQ(a_**2 - _b_**2, 0), ILtQ(Simplify(m_ + n_ + 1), 0), NeQ(m_, sympy.S(-1)/2), Or(SumSimplerQ(m_, 1), Not(SumSimplerQ(n_, 1))),),
         replacement=_b_*(a_ + _b_*sin(x*_f_ + _e_))**m_*(c_ + _d_*sin(x*_f_ + _e_))**n_*cos(x*_f_ + _e_)/(a_*_f_*(2*m_ + 1)) + (m_ + n_ + 1)*Int((a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*(c_ + _d_*sin(x*_f_ + _e_))**n_, x)/(a_*(2*m_ + 1)),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=10,

@@ -157,7 +157,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('Erf')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=(Integer(2) * _b_ * x * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List((Integer(2))**(Integer(-1)), (Integer(2))**(Integer(-1))), List((Integer(3) * (Integer(2))**(Integer(-1))), (Integer(3) * (Integer(2))**(Integer(-1)))), ((Integer(-1) * (_b_)**(Integer(2))) * (x)**(Integer(2))))),
+        replacement=2*x*_b_*hyper((sympy.S.Half, sympy.S.Half), (sympy.S(3)/2, sympy.S(3)/2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=10,
     ),
@@ -173,7 +173,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('Erfi')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=(Integer(2) * _b_ * x * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List((Integer(2))**(Integer(-1)), (Integer(2))**(Integer(-1))), List((Integer(3) * (Integer(2))**(Integer(-1))), (Integer(3) * (Integer(2))**(Integer(-1)))), ((_b_)**(Integer(2)) * (x)**(Integer(2))))),
+        replacement=2*x*_b_*hyper((sympy.S.Half, sympy.S.Half), (sympy.S(3)/2, sympy.S(3)/2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=12,
     ),
@@ -301,7 +301,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
-        replacement=(_b_ * (sympy.E)**(_c_) * (x)**(Integer(2)) * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), ((_b_)**(Integer(2)) * (x)**(Integer(2))))),
+        replacement=x**2*_b_*exp(_c_)*hyper((1, 1), (sympy.S(3)/2, 2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=28,
     ),
@@ -317,7 +317,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, -_b_**2),),
-        replacement=(_b_ * (sympy.E)**(_c_) * (x)**(Integer(2)) * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), ((Integer(-1) * (_b_)**(Integer(2))) * (x)**(Integer(2))))),
+        replacement=x**2*_b_*exp(_c_)*hyper((1, 1), (sympy.S(3)/2, 2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=30,
     ),
@@ -397,7 +397,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
-        replacement=(Integer(2) * _b_ * (sympy.E)**(_c_) * x * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List((Integer(2))**(Integer(-1)), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), (Integer(3) * (Integer(2))**(Integer(-1)))), ((_b_)**(Integer(2)) * (x)**(Integer(2))))),
+        replacement=2*x*_b_*exp(_c_)*hyper((sympy.S.Half, 1), (sympy.S(3)/2, sympy.S(3)/2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=40,
     ),
@@ -413,7 +413,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, -_b_**2),),
-        replacement=(Integer(2) * _b_ * (sympy.E)**(_c_) * x * (sympy.sqrt(sympy.pi))**(Integer(-1)) * sympy.hyper(List((Integer(2))**(Integer(-1)), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), (Integer(3) * (Integer(2))**(Integer(-1)))), ((Integer(-1) * (_b_)**(Integer(2))) * (x)**(Integer(2))))),
+        replacement=2*x*_b_*exp(_c_)*hyper((sympy.S.Half, 1), (sympy.S(3)/2, sympy.S(3)/2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
         rule_number=42,
     ),

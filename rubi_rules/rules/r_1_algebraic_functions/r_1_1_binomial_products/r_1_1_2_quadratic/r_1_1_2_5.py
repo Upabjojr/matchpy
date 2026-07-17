@@ -238,8 +238,8 @@ RULES = [
     # Rule 44
     RubiRulePattern(
         pattern=Int((x**2*_b_ + a_)**p_*(x**2*_d_ + c_)**q_*(x**2*_f_ + e_)**r_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_, p_, q_, r_], x),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((a_ + (_b_ * (x)**(Integer(2)))))**(p_) * ((c_ + (_d_ * (x)**(Integer(2)))))**(q_) * ((e_ + (_f_ * (x)**(Integer(2)))))**(r_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_, p_, q_, r_], x), SumQ(ExpandIntegrand((x**2*_b_ + a_)**p_*(x**2*_d_ + c_)**q_*(x**2*_f_ + e_)**r_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((a_ + (_b_ * (x)**(Integer(2)))))**(p_) * ((c_ + (_d_ * (x)**(Integer(2)))))**(q_) * ((e_ + (_f_ * (x)**(Integer(2)))))**(r_)), x))), Int(Symbol('u'), x)),
         module_name='1.1.2.5 (a+b x^2)^p (c+d x^2)^q (e+f x^2)^r',
         rule_number=44,
     ),

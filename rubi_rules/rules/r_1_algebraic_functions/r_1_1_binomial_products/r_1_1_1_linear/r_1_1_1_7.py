@@ -157,16 +157,16 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int(Pp_/Qq_, x),
-        constraints=(PolyQ(Pp_, x), PolyQ(Qq_, x),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), Condition((Coeff(Pp_, x, Symbol('p')) * sympy.log(Qq_) * ((Symbol('q') * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1))), And(EqQ(Symbol('p'), (Symbol('q') + Integer(-1))), EqQ(Pp_, sympy.simplify((Coeff(Pp_, x, Symbol('p')) * ((Symbol('q') * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1)) * sympy.diff(Qq_, x))))))),
+        constraints=(PolyQ(Pp_, x), PolyQ(Qq_, x), EqQ(Expon(Pp_, x), Expon(Qq_, x) - 1), EqQ(Pp_, Simplify(Coeff(Pp_, x, Expon(Pp_, x))*D(Qq_, x)/(Coeff(Qq_, x, Expon(Qq_, x))*Expon(Qq_, x)))),),
+        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), (Coeff(Pp_, x, Symbol('p')) * sympy.log(Qq_) * ((Symbol('q') * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1)))),
         module_name='1.1.1.7 P(x) (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=6,
     ),
     # Rule 7
     RubiRulePattern(
         pattern=Int(Pp_*Qq_**_m_, x),
-        constraints=(FreeQ(_m_, x), PolyQ(Pp_, x), PolyQ(Qq_, x), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), Condition((Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + Integer(1)) * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1))), And(NeQ((Symbol('p') + (_m_ * Symbol('q')) + Integer(1)), Integer(0)), EqQ(((Symbol('p') + (_m_ * Symbol('q')) + Integer(1)) * Coeff(Qq_, x, Symbol('q')) * Pp_), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')))) * (((Symbol('p') + (Integer(-1) * Symbol('q')) + Integer(1)) * Qq_) + ((_m_ + Integer(1)) * x * sympy.diff(Qq_, x)))))))),
+        constraints=(FreeQ(_m_, x), PolyQ(Pp_, x), PolyQ(Qq_, x), NeQ(_m_, -1), NeQ(_m_*Expon(Qq_, x) + Expon(Pp_, x) + 1, 0), EqQ(Pp_*(_m_*Expon(Qq_, x) + Expon(Pp_, x) + 1)*Coeff(Qq_, x, Expon(Qq_, x)), x**(Expon(Pp_, x) - Expon(Qq_, x))*(x*(_m_ + 1)*D(Qq_, x) + Qq_*(Expon(Pp_, x) - Expon(Qq_, x) + 1))*Coeff(Pp_, x, Expon(Pp_, x))),),
+        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + Integer(1)) * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1)))),
         module_name='1.1.1.7 P(x) (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=7,
     ),
@@ -181,16 +181,16 @@ RULES = [
     # Rule 9
     RubiRulePattern(
         pattern=Int(Pp_*Qq_**_m_*Rr_**_n_, x),
-        constraints=(FreeQ([_m_, _n_], x), PolyQ(Pp_, x), PolyQ(Qq_, x), PolyQ(Rr_, x), NeQ(_m_, -1), NeQ(_n_, -1),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x)), Set(Symbol('r'), Expon(Rr_, x))), Condition((Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + (Integer(-1) * Symbol('r')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (Rr_)**((_n_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + (_n_ * Symbol('r')) + Integer(1)) * Coeff(Qq_, x, Symbol('q')) * Coeff(Rr_, x, Symbol('r'))))**(Integer(-1))), And(NeQ((Symbol('p') + (_m_ * Symbol('q')) + (_n_ * Symbol('r')) + Integer(1)), Integer(0)), EqQ(((Symbol('p') + (_m_ * Symbol('q')) + (_n_ * Symbol('r')) + Integer(1)) * Coeff(Qq_, x, Symbol('q')) * Coeff(Rr_, x, Symbol('r')) * Pp_), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + (Integer(-1) * Symbol('r')))) * (((Symbol('p') + (Integer(-1) * Symbol('q')) + (Integer(-1) * Symbol('r')) + Integer(1)) * Qq_ * Rr_) + ((_m_ + Integer(1)) * x * Rr_ * sympy.diff(Qq_, x)) + ((_n_ + Integer(1)) * x * Qq_ * sympy.diff(Rr_, x)))))))),
+        constraints=(FreeQ([_m_, _n_], x), PolyQ(Pp_, x), PolyQ(Qq_, x), PolyQ(Rr_, x), NeQ(_m_, -1), NeQ(_n_, -1), NeQ(_m_*Expon(Qq_, x) + _n_*Expon(Rr_, x) + Expon(Pp_, x) + 1, 0), EqQ(Pp_*(_m_*Expon(Qq_, x) + _n_*Expon(Rr_, x) + Expon(Pp_, x) + 1)*Coeff(Qq_, x, Expon(Qq_, x))*Coeff(Rr_, x, Expon(Rr_, x)), x**(Expon(Pp_, x) - Expon(Qq_, x) - Expon(Rr_, x))*(x*Qq_*(_n_ + 1)*D(Rr_, x) + x*Rr_*(_m_ + 1)*D(Qq_, x) + Qq_*Rr_*(Expon(Pp_, x) - Expon(Qq_, x) - Expon(Rr_, x) + 1))*Coeff(Pp_, x, Expon(Pp_, x))),),
+        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x)), Set(Symbol('r'), Expon(Rr_, x))), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + (Integer(-1) * Symbol('r')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (Rr_)**((_n_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + (_n_ * Symbol('r')) + Integer(1)) * Coeff(Qq_, x, Symbol('q')) * Coeff(Rr_, x, Symbol('r'))))**(Integer(-1)))),
         module_name='1.1.1.7 P(x) (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=9,
     ),
     # Rule 10
     RubiRulePattern(
         pattern=Int(Qr_*(Pq_**_n_*_b_ + _a_)**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _n_, _p_], x), PolyQ(Pq_, x), PolyQ(Qr_, x),),
-        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Condition((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**(_n_))))**(_p_), x), x, Pq_)), And(EqQ(Symbol('r'), (Symbol('q') + Integer(-1))), EqQ((Coeff(Qr_, x, Symbol('r')) * sympy.diff(Pq_, x)), (Symbol('q') * Coeff(Pq_, x, Symbol('q')) * Qr_))))),
+        constraints=(FreeQ([_a_, _b_, _n_, _p_], x), PolyQ(Pq_, x), PolyQ(Qr_, x), EqQ(Expon(Qr_, x), Expon(Pq_, x) - 1), EqQ(Coeff(Qr_, x, Expon(Qr_, x))*D(Pq_, x), Qr_*Coeff(Pq_, x, Expon(Pq_, x))*Expon(Pq_, x)),),
+        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), (Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**(_n_))))**(_p_), x), x, Pq_))),
         module_name='1.1.1.7 P(x) (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=10,
     ),
@@ -198,7 +198,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Qr_*(Pq_**_n_*_b_ + Pq_**_n2_*_c_ + _a_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, _p_], x), EqQ(_n2_, 2*_n_), PolyQ(Pq_, x), PolyQ(Qr_, x),),
-        replacement=Module(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Condition((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**(_n_)) + (_c_ * (x)**((Integer(2) * _n_)))))**(_p_), x), x, Pq_)), And(EqQ(Symbol('r'), (Symbol('q') + Integer(-1))), EqQ((Coeff(Qr_, x, Symbol('r')) * sympy.diff(Pq_, x)), (Symbol('q') * Coeff(Pq_, x, Symbol('q')) * Qr_))))),
+        replacement=Module(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Condition((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**(_n_)) + (_c_ * (x)**((Integer(2) * _n_)))))**(_p_), x), x, Pq_)), And(EqQ(Symbol('r'), (Symbol('q') + Integer(-1))), EqQ((Coeff(Qr_, x, Symbol('r')) * D(Pq_, x)), (Symbol('q') * Coeff(Pq_, x, Symbol('q')) * Qr_))))),
         module_name='1.1.1.7 P(x) (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=11,
     ),

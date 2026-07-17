@@ -92,8 +92,8 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int(Px_**p_, x),
-        constraints=(PolyQ(Px_, x, 3), IntegerQ(p_),),
-        replacement=With(List(Set(Symbol('a'), Coeff(Px_, x, Integer(0))), Set(Symbol('b'), Coeff(Px_, x, Integer(1))), Set(Symbol('c'), Coeff(Px_, x, Integer(2))), Set(Symbol('d'), Coeff(Px_, x, Integer(3)))), Condition((((Symbol('d'))**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int((((Symbol('c') + (Symbol('d') * x)))**(p_) * ((Symbol('b') + (Symbol('d') * (x)**(Integer(2)))))**(p_)), x)), EqQ(((Symbol('b') * Symbol('c')) + (Integer(-1) * (Symbol('a') * Symbol('d')))), Integer(0)))),
+        constraints=(PolyQ(Px_, x, 3), IntegerQ(p_), EqQ(-Coeff(Px_, x, 0)*Coeff(Px_, x, 3) + Coeff(Px_, x, 1)*Coeff(Px_, x, 2), 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(Px_, x, Integer(0))), Set(Symbol('b'), Coeff(Px_, x, Integer(1))), Set(Symbol('c'), Coeff(Px_, x, Integer(2))), Set(Symbol('d'), Coeff(Px_, x, Integer(3)))), (((Symbol('d'))**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int((((Symbol('c') + (Symbol('d') * x)))**(p_) * ((Symbol('b') + (Symbol('d') * (x)**(Integer(2)))))**(p_)), x))),
         module_name='1.3.1 u (a+b x+c x^2+d x^3)^p',
         rule_number=6,
     ),
@@ -101,8 +101,8 @@ RULES = [
     # Rule 8
     RubiRulePattern(
         pattern=Int(Px_**p_, x),
-        constraints=(FreeQ(p_, x), PolyQ(Px_, x, 3),),
-        replacement=With(List(Set(Symbol('a'), Coeff(Px_, x, Integer(0))), Set(Symbol('b'), Coeff(Px_, x, Integer(1))), Set(Symbol('c'), Coeff(Px_, x, Integer(2))), Set(Symbol('d'), Coeff(Px_, x, Integer(3)))), Condition(Subst(Int((Simp((Symbol('a') + (Integer(-1) * ((Symbol('b'))**(Integer(2)) * ((Integer(3) * Symbol('c')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(p_), x), x, ((Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1))) + x)), EqQ(((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))), Integer(0)))),
+        constraints=(FreeQ(p_, x), PolyQ(Px_, x, 3), EqQ(-3*Coeff(Px_, x, 1)*Coeff(Px_, x, 3) + Coeff(Px_, x, 2)**2, 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(Px_, x, Integer(0))), Set(Symbol('b'), Coeff(Px_, x, Integer(1))), Set(Symbol('c'), Coeff(Px_, x, Integer(2))), Set(Symbol('d'), Coeff(Px_, x, Integer(3)))), Subst(Int((Simp((Symbol('a') + (Integer(-1) * ((Symbol('b'))**(Integer(2)) * ((Integer(3) * Symbol('c')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(p_), x), x, ((Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1))) + x))),
         module_name='1.3.1 u (a+b x+c x^2+d x^3)^p',
         rule_number=8,
     ),
@@ -141,8 +141,8 @@ RULES = [
     # Rule 21
     RubiRulePattern(
         pattern=Int(P3_**_p_*(x*_f_ + _e_)**_m_, x),
-        constraints=(FreeQ([_e_, _f_, _m_, _p_], x), PolyQ(P3_, x, 3),),
-        replacement=With(List(Set(Symbol('a'), Coeff(P3_, x, Integer(0))), Set(Symbol('b'), Coeff(P3_, x, Integer(1))), Set(Symbol('c'), Coeff(P3_, x, Integer(2))), Set(Symbol('d'), Coeff(P3_, x, Integer(3)))), Condition(Subst(Int(((((((Integer(3) * Symbol('d') * _e_) + (Integer(-1) * (Symbol('c') * _f_))) * ((Integer(3) * Symbol('d')))**(Integer(-1))) + (_f_ * x)))**(_m_) * (Simp(((((Integer(2) * (Symbol('c'))**(Integer(3))) + (Integer(-1) * (Integer(9) * Symbol('b') * Symbol('c') * Symbol('d'))) + (Integer(27) * Symbol('a') * (Symbol('d'))**(Integer(2)))) * ((Integer(27) * (Symbol('d'))**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))) * x * ((Integer(3) * Symbol('d')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(_p_)), x), x, (x + (Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1))))), NeQ(Symbol('c'), Integer(0)))),
+        constraints=(FreeQ([_e_, _f_, _m_, _p_], x), PolyQ(P3_, x, 3), NeQ(Coeff(P3_, x, 2), 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(P3_, x, Integer(0))), Set(Symbol('b'), Coeff(P3_, x, Integer(1))), Set(Symbol('c'), Coeff(P3_, x, Integer(2))), Set(Symbol('d'), Coeff(P3_, x, Integer(3)))), Subst(Int(((((((Integer(3) * Symbol('d') * _e_) + (Integer(-1) * (Symbol('c') * _f_))) * ((Integer(3) * Symbol('d')))**(Integer(-1))) + (_f_ * x)))**(_m_) * (Simp(((((Integer(2) * (Symbol('c'))**(Integer(3))) + (Integer(-1) * (Integer(9) * Symbol('b') * Symbol('c') * Symbol('d'))) + (Integer(27) * Symbol('a') * (Symbol('d'))**(Integer(2)))) * ((Integer(27) * (Symbol('d'))**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))) * x * ((Integer(3) * Symbol('d')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(_p_)), x), x, (x + (Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1)))))),
         module_name='1.3.1 u (a+b x+c x^2+d x^3)^p',
         rule_number=21,
     ),

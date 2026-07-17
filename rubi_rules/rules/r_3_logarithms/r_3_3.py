@@ -316,8 +316,8 @@ RULES = [
     # Rule 26
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))*(x**_r_*_g_ + f_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_, _m_, _n_, _q_, _r_], x), IntegerQ(_m_), IntegerQ(_q_), IntegerQ(_r_),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * ((f_ + (_g_ * (x)**(_r_))))**(_q_)), x))), Condition((Dist((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _e_ * _n_ * Int(SimplifyIntegrand((Symbol('u') * ((d_ + (_e_ * x)))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('u'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_, _m_, _n_, _q_, _r_], x), IntegerQ(_m_), IntegerQ(_q_), IntegerQ(_r_), InverseFunctionFreeQ(IntHide(x**_m_*(x**_r_*_g_ + f_)**_q_, x), x),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * ((f_ + (_g_ * (x)**(_r_))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _e_ * _n_ * Int(SimplifyIntegrand((Symbol('u') * ((d_ + (_e_ * x)))**(Integer(-1))), x), x))))),
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',
         rule_number=26,
     ),
@@ -348,16 +348,16 @@ RULES = [
     # Rule 30
     RubiRulePattern(
         pattern=Int(RFx_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), RationalFunctionQ(RFx_, x), IntegerQ(_p_),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), RationalFunctionQ(RFx_, x), IntegerQ(_p_), SumQ(ExpandIntegrand((_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))**_p_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_), RFx_, x))), Int(Symbol('u'), x)),
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',
         rule_number=30,
     ),
     # Rule 31
     RubiRulePattern(
         pattern=Int(RFx_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), RationalFunctionQ(RFx_, x), IntegerQ(_p_),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((RFx_ * ((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), RationalFunctionQ(RFx_, x), IntegerQ(_p_), SumQ(ExpandIntegrand(RFx_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))**_p_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((RFx_ * ((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_)), x))), Int(Symbol('u'), x)),
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',
         rule_number=31,
     ),

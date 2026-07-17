@@ -263,7 +263,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(acosh(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=x*acosh(u_) - Int(SimplifyIntegrand(0, x), x),
+        replacement=x*acosh(u_) - Int(SimplifyIntegrand(x*D(u_, x)/(sqrt(u_ - 1)*sqrt(u_ + 1)), x), x),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=22,
     ),
@@ -271,15 +271,15 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acosh(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=-_b_*Int(SimplifyIntegrand(0, x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*acosh(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
+        replacement=-_b_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(sqrt(u_ - 1)*sqrt(u_ + 1)), x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*acosh(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=23,
     ),
     # Rule 24
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acosh(u_)), x),
-        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), Condition((Dist((_a_ + (_b_ * sympy.acosh(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * sympy.diff(u_, x) * ((sympy.sqrt((Integer(-1) + u_)) * sympy.sqrt((Integer(1) + u_))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('w'), x))),
+        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
+        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acosh(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((sympy.sqrt((Integer(-1) + u_)) * sympy.sqrt((Integer(1) + u_))))**(Integer(-1))), x), x))))),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=24,
     ),

@@ -1244,16 +1244,16 @@ RULES = [
     # Rule 145
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=145,
     ),
     # Rule 146
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=146,
     ),

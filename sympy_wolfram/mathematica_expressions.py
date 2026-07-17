@@ -392,12 +392,16 @@ class With(MathematicaExpr):
     """
 
     def __new__(cls, bindings, body):
+        if isinstance(bindings, list):
+            bindings = List(*bindings)
+        if isinstance(bindings, dict):
+            bindings = List(*[Set(k, v) for k, v in bindings.items()])
         return Expr.__new__(cls, sympify(bindings), sympify(body))
 
     def doit(self, **kwargs):
         bindings, body = self.args
         subs = _binding_substitutions(bindings, evaluate_values=True, **kwargs)
-        result = body.xreplace(subs)
+        result = _substitute_body(body, subs)
         try:
             return _eval(result, **kwargs)
         except _ReturnSignal as signal:
@@ -452,164 +456,6 @@ class Module(MathematicaExpr):
     >>> r1 == r2
     False
 
-
-def _eval(expr, **kwargs):
-    return expr.doit(**kwargs) if hasattr(expr, 'doit') else expr
-
-
-def _is_true(value) -> bool:
-    return value is True or value == S.true or isinstance(value, BooleanTrue)
-
-
-def _is_false(value) -> bool:
-    return value is False or value == S.false or isinstance(value, BooleanFalse)
-
-
-def _list_items(expr) -> Iterable[Any]:
-    if isinstance(expr, List):
-        return expr.args
-    if isinstance(expr, (tuple, list)):
-        return expr
-    return (expr,)
-
-
-def _binding_substitutions(bindings, evaluate_values: bool, **kwargs):
-    subs = {}
-    for item in _list_items(bindings):
-        if isinstance(item, Set):
-            symbol, value = item.args
-            subs[symbol] = _eval(value, **kwargs) if evaluate_values else value
-    return subs
-
-
-def _fresh_symbol(symbol: Symbol) -> Symbol:
-    return Symbol(f'{symbol.name}${next(_MODULE_COUNTER)}')
-
-
-def _apply_function(function, *items):
-    if isinstance(function, sympy.Lambda):
-        # Slice args to the Lambda's declared arity so a 1-variable
-        # Lambda(v, expr) works even when called as handler(value, tag).
-        n = len(function.variables)
-        return function(*items[:n])
-    if isinstance(function, Expr) and getattr(function, 'is_Function', False):
-        return function.func(*items)
-    if callable(function):
-        return function(*items)
-    return sympy.Function(str(function))(*items)
-
-
-def _scan_items(expr):
-    if isinstance(expr, List):
-        return expr.args
-    if isinstance(expr, (tuple, list)):
-        return expr
-    return (expr,)
-
-
-def _execute_do(body, iter_specs, kwargs):
-    if not iter_specs:
-        _eval(body, **kwargs)
-        return
-    current, *rest = iter_specs
-    for subs in _iterator_substitutions(current, **kwargs):
-        next_body = body.xreplace(subs)
-        _execute_do(next_body, rest, kwargs)
-
-
-def _iterator_substitutions(spec, **kwargs):
-    if not isinstance(spec, List):
-        raise TypeError('Do iterator specification must be a List expression')
-    items = list(spec.args)
-    if not items:
-        return []
-
-    if isinstance(items[0], Symbol):
-        var = items[0]
-        if len(items) == 2:
-            imin = Integer(1)
-            imax = _eval(items[1], **kwargs)
-            step = Integer(1)
-        elif len(items) == 3:
-            imin = _eval(items[1], **kwargs)
-            imax = _eval(items[2], **kwargs)
-            step = Integer(1)
-        elif len(items) == 4:
-            imin = _eval(items[1], **kwargs)
-            imax = _eval(items[2], **kwargs)
-            step = _eval(items[3], **kwargs)
-        else:
-            raise ValueError('Unsupported Do iterator specification')
-        return ({var: value} for value in _inclusive_range(imin, imax, step))
-
-    if len(items) == 1:
-        n = _eval(items[0], **kwargs)
-        return ({} for _ in _inclusive_range(Integer(1), n, Integer(1)))
-
-    raise ValueError('Unsupported Do iterator specification')
-
-
-def _inclusive_range(imin, imax, step):
-    start = int(imin)
-    stop = int(imax)
-    delta = int(step)
-    if delta == 0:
-        raise ValueError('Do step must be non-zero')
-    if delta > 0:
-        return [Integer(i) for i in range(start, stop + 1, delta)]
-    return [Integer(i) for i in range(start, stop - 1, delta)]
-
-
-def _head_name(expr) -> str:
-    if expr == S.true:
-        return 'True'
-    if expr == S.false:
-        return 'False'
-    if expr == Null:
-        return 'Symbol'
-    if isinstance(expr, Integer):
-        return 'Integer'
-    if isinstance(expr, Rational) and not isinstance(expr, Integer):
-        return 'Rational'
-    if isinstance(expr, Symbol):
-        return 'Symbol'
-    if isinstance(expr, List):
-        return 'List'
-    if isinstance(expr, Add):
-        return 'Plus'
-    if isinstance(expr, Mul):
-        return 'Times'
-    if isinstance(expr, Pow):
-        return 'Power'
-    if isinstance(expr, sympy.Function):
-        return expr.func.__name__
-    if isinstance(expr, MathematicaExpr):
-        return expr.__class__.__name__
-    return expr.func.__name__
-
-
-__all__ = [
-    'Block',
-    'Catch',
-    'CompoundExpression',
-    'Do',
-    'Head',
-    'If',
-    'List',
-    'MathematicaExpr',
-    'Module',
-    'Null',
-    'Reap',
-    'Return',
-    'Scan',
-    'Set',
-    'Sow',
-    'Throw',
-    'With',
-]
-)    # unique name, number varies
-    True
-
     Fresh symbols are independent across two ``Module`` calls::
 
     >>> r1 = Module(List(x), x).doit()
@@ -625,6 +471,10 @@ __all__ = [
     """
 
     def __new__(cls, locals_list, body):
+        if isinstance(locals_list, list):
+            locals_list = List(*locals_list)
+        elif isinstance(locals_list, dict):
+            locals_list = List(*[Set(k, v) for k, v in locals_list.items()])
         return Expr.__new__(cls, sympify(locals_list), sympify(body))
 
     def doit(self, **kwargs):
@@ -639,7 +489,7 @@ __all__ = [
                 initialized[fresh] = _eval(value, **kwargs)
             elif isinstance(item, Symbol):
                 renamed[item] = _fresh_symbol(item)
-        result = body.xreplace(renamed).xreplace(initialized)
+        result = _substitute_body(body.xreplace(renamed), initialized)
         try:
             return _eval(result, **kwargs)
         except _ReturnSignal as signal:
@@ -696,7 +546,7 @@ class Block(MathematicaExpr):
     def doit(self, **kwargs):
         locals_list, body = self.args
         subs = _binding_substitutions(locals_list, evaluate_values=True, **kwargs)
-        result = body.xreplace(subs)
+        result = _substitute_body(body, subs)
         try:
             return _eval(result, **kwargs)
         except _ReturnSignal as signal:
@@ -1255,6 +1105,17 @@ class Head(MathematicaExpr):
         return Symbol(_head_name(expr))
 
 
+class D(MathematicaExpr):
+    """Derivative"""
+    def __new__(cls, f, x):
+        obj = MathematicaExpr.__new__(cls, f, x)
+        return obj
+
+    def _evaluate(self, **kwargs):
+        f, x = self.args
+        return sympy.diff(f, x)
+
+
 def _eval(expr, **kwargs):
     return expr.doit(**kwargs) if hasattr(expr, 'doit') else expr
 
@@ -1282,6 +1143,34 @@ def _binding_substitutions(bindings, evaluate_values: bool, **kwargs):
             symbol, value = item.args
             subs[symbol] = _eval(value, **kwargs) if evaluate_values else value
     return subs
+
+
+def _is_condition_wrapper(expr) -> bool:
+    return getattr(expr.__class__, '__name__', '') == 'Condition' and len(getattr(expr, 'args', ())) == 2
+
+
+def _substitute_body(body, substitutions):
+    if _is_condition_wrapper(body):
+        expr, test = body.args
+        return body.func(expr.xreplace(substitutions), test.xreplace(substitutions))
+    return body.xreplace(substitutions)
+
+
+def _condition_holds(test, **kwargs) -> bool:
+    test = _eval(test, **kwargs) if hasattr(test, 'doit') else test
+    if _is_true(test):
+        return True
+    if _is_false(test):
+        return False
+    if isinstance(test, sympy.logic.boolalg.Not):
+        return not _condition_holds(test.args[0], **kwargs)
+    if isinstance(test, sympy.logic.boolalg.And):
+        return all(_condition_holds(arg, **kwargs) for arg in test.args)
+    if isinstance(test, sympy.logic.boolalg.Or):
+        return any(_condition_holds(arg, **kwargs) for arg in test.args)
+    if hasattr(test, 'check') and callable(test.check):
+        return bool(test.check(**kwargs))
+    return False
 
 
 def _fresh_symbol(symbol: Symbol) -> Symbol:

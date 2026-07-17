@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Core objects for Rubi integration rules."""
 import os
+from pathlib import Path
 import sympy
 from typing import Any, List, Tuple
 from pydantic import BaseModel
@@ -58,7 +59,8 @@ def _make_replacement_fn(replacement_expr, wild_names, rule):
         for ws in _collect_wild_symbols(replacement_expr).values():
             if ws.wildcard_name in sympy_subs:
                 result = result.subs(ws, sympy_subs[ws.wildcard_name])
-        # Evaluate RubiFunction nodes (With, Condition, SimplifyIntegrand, …).
+        # Evaluate MathematicaExpr-based helper nodes (With, Condition,
+        # SimplifyIntegrand, …).
         # A Condition whose test fails raises StopIteration, which propagates
         # here and is caught by ManyToOneReplacer.replace() as "no match" —
         # the rule is silently skipped, matching Mathematica's Condition semantics.
@@ -170,7 +172,21 @@ def _make_matchpy_constraint(constraint_obj, wild_names, pattern_wilds):
     return CustomConstraint(fn)
 
 
-def build_replacer(rules: List[RubiRulePattern]) -> ManyToOneReplacer:
+def _make_tracing_replacement_fn(replacement_expr, wild_names, rule):
+    base_replacement = _make_replacement_fn(replacement_expr, wild_names, rule)
+
+    def _replacement(**match_dict):
+        result = base_replacement(**match_dict)
+        return result, (rule.module_name, rule.rule_number)
+
+    _replacement.__qualname__ = base_replacement.__qualname__
+    _replacement.__module__ = base_replacement.__module__
+    return _replacement
+
+
+def build_tracing_replacer(
+    rules: List[RubiRulePattern],
+) -> ManyToOneReplacer:
     replacer = ManyToOneReplacer()
     for i, rule in enumerate(rules):
         matchpy_pattern_expr = to_expression(rule.pattern)
@@ -181,75 +197,142 @@ def build_replacer(rules: List[RubiRulePattern]) -> ManyToOneReplacer:
             mc = _make_matchpy_constraint(constraint, wild_names, wilds)
             matchpy_constraints.append(mc)
         pattern = Pattern(matchpy_pattern_expr, *matchpy_constraints)
-        replacement_fn = _make_replacement_fn(rule.replacement, wild_names, rule)
+        replacement_fn = _make_tracing_replacement_fn(
+            rule.replacement,
+            wild_names,
+            rule,
+        )
         replacer.add(ReplacementRule(pattern, replacement_fn))
     return replacer
 
 
-_RULES_DIR = os.path.join(os.path.dirname(__file__), 'rules')
+class _RubiIntegrator:
+    """Caller-owned Rubi integrator with explicit caches and tracing support."""
 
+    def __init__(self, rules_dir: str | os.PathLike | None = None):
+        self.rules_dir = Path(rules_dir) if rules_dir is not None else Path(os.path.dirname(__file__)) / 'rules'
+        self._replacer_cache: dict[str, ManyToOneReplacer] = {}
 
-def load_rules(pattern: str = '**') -> ManyToOneReplacer:
-    import importlib
-    import importlib.util
-    from pathlib import Path
+    def _normalize_rule_glob(self, pattern: str) -> str:
+        normalized = pattern.replace('\\', '/')
+        if normalized.endswith('.py'):
+            return normalized
+        if normalized.endswith('**'):
+            return normalized + '/*.py'
+        if normalized.endswith('*'):
+            return normalized if normalized.endswith('*.py') else normalized + '.py'
 
-    rules_dir = Path(_RULES_DIR)
-    all_rules = []
+        direct_file = normalized.rstrip('/') + '.py'
+        if (self.rules_dir / direct_file).exists():
+            return direct_file
+        return normalized.rstrip('/') + '/**/*.py'
 
-    if not pattern.endswith('.py') and not pattern.endswith('*'):
-        pattern = pattern.rstrip('/') + '/**/*.py'
-    elif pattern.endswith('**'):
-        pattern = pattern + '/*.py'
-    elif pattern.endswith('*') and not pattern.endswith('*.py'):
-        pattern = pattern + '.py'
+    def load_rule_patterns(self, pattern: str = '**') -> tuple[RubiRulePattern, ...]:
+        import importlib.util
 
-    for py_file in sorted(rules_dir.glob(pattern)):
-        if py_file.name.startswith('_'):
-            continue
-        module_name = f"rubi_rules.rules.{py_file.relative_to(rules_dir).with_suffix('').as_posix().replace('/', '.')}"
-        try:
-            spec = importlib.util.spec_from_file_location(module_name, py_file)
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-            if hasattr(mod, 'RULES'):
-                all_rules.extend(mod.RULES)
-        except Exception as e:
-            import warnings, traceback
-            warnings.warn(
-                f"Failed to load rules from {py_file.name}: {e}\n"
-                + traceback.format_exc()
+        glob_pattern = self._normalize_rule_glob(pattern)
+
+        all_rules = []
+        for py_file in sorted(self.rules_dir.glob(glob_pattern)):
+            if py_file.name.startswith('_'):
+                continue
+            module_name = (
+                f"rubi_rules.rules."
+                f"{py_file.relative_to(self.rules_dir).with_suffix('').as_posix().replace('/', '.')}"
             )
+            try:
+                spec = importlib.util.spec_from_file_location(module_name, py_file)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                if hasattr(mod, 'RULES'):
+                    all_rules.extend(mod.RULES)
+            except Exception as e:
+                import warnings, traceback
+                warnings.warn(
+                    f"Failed to load rules from {py_file.name}: {e}\n"
+                    + traceback.format_exc()
+                )
 
-    return build_replacer(all_rules)
+        rules = tuple(all_rules)
+        return rules
+
+    def reset_cache(self):
+        self._replacer_cache.clear()
+
+    def integrate(
+        self,
+        expr: sympy.Expr,
+        x: sympy.Symbol,
+        pattern: str = '**',
+    ) -> tuple[sympy.Expr, list[tuple[str, int]]]:
+        expr = sympy.sympify(expr)
+        x = sympy.sympify(x)
+        x_canonical = sympy.Symbol('x')
+
+        matched_rules = []
+        replacer = self._load_replacer(pattern)
+
+        if x == x_canonical:
+            result, matched_rule = _preprocess_integrate(expr, x_canonical, replacer)
+        else:
+            dummy = sympy.Dummy('_x_var')
+            expr_sub = expr.subs(x_canonical, dummy).subs(x, x_canonical)
+            result, matched_rule = _preprocess_integrate(expr_sub, x_canonical, replacer)
+            result = result.subs(x_canonical, x).subs(dummy, x_canonical)
+
+        matched_rules.append(matched_rule)
+        return result, matched_rules
+
+    def _load_replacer(self, pattern: str) -> ManyToOneReplacer:
+        pattern = self._normalize_rule_glob(pattern)
+        if pattern not in self._replacer_cache:
+            rules = list(self.load_rule_patterns(pattern))
+            replacer = build_tracing_replacer(rules)
+            self._replacer_cache[pattern] = replacer
+        return self._replacer_cache[pattern]
 
 
-_CACHED_REPLACER = None
+_rubi_integrator = _RubiIntegrator()
 
 
-def _matchpy_integrate(expr, x, replacer):
+def load_rule_patterns(
+    pattern: str = '**',
+    integrator: _RubiIntegrator | None = None,
+) -> tuple[RubiRulePattern, ...]:
+    integrator = integrator or _RubiIntegrator()
+    return integrator.load_rule_patterns(pattern)
+
+
+def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer):
     mp_expr = to_expression(Int(expr, x))
-    result = replacer.replace(mp_expr)
-    return matchpy_to_sympy(result)
+    result, matched_rule = replacer.replace(mp_expr)
+    return matchpy_to_sympy(result), matched_rule
 
 
-def _preprocess_integrate(expr, x, replacer):
+def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer):
     expr = sympy.sympify(expr)
     if x not in expr.free_symbols:
         return expr * x
     if expr.is_Add:
-        return sympy.Add(*[_preprocess_integrate(t, x, replacer) for t in expr.args])
+        addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer) for t in expr.args])
+        return sympy.Add(*addends), matched_rules
     if expr.is_Mul:
         free_factors = [f for f in expr.args if x not in f.free_symbols]
         x_factors = [f for f in expr.args if x in f.free_symbols]
         if free_factors:
             const = sympy.Mul(*free_factors)
             core = x_factors[0] if len(x_factors) == 1 else sympy.Mul(*x_factors)
-            return const * _preprocess_integrate(core, x, replacer)
+            integ, matched_rule = _preprocess_integrate(core, x, replacer)
+            return const * integ, matched_rule
     return _matchpy_integrate(expr, x, replacer)
 
 
-def rubi_integrate(expr, x, pattern: str = '**'):
+def rubi_integrate(
+    expr: sympy.Expr,
+    x: sympy.Symbol,
+    pattern: str = '**',
+    return_matched_rules: bool = False,
+):
     """Integrate expr with respect to x using the Rubi rule set.
 
     The rule files are written with Symbol('x') as the canonical integration
@@ -270,27 +353,16 @@ def rubi_integrate(expr, x, pattern: str = '**'):
     >>> rubi_integrate(x * y, x)   # x**2*y/2
     >>> rubi_integrate(x * y, y)   # x*y**2/2
     """
-    global _CACHED_REPLACER
-    if _CACHED_REPLACER is None:
-        _CACHED_REPLACER = load_rules(pattern)
-
-    expr = sympy.sympify(expr)
-    x = sympy.sympify(x)
-    x_canonical = sympy.Symbol('x')
-
-    if x == x_canonical:
-        # Integration variable is already Symbol('x') — no substitution needed.
-        return _preprocess_integrate(expr, x_canonical, _CACHED_REPLACER)
-
-    # Replace existing Symbol('x') in expr with a Dummy to avoid it being
-    # renamed to the integration variable in the next step.
-    dummy = sympy.Dummy('_x_var')
-    expr_sub = expr.subs(x_canonical, dummy).subs(x, x_canonical)
-    result = _preprocess_integrate(expr_sub, x_canonical, _CACHED_REPLACER)
-    # Undo the substitution: canonical x → original variable, dummy → x.
-    return result.subs(x_canonical, x).subs(dummy, x_canonical)
+    integ, matched_rules = _rubi_integrator.integrate(
+        expr,
+        x,
+        pattern=pattern,
+    )
+    if return_matched_rules:
+        return integ, matched_rules
+    return integ
 
 
-def reset_cache():
-    global _CACHED_REPLACER
-    _CACHED_REPLACER = None
+def reset_cache(integrator: _RubiIntegrator | None = None):
+    if integrator is not None:
+        integrator.reset_cache()

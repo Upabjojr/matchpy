@@ -19,7 +19,7 @@ from sympy import (
     atan, atanh, asinh, asin, diff,
 )
 
-from rubi_rules.base_objects import build_replacer, _matchpy_integrate, Int
+from rubi_rules.base_objects import _matchpy_integrate, Int, build_tracing_replacer
 
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ from rubi_rules.base_objects import build_replacer, _matchpy_integrate, Int
 def replacer():
     """Build a ManyToOneReplacer containing only r_1_1_2_1 rules."""
     from rubi_rules.rules.r_1_algebraic_functions.r_1_1_binomial_products.r_1_1_2_quadratic.r_1_1_2_1 import RULES
-    return build_replacer(RULES)
+    return build_tracing_replacer(RULES)
 
 
 # ---------------------------------------------------------------------------
@@ -46,7 +46,7 @@ x = Symbol('x')
 
 def _integrate(expr, replacer):
     """Integrate expr w.r.t. x using the provided replacer."""
-    return _matchpy_integrate(expr, x, replacer)
+    return _matchpy_integrate(expr, x, replacer)[0]
 
 
 def _to_real_sympy(expr):

@@ -114,7 +114,7 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int((x**n_*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, n_, p_], x), ILtQ(p_ + 1 + 1/n_, 0), NeQ(p_, -1),),
+        constraints=(FreeQ([a_, _b_, n_, p_], x), ILtQ(Simplify(p_ + 1 + 1/n_), 0), NeQ(p_, -1),),
         replacement=-x*(x**n_*_b_ + a_)**(p_ + 1)/(a_*n_*(p_ + 1)) + (n_*(p_ + 1) + 1)*Int((x**n_*_b_ + a_)**(p_ + 1), x)/(a_*n_*(p_ + 1)),
         module_name='1.1.3.1 (a+b x^n)^p',
         rule_number=4,
@@ -354,8 +354,8 @@ RULES = [
     # Rule 34
     RubiRulePattern(
         pattern=Int(1/sqrt(x**4*_b_ + a_), x),
-        constraints=(FreeQ([a_, _b_], x), LtQ(a_, 0), GtQ(_b_, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * _b_), Integer(2)))), Condition((sympy.sqrt(((Integer(-1) * a_) + (Symbol('q') * (x)**(Integer(2))))) * sympy.sqrt(((a_ + (Symbol('q') * (x)**(Integer(2)))) * (Symbol('q'))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * sympy.sqrt((Integer(-1) * a_)) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(4)))))))**(Integer(-1)) * sympy.elliptic_f(sympy.asin((x * (sympy.sqrt(((a_ + (Symbol('q') * (x)**(Integer(2)))) * ((Integer(2) * Symbol('q')))**(Integer(-1)))))**(Integer(-1)))), (Integer(2))**(Integer(-1)))), IntegerQ(Symbol('q')))),
+        constraints=(FreeQ([a_, _b_], x), LtQ(a_, 0), GtQ(_b_, 0), IntegerQ(sqrt(-a_*_b_)),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * _b_), Integer(2)))), (sympy.sqrt(((Integer(-1) * a_) + (Symbol('q') * (x)**(Integer(2))))) * sympy.sqrt(((a_ + (Symbol('q') * (x)**(Integer(2)))) * (Symbol('q'))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * sympy.sqrt((Integer(-1) * a_)) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(4)))))))**(Integer(-1)) * sympy.elliptic_f(sympy.asin((x * (sympy.sqrt(((a_ + (Symbol('q') * (x)**(Integer(2)))) * ((Integer(2) * Symbol('q')))**(Integer(-1)))))**(Integer(-1)))), (Integer(2))**(Integer(-1))))),
         module_name='1.1.3.1 (a+b x^n)^p',
         rule_number=34,
     ),
@@ -538,7 +538,7 @@ RULES = [
     # Rule 57
     RubiRulePattern(
         pattern=Int((x**n_*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, n_, p_], x), Not(IGtQ(p_, 0)), Not(IntegerQ(1/n_)), Not(ILtQ(p_ + 1/n_, 0)), Or(IntegerQ(p_), GtQ(a_, 0)),),
+        constraints=(FreeQ([a_, _b_, n_, p_], x), Not(IGtQ(p_, 0)), Not(IntegerQ(1/n_)), Not(ILtQ(Simplify(p_ + 1/n_), 0)), Or(IntegerQ(p_), GtQ(a_, 0)),),
         replacement=x*a_**p_*hyper((1/n_, -p_), (1 + 1/n_,), -x**n_*_b_/a_),
         module_name='1.1.3.1 (a+b x^n)^p',
         rule_number=57,
@@ -546,7 +546,7 @@ RULES = [
     # Rule 58
     RubiRulePattern(
         pattern=Int((x**n_*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, n_, p_], x), Not(IGtQ(p_, 0)), Not(IntegerQ(1/n_)), Not(ILtQ(p_ + 1/n_, 0)), Not(Or(IntegerQ(p_), GtQ(a_, 0))),),
+        constraints=(FreeQ([a_, _b_, n_, p_], x), Not(IGtQ(p_, 0)), Not(IntegerQ(1/n_)), Not(ILtQ(Simplify(p_ + 1/n_), 0)), Not(Or(IntegerQ(p_), GtQ(a_, 0))),),
         replacement=a_**IntPart(p_)*(x**n_*_b_ + a_)**FracPart(p_)*Int((x**n_*_b_/a_ + 1)**p_, x)/(x**n_*_b_/a_ + 1)**FracPart(p_),
         module_name='1.1.3.1 (a+b x^n)^p',
         rule_number=58,

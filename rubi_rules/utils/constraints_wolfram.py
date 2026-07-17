@@ -212,6 +212,8 @@ class TrueQ(RubiConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
+        if hasattr(u, 'doit'):
+            u = u.doit()
         return u is sympy.true or u == True
     def __repr__(self):
         return f"TrueQ({self._u})"
@@ -225,6 +227,8 @@ class FalseQ(RubiConstraint):
         from .utility_functions import FalseQ as _FalseQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
+        if hasattr(u, 'doit'):
+            u = u.doit()
         return _FalseQ(u)
     def __repr__(self):
         return f"FalseQ({self._u})"

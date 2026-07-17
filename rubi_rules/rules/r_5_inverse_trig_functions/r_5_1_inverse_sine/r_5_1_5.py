@@ -462,64 +462,64 @@ RULES = [
     # Rule 47
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*asin(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.asin((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.asin((_c_ * x)))), Symbol('v'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))))**(Integer(-1))), x), x))))),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=47,
     ),
     # Rule 48
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*acos(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.acos((_c_ * x)))), Symbol('v'), x) + (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.acos((_c_ * x)))), Symbol('v'), x) + (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('v') * (sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))))**(Integer(-1))), x), x)))),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=48,
     ),
     # Rule 49
     RubiRulePattern(
         pattern=Int(Px_*(_a_ + _b_*asin(x*_c_))**_n_*(x**2*_e_ + d_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), PolynomialQ(Px_, x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.asin((_c_ * x)))))**(_n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), PolynomialQ(Px_, x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand(Px_*(_a_ + _b_*asin(x*_c_))**_n_*(x**2*_e_ + d_)**p_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.asin((_c_ * x)))))**(_n_)), x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=49,
     ),
     # Rule 50
     RubiRulePattern(
         pattern=Int(Px_*(_a_ + _b_*acos(x*_c_))**_n_*(x**2*_e_ + d_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), PolynomialQ(Px_, x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.acos((_c_ * x)))))**(_n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), PolynomialQ(Px_, x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand(Px_*(_a_ + _b_*acos(x*_c_))**_n_*(x**2*_e_ + d_)**p_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((Px_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * ((_a_ + (_b_ * sympy.acos((_c_ * x)))))**(_n_)), x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=50,
     ),
     # Rule 51
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*asin(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.asin((_c_ * x)))))**(_n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_), SumQ(ExpandIntegrand(_Px_*(_a_ + _b_*asin(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.asin((_c_ * x)))))**(_n_)), x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=51,
     ),
     # Rule 52
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*acos(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.acos((_c_ * x)))))**(_n_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), PolynomialQ(_Px_, x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_ + sympy.S.Half, 0), IntegersQ(_m_, _n_), SumQ(ExpandIntegrand(_Px_*(_a_ + _b_*acos(x*_c_))**_n_*(f_ + _g_*(x**2*_e_ + d_)**p_)**_m_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((_Px_ * ((f_ + (_g_ * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_))))**(_m_) * ((_a_ + (_b_ * sympy.acos((_c_ * x)))))**(_n_)), x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=52,
     ),
     # Rule 53
     RubiRulePattern(
         pattern=Int(RFx_*asin(x*_c_)**_n_, x),
-        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.asin((_c_ * x)))**(_n_), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), SumQ(ExpandIntegrand(asin(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.asin((_c_ * x)))**(_n_), RFx_, x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=53,
     ),
     # Rule 54
     RubiRulePattern(
         pattern=Int(RFx_*acos(x*_c_)**_n_, x),
-        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.acos((_c_ * x)))**(_n_), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ(_c_, x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), SumQ(ExpandIntegrand(acos(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.acos((_c_ * x)))**(_n_), RFx_, x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=54,
     ),
@@ -542,16 +542,16 @@ RULES = [
     # Rule 57
     RubiRulePattern(
         pattern=Int(RFx_*(x**2*_e_ + d_)**p_*asin(x*_c_)**_n_, x),
-        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.asin((_c_ * x)))**(_n_)), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand((x**2*_e_ + d_)**p_*asin(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.asin((_c_ * x)))**(_n_)), RFx_, x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=57,
     ),
     # Rule 58
     RubiRulePattern(
         pattern=Int(RFx_*(x**2*_e_ + d_)**p_*acos(x*_c_)**_n_, x),
-        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.acos((_c_ * x)))**(_n_)), RFx_, x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_c_, d_, _e_], x), RationalFunctionQ(RFx_, x), IGtQ(_n_, 0), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2), SumQ(ExpandIntegrand((x**2*_e_ + d_)**p_*acos(x*_c_)**_n_, RFx_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((d_ + (_e_ * (x)**(Integer(2)))))**(p_) * (sympy.acos((_c_ * x)))**(_n_)), RFx_, x))), Int(Symbol('u'), x)),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=58,
     ),

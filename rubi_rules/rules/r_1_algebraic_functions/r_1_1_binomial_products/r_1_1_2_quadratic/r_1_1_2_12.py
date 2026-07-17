@@ -87,8 +87,8 @@ RULES = [
     # Rule 2
     RubiRulePattern(
         pattern=Int(P2_*(x*_e_ + d_)**_m_*(x**2*_b_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, d_, _e_, _m_, _p_], x), PolyQ(P2_, x, 2), NeQ(_m_ + 2*_p_ + 3, 0),),
-        replacement=With(List(Set(Symbol('f'), Coeff(P2_, x, Integer(0))), Set(Symbol('g'), Coeff(P2_, x, Integer(1))), Set(Symbol('h'), Coeff(P2_, x, Integer(2)))), Condition((Symbol('h') * ((d_ + (_e_ * x)))**((_m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2)))))**((_p_ + Integer(1))) * ((_b_ * _e_ * (_m_ + (Integer(2) * _p_) + Integer(3))))**(Integer(-1))), And(EqQ(((Integer(2) * d_ * Symbol('h') * (_p_ + Integer(1))) + (Integer(-1) * (_e_ * Symbol('g') * (_m_ + (Integer(2) * _p_) + Integer(3))))), Integer(0)), EqQ(((a_ * Symbol('h') * (_m_ + Integer(1))) + (Integer(-1) * (_b_ * Symbol('f') * (_m_ + (Integer(2) * _p_) + Integer(3))))), Integer(0))))),
+        constraints=(FreeQ([a_, _b_, d_, _e_, _m_, _p_], x), PolyQ(P2_, x, 2), NeQ(_m_ + 2*_p_ + 3, 0), EqQ(2*d_*(_p_ + 1)*Coeff(P2_, x, 2) - _e_*(_m_ + 2*_p_ + 3)*Coeff(P2_, x, 1), 0), EqQ(a_*(_m_ + 1)*Coeff(P2_, x, 2) - _b_*(_m_ + 2*_p_ + 3)*Coeff(P2_, x, 0), 0),),
+        replacement=With(List(Set(Symbol('f'), Coeff(P2_, x, Integer(0))), Set(Symbol('g'), Coeff(P2_, x, Integer(1))), Set(Symbol('h'), Coeff(P2_, x, Integer(2)))), (Symbol('h') * ((d_ + (_e_ * x)))**((_m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2)))))**((_p_ + Integer(1))) * ((_b_ * _e_ * (_m_ + (Integer(2) * _p_) + Integer(3))))**(Integer(-1)))),
         module_name='1.1.2.12 P(x) (c+d x)^n (a+b x^2)^p',
         rule_number=2,
     ),

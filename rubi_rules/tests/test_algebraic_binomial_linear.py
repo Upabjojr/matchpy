@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
 from sympy_objects.conversion import to_expression, matchpy_to_sympy
-from rubi_rules.base_objects import Int, RubiRulePattern, build_replacer
+from rubi_rules.base_objects import Int, RubiRulePattern, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ
 
 
@@ -24,7 +24,7 @@ from rubi_rules.utils import FreeQ, NeQ, IntegerQ
 def replacer():
     """Build a ManyToOneReplacer from the generated 1.1.1.1 rules."""
     from rubi_rules.rules.r_1_algebraic_functions.r_1_1_binomial_products.r_1_1_1_linear.r_1_1_1_1 import RULES
-    return build_replacer(RULES)
+    return build_tracing_replacer(RULES)
 
 
 @pytest.fixture(scope='module')
@@ -35,7 +35,7 @@ def x():
 def _helper_rubi_integrate(replacer, expr, x):
     """Use Rubi replacer to integrate expr w.r.t. x."""
     int_expr = to_expression(Int(expr, x))
-    result = replacer.replace(int_expr)
+    result = replacer.replace(int_expr)[0]
     return matchpy_to_sympy(result)
 
 
@@ -144,7 +144,7 @@ class TestManualRules:
             module_name="TEST",
             rule_number=1,
         )
-        replacer = build_replacer([rule])
+        replacer = build_tracing_replacer([rule])
         int_expr = to_expression(Int(x**5, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr))
+        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - x**6/6) == 0

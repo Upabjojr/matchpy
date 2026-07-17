@@ -233,7 +233,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(asec(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=x*asec(u_) - u_*Int(SimplifyIntegrand(0, x), x)/sqrt(u_**2),
+        replacement=x*asec(u_) - u_*Int(SimplifyIntegrand(x*D(u_, x)/(u_*sqrt(u_**2 - 1)), x), x)/sqrt(u_**2),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=19,
     ),
@@ -241,7 +241,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(acsc(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=x*acsc(u_) + u_*Int(SimplifyIntegrand(0, x), x)/sqrt(u_**2),
+        replacement=x*acsc(u_) + u_*Int(SimplifyIntegrand(x*D(u_, x)/(u_*sqrt(u_**2 - 1)), x), x)/sqrt(u_**2),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=20,
     ),
@@ -249,7 +249,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*asec(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=-_b_*u_*Int(SimplifyIntegrand(0, x), x)/(_d_*(_m_ + 1)*sqrt(u_**2)) + (_a_ + _b_*asec(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
+        replacement=-_b_*u_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(u_*sqrt(u_**2 - 1)), x), x)/(_d_*(_m_ + 1)*sqrt(u_**2)) + (_a_ + _b_*asec(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=21,
     ),
@@ -257,23 +257,23 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acsc(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), Not(FunctionOfExponentialQ(u_, x)),),
-        replacement=_b_*u_*Int(SimplifyIntegrand(0, x), x)/(_d_*(_m_ + 1)*sqrt(u_**2)) + (_a_ + _b_*acsc(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
+        replacement=_b_*u_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(u_*sqrt(u_**2 - 1)), x), x)/(_d_*(_m_ + 1)*sqrt(u_**2)) + (_a_ + _b_*acsc(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=22,
     ),
     # Rule 23
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*asec(u_)), x),
-        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), Condition((Dist((_a_ + (_b_ * sympy.asec(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * u_ * (sympy.sqrt((u_)**(Integer(2))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * sympy.diff(u_, x) * ((u_ * sympy.sqrt(((u_)**(Integer(2)) + Integer(-1)))))**(Integer(-1))), x), x)))), InverseFunctionFreeQ(Symbol('w'), x))),
+        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
+        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.asec(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * u_ * (sympy.sqrt((u_)**(Integer(2))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((u_ * sympy.sqrt(((u_)**(Integer(2)) + Integer(-1)))))**(Integer(-1))), x), x))))),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=23,
     ),
     # Rule 24
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acsc(u_)), x),
-        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), Condition((Dist((_a_ + (_b_ * sympy.acsc(u_))), Symbol('w'), x) + (_b_ * u_ * (sympy.sqrt((u_)**(Integer(2))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * sympy.diff(u_, x) * ((u_ * sympy.sqrt(((u_)**(Integer(2)) + Integer(-1)))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('w'), x))),
+        constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
+        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acsc(u_))), Symbol('w'), x) + (_b_ * u_ * (sympy.sqrt((u_)**(Integer(2))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((u_ * sympy.sqrt(((u_)**(Integer(2)) + Integer(-1)))))**(Integer(-1))), x), x)))),
         module_name='5.5.2 Miscellaneous inverse secant',
         rule_number=24,
     ),

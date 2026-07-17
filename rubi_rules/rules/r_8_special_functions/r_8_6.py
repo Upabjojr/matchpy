@@ -96,7 +96,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('Gamma')(Integer(0), (_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=((_b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * _b_) * x))) + (Integer(-1) * (Symbol('EulerGamma') * sympy.log(x))) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2))))),
+        replacement=-EulerGamma*log(x) + x*_b_*hyper((1, 1, 1), (2, 2, 2), -x*_b_) - log(x*_b_)**2/2,
         module_name='8.6 Gamma functions',
         rule_number=2,
     ),
@@ -120,7 +120,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('Gamma')(n_, (_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, n_], x), Not(IntegerQ(n_)),),
-        replacement=((Gamma(n_) * sympy.log(x)) + (Integer(-1) * (((_b_ * x))**(n_) * ((n_)**(Integer(2)))**(Integer(-1)) * sympy.hyper(List(n_, n_), List((Integer(1) + n_), (Integer(1) + n_)), ((Integer(-1) * _b_) * x))))),
+        replacement=Gamma(n_)*log(x) - (x*_b_)**n_*hyper((n_, n_), (n_ + 1, n_ + 1), -x*_b_)/n_**2,
         module_name='8.6 Gamma functions',
         rule_number=5,
     ),

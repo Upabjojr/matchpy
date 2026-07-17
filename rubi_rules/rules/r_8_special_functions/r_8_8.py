@@ -291,16 +291,16 @@ RULES = [
     # Rule 25
     RubiRulePattern(
         pattern=Int((u_ * sympy.Function('PolyLog')(n_, v_)), x),
-        constraints=(FreeQ(n_, x),),
-        replacement=With(List(Set(Symbol('w'), DerivativeDivides(v_, (u_ * v_), x))), Condition((Symbol('w') * sympy.polylog((n_ + Integer(1)), v_)), Not(FalseQ(Symbol('w'))))),
+        constraints=(FreeQ(n_, x), Not(FalseQ(DerivativeDivides(v_, u_*v_, x))),),
+        replacement=With(List(Set(Symbol('w'), DerivativeDivides(v_, (u_ * v_), x))), (Symbol('w') * sympy.polylog((n_ + Integer(1)), v_))),
         module_name='8.8 Polylogarithm function',
         rule_number=25,
     ),
     # Rule 26
     RubiRulePattern(
         pattern=Int((u_ * sympy.log(w_) * sympy.Function('PolyLog')(n_, v_)), x),
-        constraints=(FreeQ(n_, x), InverseFunctionFreeQ(w_, x),),
-        replacement=With(List(Set(Symbol('z'), DerivativeDivides(v_, (u_ * v_), x))), Condition(((Symbol('z') * sympy.log(w_) * sympy.polylog((n_ + Integer(1)), v_)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.diff(w_, x) * sympy.polylog((n_ + Integer(1)), v_) * (w_)**(Integer(-1))), x), x))), Not(FalseQ(Symbol('z'))))),
+        constraints=(FreeQ(n_, x), InverseFunctionFreeQ(w_, x), Not(FalseQ(DerivativeDivides(v_, u_*v_, x))),),
+        replacement=With(List(Set(Symbol('z'), DerivativeDivides(v_, (u_ * v_), x))), ((Symbol('z') * sympy.log(w_) * sympy.polylog((n_ + Integer(1)), v_)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * D(w_, x) * sympy.polylog((n_ + Integer(1)), v_) * (w_)**(Integer(-1))), x), x)))),
         module_name='8.8 Polylogarithm function',
         rule_number=26,
     ),

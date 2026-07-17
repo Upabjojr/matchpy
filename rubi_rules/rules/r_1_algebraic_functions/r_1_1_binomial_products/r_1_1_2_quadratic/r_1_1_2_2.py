@@ -171,8 +171,8 @@ RULES = [
     # Rule 33
     RubiRulePattern(
         pattern=Int(x**_m_*(x**2*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _m_], x), IntegerQ(_m_/2 + p_ + sympy.S.Half), LtQ(-1, p_, 0),),
-        replacement=With(List(Set(Symbol('k'), Denominator(p_))), (Symbol('k') * (a_)**((p_ + sympy.simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))))) * (sympy.Function('2')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * sympy.simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1))))) + Integer(-1))) * (((Integer(1) + (Integer(-1) * (_b_ * (x)**(Symbol('k'))))))**((p_ + sympy.simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))) + Integer(1))))**(Integer(-1))), x), x, ((x)**((Integer(2) * (Symbol('k'))**(Integer(-1)))) * (((a_ + (_b_ * (x)**(Integer(2)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
+        constraints=(FreeQ([a_, _b_, _m_], x), IntegerQ(p_ + Simplify(_m_/2 + sympy.S.Half)), LtQ(-1, p_, 0),),
+        replacement=With(List(Set(Symbol('k'), Denominator(p_))), (Symbol('k') * (a_)**((p_ + Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))))) * (sympy.Function('2')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1))))) + Integer(-1))) * (((Integer(1) + (Integer(-1) * (_b_ * (x)**(Symbol('k'))))))**((p_ + Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))) + Integer(1))))**(Integer(-1))), x), x, ((x)**((Integer(2) * (Symbol('k'))**(Integer(-1)))) * (((a_ + (_b_ * (x)**(Integer(2)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
         module_name='1.1.2.2 (c x)^m (a+b x^2)^p',
         rule_number=33,
     ),
@@ -190,7 +190,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, m_], x), FractionQ(m_/2 + sympy.S.Half), SumSimplerQ(m_, 2),),
-        replacement=(((x)**((m_ + Integer(1))) * ((a_ * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * (sympy.Function('a')(Symbol('Star')))**(Integer(-1)) * Int(((x)**(sympy.simplify((m_ + Integer(2)))) * ((a_ + (_b_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
+        replacement=(((x)**((m_ + Integer(1))) * ((a_ * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * (sympy.Function('a')(Symbol('Star')))**(Integer(-1)) * Int(((x)**(Simplify((m_ + Integer(2)))) * ((a_ + (_b_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='1.1.2.2 (c x)^m (a+b x^2)^p',
         rule_number=37,
     ),

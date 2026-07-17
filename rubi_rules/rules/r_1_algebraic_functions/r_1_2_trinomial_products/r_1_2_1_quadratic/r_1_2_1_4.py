@@ -109,24 +109,24 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int((x**2*_c_ + x*_b_ + _a_)**p_*(x**2*_f_ + x*_e_ + _d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-4*_a_*_c_ + _b_**2),),
-        replacement=With(List(Set(Symbol('r'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), Condition((((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((_b_ * (Integer(2))**(Integer(-1))) + (Integer(-1) * (Symbol('r') * (Integer(2))**(Integer(-1)))) + (_c_ * x)))**(p_) * (((_b_ * (Integer(2))**(Integer(-1))) + (Symbol('r') * (Integer(2))**(Integer(-1))) + (_c_ * x)))**(p_) * ((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(q_)), x), x)), Or(EqQ(p_, Integer(-1)), Not(FractionalPowerFactorQ(Symbol('r')))))),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-4*_a_*_c_ + _b_**2), Or(EqQ(p_, -1), Not(FractionalPowerFactorQ(sqrt(-4*_a_*_c_ + _b_**2)))),),
+        replacement=With(List(Set(Symbol('r'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), (((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((_b_ * (Integer(2))**(Integer(-1))) + (Integer(-1) * (Symbol('r') * (Integer(2))**(Integer(-1)))) + (_c_ * x)))**(p_) * (((_b_ * (Integer(2))**(Integer(-1))) + (Symbol('r') * (Integer(2))**(Integer(-1))) + (_c_ * x)))**(p_) * ((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(q_)), x), x))),
         module_name='1.2.1.4 (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=6,
     ),
     # Rule 7
     RubiRulePattern(
         pattern=Int((x**2*_f_ + _d_)**q_*(x**2*_c_ + x*_b_ + _a_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-4*_a_*_c_ + _b_**2),),
-        replacement=With(List(Set(Symbol('r'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), Condition((((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((_b_ * (Integer(2))**(Integer(-1))) + (Integer(-1) * (Symbol('r') * (Integer(2))**(Integer(-1)))) + (_c_ * x)))**(p_) * (((_b_ * (Integer(2))**(Integer(-1))) + (Symbol('r') * (Integer(2))**(Integer(-1))) + (_c_ * x)))**(p_) * ((_d_ + (_f_ * (x)**(Integer(2)))))**(q_)), x), x)), Or(EqQ(p_, Integer(-1)), Not(FractionalPowerFactorQ(Symbol('r')))))),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-4*_a_*_c_ + _b_**2), Or(EqQ(p_, -1), Not(FractionalPowerFactorQ(sqrt(-4*_a_*_c_ + _b_**2)))),),
+        replacement=With(List(Set(Symbol('r'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), (((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((_b_ * (Integer(2))**(Integer(-1))) + (Integer(-1) * (Symbol('r') * (Integer(2))**(Integer(-1)))) + (_c_ * x)))**(p_) * (((_b_ * (Integer(2))**(Integer(-1))) + (Symbol('r') * (Integer(2))**(Integer(-1))) + (_c_ * x)))**(p_) * ((_d_ + (_f_ * (x)**(Integer(2)))))**(q_)), x), x))),
         module_name='1.2.1.4 (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=7,
     ),
     # Rule 8
     RubiRulePattern(
         pattern=Int((x**2*_c_ + _a_)**p_*(x**2*_f_ + x*_e_ + _d_)**q_, x),
-        constraints=(FreeQ([_a_, _c_, _d_, _e_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-_a_*_c_),),
-        replacement=With(List(Set(Symbol('r'), sympy.root(((Integer(-1) * _a_) * _c_), Integer(2)))), Condition((((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((Integer(-1) * Symbol('r')) + (_c_ * x)))**(p_) * ((Symbol('r') + (_c_ * x)))**(p_) * ((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(q_)), x), x)), Or(EqQ(p_, Integer(-1)), Not(FractionalPowerFactorQ(Symbol('r')))))),
+        constraints=(FreeQ([_a_, _c_, _d_, _e_, _f_], x), ILtQ(p_, 0), IntegerQ(q_), NiceSqrtQ(-_a_*_c_), Or(EqQ(p_, -1), Not(FractionalPowerFactorQ(sqrt(-_a_*_c_)))),),
+        replacement=With(List(Set(Symbol('r'), sympy.root(((Integer(-1) * _a_) * _c_), Integer(2)))), (((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand(((((Integer(-1) * Symbol('r')) + (_c_ * x)))**(p_) * ((Symbol('r') + (_c_ * x)))**(p_) * ((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(q_)), x), x))),
         module_name='1.2.1.4 (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=8,
     ),
@@ -142,16 +142,16 @@ RULES = [
     # Rule 27
     RubiRulePattern(
         pattern=Int(1/((x**2*_c_ + x*_b_ + a_)*(x**2*_f_ + x*_e_ + d_)), x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), NeQ(-4*d_*_f_ + _e_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), (((_c_)**(Integer(2)) * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * _c_ * d_ * _e_)) + (a_ * _c_ * (_e_)**(Integer(2))) + ((_b_)**(Integer(2)) * d_ * _f_) + (Integer(-1) * (Integer(2) * a_ * _c_ * d_ * _f_)) + (Integer(-1) * (a_ * _b_ * _e_ * _f_)) + ((a_)**(Integer(2)) * (_f_)**(Integer(2)))))), Condition((((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int(((((_c_)**(Integer(2)) * d_) + (Integer(-1) * (_b_ * _c_ * _e_)) + ((_b_)**(Integer(2)) * _f_) + (Integer(-1) * (a_ * _c_ * _f_)) + (Integer(-1) * ((((_c_)**(Integer(2)) * _e_) + (Integer(-1) * (_b_ * _c_ * _f_))) * x))) * ((a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(Integer(-1))), x)) + ((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int((((_c_ * (_e_)**(Integer(2))) + (Integer(-1) * (_c_ * d_ * _f_)) + (Integer(-1) * (_b_ * _e_ * _f_)) + (a_ * (_f_)**(Integer(2))) + (((_c_ * _e_ * _f_) + (Integer(-1) * (_b_ * (_f_)**(Integer(2))))) * x)) * ((d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(Integer(-1))), x))), NeQ(Symbol('q'), Integer(0)))),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), NeQ(-4*d_*_f_ + _e_**2, 0), NeQ(a_**2*_f_**2 - a_*_b_*_e_*_f_ - 2*a_*_c_*d_*_f_ + a_*_c_*_e_**2 + _b_**2*d_*_f_ - _b_*_c_*d_*_e_ + _c_**2*d_**2, 0),),
+        replacement=With(List(Set(Symbol('q'), (((_c_)**(Integer(2)) * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * _c_ * d_ * _e_)) + (a_ * _c_ * (_e_)**(Integer(2))) + ((_b_)**(Integer(2)) * d_ * _f_) + (Integer(-1) * (Integer(2) * a_ * _c_ * d_ * _f_)) + (Integer(-1) * (a_ * _b_ * _e_ * _f_)) + ((a_)**(Integer(2)) * (_f_)**(Integer(2)))))), (((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int(((((_c_)**(Integer(2)) * d_) + (Integer(-1) * (_b_ * _c_ * _e_)) + ((_b_)**(Integer(2)) * _f_) + (Integer(-1) * (a_ * _c_ * _f_)) + (Integer(-1) * ((((_c_)**(Integer(2)) * _e_) + (Integer(-1) * (_b_ * _c_ * _f_))) * x))) * ((a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(Integer(-1))), x)) + ((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int((((_c_ * (_e_)**(Integer(2))) + (Integer(-1) * (_c_ * d_ * _f_)) + (Integer(-1) * (_b_ * _e_ * _f_)) + (a_ * (_f_)**(Integer(2))) + (((_c_ * _e_ * _f_) + (Integer(-1) * (_b_ * (_f_)**(Integer(2))))) * x)) * ((d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='1.2.1.4 (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=27,
     ),
     # Rule 28
     RubiRulePattern(
         pattern=Int(1/((x**2*_f_ + d_)*(x**2*_c_ + x*_b_ + a_)), x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), (((_c_)**(Integer(2)) * (d_)**(Integer(2))) + ((_b_)**(Integer(2)) * d_ * _f_) + (Integer(-1) * (Integer(2) * a_ * _c_ * d_ * _f_)) + ((a_)**(Integer(2)) * (_f_)**(Integer(2)))))), Condition((((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int(((((_c_)**(Integer(2)) * d_) + ((_b_)**(Integer(2)) * _f_) + (Integer(-1) * (a_ * _c_ * _f_)) + (_b_ * _c_ * _f_ * x)) * ((a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(Integer(-1))), x)) + (Integer(-1) * ((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int((((_c_ * d_ * _f_) + (Integer(-1) * (a_ * (_f_)**(Integer(2)))) + (_b_ * (_f_)**(Integer(2)) * x)) * ((d_ + (_f_ * (x)**(Integer(2)))))**(Integer(-1))), x)))), NeQ(Symbol('q'), Integer(0)))),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), NeQ(a_**2*_f_**2 - 2*a_*_c_*d_*_f_ + _b_**2*d_*_f_ + _c_**2*d_**2, 0),),
+        replacement=With(List(Set(Symbol('q'), (((_c_)**(Integer(2)) * (d_)**(Integer(2))) + ((_b_)**(Integer(2)) * d_ * _f_) + (Integer(-1) * (Integer(2) * a_ * _c_ * d_ * _f_)) + ((a_)**(Integer(2)) * (_f_)**(Integer(2)))))), (((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int(((((_c_)**(Integer(2)) * d_) + ((_b_)**(Integer(2)) * _f_) + (Integer(-1) * (a_ * _c_ * _f_)) + (_b_ * _c_ * _f_ * x)) * ((a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(Integer(-1))), x)) + (Integer(-1) * ((sympy.Function('q')(Symbol('Star')))**(Integer(-1)) * Int((((_c_ * d_ * _f_) + (Integer(-1) * (a_ * (_f_)**(Integer(2)))) + (_b_ * (_f_)**(Integer(2)) * x)) * ((d_ + (_f_ * (x)**(Integer(2)))))**(Integer(-1))), x))))),
         module_name='1.2.1.4 (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=28,
     ),

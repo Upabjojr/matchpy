@@ -16,7 +16,7 @@ import pytest
 import sympy
 from sympy import Symbol, Integer, Rational, log, sqrt, simplify, S
 
-from rubi_rules.base_objects import build_replacer, _matchpy_integrate
+from rubi_rules.base_objects import _matchpy_integrate, _rubi_integrator, build_tracing_replacer
 
 
 # ---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ from rubi_rules.base_objects import build_replacer, _matchpy_integrate
 def replacer():
     """Build a ManyToOneReplacer containing only r_1_1_1_1 rules."""
     from rubi_rules.rules.r_1_algebraic_functions.r_1_1_binomial_products.r_1_1_1_linear.r_1_1_1_1 import RULES
-    return build_replacer(RULES)
+    return build_tracing_replacer(RULES)
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ a, b, m, n = sympy.symbols('a b m n')
 
 def _integrate(expr, replacer):
     """Integrate expr w.r.t. x using the provided replacer."""
-    return _matchpy_integrate(expr, x, replacer)
+    return _matchpy_integrate(expr, x, replacer)[0]
 
 
 # ---------------------------------------------------------------------------

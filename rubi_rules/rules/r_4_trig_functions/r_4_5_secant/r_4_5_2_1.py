@@ -405,7 +405,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*csc(x*_f_ + _e_))**m_*(c_ + _d_*csc(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, m_, n_], x), NeQ(-a_*_d_ + _b_*c_, 0), EqQ(m_ + n_, 0), Not(IntegerQ(2*m_)),),
-        replacement=(a_ + _b_*csc(x*_f_ + _e_))**m_*(c_ + _d_*csc(x*_f_ + _e_))**n_*Int((a_*sin(x*_f_ + _e_) + _b_)**m_*(c_*sin(x*_f_ + _e_) + _d_)**n_*sin(x*_f_ + _e_)**(-m_ - n_), x)*sin(x*_f_ + _e_)**(m_ + n_)/((a_*sin(x*_f_ + _e_) + _b_)**m_*(c_*sin(x*_f_ + _e_) + _d_)**n_),
+        replacement=(a_ + _b_*csc(x*_f_ + _e_))**m_*(c_ + _d_*csc(x*_f_ + _e_))**n_*Int((a_*sin(x*_f_ + _e_) + _b_)**m_*(c_*sin(x*_f_ + _e_) + _d_)**n_/sin(x*_f_ + _e_)**Simplify(m_ + n_), x)*sin(x*_f_ + _e_)**(m_ + n_)/((a_*sin(x*_f_ + _e_) + _b_)**m_*(c_*sin(x*_f_ + _e_) + _d_)**n_),
         module_name='4.5.2.1 (a+b sec)^m (c+d sec)^n',
         rule_number=41,
     ),

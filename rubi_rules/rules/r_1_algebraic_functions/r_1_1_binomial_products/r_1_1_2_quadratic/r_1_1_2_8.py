@@ -197,7 +197,7 @@ RULES = [
     # Rule 29
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(x*_d_ + c_)*(x**2*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_], x), EqQ(m_ + 2*p_ + 3, 0), LtQ(p_, -1),),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_], x), EqQ(Simplify(m_ + 2*p_ + 3), 0), LtQ(p_, -1),),
         replacement=-_d_*_e_*m_*Int((x*_e_)**(m_ - 1)*(x**2*_b_ + a_)**(p_ + 1), x)/(2*_b_*(p_ + 1)) + (x*_e_)**m_*(x**2*_b_ + a_)**(p_ + 1)*(-x*_b_*c_ + a_*_d_)/(2*a_*_b_*(p_ + 1)),
         module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=29,
@@ -205,7 +205,7 @@ RULES = [
     # Rule 30
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(x*_d_ + c_)*(x**2*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_, p_], x), EqQ(m_ + 2*p_ + 3, 0),),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, m_, p_], x), EqQ(Simplify(m_ + 2*p_ + 3), 0),),
         replacement=(((Integer(-1) * c_) * ((_e_ * x))**((m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2)))))**((p_ + Integer(1))) * ((Integer(2) * a_ * _e_ * (p_ + Integer(1))))**(Integer(-1))) + (_d_ * (sympy.Function('e')(Symbol('Star')))**(Integer(-1)) * Int((((_e_ * x))**((m_ + Integer(1))) * ((a_ + (_b_ * (x)**(Integer(2)))))**(p_)), x))),
         module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=30,

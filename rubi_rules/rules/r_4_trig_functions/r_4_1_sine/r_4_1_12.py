@@ -315,23 +315,23 @@ RULES = [
     # Rule 29
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IntegerQ((_m_ + 1)/n_), Or(EqQ(_p_, 1), EqQ(_m_, n_ - 1), And(IntegerQ(_p_), GtQ((_m_ + 1)/n_, 0))),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(_a_ + _b_*sin(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IntegerQ(Simplify((_m_ + 1)/n_)), Or(EqQ(_p_, 1), EqQ(_m_, n_ - 1), And(IntegerQ(_p_), GtQ(Simplify((_m_ + 1)/n_), 0))),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(_a_ + _b_*sin(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=29,
     ),
     # Rule 30
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IntegerQ((_m_ + 1)/n_), Or(EqQ(_p_, 1), EqQ(_m_, n_ - 1), And(IntegerQ(_p_), GtQ((_m_ + 1)/n_, 0))),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/n_)*(_a_ + _b_*cos(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), IntegerQ(Simplify((_m_ + 1)/n_)), Or(EqQ(_p_, 1), EqQ(_m_, n_ - 1), And(IntegerQ(_p_), GtQ(Simplify((_m_ + 1)/n_), 0))),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/n_) - 1)*(_a_ + _b_*cos(x*_d_ + _c_))**_p_, x), x, x**n_)/n_,
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=30,
     ),
     # Rule 31
     RubiRulePattern(
         pattern=Int((x*e_)**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_, _p_], x), IntegerQ((m_ + 1)/n_),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_, _p_], x), IntegerQ(Simplify((m_ + 1)/n_)),),
         replacement=e_**IntPart(m_)*(x*e_)**FracPart(m_)*Int(x**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x)/x**FracPart(m_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=31,
@@ -339,7 +339,7 @@ RULES = [
     # Rule 32
     RubiRulePattern(
         pattern=Int((x*e_)**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_, _p_], x), IntegerQ((m_ + 1)/n_),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_, _p_], x), IntegerQ(Simplify((m_ + 1)/n_)),),
         replacement=e_**IntPart(m_)*(x*e_)**FracPart(m_)*Int(x**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x)/x**FracPart(m_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=32,
@@ -635,23 +635,23 @@ RULES = [
     # Rule 69
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), IntegerQ(_p_), NeQ(_m_, -1), IGtQ(n_/(_m_ + 1), 0), Not(IntegerQ(n_)),),
-        replacement=Subst(Int((_a_ + _b_*sin(x**(n_/(_m_ + 1))*_d_ + _c_))**_p_, x), x, x**(_m_ + 1))/(_m_ + 1),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), IntegerQ(_p_), NeQ(_m_, -1), IGtQ(Simplify(n_/(_m_ + 1)), 0), Not(IntegerQ(n_)),),
+        replacement=Subst(Int((_a_ + _b_*sin(x**Simplify(n_/(_m_ + 1))*_d_ + _c_))**_p_, x), x, x**(_m_ + 1))/(_m_ + 1),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=69,
     ),
     # Rule 70
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), IntegerQ(_p_), NeQ(_m_, -1), IGtQ(n_/(_m_ + 1), 0), Not(IntegerQ(n_)),),
-        replacement=Subst(Int((_a_ + _b_*cos(x**(n_/(_m_ + 1))*_d_ + _c_))**_p_, x), x, x**(_m_ + 1))/(_m_ + 1),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), IntegerQ(_p_), NeQ(_m_, -1), IGtQ(Simplify(n_/(_m_ + 1)), 0), Not(IntegerQ(n_)),),
+        replacement=Subst(Int((_a_ + _b_*cos(x**Simplify(n_/(_m_ + 1))*_d_ + _c_))**_p_, x), x, x**(_m_ + 1))/(_m_ + 1),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=70,
     ),
     # Rule 71
     RubiRulePattern(
         pattern=Int((x*e_)**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_], x), IntegerQ(_p_), NeQ(m_, -1), IGtQ(n_/(m_ + 1), 0), Not(IntegerQ(n_)),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_], x), IntegerQ(_p_), NeQ(m_, -1), IGtQ(Simplify(n_/(m_ + 1)), 0), Not(IntegerQ(n_)),),
         replacement=e_**IntPart(m_)*(x*e_)**FracPart(m_)*Int(x**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x)/x**FracPart(m_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=71,
@@ -659,7 +659,7 @@ RULES = [
     # Rule 72
     RubiRulePattern(
         pattern=Int((x*e_)**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_], x), IntegerQ(_p_), NeQ(m_, -1), IGtQ(n_/(m_ + 1), 0), Not(IntegerQ(n_)),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, m_, n_], x), IntegerQ(_p_), NeQ(m_, -1), IGtQ(Simplify(n_/(m_ + 1)), 0), Not(IntegerQ(n_)),),
         replacement=e_**IntPart(m_)*(x*e_)**FracPart(m_)*Int(x**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x)/x**FracPart(m_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=72,

@@ -188,15 +188,15 @@ RULES = [
     # Rule 12
     RubiRulePattern(
         pattern=Int(x**_m_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
-        constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _m_, _n_, p_], x), IntegerQ((_m_ + 1)/_n_),),
-        replacement=Subst(Int(x**(-1 + (_m_ + 1)/_n_)*(_e_*(x*_b_ + _a_)/(x*_d_ + c_))**p_, x), x, x**_n_)/_n_,
+        constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _m_, _n_, p_], x), IntegerQ(Simplify((_m_ + 1)/_n_)),),
+        replacement=Subst(Int(x**(Simplify((_m_ + 1)/_n_) - 1)*(_e_*(x*_b_ + _a_)/(x*_d_ + c_))**p_, x), x, x**_n_)/_n_,
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=12,
     ),
     # Rule 13
     RubiRulePattern(
         pattern=Int((x*f_)**m_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
-        constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, f_, m_, _n_, p_], x), IntegerQ((m_ + 1)/_n_),),
+        constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, f_, m_, _n_, p_], x), IntegerQ(Simplify((m_ + 1)/_n_)),),
         replacement=Int(x**m_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x)*Simp((x*c_)**m_/x**m_),
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=13,

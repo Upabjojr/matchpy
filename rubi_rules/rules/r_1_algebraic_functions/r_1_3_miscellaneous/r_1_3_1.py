@@ -109,24 +109,24 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int(P_**p_, x),
-        constraints=(PolyQ(P_, x**2), ILtQ(p_, 0),),
-        replacement=With(List(Set(Symbol('u'), sympy.factor(ReplaceAll(P_, Rule(x, sympy.sqrt(x)))))), Condition(Int(ExpandIntegrand((ReplaceAll(Symbol('u'), Rule(x, (x)**(Integer(2)))))**(p_), x), x), Not(SumQ(NonfreeFactors(Symbol('u'), x))))),
+        constraints=(PolyQ(P_, x**2), ILtQ(p_, 0), Not(SumQ(NonfreeFactors(ReplaceAll(P_, Rule(x, sqrt(x))), x))),),
+        replacement=With(List(Set(Symbol('u'), sympy.factor(ReplaceAll(P_, Rule(x, sympy.sqrt(x)))))), Int(ExpandIntegrand((ReplaceAll(Symbol('u'), Rule(x, (x)**(Integer(2)))))**(p_), x), x)),
         module_name='1.3.1 P(x)^p',
         rule_number=4,
     ),
     # Rule 5
     RubiRulePattern(
         pattern=Int(P_**p_, x),
-        constraints=(PolyQ(P_, x), ILtQ(p_, 0),),
-        replacement=With(List(Set(Symbol('u'), sympy.factor(P_))), Condition(Int(ExpandIntegrand((Symbol('u'))**(p_), x), x), Not(SumQ(NonfreeFactors(Symbol('u'), x))))),
+        constraints=(PolyQ(P_, x), ILtQ(p_, 0), Not(SumQ(NonfreeFactors(P_, x))),),
+        replacement=With(List(Set(Symbol('u'), sympy.factor(P_))), Int(ExpandIntegrand((Symbol('u'))**(p_), x), x)),
         module_name='1.3.1 P(x)^p',
         rule_number=5,
     ),
     # Rule 6
     RubiRulePattern(
         pattern=Int(P_**p_, x),
-        constraints=(PolyQ(P_, x), IntegerQ(p_),),
-        replacement=With(List(Set(Symbol('u'), sympy.factor(P_))), Condition(Int((Symbol('u'))**(p_), x), Not(SumQ(NonfreeFactors(Symbol('u'), x))))),
+        constraints=(PolyQ(P_, x), IntegerQ(p_), Not(SumQ(NonfreeFactors(P_, x))),),
+        replacement=With(List(Set(Symbol('u'), sympy.factor(P_))), Int((Symbol('u'))**(p_), x)),
         module_name='1.3.1 P(x)^p',
         rule_number=6,
     ),
@@ -189,32 +189,32 @@ RULES = [
     # Rule 14
     RubiRulePattern(
         pattern=Int(P3_**p_, x),
-        constraints=(FreeQ(p_, x), PolyQ(P3_, x, 3),),
-        replacement=With(List(Set(Symbol('a'), Coeff(P3_, x, Integer(0))), Set(Symbol('b'), Coeff(P3_, x, Integer(1))), Set(Symbol('c'), Coeff(P3_, x, Integer(2))), Set(Symbol('d'), Coeff(P3_, x, Integer(3)))), Condition(Subst(Int((Simp(((((Integer(2) * (Symbol('c'))**(Integer(3))) + (Integer(-1) * (Integer(9) * Symbol('b') * Symbol('c') * Symbol('d'))) + (Integer(27) * Symbol('a') * (Symbol('d'))**(Integer(2)))) * ((Integer(27) * (Symbol('d'))**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))) * x * ((Integer(3) * Symbol('d')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(p_), x), x, (x + (Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1))))), NeQ(Symbol('c'), Integer(0)))),
+        constraints=(FreeQ(p_, x), PolyQ(P3_, x, 3), NeQ(Coeff(P3_, x, 2), 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(P3_, x, Integer(0))), Set(Symbol('b'), Coeff(P3_, x, Integer(1))), Set(Symbol('c'), Coeff(P3_, x, Integer(2))), Set(Symbol('d'), Coeff(P3_, x, Integer(3)))), Subst(Int((Simp(((((Integer(2) * (Symbol('c'))**(Integer(3))) + (Integer(-1) * (Integer(9) * Symbol('b') * Symbol('c') * Symbol('d'))) + (Integer(27) * Symbol('a') * (Symbol('d'))**(Integer(2)))) * ((Integer(27) * (Symbol('d'))**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))) * x * ((Integer(3) * Symbol('d')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(p_), x), x, (x + (Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1)))))),
         module_name='1.3.1 P(x)^p',
         rule_number=14,
     ),
     # Rule 15
     RubiRulePattern(
         pattern=Int(P4_**p_, x),
-        constraints=(FreeQ(p_, x), PolyQ(P4_, x, 4), ILtQ(p_, 0),),
-        replacement=With(List(Set(Symbol('a'), Coeff(P4_, x, Integer(0))), Set(Symbol('b'), Coeff(P4_, x, Integer(1))), Set(Symbol('c'), Coeff(P4_, x, Integer(2))), Set(Symbol('d'), Coeff(P4_, x, Integer(3))), Set(Symbol('e'), Coeff(P4_, x, Integer(4)))), Condition((((Symbol('a'))**((Integer(3) * p_)))**(Integer(-1)) * Int(ExpandIntegrand((((Symbol('a') + (Integer(-1) * (Symbol('b') * x))))**((Integer(-1) * p_)) * ((((Symbol('a'))**(Integer(5)) + (Integer(-1) * ((Symbol('b'))**(Integer(5)) * (x)**(Integer(5))))))**((Integer(-1) * p_)))**(Integer(-1))), x), x)), And(NeQ(Symbol('a'), Integer(0)), EqQ(Symbol('c'), ((Symbol('b'))**(Integer(2)) * (Symbol('a'))**(Integer(-1)))), EqQ(Symbol('d'), ((Symbol('b'))**(Integer(3)) * ((Symbol('a'))**(Integer(2)))**(Integer(-1)))), EqQ(Symbol('e'), ((Symbol('b'))**(Integer(4)) * ((Symbol('a'))**(Integer(3)))**(Integer(-1))))))),
+        constraints=(FreeQ(p_, x), PolyQ(P4_, x, 4), ILtQ(p_, 0), NeQ(Coeff(P4_, x, 0), 0), EqQ(Coeff(P4_, x, 2), Coeff(P4_, x, 1)**2/Coeff(P4_, x, 0)), EqQ(Coeff(P4_, x, 3), Coeff(P4_, x, 1)**3/Coeff(P4_, x, 0)**2), EqQ(Coeff(P4_, x, 4), Coeff(P4_, x, 1)**4/Coeff(P4_, x, 0)**3),),
+        replacement=With(List(Set(Symbol('a'), Coeff(P4_, x, Integer(0))), Set(Symbol('b'), Coeff(P4_, x, Integer(1))), Set(Symbol('c'), Coeff(P4_, x, Integer(2))), Set(Symbol('d'), Coeff(P4_, x, Integer(3))), Set(Symbol('e'), Coeff(P4_, x, Integer(4)))), (((Symbol('a'))**((Integer(3) * p_)))**(Integer(-1)) * Int(ExpandIntegrand((((Symbol('a') + (Integer(-1) * (Symbol('b') * x))))**((Integer(-1) * p_)) * ((((Symbol('a'))**(Integer(5)) + (Integer(-1) * ((Symbol('b'))**(Integer(5)) * (x)**(Integer(5))))))**((Integer(-1) * p_)))**(Integer(-1))), x), x))),
         module_name='1.3.1 P(x)^p',
         rule_number=15,
     ),
     # Rule 16
     RubiRulePattern(
         pattern=Int(P4_**p_, x),
-        constraints=(FreeQ(p_, x), PolyQ(P4_, x, 4), IntegerQ(2*p_), Not(IGtQ(p_, 0)),),
-        replacement=With(List(Set(Symbol('a'), Coeff(P4_, x, Integer(0))), Set(Symbol('b'), Coeff(P4_, x, Integer(1))), Set(Symbol('c'), Coeff(P4_, x, Integer(2))), Set(Symbol('d'), Coeff(P4_, x, Integer(3))), Set(Symbol('e'), Coeff(P4_, x, Integer(4)))), Condition((Integer(-16) * (Symbol('a'))**(Integer(2)) * Subst(Int(((((Symbol('b') + (Integer(-1) * (Integer(4) * Symbol('a') * x))))**(Integer(2)))**(Integer(-1)) * ((Symbol('a') * ((Integer(-3) * (Symbol('b'))**(Integer(4))) + (Integer(16) * Symbol('a') * (Symbol('b'))**(Integer(2)) * Symbol('c')) + (Integer(-1) * (Integer(64) * (Symbol('a'))**(Integer(2)) * Symbol('b') * Symbol('d'))) + (Integer(256) * (Symbol('a'))**(Integer(3)) * Symbol('e')) + (Integer(-1) * (Integer(32) * (Symbol('a'))**(Integer(2)) * ((Integer(3) * (Symbol('b'))**(Integer(2))) + (Integer(-1) * (Integer(8) * Symbol('a') * Symbol('c')))) * (x)**(Integer(2)))) + (Integer(256) * (Symbol('a'))**(Integer(4)) * (x)**(Integer(4)))) * (((Symbol('b') + (Integer(-1) * (Integer(4) * Symbol('a') * x))))**(Integer(4)))**(Integer(-1))))**(p_)), x), x, ((Symbol('b') * ((Integer(4) * Symbol('a')))**(Integer(-1))) + (x)**(Integer(-1))))), And(NeQ(Symbol('a'), Integer(0)), NeQ(Symbol('b'), Integer(0)), EqQ(((Symbol('b'))**(Integer(3)) + (Integer(-1) * (Integer(4) * Symbol('a') * Symbol('b') * Symbol('c'))) + (Integer(8) * (Symbol('a'))**(Integer(2)) * Symbol('d'))), Integer(0))))),
+        constraints=(FreeQ(p_, x), PolyQ(P4_, x, 4), IntegerQ(2*p_), Not(IGtQ(p_, 0)), NeQ(Coeff(P4_, x, 0), 0), NeQ(Coeff(P4_, x, 1), 0), EqQ(8*Coeff(P4_, x, 0)**2*Coeff(P4_, x, 3) - 4*Coeff(P4_, x, 0)*Coeff(P4_, x, 1)*Coeff(P4_, x, 2) + Coeff(P4_, x, 1)**3, 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(P4_, x, Integer(0))), Set(Symbol('b'), Coeff(P4_, x, Integer(1))), Set(Symbol('c'), Coeff(P4_, x, Integer(2))), Set(Symbol('d'), Coeff(P4_, x, Integer(3))), Set(Symbol('e'), Coeff(P4_, x, Integer(4)))), (Integer(-16) * (Symbol('a'))**(Integer(2)) * Subst(Int(((((Symbol('b') + (Integer(-1) * (Integer(4) * Symbol('a') * x))))**(Integer(2)))**(Integer(-1)) * ((Symbol('a') * ((Integer(-3) * (Symbol('b'))**(Integer(4))) + (Integer(16) * Symbol('a') * (Symbol('b'))**(Integer(2)) * Symbol('c')) + (Integer(-1) * (Integer(64) * (Symbol('a'))**(Integer(2)) * Symbol('b') * Symbol('d'))) + (Integer(256) * (Symbol('a'))**(Integer(3)) * Symbol('e')) + (Integer(-1) * (Integer(32) * (Symbol('a'))**(Integer(2)) * ((Integer(3) * (Symbol('b'))**(Integer(2))) + (Integer(-1) * (Integer(8) * Symbol('a') * Symbol('c')))) * (x)**(Integer(2)))) + (Integer(256) * (Symbol('a'))**(Integer(4)) * (x)**(Integer(4)))) * (((Symbol('b') + (Integer(-1) * (Integer(4) * Symbol('a') * x))))**(Integer(4)))**(Integer(-1))))**(p_)), x), x, ((Symbol('b') * ((Integer(4) * Symbol('a')))**(Integer(-1))) + (x)**(Integer(-1)))))),
         module_name='1.3.1 P(x)^p',
         rule_number=16,
     ),
     # Rule 17
     RubiRulePattern(
         pattern=Int(Q6_**p_, x),
-        constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(u, x),),
-        replacement=With(List(Set(Symbol('a'), Coeff(Q6_, x, Integer(0))), Set(Symbol('b'), Coeff(Q6_, x, Integer(2))), Set(Symbol('c'), Coeff(Q6_, x, Integer(3))), Set(Symbol('d'), Coeff(Q6_, x, Integer(4))), Set(Symbol('e'), Coeff(Q6_, x, Integer(6)))), Condition(((((Integer(3))**((Integer(3) * p_)) * (Symbol('a'))**((Integer(2) * p_))))**(Integer(-1)) * Int(ExpandIntegrand(((((Integer(3) * Symbol('a')) + (Integer(3) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(-1) * (Integer(3) * (Integer(-1))**((Integer(3))**(Integer(-1))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x)) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(3) * (Integer(-1))**((Integer(2) * (Integer(3))**(Integer(-1)))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_)), x), x)), And(EqQ(((Symbol('b'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('a') * Symbol('d')))), Integer(0)), EqQ(((Symbol('b'))**(Integer(3)) + (Integer(-1) * (Integer(27) * (Symbol('a'))**(Integer(2)) * Symbol('e')))), Integer(0))))),
+        constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(u, x), EqQ(-3*Coeff(Q6_, x, 0)*Coeff(Q6_, x, 4) + Coeff(Q6_, x, 2)**2, 0), EqQ(-27*Coeff(Q6_, x, 0)**2*Coeff(Q6_, x, 6) + Coeff(Q6_, x, 2)**3, 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(Q6_, x, Integer(0))), Set(Symbol('b'), Coeff(Q6_, x, Integer(2))), Set(Symbol('c'), Coeff(Q6_, x, Integer(3))), Set(Symbol('d'), Coeff(Q6_, x, Integer(4))), Set(Symbol('e'), Coeff(Q6_, x, Integer(6)))), ((((Integer(3))**((Integer(3) * p_)) * (Symbol('a'))**((Integer(2) * p_))))**(Integer(-1)) * Int(ExpandIntegrand(((((Integer(3) * Symbol('a')) + (Integer(3) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(-1) * (Integer(3) * (Integer(-1))**((Integer(3))**(Integer(-1))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x)) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(3) * (Integer(-1))**((Integer(2) * (Integer(3))**(Integer(-1)))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_)), x), x))),
         module_name='1.3.1 P(x)^p',
         rule_number=17,
     ),

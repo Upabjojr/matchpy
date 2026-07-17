@@ -224,8 +224,8 @@ RULES = [
     # Rule 26
     RubiRulePattern(
         pattern=Int((x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(x**2*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_p_, -1), IntegersQ(_m_, _n_), NiceSqrtQ(-a_*_c_),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * _c_), Integer(2)))), Condition((((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand((((_d_ + (_e_ * x)))**(_m_) * ((_f_ + (_g_ * x)))**(_n_) * (((Integer(-1) * Symbol('q')) + (_c_ * x)))**(_p_) * ((Symbol('q') + (_c_ * x)))**(_p_)), x), x)), Not(FractionalPowerFactorQ(Symbol('q'))))),
+        constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_p_, -1), IntegersQ(_m_, _n_), NiceSqrtQ(-a_*_c_), Not(FractionalPowerFactorQ(sqrt(-a_*_c_))),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * _c_), Integer(2)))), (((_c_)**(sympy.Function('p')(Symbol('Star'))))**(Integer(-1)) * Int(ExpandIntegrand((((_d_ + (_e_ * x)))**(_m_) * ((_f_ + (_g_ * x)))**(_n_) * (((Integer(-1) * Symbol('q')) + (_c_ * x)))**(_p_) * ((Symbol('q') + (_c_ * x)))**(_p_)), x), x))),
         module_name='1.1.2.9 (c+d x)^m (e+f x)^n (a+b x^2)^p',
         rule_number=26,
     ),
@@ -280,7 +280,7 @@ RULES = [
     # Rule 40
     RubiRulePattern(
         pattern=Int((x*_e_ + _d_)**m_*(x*_g_ + _f_)*(x**2*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, _g_, m_, _p_], x), EqQ(m_ + 2*_p_ + 3, 0), EqQ(a_*_e_*_g_ + _c_*_d_*_f_, 0),),
+        constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, _g_, m_, _p_], x), EqQ(Simplify(m_ + 2*_p_ + 3), 0), EqQ(a_*_e_*_g_ + _c_*_d_*_f_, 0),),
         replacement=(x*_e_ + _d_)**(m_ + 1)*(x**2*_c_ + a_)**(_p_ + 1)*(_d_*_g_ - _e_*_f_)/((2*_p_ + 2)*(a_*_e_**2 + _c_*_d_**2)),
         module_name='1.1.2.9 (c+d x)^m (e+f x)^n (a+b x^2)^p',
         rule_number=40,

@@ -1004,16 +1004,16 @@ RULES = [
     # Rule 115
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atan(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(And(EqQ(_p_, 1), GtQ(_q_, 0)), IntegerQ(_m_)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(And(EqQ(_p_, 1), GtQ(_q_, 0)), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*atan(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='5.3.4 u (a+b arctan(c x))^p',
         rule_number=115,
     ),
     # Rule 116
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acot(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(And(EqQ(_p_, 1), GtQ(_q_, 0)), IntegerQ(_m_)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Condition(Int(Symbol('u'), x), SumQ(Symbol('u')))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(And(EqQ(_p_, 1), GtQ(_q_, 0)), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*acot(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='5.3.4 u (a+b arctan(c x))^p',
         rule_number=116,
     ),

@@ -343,16 +343,16 @@ RULES = [
     # Rule 33
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*asech(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.asech((_c_ * x)))), Symbol('v'), x) + (_b_ * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))) * ((_c_ * x * sympy.sqrt((Integer(-1) + ((_c_ * x))**(Integer(-1)))) * sympy.sqrt((Integer(1) + ((_c_ * x))**(Integer(-1))))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * ((x * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.asech((_c_ * x)))), Symbol('v'), x) + (_b_ * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))) * ((_c_ * x * sympy.sqrt((Integer(-1) + ((_c_ * x))**(Integer(-1)))) * sympy.sqrt((Integer(1) + ((_c_ * x))**(Integer(-1))))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * ((x * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))))**(Integer(-1))), x), x)))),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=33,
     ),
     # Rule 34
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*acsch(x*_c_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), Condition((Dist((_a_ + (_b_ * sympy.acsch((_c_ * x)))), Symbol('v'), x) + (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1))))))**(Integer(-1))), x), x))), InverseFunctionFreeQ(Symbol('v'), x))),
+        constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
+        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.acsch((_c_ * x)))), Symbol('v'), x) + (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1))))))**(Integer(-1))), x), x)))),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=34,
     ),

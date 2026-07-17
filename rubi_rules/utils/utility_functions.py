@@ -14,7 +14,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, WildFunction, expand, expand_trig)
 from sympy.core.mul import Mul
-from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo, Exp1)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
@@ -22,7 +22,7 @@ from sympy.core.sympify import sympify
 from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import im, re, Abs, sign
-from sympy.functions.elementary.exponential import exp as sym_exp, log as sym_log, LambertW
+from sympy.functions.elementary.exponential import exp as sym_exp, log as sym_log, LambertW, exp, log
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.integers import floor, frac
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
@@ -50,62 +50,6 @@ from sympy.core.random import randint
 from sympy_objects import WildSymbol, IDENTITY_ELEMENT
 from sympy_objects.conversion import matchpy_to_sympy
 
-
-class rubi_unevaluated_expr(UnevaluatedExpr):
-    """
-    This is needed to convert `exp` as `Pow`.
-    SymPy's UnevaluatedExpr has an issue with `is_commutative`.
-    """
-    @property
-    def is_commutative(self):
-        from sympy.core.logic import fuzzy_and
-        return fuzzy_and(a.is_commutative for a in self.args)
-
-_E = rubi_unevaluated_expr(E)
-
-
-class rubi_exp(Function):
-    """
-    SymPy's exp is not identified as `Pow`. So it is not matched with `Pow`.
-    Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
-    So, another exp has been created only for rubi module.
-
-    Examples
-    ========
-
-    >>> from sympy import Pow, exp as sym_exp
-    >>> isinstance(sym_exp(2), Pow)
-    False
-    >>> from rubi_rules.utils.utility_functions import rubi_exp
-    >>> isinstance(rubi_exp(2), Pow)
-    True
-
-    """
-    @classmethod
-    def eval(cls, *args):
-        return Pow(_E, args[0])
-
-class rubi_log(Function):
-    """
-    For rule matching different `exp` has been used. So for proper results,
-    `log` is modified little only for case when it encounters rubi's `exp`.
-    For other cases it is same.
-
-    Examples
-    ========
-
-    >>> from rubi_rules.utils.utility_functions import rubi_exp, rubi_log
-    >>> a = rubi_exp(2)
-    >>> rubi_log(a)
-    2
-
-    """
-    @classmethod
-    def eval(cls, *args):
-        if args[0].has(_E):
-            return sym_log(args[0]).doit()
-        else:
-            return sym_log(args[0])
 
 from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_expression, \
     to_expression
@@ -164,26 +108,6 @@ a, b, c, d, e = symbols('a b c d e')
 
 _a_ = WildSymbol("a", optional_value=IDENTITY_ELEMENT)
 
-
-def replace_pow_exp(z):
-    """
-    This function converts back rubi's `exp` to general SymPy's `exp`.
-
-    Examples
-    ========
-
-    >>> from rubi_rules.utils.utility_functions import rubi_exp, replace_pow_exp
-    >>> expr = rubi_exp(5)
-    >>> expr
-    E**5
-    >>> replace_pow_exp(expr)
-    exp(5)
-
-    """
-    z = S(z)
-    if z.has(_E):
-        z = z.replace(_E, E)
-    return z
 
 def Simplify(expr):
     expr = simplify(expr)
@@ -747,7 +671,7 @@ def AtomQ(expr):
     expr = sympify(expr)
     if isinstance(expr, (tuple, list, Tuple)):
         return False
-    if expr in [None, True, False, _E]: # [None, True, False] are atoms in mathematica and _E is also an atom
+    if expr in [None, True, False, Exp1]: # [None, True, False] are atoms in mathematica and _E is also an atom
         return True
     # elif isinstance(expr, (tuple, list, Tuple)):
     #     return all(AtomQ(i) for i in expr)
@@ -755,8 +679,7 @@ def AtomQ(expr):
         return expr.is_Atom
 
 def ExpQ(u):
-    u = replace_pow_exp(u)
-    return Head(u) in (sym_exp, rubi_exp)
+    return Head(u) in (sym_exp, exp)
 
 def LogQ(u):
     return u.func in (sym_log, Log)
@@ -1495,8 +1418,6 @@ def MakeAssocList(u, x, alst=None):
     # parameters of a u that are not integer powers, products or sums. *)
     if alst is None:
         alst = []
-    u = replace_pow_exp(u)
-    x = replace_pow_exp(x)
     if AtomQ(u):
         return alst
     elif IntegerPowerQ(u):
@@ -1523,8 +1444,6 @@ def GensymSubst(u, x, alst=None):
     # (* GensymSubst[u,x,alst] returns u with the kernels in alst free of x replaced by gensymed names. *)
     if alst is None:
         alst =[]
-    u = replace_pow_exp(u)
-    x = replace_pow_exp(x)
     if AtomQ(u):
         return u
     elif IntegerPowerQ(u):
@@ -2021,7 +1940,6 @@ def TrinomialQ(u, x):
         return True
 
     check = False
-    u = replace_pow_exp(u)
     if PowerQ(u):
         if u.exp == 2 and BinomialQ(u.base, x):
             check = True
@@ -2219,17 +2137,15 @@ def RationalFunctionExpand(expr, x):
                 return v*w
     pattern2 = Pattern(UtilityOperator(u_, x_))
     rule2 = _ReplacementRuleWrapped(pattern2, With2)
-    expr = expr.replace(sym_exp, rubi_exp)
     result = replace_all(UtilityOperator(expr, x), [rule1, rule2])
     if isinstance(result, Operation) and result.head == UtilityOp:
         res = expr
     else:
         res = matchpy_to_sympy(result)
-    return replace_pow_exp(res)
+    return res
 
 
 def ExpandIntegrand(expr, x, extra=None):
-    expr = replace_pow_exp(expr)
     if extra is not None:
         extra, x = x, extra
         w = ExpandIntegrand(extra, x)
@@ -2266,13 +2182,12 @@ def ExpandIntegrand(expr, x, extra=None):
                                 F = F.func
                                 return ExpandLinearProduct((a + b*F(c + d*x))**n, u, c, d, x)
 
-        expr = expr.replace(sym_exp, rubi_exp)
         result = replace_all(UtilityOperator(expr, x), ExpandIntegrand_rules, max_count = 1)
         if isinstance(result, Operation) and result.head == UtilityOp:
             res = expr
         else:
             res = matchpy_to_sympy(result)
-        return replace_pow_exp(res)
+        return res
 
 
 def SimplerQ(u, v):
@@ -4452,7 +4367,7 @@ def NormalizeTrig(v, x):
 #=================================
 def TrigToExp(expr):
     ex = expr.rewrite(sin, sym_exp).rewrite(cos, sym_exp).rewrite(tan, sym_exp).rewrite(sec, sym_exp).rewrite(csc, sym_exp).rewrite(cot, sym_exp)
-    return ex.replace(sym_exp, rubi_exp)
+    return ex
 
 def ExpandTrigToExp(u, *args):
     if len(args) == 1:
@@ -5811,7 +5726,6 @@ def Condition(r, c):
         raise NotImplementedError('In Condition()')
 
 def Simp(u, x):
-    u = replace_pow_exp(u)
     return NormalizeSumFactors(SimpHelp(u, x))
 
 def SimpHelp(u, x):
@@ -6702,8 +6616,6 @@ def IntegralFreeQ(u):
 
 def Dist(u, v, x):
     #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
-    u = replace_pow_exp(u) # to replace back to SymPy's exp
-    v = replace_pow_exp(v)
     w = Simp(u*x**2, x)/x**2
     if u == 1:
         return v
@@ -6790,7 +6702,6 @@ def Sum_doit(exp, args):
     6
 
     """
-    exp = replace_pow_exp(exp)
     if not isinstance(args[2], (int, Integer)):
         new_args = [args[0], args[1], Floor(args[2])]
         return Sum(exp, new_args).doit()
@@ -7399,7 +7310,7 @@ def _RemoveContentAux():
     rule4 = _ReplacementRuleWrapped(pattern4, replacement4)
     return [rule1, rule2, rule3, rule4, ]
 
-Log = rubi_log
+Log = log
 Null = None
 
 RemoveContentAux_replacer = ManyToOneReplacer(*_RemoveContentAux())

@@ -130,8 +130,8 @@ RULES = [
     # Rule 10
     RubiRulePattern(
         pattern=Int(u_*(x**4*_B_ + A_)/sqrt(v_), x),
-        constraints=(FreeQ([A_, _B_], x), PolyQ(v_, x**2, 2), PolyQ(1/u_, x**2, 2),),
-        replacement=With(List(Set(Symbol('a'), Coeff(v_, x, Integer(0))), Set(Symbol('b'), Coeff(v_, x, Integer(2))), Set(Symbol('c'), Coeff(v_, x, Integer(4))), Set(Symbol('d'), Coeff((u_)**(Integer(-1)), x, Integer(0))), Set(Symbol('e'), Coeff((u_)**(Integer(-1)), x, Integer(2))), Set(Symbol('f'), Coeff((u_)**(Integer(-1)), x, Integer(4)))), Condition((sympy.Function('A')(Symbol('Star')) * Subst(Int(((Symbol('d') + (Integer(-1) * (((Symbol('b') * Symbol('d')) + (Integer(-1) * (Symbol('a') * Symbol('e')))) * (x)**(Integer(2))))))**(Integer(-1)), x), x, (x * (sympy.sqrt(v_))**(Integer(-1))))), And(EqQ(((Symbol('a') * _B_) + (A_ * Symbol('c'))), Integer(0)), EqQ(((Symbol('c') * Symbol('d')) + (Integer(-1) * (Symbol('a') * Symbol('f')))), Integer(0))))),
+        constraints=(FreeQ([A_, _B_], x), PolyQ(v_, x**2, 2), PolyQ(1/u_, x**2, 2), EqQ(A_*Coeff(v_, x, 4) + _B_*Coeff(v_, x, 0), 0), EqQ(Coeff(1/u_, x, 0)*Coeff(v_, x, 4) - Coeff(1/u_, x, 4)*Coeff(v_, x, 0), 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(v_, x, Integer(0))), Set(Symbol('b'), Coeff(v_, x, Integer(2))), Set(Symbol('c'), Coeff(v_, x, Integer(4))), Set(Symbol('d'), Coeff((u_)**(Integer(-1)), x, Integer(0))), Set(Symbol('e'), Coeff((u_)**(Integer(-1)), x, Integer(2))), Set(Symbol('f'), Coeff((u_)**(Integer(-1)), x, Integer(4)))), (sympy.Function('A')(Symbol('Star')) * Subst(Int(((Symbol('d') + (Integer(-1) * (((Symbol('b') * Symbol('d')) + (Integer(-1) * (Symbol('a') * Symbol('e')))) * (x)**(Integer(2))))))**(Integer(-1)), x), x, (x * (sympy.sqrt(v_))**(Integer(-1)))))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=10,
     ),
@@ -285,7 +285,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), NeQ(-c_*_f_ + _d_*e_, 0), EqQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0), EqQ(6*a_*_d_**4*e_ - c_*_f_*(-22*a_*_d_**3 + _b_*c_**3), 0),),
-        replacement=With(List(Set(Symbol('k'), sympy.simplify((((_d_ * e_) + (Integer(2) * c_ * _f_)) * ((c_ * _f_))**(Integer(-1)))))), ((Integer(1) + Symbol('k')) * e_ * (sympy.Function('d')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((Integer(1) + ((Integer(3) + (Integer(2) * Symbol('k'))) * a_ * (x)**(Integer(2)))))**(Integer(-1)), x), x, ((Integer(1) + ((Integer(1) + Symbol('k')) * _d_ * x * (c_)**(Integer(-1)))) * (sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('k'), Simplify((((_d_ * e_) + (Integer(2) * c_ * _f_)) * ((c_ * _f_))**(Integer(-1)))))), ((Integer(1) + Symbol('k')) * e_ * (sympy.Function('d')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((Integer(1) + ((Integer(3) + (Integer(2) * Symbol('k'))) * a_ * (x)**(Integer(2)))))**(Integer(-1)), x), x, ((Integer(1) + ((Integer(1) + Symbol('k')) * _d_ * x * (c_)**(Integer(-1)))) * (sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))))**(Integer(-1)))))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=40,
     ),

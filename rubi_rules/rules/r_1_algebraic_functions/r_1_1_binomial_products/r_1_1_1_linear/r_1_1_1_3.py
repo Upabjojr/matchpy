@@ -135,7 +135,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_b_ + _a_)*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_, _p_], x), Not(RationalQ(_p_)), SumSimplerQ(_p_, 1),),
-        replacement=(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)*(_a_*_f_ - _b_*_e_)/(_f_*(_p_ + 1)*(_c_*_f_ - _d_*_e_)) - (_a_*_d_*_f_*(_n_ + _p_ + 2) - _b_*(_c_*_f_*(_p_ + 1) + _d_*_e_*(_n_ + 1)))*Int((x*_d_ + _c_)**_n_*(x*_f_ + _e_)**(_p_ + 1), x)/(_f_*(_p_ + 1)*(_c_*_f_ - _d_*_e_)),
+        replacement=(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)*(_a_*_f_ - _b_*_e_)/(_f_*(_p_ + 1)*(_c_*_f_ - _d_*_e_)) - (_a_*_d_*_f_*(_n_ + _p_ + 2) - _b_*(_c_*_f_*(_p_ + 1) + _d_*_e_*(_n_ + 1)))*Int((x*_d_ + _c_)**_n_*(x*_f_ + _e_)**Simplify(_p_ + 1), x)/(_f_*(_p_ + 1)*(_c_*_f_ - _d_*_e_)),
         module_name='1.1.1.3 (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=7,
     ),
@@ -270,7 +270,7 @@ RULES = [
     # Rule 24
     RubiRulePattern(
         pattern=Int((x*_b_ + _a_)**m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, m_, _n_, _p_], x), EqQ(m_ + _n_ + _p_ + 3, 0), EqQ(_a_*_d_*_f_*(m_ + 1) + _b_*_c_*_f_*(_n_ + 1) + _b_*_d_*_e_*(_p_ + 1), 0), NeQ(m_, -1),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, m_, _n_, _p_], x), EqQ(Simplify(m_ + _n_ + _p_ + 3), 0), EqQ(_a_*_d_*_f_*(m_ + 1) + _b_*_c_*_f_*(_n_ + 1) + _b_*_d_*_e_*(_p_ + 1), 0), NeQ(m_, -1),),
         replacement=_b_*(x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_)),
         module_name='1.1.1.3 (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=24,
@@ -278,7 +278,7 @@ RULES = [
     # Rule 25
     RubiRulePattern(
         pattern=Int((x*_b_ + _a_)**m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, m_, _n_, _p_], x), EqQ(m_ + _n_ + _p_ + 3, 0), Or(LtQ(m_, -1), SumSimplerQ(m_, 1)),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, m_, _n_, _p_], x), EqQ(Simplify(m_ + _n_ + _p_ + 3), 0), Or(LtQ(m_, -1), SumSimplerQ(m_, 1)),),
         replacement=_b_*(x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_)) + (_a_*_d_*_f_*(m_ + 1) + _b_*_c_*_f_*(_n_ + 1) + _b_*_d_*_e_*(_p_ + 1))*Int((x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_)),
         module_name='1.1.1.3 (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=25,
