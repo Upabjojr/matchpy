@@ -108,7 +108,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('CoshIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=EulerGamma*log(x) - x*_b_*hyper((1, 1, 1), (2, 2, 2), -x*_b_)/2 + x*_b_*hyper((1, 1, 1), (2, 2, 2), x*_b_)/2 + log(x*_b_)**2/2,
+        replacement=((Integer(-1) * (Integer(2))**(Integer(-1)) * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * _b_) * x))) + ((Integer(2))**(Integer(-1)) * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), (_b_ * x))) + (sympy.EulerGamma * sympy.log(x)) + ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2)))),
         module_name='8.5 Hyperbolic integral functions',
         rule_number=4,
     ),

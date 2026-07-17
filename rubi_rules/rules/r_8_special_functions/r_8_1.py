@@ -83,7 +83,7 @@ n_ = WildSymbol('n')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erf')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.erf((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.erf((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + ((_b_ * sympy.sqrt(sympy.pi) * (sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2)))))**(Integer(-1))),
         module_name='8.1 Error functions',
@@ -91,7 +91,7 @@ RULES = [
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erfc')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.erfc((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.erfc((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * ((_b_ * sympy.sqrt(sympy.pi) * (sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2)))))**(Integer(-1)))),
         module_name='8.1 Error functions',
@@ -99,7 +99,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erfi')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.erfi((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.erfi((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * ((sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))) * ((_b_ * sympy.sqrt(sympy.pi)))**(Integer(-1))))),
         module_name='8.1 Error functions',
@@ -107,7 +107,7 @@ RULES = [
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erf')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.erf((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.erf((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(4) * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int(((_a_ + (_b_ * x)) * sympy.erf((_a_ + (_b_ * x))) * ((sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))))**(Integer(-1))), x)))),
         module_name='8.1 Error functions',
@@ -115,7 +115,7 @@ RULES = [
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfc')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.erfc((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.erfc((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(4) * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int(((_a_ + (_b_ * x)) * sympy.erfc((_a_ + (_b_ * x))) * ((sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))))**(Integer(-1))), x))),
         module_name='8.1 Error functions',
@@ -123,7 +123,7 @@ RULES = [
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfi')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.erfi((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.erfi((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(4) * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int(((_a_ + (_b_ * x)) * (sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))) * sympy.erfi((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -131,7 +131,7 @@ RULES = [
     ),
     # Rule 7
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erf')((_a_ + (_b_ * x))))**(n_), x),
+        pattern=Int((sympy.erf((_a_ + (_b_ * x))))**(n_), x),
         constraints=(FreeQ([_a_, _b_, n_], x), NeQ(n_, 1), NeQ(n_, 2),),
         replacement=Unintegrable((sympy.erf((_a_ + (_b_ * x))))**(n_), x),
         module_name='8.1 Error functions',
@@ -139,7 +139,7 @@ RULES = [
     ),
     # Rule 8
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfc')((_a_ + (_b_ * x))))**(n_), x),
+        pattern=Int((sympy.erfc((_a_ + (_b_ * x))))**(n_), x),
         constraints=(FreeQ([_a_, _b_, n_], x), NeQ(n_, 1), NeQ(n_, 2),),
         replacement=Unintegrable((sympy.erfc((_a_ + (_b_ * x))))**(n_), x),
         module_name='8.1 Error functions',
@@ -147,7 +147,7 @@ RULES = [
     ),
     # Rule 9
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfi')((_a_ + (_b_ * x))))**(n_), x),
+        pattern=Int((sympy.erfi((_a_ + (_b_ * x))))**(n_), x),
         constraints=(FreeQ([_a_, _b_, n_], x), NeQ(n_, 1), NeQ(n_, 2),),
         replacement=Unintegrable((sympy.erfi((_a_ + (_b_ * x))))**(n_), x),
         module_name='8.1 Error functions',
@@ -155,7 +155,7 @@ RULES = [
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erf')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.erf((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=2*x*_b_*hyper((sympy.S.Half, sympy.S.Half), (sympy.S(3)/2, sympy.S(3)/2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -163,7 +163,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfc')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.erfc((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=(sympy.log(x) + (Integer(-1) * Int((sympy.erf((_b_ * x)) * (x)**(Integer(-1))), x))),
         module_name='8.1 Error functions',
@@ -171,7 +171,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((sympy.Function('Erfi')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.erfi((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=2*x*_b_*hyper((sympy.S.Half, sympy.S.Half), (sympy.S(3)/2, sympy.S(3)/2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -179,7 +179,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Erf')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.erf((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.erf((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * ((sympy.sqrt(sympy.pi) * _d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * ((sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))))**(Integer(-1))), x)))),
         module_name='8.1 Error functions',
@@ -187,7 +187,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Erfc')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.erfc((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.erfc((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(2) * _b_ * ((sympy.sqrt(sympy.pi) * _d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * ((sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2))))**(Integer(-1))), x))),
         module_name='8.1 Error functions',
@@ -195,7 +195,7 @@ RULES = [
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Erfi')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.erfi((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.erfi((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * ((sympy.sqrt(sympy.pi) * _d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * (sympy.E)**(((_a_ + (_b_ * x)))**(Integer(2)))), x)))),
         module_name='8.1 Error functions',
@@ -203,7 +203,7 @@ RULES = [
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('Erf')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.erf((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), Or(IGtQ(_m_, 0), ILtQ(_m_/2 + sympy.S.Half, 0)),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.erf((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(4) * _b_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((_m_ + Integer(1))) * (sympy.E)**(((Integer(-1) * (_b_)**(Integer(2))) * (x)**(Integer(2)))) * sympy.erf((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -211,7 +211,7 @@ RULES = [
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('Erfc')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.erfc((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), Or(IGtQ(_m_, 0), ILtQ(_m_/2 + sympy.S.Half, 0)),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.erfc((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(4) * _b_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((_m_ + Integer(1))) * (sympy.E)**(((Integer(-1) * (_b_)**(Integer(2))) * (x)**(Integer(2)))) * sympy.erfc((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -219,7 +219,7 @@ RULES = [
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('Erfi')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.erfi((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), Or(IGtQ(_m_, 0), ILtQ(_m_/2 + sympy.S.Half, 0)),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.erfi((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(4) * _b_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((_m_ + Integer(1))) * (sympy.E)**(((_b_)**(Integer(2)) * (x)**(Integer(2)))) * sympy.erfi((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -227,7 +227,7 @@ RULES = [
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erf')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erf((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((_b_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand((sympy.erf(x))**(Integer(2)), (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * x)))**(_m_), x), x), x, (a_ + (_b_ * x)))),
         module_name='8.1 Error functions',
@@ -235,7 +235,7 @@ RULES = [
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erfc')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfc((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((_b_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand((sympy.erfc(x))**(Integer(2)), (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * x)))**(_m_), x), x), x, (a_ + (_b_ * x)))),
         module_name='8.1 Error functions',
@@ -243,7 +243,7 @@ RULES = [
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erfi')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfi((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((_b_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand((sympy.erfi(x))**(Integer(2)), (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * x)))**(_m_), x), x), x, (a_ + (_b_ * x)))),
         module_name='8.1 Error functions',
@@ -251,7 +251,7 @@ RULES = [
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erf')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x),),
         replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -259,7 +259,7 @@ RULES = [
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erfc')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x),),
         replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -267,7 +267,7 @@ RULES = [
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('Erfi')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x),),
         replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -275,7 +275,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erf')((_b_ * x)))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erf((_b_ * x)))**(_n_)), x),
         constraints=(FreeQ([_b_, _c_, _d_, _n_], x), EqQ(_d_, -_b_**2),),
         replacement=((sympy.E)**(_c_) * sympy.sqrt(sympy.pi) * ((Integer(2) * _b_))**(Integer(-1)) * Subst(Int((x)**(_n_), x), x, sympy.erf((_b_ * x)))),
         module_name='8.1 Error functions',
@@ -283,7 +283,7 @@ RULES = [
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfc')((_b_ * x)))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfc((_b_ * x)))**(_n_)), x),
         constraints=(FreeQ([_b_, _c_, _d_, _n_], x), EqQ(_d_, -_b_**2),),
         replacement=((Integer(-1) * (sympy.E)**(_c_)) * sympy.sqrt(sympy.pi) * ((Integer(2) * _b_))**(Integer(-1)) * Subst(Int((x)**(_n_), x), x, sympy.erfc((_b_ * x)))),
         module_name='8.1 Error functions',
@@ -291,7 +291,7 @@ RULES = [
     ),
     # Rule 27
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfi')((_b_ * x)))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfi((_b_ * x)))**(_n_)), x),
         constraints=(FreeQ([_b_, _c_, _d_, _n_], x), EqQ(_d_, _b_**2),),
         replacement=((sympy.E)**(_c_) * sympy.sqrt(sympy.pi) * ((Integer(2) * _b_))**(Integer(-1)) * Subst(Int((x)**(_n_), x), x, sympy.erfi((_b_ * x)))),
         module_name='8.1 Error functions',
@@ -299,7 +299,7 @@ RULES = [
     ),
     # Rule 28
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
         replacement=x**2*_b_*exp(_c_)*hyper((1, 1), (sympy.S(3)/2, 2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -307,7 +307,7 @@ RULES = [
     ),
     # Rule 29
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
         replacement=(Int((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))), x) + (Integer(-1) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -315,7 +315,7 @@ RULES = [
     ),
     # Rule 30
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, -_b_**2),),
         replacement=x**2*_b_*exp(_c_)*hyper((1, 1), (sympy.S(3)/2, 2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -323,7 +323,7 @@ RULES = [
     ),
     # Rule 31
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erf')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=Unintegrable(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -331,7 +331,7 @@ RULES = [
     ),
     # Rule 32
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfc')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=Unintegrable(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -339,7 +339,7 @@ RULES = [
     ),
     # Rule 33
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfi')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=Unintegrable(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -347,7 +347,7 @@ RULES = [
     ),
     # Rule 34
     RubiRulePattern(
-        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_a_ + (_b_ * x)))), x),
+        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int((sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2)))))), x)))),
         module_name='8.1 Error functions',
@@ -355,7 +355,7 @@ RULES = [
     ),
     # Rule 35
     RubiRulePattern(
-        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_a_ + (_b_ * x)))), x),
+        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int((sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2)))))), x))),
         module_name='8.1 Error functions',
@@ -363,7 +363,7 @@ RULES = [
     ),
     # Rule 36
     RubiRulePattern(
-        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_a_ + (_b_ * x)))), x),
+        pattern=Int((x * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int((sympy.E)**(((_a_)**(Integer(2)) + _c_ + (Integer(2) * _a_ * _b_ * x) + (((_b_)**(Integer(2)) + _d_) * (x)**(Integer(2))))), x)))),
         module_name='8.1 Error functions',
@@ -371,7 +371,7 @@ RULES = [
     ),
     # Rule 37
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(m_, 1),),
         replacement=(((x)**((m_ + Integer(-1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * (sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2))))))), x))) + (Integer(-1) * ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -379,7 +379,7 @@ RULES = [
     ),
     # Rule 38
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(m_, 1),),
         replacement=(((x)**((m_ + Integer(-1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * (sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2))))))), x)) + (Integer(-1) * ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -387,7 +387,7 @@ RULES = [
     ),
     # Rule 39
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(m_, 1),),
         replacement=(((x)**((m_ + Integer(-1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x))) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * (sympy.E)**(((_a_)**(Integer(2)) + _c_ + (Integer(2) * _a_ * _b_ * x) + (((_b_)**(Integer(2)) + _d_) * (x)**(Integer(2)))))), x))) + (Integer(-1) * ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -395,7 +395,7 @@ RULES = [
     ),
     # Rule 40
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
         replacement=2*x*_b_*exp(_c_)*hyper((sympy.S.Half, 1), (sympy.S(3)/2, sympy.S(3)/2), x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -403,7 +403,7 @@ RULES = [
     ),
     # Rule 41
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, _b_**2),),
         replacement=(Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (x)**(Integer(-1))), x) + (Integer(-1) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x)) * (x)**(Integer(-1))), x))),
         module_name='8.1 Error functions',
@@ -411,7 +411,7 @@ RULES = [
     ),
     # Rule 42
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_, -_b_**2),),
         replacement=2*x*_b_*exp(_c_)*hyper((sympy.S.Half, 1), (sympy.S(3)/2, sympy.S(3)/2), -x**2*_b_**2)/sqrt(pi),
         module_name='8.1 Error functions',
@@ -419,7 +419,7 @@ RULES = [
     ),
     # Rule 43
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), ILtQ(m_, -1),),
         replacement=(((x)**((m_ + Integer(1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x))) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * (((m_ + Integer(1)) * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * (sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2))))))), x))) + (Integer(-1) * (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -427,7 +427,7 @@ RULES = [
     ),
     # Rule 44
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), ILtQ(m_, -1),),
         replacement=(((x)**((m_ + Integer(1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x))) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(2) * _b_ * (((m_ + Integer(1)) * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * (sympy.E)**(((Integer(-1) * (_a_)**(Integer(2))) + _c_ + (Integer(-1) * (Integer(2) * _a_ * _b_ * x)) + (Integer(-1) * (((_b_)**(Integer(2)) + (Integer(-1) * _d_)) * (x)**(Integer(2))))))), x)) + (Integer(-1) * (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -435,7 +435,7 @@ RULES = [
     ),
     # Rule 45
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_a_ + (_b_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), ILtQ(m_, -1),),
         replacement=(((x)**((m_ + Integer(1))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x))) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * (((m_ + Integer(1)) * sympy.sqrt(sympy.pi)))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * (sympy.E)**(((_a_)**(Integer(2)) + _c_ + (Integer(2) * _a_ * _b_ * x) + (((_b_)**(Integer(2)) + _d_) * (x)**(Integer(2)))))), x))) + (Integer(-1) * (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_a_ + (_b_ * x)))), x)))),
         module_name='8.1 Error functions',
@@ -443,7 +443,7 @@ RULES = [
     ),
     # Rule 46
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erf')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
         replacement=Unintegrable((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erf((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -451,7 +451,7 @@ RULES = [
     ),
     # Rule 47
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfc')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
         replacement=Unintegrable((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfc((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -459,7 +459,7 @@ RULES = [
     ),
     # Rule 48
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.Function('Erfi')((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
         replacement=Unintegrable((((_e_ * x))**(_m_) * (sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.erfi((_a_ + (_b_ * x))))**(_n_)), x),
         module_name='8.1 Error functions',
@@ -467,7 +467,7 @@ RULES = [
     ),
     # Rule 49
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erf')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.erf((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.erf((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (Integer(2) * _b_ * _d_ * _n_ * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int(((sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))**(Integer(-1)), x)))),
         module_name='8.1 Error functions',
@@ -475,7 +475,7 @@ RULES = [
     ),
     # Rule 50
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erfc')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.erfc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.erfc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(2) * _b_ * _d_ * _n_ * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int(((sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))**(Integer(-1)), x))),
         module_name='8.1 Error functions',
@@ -483,7 +483,7 @@ RULES = [
     ),
     # Rule 51
     RubiRulePattern(
-        pattern=Int(sympy.Function('Erfi')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.erfi((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.erfi((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (Integer(2) * _b_ * _d_ * _n_ * (sympy.sqrt(sympy.pi))**(Integer(-1)) * Int((sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))), x)))),
         module_name='8.1 Error functions',
@@ -492,7 +492,7 @@ RULES = [
     # Rule 52: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 53
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('Erf')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.erf((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.erf((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * _d_ * _n_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * ((sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))**(Integer(-1))), x)))),
         module_name='8.1 Error functions',
@@ -500,7 +500,7 @@ RULES = [
     ),
     # Rule 54
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('Erfc')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.erfc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.erfc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(2) * _b_ * _d_ * _n_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * ((sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))**(Integer(-1))), x))),
         module_name='8.1 Error functions',
@@ -508,7 +508,7 @@ RULES = [
     ),
     # Rule 55
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('Erfi')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.erfi((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.erfi((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * _d_ * _n_ * ((sympy.sqrt(sympy.pi) * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * (sympy.E)**(((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2)))), x)))),
         module_name='8.1 Error functions',
@@ -516,7 +516,7 @@ RULES = [
     ),
     # Rule 56
     RubiRulePattern(
-        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
+        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=((sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erf((_b_ * x))), x)) + (Integer(-1) * (sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -524,7 +524,7 @@ RULES = [
     ),
     # Rule 57
     RubiRulePattern(
-        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x))), x),
+        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=((sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erfc((_b_ * x))), x)) + (Integer(-1) * (sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -532,7 +532,7 @@ RULES = [
     ),
     # Rule 58
     RubiRulePattern(
-        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
+        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=((sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erfi((_b_ * x))), x)) + (Integer(-1) * (sympy.I * (Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -540,7 +540,7 @@ RULES = [
     ),
     # Rule 59
     RubiRulePattern(
-        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
+        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erf((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -548,7 +548,7 @@ RULES = [
     ),
     # Rule 60
     RubiRulePattern(
-        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x))), x),
+        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erfc((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -556,7 +556,7 @@ RULES = [
     ),
     # Rule 61
     RubiRulePattern(
-        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
+        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -_b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((((Integer(-1) * sympy.I) * _c_) + (Integer(-1) * (sympy.I * _d_ * (x)**(Integer(2)))))) * sympy.erfi((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((sympy.I * _c_) + (sympy.I * _d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -564,7 +564,7 @@ RULES = [
     ),
     # Rule 62
     RubiRulePattern(
-        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
+        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x)) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erf((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -572,7 +572,7 @@ RULES = [
     ),
     # Rule 63
     RubiRulePattern(
-        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x))), x),
+        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x)) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erfc((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -580,7 +580,7 @@ RULES = [
     ),
     # Rule 64
     RubiRulePattern(
-        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
+        pattern=Int((sympy.sinh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x)) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erfi((_b_ * x))), x)))),
         module_name='8.1 Error functions',
@@ -588,7 +588,7 @@ RULES = [
     ),
     # Rule 65
     RubiRulePattern(
-        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erf')((_b_ * x))), x),
+        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erf((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -596,7 +596,7 @@ RULES = [
     ),
     # Rule 66
     RubiRulePattern(
-        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfc')((_b_ * x))), x),
+        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfc((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erfc((_b_ * x))), x))),
         module_name='8.1 Error functions',
@@ -604,7 +604,7 @@ RULES = [
     ),
     # Rule 67
     RubiRulePattern(
-        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.Function('Erfi')((_b_ * x))), x),
+        pattern=Int((sympy.cosh((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, _b_**4),),
         replacement=(((Integer(2))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erfi((_b_ * x))), x)) + ((Integer(2))**(Integer(-1)) * Int(((sympy.E)**(((Integer(-1) * _c_) + (Integer(-1) * (_d_ * (x)**(Integer(2)))))) * sympy.erfi((_b_ * x))), x))),
         module_name='8.1 Error functions',

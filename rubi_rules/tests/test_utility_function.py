@@ -586,6 +586,8 @@ def test_QuadraticQ():
     assert not QuadraticQ(x**2+1+x**3, x)
     assert QuadraticQ(x**2+1+x, x)
     assert not QuadraticQ(x**2, x)
+    assert not QuadraticQ(sin(x), x)
+    assert not QuadraticQ([sin(x), cos(x)], x)
 
 def test_BinomialQ():
     assert BinomialQ(x**9, x)

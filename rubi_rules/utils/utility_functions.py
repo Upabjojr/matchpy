@@ -109,6 +109,29 @@ a, b, c, d, e = symbols('a b c d e')
 _a_ = WildSymbol("a", optional_value=IDENTITY_ELEMENT)
 
 
+def everything_else_means_false(f):
+    @wraps(f)
+    def newf(*args, **kwargs):
+        ret = f(*args, **kwargs)
+        if ret is None:
+            return False
+        if ret != True:
+            return False
+        return ret
+
+    return newf
+
+
+def exception_means_false(f):
+    @wraps(f)
+    def newf(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            return False
+    return newf
+
+
 def Simplify(expr):
     expr = simplify(expr)
     return expr
@@ -1005,15 +1028,18 @@ def ExponentList(expr, x):
         else:
             return [degree(expr, gen = x)]
 
+
+@everything_else_means_false
 def QuadraticQ(u, x):
     # QuadraticQ(u, x) returns True iff u is a polynomial of degree 2 and not a monomial of the form a x^2
     if ListQ(u):
         for expr in u:
-            if Not(PolyQ(expr, x, 2) and Not(Coefficient(expr, x, 0) == 0 and Coefficient(expr, x, 1) == 0)):
+            if Not(QuadraticQ(expr, x)):
                 return False
         return True
     else:
         return PolyQ(u, x, 2) and Not(Coefficient(u, x, 0) == 0 and Coefficient(u, x, 1) == 0)
+
 
 def LinearPairQ(u, v, x):
     # LinearPairQ(u, v, x) returns True iff u and v are linear not equal x but u/v is a constant wrt x
@@ -1204,6 +1230,8 @@ def TrinomialParts(u, x):
     else:
         return False
 
+
+@exception_means_false
 def PolyQ(u, x, n=None):
     # returns True iff u is a polynomial of degree n.
     if ListQ(u):

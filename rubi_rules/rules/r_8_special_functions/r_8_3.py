@@ -98,7 +98,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((sympy.Function('ExpIntegralE')(Integer(1), (_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
-        replacement=-EulerGamma*log(x) + x*_b_*hyper((1, 1, 1), (2, 2, 2), -x*_b_) - log(x*_b_)**2/2,
+        replacement=((_b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * _b_) * x))) + (Integer(-1) * (sympy.EulerGamma * sympy.log(x))) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2))))),
         module_name='8.3 Exponential integral functions',
         rule_number=3,
     ),

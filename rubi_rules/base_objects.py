@@ -264,7 +264,27 @@ class _RubiIntegrator:
         expr: sympy.Expr,
         x: sympy.Symbol,
         pattern: str = '**',
-    ) -> tuple[sympy.Expr, list[tuple[str, int]]]:
+    ) -> tuple[sympy.Expr, list[tuple[sympy.Expr, list[tuple[str, int]]]]]:
+        current = Int(expr, x)
+        matched_rules = []
+        while True:
+            previous = current
+            current_rules = []
+            for intfun in previous.atoms(Int):
+                integfun, matched_rule = self._integration_step(intfun.args[0], intfun.args[1], pattern)
+                current = current.replace(intfun, integfun)
+                current_rules.extend(matched_rule)
+            if current == previous:
+                break
+            matched_rules.append((current, current_rules))
+        return current, matched_rules
+
+    def _integration_step(
+            self,
+            expr: sympy.Expr,
+            x: sympy.Symbol,
+            pattern: str = '**',
+        ) -> tuple[sympy.Expr, list[tuple[str, int]]]:
         expr = sympy.sympify(expr)
         x = sympy.sympify(x)
         x_canonical = sympy.Symbol('x')
@@ -276,7 +296,8 @@ class _RubiIntegrator:
             result, matched_rule = _preprocess_integrate(expr, x_canonical, replacer)
         else:
             dummy = sympy.Dummy('_x_var')
-            expr_sub = expr.subs(x_canonical, dummy).subs(x, x_canonical)
+            x_sub = x.subs(x_canonical, dummy)  # x could be function containing x_canonical
+            expr_sub = expr.subs(x_canonical, dummy).subs(x_sub, x_canonical)
             result, matched_rule = _preprocess_integrate(expr_sub, x_canonical, replacer)
             result = result.subs(x_canonical, x).subs(dummy, x_canonical)
 
@@ -312,7 +333,7 @@ def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneRep
 def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer):
     expr = sympy.sympify(expr)
     if x not in expr.free_symbols:
-        return expr * x
+        return expr * x, []
     if expr.is_Add:
         addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer) for t in expr.args])
         return sympy.Add(*addends), matched_rules

@@ -26,7 +26,9 @@ from sympy_wolfram.mathematica_expressions import (
     D,
     _condition_holds,
 )
-
+from sympy_wolfram.mathematica_functions import (
+    Gamma,
+)
 
 # =============================================================================
 # Coefficient[expr, x, n] — coefficient of x^n in expr

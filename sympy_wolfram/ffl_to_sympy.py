@@ -108,10 +108,16 @@ class FFLConverter:
         # Special functions
         'EllipticE': 'sympy.elliptic_e', 'EllipticF': 'sympy.elliptic_f',
         'AppellF1': 'sympy.appellf1',
+        'Gamma': 'Gamma', 'LogGamma': 'sympy.loggamma',
+        'Erf': 'sympy.erf',
+        'Erfi': 'sympy.erfi', 'Erfc': 'sympy.erfc',
+        'PolyLog': 'sympy.polylog',
         # Calculus / algebra
         'D': 'D', 'Denominator': 'sympy.denom',
         'Rt': 'sympy.root', 'Simplify': 'Simplify',
         'FractionalPart': 'sympy.frac', 'IntegerPart': 'sympy.floor',
+        # List functions:
+        'Min': 'sympy.Min', 'Max': 'sympy.Max',
     }
 
     # Mathematica predicates that map to native SymPy relational/logic objects
@@ -128,6 +134,7 @@ class FFLConverter:
         'Pi': 'sympy.pi', 'E': 'sympy.E',
         'I': 'sympy.I', 'Infinity': 'sympy.oo',
         'True': 'sympy.true', 'False': 'sympy.false',
+        'EulerGamma': 'sympy.EulerGamma',
     }
 
     def __init__(
