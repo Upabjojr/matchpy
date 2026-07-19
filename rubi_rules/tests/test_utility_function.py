@@ -1452,19 +1452,29 @@ def test_InverseFunctionOfLinear():
     assert InverseFunctionOfLinear(log(u), x) == log(u)
 
 def test_InertTrigQ():
-    s = sin(x)
-    c = cos(x)
-    assert not InertTrigQ(sin(x), csc(x), cos(h))
-    assert InertTrigQ(sin(x), csc(x))
-    assert not InertTrigQ(s, c)
-    assert InertTrigQ(c)
+    # InertTrigQ detects *inert* trig markers (Function('sin')(...)), not the
+    # active SymPy trig functions.
+    from rubi_rules.utils.utility_functions import InertSin, InertCos, InertCsc
+    isin, icos, icsc = InertSin(x), InertCos(x), InertCsc(x)
+    assert not InertTrigQ(isin, icsc, InertCos(h))
+    assert InertTrigQ(isin, icsc)          # sin/csc reciprocal pair
+    assert not InertTrigQ(isin, icos)
+    assert InertTrigQ(icos)
+    # active SymPy trig is not inert
+    assert not InertTrigQ(sin(x))
+    assert not InertTrigQ(cos(x))
 
 def test_InertTrigFreeQ():
+    from rubi_rules.utils.utility_functions import InertSin
     assert InertTrigFreeQ(x)
     assert InertTrigFreeQ(exp(x)*x)
-    assert not InertTrigFreeQ(sin(x))
-    assert not InertTrigFreeQ(x*sin(x))
-    assert not InertTrigFreeQ(x*sin(x**2 + x))
+    # active SymPy trig is inert-trig-free (that is the whole point of the fix)
+    assert InertTrigFreeQ(sin(x))
+    assert InertTrigFreeQ(x*sin(x))
+    assert InertTrigFreeQ(x*sin(x**2 + x))
+    # inert markers ARE detected
+    assert not InertTrigFreeQ(InertSin(x))
+    assert not InertTrigFreeQ(x*InertSin(x))
 
 def test_PowerOfInertTrigSumQ():
     func = sin
@@ -2070,7 +2080,9 @@ def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6
 
 def test_DeactivateTrig():
-    assert DeactivateTrig(sec(a + b*x), x) == sec(a + b*x)
+    # DeactivateTrig turns active trig into inert markers
+    from rubi_rules.utils.utility_functions import InertSec
+    assert DeactivateTrig(sec(a + b*x), x) == InertSec(a + b*x)
 
 def test_Negative():
     from rubi_rules.utils.utility_functions import Negative

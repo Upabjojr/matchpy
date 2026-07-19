@@ -412,10 +412,13 @@ class TestInertTrigQ:
     """Tests for InertTrigQ constraint."""
 
     def test_trig_functions(self):
+        from rubi_rules.utils.utility_functions import InertSin, InertCos, InertTan
         c = InertTrigQ('u')
-        assert c.check(u=sin(x)) == True
-        assert c.check(u=cos(x)) == True
-        assert c.check(u=tan(x)) == True
+        # inert trig markers are inert; active SymPy trig is not
+        assert c.check(u=InertSin(x)) == True
+        assert c.check(u=InertCos(x)) == True
+        assert c.check(u=InertTan(x)) == True
+        assert c.check(u=sin(x)) == False
 
     def test_not_trig(self):
         c = InertTrigQ('u')
@@ -432,9 +435,12 @@ class TestInertTrigFreeQ:
         assert c.check(u=log(x)) == True
 
     def test_has_trig(self):
+        from rubi_rules.utils.utility_functions import InertSin, InertCos
         c = InertTrigFreeQ('u')
-        assert c.check(u=sin(x)) == False
-        assert c.check(u=x + cos(x)) == False
+        # inert trig present -> not free; active SymPy trig -> free
+        assert c.check(u=InertSin(x)) == False
+        assert c.check(u=x + InertCos(x)) == False
+        assert c.check(u=sin(x)) == True
 
 
 class TestCalculusFreeQ:

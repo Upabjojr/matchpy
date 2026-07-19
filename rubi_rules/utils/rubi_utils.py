@@ -1,5 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Rubi utility expression wrappers.
+"""Rubi utility expression wrappers — the DEFERRED half of the utility layer.
+
+Rubi's rules are RuleDelayed (``:>``): a utility call on the right-hand side,
+e.g. ``ExpandToSum[v, x]``, must evaluate only WHEN THE RULE FIRES, with the
+matched value of ``v`` — never at rule-definition/import time while ``v`` is
+still a symbolic wildcard.
+
+To model that, every RUBI utility exists in two forms with the SAME name:
+
+* ``utility_functions.<Name>`` — an EAGER plain Python function that computes
+  immediately. This is the real implementation.
+* ``rubi_utils.<Name>`` — a DEFERRED ``MathematicaExpr`` subclass. Constructing
+  it (``ExpandToSum(v_, x)``) just builds an unevaluated node; its ``_evaluate``
+  (invoked by ``.doit()``) delegates to the eager ``utility_functions.<Name>``.
+
+Generated rule modules import the DEFERRED classes (via ``from rubi_utils import *``)
+so replacement expressions hold unevaluated nodes. ``_make_replacement_fn``
+(rubi_rules/base_objects.py) substitutes the matched wildcard values first and
+only then calls ``.doit()`` — so the eager function runs at fire time on concrete
+arguments, exactly like Mathematica's ``:>``.
+
+Rule of thumb: a deferred ``_evaluate`` should call its eager counterpart rather
+than re-implement the logic (e.g. ``ExpandToSum._evaluate`` must delegate — plain
+``sympy.expand`` does NOT collect ``x - I*x`` into ``(1-I)*x``, so it would not
+produce the canonical ``a+b*x+c*x**2`` the rule patterns match).
 
 Common Wolfram Mathematica expression classes shared with other packages are
 re-exported from ``sympy_wolfram.mathematica_expressions``. Only RUBI-specific
@@ -157,15 +181,11 @@ class ExpandToSum(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
-        if len(self.args) == 2:
-            u, x = self.args
-            return expand(u)
-        # 3-arg form: ExpandToSum[u, v, x]
-        u, v, x = self.args[0], self.args[1], self.args[2]
-        w = expand(v)
-        if isinstance(w, Add):
-            return Add(*[expand(u * t) for t in w.args])
-        return expand(u * w)
+        # Delegate to the eager implementation, which collects into canonical
+        # a + b*x + c*x**2 form (plain sympy.expand does NOT combine terms like
+        # x - I*x, so the result would not match the a+b*x+c*x**2 rule patterns).
+        from .utility_functions import ExpandToSum as _ExpandToSum
+        return _ExpandToSum(*self.args)
 
 
 # =============================================================================

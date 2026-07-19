@@ -3917,7 +3917,40 @@ def SmartDenominator(expr):
         return Mul(*[SmartDenominator(i) for i in expr.args])
     return Denominator(expr)
 
+# =============================================================================
+# Inert (deactivated) trigonometric / hyperbolic functions
+# =============================================================================
+# Rubi distinguishes *active* trig functions (SymPy's sin, cos, ...) from
+# *inert* ones.  While integrating it deactivates the active functions into inert
+# markers so their operands are never auto-simplified, applies the inert-trig
+# rules, then reactivates.  We model an inert trig function as a plain
+# ``Function('sin')`` — an *undefined* function that prints like ``sin`` but is a
+# distinct head SymPy never evaluates or rewrites (e.g. ``Function('sin')(0)``
+# stays unevaluated, whereas ``sin(0)`` collapses to ``0``).  ``ActivateTrig``
+# turns them back into the real SymPy trig functions.
+InertSin = Function('sin')
+InertCos = Function('cos')
+InertTan = Function('tan')
+InertCot = Function('cot')
+InertSec = Function('sec')
+InertCsc = Function('csc')
+
+_INERT_TO_ACTIVE = {InertSin: sin, InertCos: cos, InertTan: tan,
+                    InertCot: cot, InertSec: sec, InertCsc: csc}
+_INERT_TRIG_HEADS = tuple(_INERT_TO_ACTIVE)
+
+
 def ActivateTrig(u):
+    """Replace inert trig functions (``Function('sin')(...)``, ...) with the
+    active SymPy trig functions (``sin(...)``, ...).
+
+    A no-op on expressions that contain no inert markers (e.g. ordinary
+    integrands), so it is safe to call unconditionally.
+    """
+    if not isinstance(u, Basic):
+        return u
+    for inert, active in _INERT_TO_ACTIVE.items():
+        u = u.replace(inert, active)
     return u
 
 def ExpandTrig(*args):
@@ -4007,7 +4040,12 @@ def SubstForHyperbolic(u, sinh_, cosh_, v, x):
     return u.func(*[SubstForHyperbolic(i, sinh_, cosh_, v, x) for i in u.args])
 
 def InertTrigFreeQ(u):
-    return FreeQ(u, sin) and FreeQ(u, cos) and FreeQ(u, tan) and FreeQ(u, cot) and FreeQ(u, sec) and FreeQ(u, csc)
+    # True when u contains no *inert* trig functions.  Active SymPy sin/cos/...
+    # are not inert, so an ordinary trig integrand is inert-trig-free — which is
+    # why the inert-trig fallback rules (guarded by Not(InertTrigFreeQ)) must NOT
+    # fire on it.  (Checking active sin/cos here was a bug: it made every trig
+    # integrand look inert and let the CannotIntegrate catch-all steal them.)
+    return all(FreeQ(u, h) for h in _INERT_TRIG_HEADS)
 
 def LCM(a, b):
     return lcm(a, b)
@@ -4058,8 +4096,7 @@ def InverseFunctionOfLinear(u, x):
 def InertTrigQ(*args):
     if len(args) == 1:
         f = args[0]
-        l = [sin,cos,tan,cot,sec,csc]
-        return any(Head(f) == i for i in l)
+        return Head(f) in _INERT_TRIG_HEADS
     elif len(args) == 2:
         f, g = args
         if f == g:
@@ -4070,7 +4107,9 @@ def InertTrigQ(*args):
         return InertTrigQ(g, f) and InertTrigQ(g, h)
 
 def InertReciprocalQ(f, g):
-    return (f.func == sin and g.func == csc) or (f.func == cos and g.func == sec) or (f.func == tan and g.func == cot)
+    return ((f.func is InertSin and g.func is InertCsc) or
+            (f.func is InertCos and g.func is InertSec) or
+            (f.func is InertTan and g.func is InertCot))
 
 def DeactivateTrig(u, x):
     # (* u is a function of trig functions of a linear function of x. *)
@@ -4081,34 +4120,36 @@ def FixInertTrigFunction(u, x):
     return u
 
 def DeactivateTrigAux(u, x):
+    # Replaces active trig/hyperbolic functions of a linear argument with the
+    # corresponding *inert* trig markers (see ActivateTrig / InertSin ...).
     if AtomQ(u):
         return u
     elif TrigQ(u) and LinearQ(u.args[0], x):
         v = ExpandToSum(u.args[0], x)
         if SinQ(u):
-            return sin(v)
+            return InertSin(v)
         elif CosQ(u):
-            return cos(v)
+            return InertCos(v)
         elif TanQ(u):
-            return tan(u)
+            return InertTan(v)
         elif CotQ(u):
-            return cot(v)
+            return InertCot(v)
         elif SecQ(u):
-            return sec(v)
-        return csc(v)
+            return InertSec(v)
+        return InertCsc(v)
     elif HyperbolicQ(u) and LinearQ(u.args[0], x):
         v = ExpandToSum(I*u.args[0], x)
         if SinhQ(u):
-            return -I*sin(v)
+            return -I*InertSin(v)
         elif CoshQ(u):
-            return cos(v)
+            return InertCos(v)
         elif TanhQ(u):
-            return -I*tan(v)
+            return -I*InertTan(v)
         elif CothQ(u):
-            I*cot(v)
+            return I*InertCot(v)
         elif SechQ(u):
-            return sec(v)
-        return I*csc(v)
+            return InertSec(v)
+        return I*InertCsc(v)
     return u.func(*[DeactivateTrigAux(i, x) for i in u.args])
 
 def PowerOfInertTrigSumQ(u, func, x):
