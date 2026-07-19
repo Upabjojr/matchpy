@@ -42,12 +42,30 @@ structures never bleed into the pattern matcher.
 
 Data flow for integration:
 
+Rubi project implementation for Wolfram Mathematica can be found in: https://github.com/RuleBasedIntegration/Rubi
+
 ```
 Rubi .m rules → (precomputed) FFL JSON → codegen/generate.py
     → rubi_rules/rules/**.py (RubiRulePattern objects)
     → build_tracing_replacer() → MatchPy ManyToOneReplacer
     → rubi_integrate(expr, x) → SymPy antiderivative
 ```
+
+Running
+```python
+python rubi_rules/codegen/parse_rubi_to_ffl.py
+```
+assuming the Rubi has been checkout out in a sibling folder of this project, it will create ../Rubi/rubi_fullformlist_results.json 
+that is a file that contains all Rubi `*.m` Mathematica source files parsed into full-form-list
+(an equivalent of Mathematica's FullForm, but using python lists, e.g. Integral[Sin[x], x] ==> ["Integral", ["Sin", "x"], "x"])
+
+Calling then:
+```sh
+python rubi_rules/codegen/generate.py --json ../Rubi/rubi_fullformlist_results.json
+```
+will generate `rubi_rules/rules/**` python files with the logic of Rubi translated into Python.
+
+A similar procedure exists for https://github.com/RuleBasedIntegration/MathematicaSyntaxTestSuite to generate the test suite in rubi_rules/rubi_test_suite/**
 
 ## 2. Component Registry & Rules
 
@@ -149,3 +167,17 @@ ModuleAllowed ImportsProhibited ImportsState/Side-Effects AllowedmatchpyNone (St
 - Run the tests relevant to what you touched (at minimum the affected package's `tests/`).
 - If you changed matching internals, run `make test` so doctests and all match backends are exercised.
 - Run `make check` if you touched style-sensitive code.
+
+## Purpose of the project
+
+The purpose is to provide `rubi_integrate` defined in `rubi_rules.basic_objects`.
+
+This function allows users to compute integrals using Rubi rules.
+
+Examples:
+
+```python
+>>> rubi_integrate(sin(x), x)
+-cos(x)
+```
+
