@@ -26,7 +26,7 @@ packages, layered bottom-up:
 
 | Package           | May import          | Purpose |
 |-------------------|---------------------|---------|
-| `matchpy/`        | *(stdlib + `multiset` only)* | Core pattern matching — expression trees, wildcards, one-to-one and many-to-one matching, discrimination nets. **Rewritten as pydantic `BaseModel` classes** (`matchpy/expressions/expressions.py`). |
+| `matchpy/`        | *(stdlib + `multiset` only)* | Core pattern matching — expression trees, wildcards, one-to-one and many-to-one matching, discrimination nets. currently implemented as pydantic `BaseModel` classes (`matchpy/expressions/expressions.py`), though pydantic is a temporary stopgap slated for removal (see [Conventions](#conventions)). |
 | `sympy_matching/` | `matchpy`           | Bridge between SymPy and MatchPy. Converts SymPy trees ↔ MatchPy trees (singledispatch), maps SymPy heads (`Add`, `Mul`, `Pow`, `sin`, …) to MatchPy `OperationHead`s, and adds `WildSymbol` (a SymPy symbol that becomes a MatchPy `Wildcard`). |
 | `sympy_wolfram/`  | `matchpy`, `sympy_matching` | Data structures and behaviors for standard Wolfram Mathematica objects, plus a converter from Mathematica **Full-Form List (FFL)** ASTs (JSON) into SymPy code. Hosts the `MathematicaExpr` base class. |
 | `rubi_rules/`     | all of the above    | The Rubi integration engine. Auto-generated rule modules, constraint helpers, the code generator, and `rubi_integrate()`. |
@@ -166,7 +166,7 @@ generates the test suite under `rubi_rules/rubi_test_suite/**`.
 
 - **Every file starts with `# -*- coding: utf-8 -*-`.** Keep it.
 - Respect the import stack in the [enforcement matrix](#enforcement-matrix) — never introduce an up-stack or sideways import.
-- MatchPy expression types are **pydantic models** — construct/copy via pydantic semantics, not ad-hoc `__init__` mutation.
+- MatchPy expression types are **pydantic models** — construct/copy via pydantic semantics, not ad-hoc `__init__` mutation. Note that pydantic is a **temporary stopgap** used only to validate that field type annotations are correct; the long-term aim is to remove it, since it slows the matcher down. Don't build features that depend on pydantic-specific behavior beyond type checking.
 - Prefer the existing **singledispatch** converters in `sympy_matching/conversion.py` when adding SymPy↔MatchPy support; register new heads through `register_sympy_head` / the `SYMPY_NODES` table in `sympy_matching/operations.py`.
 - **Never hand-edit `rubi_rules/rules/**`.** Change `codegen/generate.py` (or the source FFL) and regenerate. Each generated file carries an `AUTO-GENERATED -- DO NOT EDIT` banner.
 - The canonical integration variable in rule files is `Symbol('x')`; `rubi_integrate` substitutes when the caller passes a different variable (see the docstring in `base_objects.py`).
