@@ -268,7 +268,16 @@ class _RubiIntegrator:
     ) -> tuple[sympy.Expr, list[tuple[sympy.Expr, list[tuple[str, int]]]]]:
         current = Int(expr, x)
         matched_rules = []
-        while True:
+        # Some Rubi rule pairs are mutually inverse (e.g. complete-the-square vs
+        # ExpandToSum), so without rule ordering the matcher can bounce an
+        # integrand between two forms forever. `seen` records every integrand we
+        # have already tried to integrate; a rule application whose result only
+        # revisits `seen` forms is a cycle and is skipped in favour of the next
+        # matching rule (see `_matchpy_integrate`).
+        seen: set = set()
+        # Safety backstop against a rule set that keeps generating genuinely new
+        # forms without converging.
+        for _ in range(1000):
             previous = current
             current_rules = []
             for intfun in previous.atoms(Int):
@@ -276,7 +285,7 @@ class _RubiIntegrator:
                 # single Pow(E, ...) can match the exponential rule patterns; SymPy
                 # never does this automatically.
                 integrand = sympy.powsimp(intfun.args[0], combine='exp')
-                integfun, matched_rule = self._integration_step(integrand, intfun.args[1], pattern)
+                integfun, matched_rule = self._integration_step(integrand, intfun.args[1], pattern, seen)
                 current = current.replace(intfun, integfun)
                 current_rules.extend(matched_rule)
             if current == previous:
@@ -289,6 +298,7 @@ class _RubiIntegrator:
             expr: sympy.Expr,
             x: sympy.Symbol,
             pattern: str = '**',
+            seen: set | None = None,
         ) -> tuple[sympy.Expr, list[tuple[str, int]]]:
         expr = sympy.sympify(expr)
         x = sympy.sympify(x)
@@ -298,12 +308,12 @@ class _RubiIntegrator:
         replacer = self._load_replacer(pattern)
 
         if x == x_canonical:
-            result, matched_rule = _preprocess_integrate(expr, x_canonical, replacer)
+            result, matched_rule = _preprocess_integrate(expr, x_canonical, replacer, seen)
         else:
             dummy = sympy.Dummy('_x_var')
             x_sub = x.subs(x_canonical, dummy)  # x could be function containing x_canonical
             expr_sub = expr.subs(x_canonical, dummy).subs(x_sub, x_canonical)
-            result, matched_rule = _preprocess_integrate(expr_sub, x_canonical, replacer)
+            result, matched_rule = _preprocess_integrate(expr_sub, x_canonical, replacer, seen)
             result = result.subs(x_canonical, x).subs(dummy, x_canonical)
 
         matched_rules.append(matched_rule)
@@ -329,18 +339,35 @@ def load_rule_patterns(
     return integrator.load_rule_patterns(pattern)
 
 
-def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer):
+def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
     mp_expr = to_expression(Int(expr, x))
-    result, matched_rule = replacer.replace(mp_expr)
-    return matchpy_to_sympy(result), matched_rule
+    if seen is not None:
+        seen.add(Int(expr, x))
+    # Try the matching rules in the order the matcher yields them and apply the
+    # first one that makes progress. A rule whose result only reproduces
+    # integrands we have already visited (`seen`) is a cycle — skip it and try the
+    # next matching rule. A rule whose Condition fails raises StopIteration; skip
+    # it too. If nothing applies, return the integral unchanged.
+    for replacement, subst in replacer.matcher.match(mp_expr):
+        try:
+            result_mp, matched_rule = replacement(**subst)
+        except StopIteration:
+            continue
+        result = matchpy_to_sympy(result_mp)
+        if seen is not None:
+            produced = [f for f in result.atoms(Int)]
+            if produced and all(f in seen for f in produced):
+                continue  # cycle: only revisits already-integrated forms
+        return result, matched_rule
+    return matchpy_to_sympy(mp_expr), []
 
 
-def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer):
+def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
     expr = sympy.sympify(expr)
     if x not in expr.free_symbols:
         return expr * x, []
     if expr.is_Add:
-        addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer) for t in expr.args])
+        addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer, seen) for t in expr.args])
         return sympy.Add(*addends), matched_rules
     if expr.is_Mul:
         free_factors = [f for f in expr.args if x not in f.free_symbols]
@@ -348,9 +375,9 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
         if free_factors:
             const = sympy.Mul(*free_factors)
             core = x_factors[0] if len(x_factors) == 1 else sympy.Mul(*x_factors)
-            integ, matched_rule = _preprocess_integrate(core, x, replacer)
+            integ, matched_rule = _preprocess_integrate(core, x, replacer, seen)
             return const * integ, matched_rule
-    return _matchpy_integrate(expr, x, replacer)
+    return _matchpy_integrate(expr, x, replacer, seen)
 
 
 def rubi_integrate(
