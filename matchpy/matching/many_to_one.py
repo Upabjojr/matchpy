@@ -438,7 +438,28 @@ class _MatchIter:
 
     def _check_constraints(self, variable: str, restore_constraints, restore_patterns) -> bool:
         if isinstance(variable, str):
-            check_constraints = self.matcher.constraint_vars.get(variable, [])
+            by_name = self.matcher.constraint_vars.get(variable)
+            if not by_name:
+                return
+            # Only constraints whose patterns still overlap the viable patterns are
+            # processed anyway (the disjoint check below). Common variable names
+            # (x, a, b, m, ...) appear in thousands of rules, so `by_name` can be
+            # huge while there are few viable patterns; in that case gather the
+            # candidates from the per-(variable, pattern) index rather than
+            # scanning every constraint on the name. This yields exactly the same
+            # set of processed constraints (a subset the disjoint check would keep).
+            cpm = self.matcher.constraint_pattern_map
+            # `cpm` is a build-time index; it is empty on a matcher rebuilt from a
+            # serialized form (constraints/constraint_vars set directly). Fall back
+            # to the full scan in that case — it is always correct.
+            if cpm and len(self.patterns) < len(by_name):
+                check_constraints = set()
+                for p in self.patterns:
+                    cs = cpm.get((variable, p))
+                    if cs:
+                        check_constraints |= cs
+            else:
+                check_constraints = by_name
         else:
             check_constraints = variable
         variables = set(self.substitution.keys())
