@@ -265,6 +265,7 @@ class _RubiIntegrator:
         expr: sympy.Expr,
         x: sympy.Symbol,
         pattern: str = '**',
+        trace: list | None = None,
     ) -> tuple[sympy.Expr, list[tuple[sympy.Expr, list[tuple[str, int]]]]]:
         # Depth-first reduction with path-aware cycle detection. Some Rubi rule
         # pairs are mutually inverse (e.g. complete-the-square [42] vs ExpandToSum
@@ -279,7 +280,7 @@ class _RubiIntegrator:
         applied: list = []
         budget = [50000]  # backstop against a rule set that never converges
         result, _ = _dfs_reduce_int(
-            sympy.sympify(expr), sympy.sympify(x), frozenset(), replacer, applied, budget
+            sympy.sympify(expr), sympy.sympify(x), frozenset(), replacer, applied, budget, trace
         )
         matched_rules = [(result, applied)] if applied else []
         return result, matched_rules
@@ -387,7 +388,19 @@ def _dfs_is_clean(expr) -> bool:
     return not any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
 
 
-def _dfs_reduce_result(result, x, path, replacer, applied, budget):
+def _rule_id(replacement):
+    """(module_name, rule_number) id parsed from a tracing replacement fn's qualname."""
+    qn = getattr(replacement, '__qualname__', '')
+    if ':[' in qn and qn.endswith(']'):
+        mod, num = qn.rsplit(':[', 1)
+        try:
+            return (mod, int(num[:-1]))
+        except ValueError:
+            pass
+    return (qn or repr(replacement), None)
+
+
+def _dfs_reduce_result(result, x, path, replacer, applied, budget, trace=None):
     """Recursively reduce every `Int` atom in `result`.
 
     Returns (reduced_expr, blocked); blocked is True if some `Int` could only be
@@ -396,14 +409,14 @@ def _dfs_reduce_result(result, x, path, replacer, applied, budget):
     blocked_any = False
     for intfun in list(result.atoms(Int)):
         reduced, blocked = _dfs_reduce_int(
-            intfun.args[0], intfun.args[1], path, replacer, applied, budget
+            intfun.args[0], intfun.args[1], path, replacer, applied, budget, trace
         )
         result = result.replace(intfun, reduced)
         blocked_any = blocked_any or blocked
     return result, blocked_any
 
 
-def _dfs_reduce_int(f, x, path, replacer, applied, budget):
+def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
     """Reduce `Int(f, x)` via DFS. Returns (result_expr, blocked).
 
     `path` is the frozenset of integrand forms currently on the reduction stack.
@@ -418,7 +431,7 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget):
         dummy = sympy.Dummy('_x_var')
         x_sub = x.subs(x_canonical, dummy)
         f_sub = f.subs(x_canonical, dummy).subs(x_sub, x_canonical)
-        r, b = _dfs_reduce_int(f_sub, x_canonical, path, replacer, applied, budget)
+        r, b = _dfs_reduce_int(f_sub, x_canonical, path, replacer, applied, budget, trace)
         return r.subs(x_canonical, x).subs(dummy, x_canonical), b
 
     if x not in f.free_symbols:
@@ -426,7 +439,7 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget):
     if f.is_Add:
         parts, blocked = [], False
         for t in f.args:
-            r, b = _dfs_reduce_int(t, x, path, replacer, applied, budget)
+            r, b = _dfs_reduce_int(t, x, path, replacer, applied, budget, trace)
             parts.append(r)
             blocked = blocked or b
         return sympy.Add(*parts), blocked
@@ -435,13 +448,13 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget):
         x_factors = [g for g in f.args if x in g.free_symbols]
         if free_factors:
             core = x_factors[0] if len(x_factors) == 1 else sympy.Mul(*x_factors)
-            r, b = _dfs_reduce_int(core, x, path, replacer, applied, budget)
+            r, b = _dfs_reduce_int(core, x, path, replacer, applied, budget, trace)
             return sympy.Mul(*free_factors) * r, b
 
-    return _dfs_match_int(f, x, path, replacer, applied, budget)
+    return _dfs_match_int(f, x, path, replacer, applied, budget, trace)
 
 
-def _dfs_match_int(f, x, path, replacer, applied, budget):
+def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
     """Try the matching rules for `Int(f, x)`, preferring a fully-integrated result.
 
     Rules are tried in whatever order the matcher yields them (order must not
@@ -449,6 +462,10 @@ def _dfs_match_int(f, x, path, replacer, applied, budget):
     skipped; a rule yielding a clean antiderivative is taken immediately; a
     non-clean terminal (`CannotIntegrate`, or a residual `Int`) is kept only as a
     fallback so a later rule can still win with a clean result.
+
+    If `trace` is a list, one record is appended per rule *tried*
+    (`{'depth', 'integrand', 'rule', 'status'}`) so accepted AND rejected rules
+    (with the reason) can be inspected — see `rubi_integrate(..., return_trace=True)`.
     """
     # Combine products of exponentials (E^a * E^b -> E^(a+b)) so a single
     # Pow(E, ...) can match the exponential rule patterns; SymPy never does this.
@@ -460,6 +477,11 @@ def _dfs_match_int(f, x, path, replacer, applied, budget):
     budget[0] -= 1
     new_path = path | {f}
     mp_expr = to_expression(Int(f, x))
+    depth = len(path)
+
+    def _record(rule, status):
+        if trace is not None:
+            trace.append({'depth': depth, 'integrand': Int(f, x), 'rule': rule, 'status': status})
 
     fallback = None
     matched_any = False
@@ -468,22 +490,29 @@ def _dfs_match_int(f, x, path, replacer, applied, budget):
             result_mp, rule = replacement(**subst)
         except StopIteration:
             # This rule's Condition failed; try the next matching rule.
+            _record(_rule_id(replacement), 'rejected (condition failed)')
             continue
         matched_any = True
         result = matchpy_to_sympy(result_mp)
         local: list = []
-        reduced, blocked = _dfs_reduce_result(result, x, new_path, replacer, local, budget)
+        reduced, blocked = _dfs_reduce_result(result, x, new_path, replacer, local, budget, trace)
         if blocked:
+            _record(rule, 'rejected (cycle)')
             continue  # rule re-enters the current path -> cycle; try the next rule
         if _dfs_is_clean(reduced):
+            _record(rule, 'accepted')
             applied.append(rule)
             applied.extend(local)
             return reduced, False
+        # A terminal result that still has an Int/CannotIntegrate: keep the first
+        # one as a fallback, but keep looking for a clean result.
+        _record(rule, 'candidate (non-clean)')
         if fallback is None:
             fallback = (reduced, rule, local)
 
     if fallback is not None:
         reduced, rule, local = fallback
+        _record(rule, 'accepted (fallback)')
         applied.append(rule)
         applied.extend(local)
         return reduced, False
@@ -492,11 +521,28 @@ def _dfs_match_int(f, x, path, replacer, applied, budget):
     return Int(f, x), matched_any
 
 
+def format_trace(trace) -> str:
+    """Render a DFS trace (from ``rubi_integrate(..., return_trace=True)``) as text.
+
+    One indented line per rule tried, showing its status (accepted / rejected /
+    candidate) and the integrand it was tried on.
+    """
+    lines = []
+    for e in trace:
+        indent = '  ' * e['depth']
+        rule = e['rule']
+        rule_str = (f"{rule[0]}:[{rule[1]}]"
+                    if isinstance(rule, tuple) and rule[1] is not None else str(rule))
+        lines.append(f"{indent}{e['status']:26s} {rule_str:40s} Int({e['integrand'].args[0]})")
+    return '\n'.join(lines)
+
+
 def rubi_integrate(
     expr: sympy.Expr,
     x: sympy.Symbol,
     pattern: str = '**',
     return_matched_rules: bool = False,
+    return_trace: bool = False,
 ):
     """Integrate expr with respect to x using the Rubi rule set.
 
@@ -510,6 +556,20 @@ def rubi_integrate(
         3. Integrate with respect to Symbol('x').
         4. Undo the substitution: Symbol('x') → original variable,
            Dummy → Symbol('x').
+
+    Parameters
+    ----------
+    pattern:
+        Glob over ``rubi_rules/rules/**`` selecting which rule files to load
+        (default ``'**'`` = the whole rule set). Scope it (e.g.
+        ``'r_2_exponentials/**'``) for speed.
+    return_matched_rules:
+        If True, return ``(result, matched_rules)`` where ``matched_rules`` lists
+        the rules ACCEPTED on the winning path.
+    return_trace:
+        If True, return ``(result, trace)`` where ``trace`` records every rule the
+        DFS tried — accepted AND rejected, with the reason. Render it with
+        ``format_trace(trace)``. See ``rubi_rules/README.md``.
 
     Examples
     --------
@@ -527,11 +587,17 @@ def rubi_integrate(
     with _exp_is_pow(True):
         expr = sympy.sympify(expr).replace(sympy.exp, lambda u: sympy.exp(u))
         x = sympy.sympify(x).replace(sympy.exp, lambda u: sympy.exp(u))
+        # When return_trace is set, collect a record of every rule the DFS tried
+        # (accepted AND rejected, with the reason) — see format_trace().
+        trace = [] if return_trace else None
         integ, matched_rules = _rubi_integrator.integrate(
             expr,
             x,
             pattern=pattern,
+            trace=trace,
         )
+    if return_trace:
+        return integ, trace
     if return_matched_rules:
         return integ, matched_rules
     return integ
