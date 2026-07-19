@@ -1,8 +1,14 @@
 # rubi_rules — Known issues & TODO
 
-## 1. Rule-ordering dependency causes a non-terminating 42↔43 rewrite cycle
+## 1. Rule-ordering dependency causes a non-terminating 42↔43 rewrite cycle — RESOLVED
 
-**Status:** open. Confirmed NOT a translation bug — `QuadraticMatchQ` matches the
+**Status:** RESOLVED via path-aware DFS cycle detection (integrator-only, no rule
+edits). `rubi_integrate(exp(x)*sin(x**2 + x), x)` now returns the correct
+`Erf`/`Erfi` antiderivative (numerically verified; regression test in
+`tests/test_integrate_exp_gaussian.py`). Details of the original problem and the
+implemented fix below.
+
+**Confirmed NOT a translation bug** — `QuadraticMatchQ` matches the
 Mathematica original faithfully (`Rubi/Rubi/IntegrationUtilityFunctions.m:1427`;
 verified `(x+1)^2` → False, `expand((x+1)^2)` → True, completed square → False).
 
@@ -29,33 +35,38 @@ matter" (documented in `AGENTS.md`). The `ManyToOneMatcher` does not preserve
 Rubi's rule order, so on the full ruleset rule `[43]` can win the completed-square
 form and the integration loops.
 
-### Progress
+### Resolution — path-aware DFS cycle detection (DONE)
 
-- [x] **Cycle detection (coarse) in `_RubiIntegrator` — DONE.** A `seen` set of
-      visited integrands is threaded through `integrate` → `_integration_step` →
-      `_preprocess_integrate` → `_matchpy_integrate`. `_matchpy_integrate` now
-      enumerates the matcher's rules in order and skips any whose result only
-      revisits `seen` forms (and any whose Condition raises StopIteration), taking
-      the next matching rule instead. **`exp(x)*sin(x**2+x)` now TERMINATES**
-      (~79s) instead of looping. No rule/codegen changes. Full suite: 1437 pass.
-      LIMITATION: the `seen` set is *global*, so it over-skips — rule `[42]`
-      (complete-the-square) gets skipped because its output was already seen during
-      the cycle, so the result is `CannotIntegrate(...)` rather than the correct
-      `Erf`/`Erfi`.
+`_RubiIntegrator.integrate` is now a depth-first reducer (`_dfs_reduce_int` /
+`_dfs_match_int` / `_dfs_reduce_result` in `base_objects.py`). Key properties:
 
-### TODO
+- **Path-aware cycle detection.** Each recursion carries a frozenset `path` of the
+  integrand forms currently on the reduction stack. A rule whose (recursively
+  reduced) result re-enters a `path` form is a cycle and is skipped in favour of
+  the next matching rule — so rule `[43]` is skipped at the completed square while
+  rule `[42]` (which produces that square) is NOT globally banned.
+- **Order-independent by preferring clean results.** Rules are tried in whatever
+  order the matcher yields them; a *clean* result (no `Int`, no `CannotIntegrate`)
+  wins immediately, and a non-clean terminal (`CannotIntegrate` / residual `Int`)
+  is kept only as a fallback. So rule `[11]` (→ `Erf`) beats rule `[43]`'s
+  `CannotIntegrate` regardless of yield order.
+- **`CannotIntegrate` detected by head name** (`_dfs_is_clean`): round-tripping a
+  rule's replacement through MatchPy turns `rubi_utils.CannotIntegrate` into a
+  plain `Function('CannotIntegrate')`, so an isinstance/atoms check against the
+  imported class misses it — this was the bug that made the first DFS still return
+  `CannotIntegrate`.
+- Backstop: a `budget` counter caps total match attempts.
 
-- [ ] **Path-aware backtracking (the correct version).** Skip only the rule whose
-      result returns to a state ON THE CURRENT REDUCTION PATH (not any globally
-      seen form), then take the next matching rule at that choice point. This
-      reaches `Erf`/`Erfi` for `exp(x)*sin(x**2+x)`. Requires restructuring
-      `integrate`'s breadth-first outer loop into a DFS with a path/visited-on-path
-      stack so "previous step" and "next rule" are well-defined. Integrator-only
-      (no rule/codegen changes) — this is the agreed direction.
-- [ ] Add a regression test: `rubi_integrate(exp(x)*sin(x**2 + x), x)` must
-      terminate and match Mathematica's `Erf`/`Erfi` result.
+Integrator-only; no rule/codegen changes. Full suite: 1437 pass, 7 pre-existing
+failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
+
+### Remaining TODO
+
 - [ ] Audit for other mutually-inverse rule pairs (complete-square ↔ expand,
-      factor ↔ expand, together ↔ apart) that can form the same kind of cycle.
+      factor ↔ expand, together ↔ apart) that can form the same kind of cycle —
+      the DFS handles them generically, but worth a sweep for correctness/perf.
+- [ ] Performance: the full-ruleset build is ~50s (cached after first call); the
+      DFS itself is fast (~3s once cached).
 - [ ] (Rejected) Making rule 43 not undo rule 42 would need editing generated
       rules / codegen — out of scope: rules are codegen-owned.
 

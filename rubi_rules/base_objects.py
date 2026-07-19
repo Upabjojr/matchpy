@@ -266,32 +266,23 @@ class _RubiIntegrator:
         x: sympy.Symbol,
         pattern: str = '**',
     ) -> tuple[sympy.Expr, list[tuple[sympy.Expr, list[tuple[str, int]]]]]:
-        current = Int(expr, x)
-        matched_rules = []
-        # Some Rubi rule pairs are mutually inverse (e.g. complete-the-square vs
-        # ExpandToSum), so without rule ordering the matcher can bounce an
-        # integrand between two forms forever. `seen` records every integrand we
-        # have already tried to integrate; a rule application whose result only
-        # revisits `seen` forms is a cycle and is skipped in favour of the next
-        # matching rule (see `_matchpy_integrate`).
-        seen: set = set()
-        # Safety backstop against a rule set that keeps generating genuinely new
-        # forms without converging.
-        for _ in range(1000):
-            previous = current
-            current_rules = []
-            for intfun in previous.atoms(Int):
-                # Combine products of exponentials (E^a * E^b -> E^(a+b)) so a
-                # single Pow(E, ...) can match the exponential rule patterns; SymPy
-                # never does this automatically.
-                integrand = sympy.powsimp(intfun.args[0], combine='exp')
-                integfun, matched_rule = self._integration_step(integrand, intfun.args[1], pattern, seen)
-                current = current.replace(intfun, integfun)
-                current_rules.extend(matched_rule)
-            if current == previous:
-                break
-            matched_rules.append((current, current_rules))
-        return current, matched_rules
+        # Depth-first reduction with path-aware cycle detection. Some Rubi rule
+        # pairs are mutually inverse (e.g. complete-the-square [42] vs ExpandToSum
+        # [43]), so without rule ordering the matcher can bounce an integrand
+        # between two forms forever. The DFS records the integrand forms on the
+        # current reduction path; a rule whose result re-enters a path form is a
+        # cycle and is skipped in favour of the next matching rule (see
+        # `_dfs_match_int`). Match order stays irrelevant: a fully-integrated
+        # result is always preferred over a `CannotIntegrate`/residual-`Int`
+        # terminal, whichever rule happens to be yielded first.
+        replacer = self._load_replacer(pattern)
+        applied: list = []
+        budget = [50000]  # backstop against a rule set that never converges
+        result, _ = _dfs_reduce_int(
+            sympy.sympify(expr), sympy.sympify(x), frozenset(), replacer, applied, budget
+        )
+        matched_rules = [(result, applied)] if applied else []
+        return result, matched_rules
 
     def _integration_step(
             self,
@@ -378,6 +369,127 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
             integ, matched_rule = _preprocess_integrate(core, x, replacer, seen)
             return const * integ, matched_rule
     return _matchpy_integrate(expr, x, replacer, seen)
+
+
+# ── DFS integrator with path-aware cycle detection ───────────────────────────
+
+def _dfs_is_clean(expr) -> bool:
+    """True if `expr` is a finished antiderivative: no unresolved `Int` and no
+    `CannotIntegrate` marker.
+
+    `CannotIntegrate` is matched by head *name*: round-tripping a rule's
+    replacement through MatchPy can turn the `rubi_utils.CannotIntegrate` node into
+    a plain undefined `Function('CannotIntegrate')`, so an isinstance/atoms check
+    against the imported class misses it.
+    """
+    if expr.atoms(Int):
+        return False
+    return not any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
+
+
+def _dfs_reduce_result(result, x, path, replacer, applied, budget):
+    """Recursively reduce every `Int` atom in `result`.
+
+    Returns (reduced_expr, blocked); blocked is True if some `Int` could only be
+    reduced by re-entering a form already on the current DFS `path` (a cycle).
+    """
+    blocked_any = False
+    for intfun in list(result.atoms(Int)):
+        reduced, blocked = _dfs_reduce_int(
+            intfun.args[0], intfun.args[1], path, replacer, applied, budget
+        )
+        result = result.replace(intfun, reduced)
+        blocked_any = blocked_any or blocked
+    return result, blocked_any
+
+
+def _dfs_reduce_int(f, x, path, replacer, applied, budget):
+    """Reduce `Int(f, x)` via DFS. Returns (result_expr, blocked).
+
+    `path` is the frozenset of integrand forms currently on the reduction stack.
+    Handles a non-canonical integration variable and the Add/Mul/constant
+    preprocessing (mirrors `_preprocess_integrate`), then defers to
+    `_dfs_match_int` for the rule-matching core.
+    """
+    x_canonical = sympy.Symbol('x')
+    f = sympy.sympify(f)
+    # Rules are written with Symbol('x'); rewrite a non-canonical variable.
+    if x != x_canonical:
+        dummy = sympy.Dummy('_x_var')
+        x_sub = x.subs(x_canonical, dummy)
+        f_sub = f.subs(x_canonical, dummy).subs(x_sub, x_canonical)
+        r, b = _dfs_reduce_int(f_sub, x_canonical, path, replacer, applied, budget)
+        return r.subs(x_canonical, x).subs(dummy, x_canonical), b
+
+    if x not in f.free_symbols:
+        return f * x, False
+    if f.is_Add:
+        parts, blocked = [], False
+        for t in f.args:
+            r, b = _dfs_reduce_int(t, x, path, replacer, applied, budget)
+            parts.append(r)
+            blocked = blocked or b
+        return sympy.Add(*parts), blocked
+    if f.is_Mul:
+        free_factors = [g for g in f.args if x not in g.free_symbols]
+        x_factors = [g for g in f.args if x in g.free_symbols]
+        if free_factors:
+            core = x_factors[0] if len(x_factors) == 1 else sympy.Mul(*x_factors)
+            r, b = _dfs_reduce_int(core, x, path, replacer, applied, budget)
+            return sympy.Mul(*free_factors) * r, b
+
+    return _dfs_match_int(f, x, path, replacer, applied, budget)
+
+
+def _dfs_match_int(f, x, path, replacer, applied, budget):
+    """Try the matching rules for `Int(f, x)`, preferring a fully-integrated result.
+
+    Rules are tried in whatever order the matcher yields them (order must not
+    matter): a rule whose result re-enters a form on `path` is a cycle and is
+    skipped; a rule yielding a clean antiderivative is taken immediately; a
+    non-clean terminal (`CannotIntegrate`, or a residual `Int`) is kept only as a
+    fallback so a later rule can still win with a clean result.
+    """
+    # Combine products of exponentials (E^a * E^b -> E^(a+b)) so a single
+    # Pow(E, ...) can match the exponential rule patterns; SymPy never does this.
+    f = sympy.powsimp(f, combine='exp')
+    if f in path:
+        return Int(f, x), True
+    if budget[0] <= 0:
+        return Int(f, x), False
+    budget[0] -= 1
+    new_path = path | {f}
+    mp_expr = to_expression(Int(f, x))
+
+    fallback = None
+    matched_any = False
+    for replacement, subst in replacer.matcher.match(mp_expr):
+        try:
+            result_mp, rule = replacement(**subst)
+        except StopIteration:
+            # This rule's Condition failed; try the next matching rule.
+            continue
+        matched_any = True
+        result = matchpy_to_sympy(result_mp)
+        local: list = []
+        reduced, blocked = _dfs_reduce_result(result, x, new_path, replacer, local, budget)
+        if blocked:
+            continue  # rule re-enters the current path -> cycle; try the next rule
+        if _dfs_is_clean(reduced):
+            applied.append(rule)
+            applied.extend(local)
+            return reduced, False
+        if fallback is None:
+            fallback = (reduced, rule, local)
+
+    if fallback is not None:
+        reduced, rule, local = fallback
+        applied.append(rule)
+        applied.extend(local)
+        return reduced, False
+    # Every matching rule cycled -> propagate as blocked so the caller backtracks;
+    # no rule matched at all -> leave the integral unevaluated (not a cycle).
+    return Int(f, x), matched_any
 
 
 def rubi_integrate(
