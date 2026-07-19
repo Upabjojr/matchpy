@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import sympy
+from sympy.core.parameters import _exp_is_pow
 from typing import Any, List, Tuple
 from pydantic import BaseModel
 
@@ -374,11 +375,20 @@ def rubi_integrate(
     >>> rubi_integrate(x * y, x)   # x**2*y/2
     >>> rubi_integrate(x * y, y)   # x*y**2/2
     """
-    integ, matched_rules = _rubi_integrator.integrate(
-        expr,
-        x,
-        pattern=pattern,
-    )
+    # Rubi (like Mathematica) represents e^u as Power[E, u], so every exponential
+    # rule pattern is a Power (F^(...)).  SymPy normally collapses E**u into the
+    # distinct exp(u) function, whose head never matches those Power patterns.
+    # Run the whole integration under SymPy's exp_is_pow flag so exponentials are
+    # built as Pow(E, u); and rebuild any exp(...) already present in the incoming
+    # expression (it was created before we entered the context) into that form.
+    with _exp_is_pow(True):
+        expr = sympy.sympify(expr).replace(sympy.exp, lambda u: sympy.exp(u))
+        x = sympy.sympify(x).replace(sympy.exp, lambda u: sympy.exp(u))
+        integ, matched_rules = _rubi_integrator.integrate(
+            expr,
+            x,
+            pattern=pattern,
+        )
     if return_matched_rules:
         return integ, matched_rules
     return integ
