@@ -98,7 +98,7 @@ w_ = WildSymbol('w')
 
 RULES = [
     # Rule 1: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 2: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 2: SKIPPED - TypeError: unhashable type: 'list'
     # Rule 3: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 4: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 5: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.

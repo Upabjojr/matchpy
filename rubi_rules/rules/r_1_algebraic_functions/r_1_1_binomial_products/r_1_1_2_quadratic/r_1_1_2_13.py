@@ -87,8 +87,15 @@ RULES = [
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=1,
     ),
-    # Rule 2: SKIPPED - ValueError: Non-string function head ['PolynomialRemainder', 'Px', 'x', 'x'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 3: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', 'c', 'e', ['Plus', 'm', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 2: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 3
+    RubiRulePattern(
+        pattern=Int(Px_*(x*_e_)**m_/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_], x), PolynomialQ(Px_, x), LtQ(m_, -1),),
+        replacement=With(List(Set(Symbol('Px0'), Coefficient(Px_, x, Integer(0)))), ((Symbol('Px0') * ((_e_ * x))**((m_ + Integer(1))) * sympy.sqrt((c_ + (_d_ * x))) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(2))))) * ((a_ * c_ * _e_ * (m_ + Integer(1))))**(Integer(-1))) + Star(((Integer(2) * a_ * c_ * _e_ * (m_ + Integer(1))))**(Integer(-1)), Int((((_e_ * x))**((m_ + Integer(1))) * ((sympy.sqrt((c_ + (_d_ * x))) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(2)))))))**(Integer(-1)) * ExpandToSum(((Integer(2) * a_ * c_ * (m_ + Integer(1)) * ((Px_ + (Integer(-1) * Symbol('Px0'))) * (x)**(Integer(-1)))) + (Integer(-1) * (Symbol('Px0') * ((a_ * _d_ * ((Integer(2) * m_) + Integer(3))) + (Integer(2) * _b_ * c_ * (m_ + Integer(2)) * x) + (_b_ * _d_ * ((Integer(2) * m_) + Integer(5)) * (x)**(Integer(2))))))), x)), x)))),
+        module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
+        rule_number=3,
+    ),
     # Rule 4
     RubiRulePattern(
         pattern=Int(Px_*(x*_e_)**_m_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
@@ -101,12 +108,12 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_e_)**m_*(x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _n_, _p_], x), PolyQ(Px_, x), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (Symbol('k') * (sympy.Function('e')(Symbol('Star')))**(Integer(-1)) * Subst(Int((ReplaceAll(Px_, Rule(x, ((x)**(Symbol('k')) * (_e_)**(Integer(-1))))) * (x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((c_ + (_d_ * (x)**(Symbol('k')) * (_e_)**(Integer(-1)))))**(_n_) * ((a_ + (_b_ * (x)**((Integer(2) * Symbol('k'))) * ((_e_)**(Integer(2)))**(Integer(-1)))))**(_p_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star((Symbol('k') * (_e_)**(Integer(-1))), Subst(Int((ReplaceAll(Px_, Rule(x, ((x)**(Symbol('k')) * (_e_)**(Integer(-1))))) * (x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((c_ + (_d_ * (x)**(Symbol('k')) * (_e_)**(Integer(-1)))))**(_n_) * ((a_ + (_b_ * (x)**((Integer(2) * Symbol('k'))) * ((_e_)**(Integer(2)))**(Integer(-1)))))**(_p_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=5,
     ),
-    # Rule 6: SKIPPED - ValueError: Non-string function head ['PolynomialRemainder', 'Px', ['Plus', 'c', ['Times', 'd', 'x']], 'x'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 6: SKIPPED - TypeError: unhashable type: 'list'
 
 ]
 
-# Summary: 3 rules translated, 3 skipped
+# Summary: 4 rules translated, 2 skipped

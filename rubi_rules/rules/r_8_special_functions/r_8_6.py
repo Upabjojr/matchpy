@@ -166,7 +166,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int(sympy.Function('LogGamma')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.loggamma((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(sympy.polygamma(Integer(-2), (_a_ + (_b_ * x))) * (_b_)**(Integer(-1))),
         module_name='8.6 Gamma functions',
@@ -174,7 +174,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('LogGamma')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=((((_c_ + (_d_ * x)))**(_m_) * sympy.polygamma(Integer(-2), (_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * _m_ * (_b_)**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * sympy.polygamma(Integer(-2), (_a_ + (_b_ * x)))), x)))),
         module_name='8.6 Gamma functions',
@@ -182,7 +182,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('LogGamma')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x),),
         replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
         module_name='8.6 Gamma functions',

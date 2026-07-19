@@ -6701,6 +6701,17 @@ def Dist(u, v, x):
     else:
         return Simp(u*v, x)
 
+
+def Star(u, v):
+    # Rubi Star[u, v]: the product of u and v, with u distributed over the terms
+    # of v (see IntegrationUtilityFunctions.m). Rubi co-opts Wolfram's otherwise
+    # meaning-free \[Star] infix operator purely as a display-friendly product,
+    # so the step-by-step output shows the natural "coefficient * integral"
+    # structure. Semantically it is just multiplication with distribution.
+    if isinstance(v, Add):
+        return Add(*[Star(u, term) for term in v.args])
+    return u * v
+
 def PureFunctionOfCothQ(u, v, x):
     # If u is a pure function of Coth[v], PureFunctionOfCothQ[u,v,x] returns True;
     if AtomQ(u):

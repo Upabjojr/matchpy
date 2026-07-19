@@ -489,10 +489,31 @@ RULES = [
         module_name='1.2.1.6 (g+h x)^m (a+b x+c x^2)^p (d+e x+f x^2)^q',
         rule_number=50,
     ),
-    # Rule 51: SKIPPED - ValueError: Non-string function head ['Times', ['Power', ['Times', '4', 'c'], ['IntPart', 'p']], ['Power', ['Plus', 'b', ['Times', '2', 'c', 'x']], ['Times', '2', ['FracPart', 'p']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 52: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'p', '1'], ['Plus', ['Power', 'b', '2'], ['Times', '-1', ['Times', '4', 'a', 'c']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 53: SKIPPED - ValueError: Non-string function head ['Times', 'c', ['Plus', 'q', ['Times', '2', 'p'], '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 51
+    RubiRulePattern(
+        pattern=Int(Pq_*(x**2*_c_ + x*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, _c_, p_], x), PolyQ(Pq_, x), EqQ(-4*a_*_c_ + _b_**2, 0),),
+        replacement=Star((x**2*_c_ + x*_b_ + a_)**FracPart(p_)/((4*_c_)**IntPart(p_)*(2*x*_c_ + _b_)**(2*FracPart(p_))), Int(Pq_*(2*x*_c_ + _b_)**(2*p_), x)),
+        module_name='1.2.1.6 (g+h x)^m (a+b x+c x^2)^p (d+e x+f x^2)^q',
+        rule_number=51,
+    ),
+    # Rule 52
+    RubiRulePattern(
+        pattern=Int(Pq_*(x**2*_c_ + x*_b_ + _a_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), PolyQ(Pq_, x), NeQ(-4*_a_*_c_ + _b_**2, 0), LtQ(p_, -1),),
+        replacement=With(List(Set(Symbol('Q'), PolynomialQuotient(Pq_, (_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))), x)), Set(Symbol('f'), Coeff(PolynomialRemainder(Pq_, (_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))), x), x, Integer(0))), Set(Symbol('g'), Coeff(PolynomialRemainder(Pq_, (_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))), x), x, Integer(1)))), ((((_b_ * Symbol('f')) + (Integer(-1) * (Integer(2) * _a_ * Symbol('g'))) + (((Integer(2) * _c_ * Symbol('f')) + (Integer(-1) * (_b_ * Symbol('g')))) * x)) * ((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**((p_ + Integer(1))) * (((p_ + Integer(1)) * ((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_)))))**(Integer(-1))) + Star((((p_ + Integer(1)) * ((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_)))))**(Integer(-1)), Int((((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**((p_ + Integer(1))) * ExpandToSum((((p_ + Integer(1)) * ((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))) * Symbol('Q')) + (Integer(-1) * (((Integer(2) * p_) + Integer(3)) * ((Integer(2) * _c_ * Symbol('f')) + (Integer(-1) * (_b_ * Symbol('g'))))))), x)), x)))),
+        module_name='1.2.1.6 (g+h x)^m (a+b x+c x^2)^p (d+e x+f x^2)^q',
+        rule_number=52,
+    ),
+    # Rule 53
+    RubiRulePattern(
+        pattern=Int(Pq_*(x**2*_c_ + x*_b_ + _a_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, p_], x), PolyQ(Pq_, x), NeQ(-4*_a_*_c_ + _b_**2, 0), Not(LeQ(p_, -1)),),
+        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('e'), Coeff(Pq_, x, Expon(Pq_, x)))), ((Symbol('e') * (x)**((Symbol('q') + Integer(-1))) * ((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**((p_ + Integer(1))) * ((_c_ * (Symbol('q') + (Integer(2) * p_) + Integer(1))))**(Integer(-1))) + Star(((_c_ * (Symbol('q') + (Integer(2) * p_) + Integer(1))))**(Integer(-1)), Int((((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(p_) * ExpandToSum(((_c_ * (Symbol('q') + (Integer(2) * p_) + Integer(1)) * Pq_) + (Integer(-1) * (_a_ * Symbol('e') * (Symbol('q') + Integer(-1)) * (x)**((Symbol('q') + Integer(-2))))) + (Integer(-1) * (_b_ * Symbol('e') * (Symbol('q') + p_) * (x)**((Symbol('q') + Integer(-1))))) + (Integer(-1) * (_c_ * Symbol('e') * (Symbol('q') + (Integer(2) * p_) + Integer(1)) * (x)**(Symbol('q'))))), x)), x)))),
+        module_name='1.2.1.6 (g+h x)^m (a+b x+c x^2)^p (d+e x+f x^2)^q',
+        rule_number=53,
+    ),
 
 ]
 
-# Summary: 50 rules translated, 3 skipped
+# Summary: 53 rules translated, 0 skipped

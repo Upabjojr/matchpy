@@ -1692,7 +1692,7 @@ RULES = [
     ),
     # Rule 203
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
         replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
@@ -1700,7 +1700,7 @@ RULES = [
     ),
     # Rule 204
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
         replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
@@ -1708,7 +1708,7 @@ RULES = [
     ),
     # Rule 205
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
         replacement=((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
@@ -1716,7 +1716,7 @@ RULES = [
     ),
     # Rule 206
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
         replacement=((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',

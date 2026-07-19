@@ -166,7 +166,14 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=5,
     ),
-    # Rule 6: SKIPPED - ValueError: Non-string function head ['Times', ['Expon', 'Px', 'x'], 'p'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 6
+    RubiRulePattern(
+        pattern=Int(Px_**p_*_u_, x),
+        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
+        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, x, Integer(0)), Expon(Px_, x))), Set(Symbol('b'), sympy.root(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)))), Star(((((Symbol('a') + (Symbol('b') * x)))**(Expon(Px_, x)))**(p_) * (((Symbol('a') + (Symbol('b') * x)))**((Expon(Px_, x) * p_)))**(Integer(-1))), Int((_u_ * ((Symbol('a') + (Symbol('b') * x)))**((Expon(Px_, x) * p_))), x))),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=6,
+    ),
     # Rule 8
     RubiRulePattern(
         pattern=Int(u_*(x*_c_)**_m_, x),
@@ -179,7 +186,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*v_)**_m_*(c_ + _d_*v_)**_n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _n_], x), EqQ(-a_*_d_ + _b_*c_, 0), IntegerQ(_m_), Or(Not(IntegerQ(_n_)), SimplerQ(x*_d_ + c_, x*_b_ + a_)),),
-        replacement=(((_b_ * (_d_)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Int((_u_ * ((c_ + (_d_ * v_)))**((_m_ + _n_))), x)),
+        replacement=Star((_b_/_d_)**_m_, Int(_u_*(c_ + _d_*v_)**(_m_ + _n_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=9,
     ),
@@ -187,7 +194,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*v_)**m_*(c_ + _d_*v_)**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), GtQ(_b_/_d_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_))),),
-        replacement=(((_b_ * (_d_)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Int((_u_ * ((c_ + (_d_ * v_)))**((m_ + n_))), x)),
+        replacement=Star((_b_/_d_)**m_, Int(_u_*(c_ + _d_*v_)**(m_ + n_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=10,
     ),
@@ -195,7 +202,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*v_)**m_*(c_ + _d_*v_)**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_), GtQ(_b_/_d_, 0))),),
-        replacement=(((a_ + (_b_ * v_)))**(m_) * (((c_ + (_d_ * v_)))**(sympy.Function('m')(Symbol('Star'))))**(Integer(-1)) * Int((_u_ * ((c_ + (_d_ * v_)))**((m_ + n_))), x)),
+        replacement=Star((a_ + _b_*v_)**m_/(c_ + _d_*v_)**m_, Int(_u_*(c_ + _d_*v_)**(m_ + n_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=11,
     ),
@@ -203,7 +210,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*v_)**m_*(_A_ + _B_*v_ + _C_*v_**2), x),
         constraints=(FreeQ([a_, _b_, _A_, _B_, _C_], x), EqQ(_A_*_b_**2 - _B_*a_*_b_ + _C_*a_**2, 0), LeQ(m_, -1),),
-        replacement=(((_b_)**(sympy.Function('2')(Symbol('Star'))))**(Integer(-1)) * Int((_u_ * ((a_ + (_b_ * v_)))**((m_ + Integer(1))) * Simp(((_b_ * _B_) + (Integer(-1) * (a_ * _C_)) + (_b_ * _C_ * v_)), x)), x)),
+        replacement=Star(_b_**(-2), Int(_u_*(a_ + _b_*v_)**(m_ + 1)*Simp(_B_*_b_ - _C_*a_ + _C_*_b_*v_, x), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=12,
     ),
@@ -211,7 +218,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(x**_n_*_b_ + a_)**_m_*(x**_q_*_d_ + c_)**_p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_], x), EqQ(_q_, -_n_), IntegerQ(_p_), EqQ(a_*c_ - _b_*_d_, 0), Not(And(IntegerQ(_m_), NegQ(_n_))),),
-        replacement=(((_d_ * (a_)**(Integer(-1))))**(sympy.Function('p')(Symbol('Star'))) * Int((_u_ * ((a_ + (_b_ * (x)**(_n_))))**((_m_ + _p_)) * ((x)**((_n_ * _p_)))**(Integer(-1))), x)),
+        replacement=Star((_d_/a_)**_p_, Int(_u_*(x**_n_*_b_ + a_)**(_m_ + _p_)/x**(_n_*_p_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=13,
     ),
@@ -219,7 +226,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(x**j_*_d_ + c_)**_p_*(x**_n_*_b_ + a_)**_m_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_, _p_], x), EqQ(j_, 2*_n_), EqQ(_p_, -_m_), EqQ(a_**2*_d_ + _b_**2*c_, 0), GtQ(a_, 0), LtQ(_d_, 0), GtQ(_b_**2, 0),),
-        replacement=((((Integer(-1) * (_b_)**(Integer(2))) * (_d_)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Int((_u_ * ((a_ + (Integer(-1) * (_b_ * (x)**(_n_)))))**((Integer(-1) * _m_))), x)),
+        replacement=Star((-_b_**2/_d_)**_m_, Int(_u_/(-x**_n_*_b_ + a_)**_m_, x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=14,
     ),
@@ -279,16 +286,23 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=21,
     ),
-    # Rule 22: SKIPPED - ValueError: Non-string function head ['Times', 'q', ['Coeff', 'Pq', 'x', 'q']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 23: SKIPPED - ValueError: Non-string function head ['Times', 'q', ['Coeff', 'Pq', 'x', 'q']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 24
+    # Rule 22
     RubiRulePattern(
-        pattern=Int(_Fx_*Px_**_p_, x),
-        constraints=(PolyQ(Px_, x), IntegerQ(_p_), Not(MonomialQ(Px_, x)), Or(ILtQ(_p_, 0), Not(PolyQ(u, x))), IGtQ(Expon(Px_, x, Min), 0),),
-        replacement=With(List(Set(Symbol('r'), Expon(Px_, x, Symbol('Min')))), Int(((x)**((_p_ * Symbol('r'))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(_p_) * _Fx_), x)),
+        pattern=Int(Qr_*(Pq_**_n_*_b_ + _a_)**_p_, x),
+        constraints=(FreeQ([_a_, _b_, _n_, _p_], x), PolyQ(Pq_, x), PolyQ(Qr_, x), EqQ(Expon(Qr_, x), Expon(Pq_, x) - 1), EqQ(Coeff(Qr_, x, Expon(Qr_, x))*D(Pq_, x), Qr_*Coeff(Pq_, x, Expon(Pq_, x))*Expon(Pq_, x)),),
+        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Star((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1))), Subst(Int(((_a_ + (_b_ * (x)**(_n_))))**(_p_), x), x, Pq_))),
         module_name='1.4.1 Algebraic function simplification',
-        rule_number=24,
+        rule_number=22,
     ),
+    # Rule 23
+    RubiRulePattern(
+        pattern=Int(Qr_*(Pq_**_n_*_b_ + Pq_**_n2_*_c_ + _a_)**_p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _n_, _p_], x), EqQ(_n2_, 2*_n_), PolyQ(Pq_, x), PolyQ(Qr_, x),),
+        replacement=Module(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Condition(Star((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1))), Subst(Int(((_a_ + (_b_ * (x)**(_n_)) + (_c_ * (x)**((Integer(2) * _n_)))))**(_p_), x), x, Pq_)), And(EqQ(Symbol('r'), (Symbol('q') + Integer(-1))), EqQ((Coeff(Qr_, x, Symbol('r')) * D(Pq_, x)), (Symbol('q') * Coeff(Pq_, x, Symbol('q')) * Qr_))))),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=23,
+    ),
+    # Rule 24: SKIPPED - ValueError: generated rule not loadable: NameError: name 'Min' is not defined
     # Rule 25
     RubiRulePattern(
         pattern=Int(_Fx_*(x**_r_*_a_ + x**_s_*_b_)**_p_, x),
@@ -317,26 +331,47 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_Fx_*v_**_m_*(b_*v_)**n_, x),
         constraints=(FreeQ([b_, n_], x), IntegerQ(_m_),),
-        replacement=(((b_)**(sympy.Function('m')(Symbol('Star'))))**(Integer(-1)) * Int((((b_ * v_))**((_m_ + n_)) * _Fx_), x)),
+        replacement=Star(b_**(-_m_), Int(_Fx_*(b_*v_)**(_m_ + n_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=28,
     ),
-    # Rule 29: SKIPPED - ValueError: Non-string function head ['Sqrt', ['Times', 'a', 'v']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 30: SKIPPED - ValueError: Non-string function head ['Sqrt', ['Times', 'b', 'v']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 29
+    RubiRulePattern(
+        pattern=Int(_Fx_*(_a_*v_)**m_*(_b_*v_)**n_, x),
+        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), IGtQ(n_ + sympy.S.Half, 0), IntegerQ(m_ + n_),),
+        replacement=Star(_a_**(m_ + sympy.S.Half)*_b_**(n_ + sympy.S(-1)/2)*sqrt(_b_*v_)/sqrt(_a_*v_), Int(_Fx_*v_**(m_ + n_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=29,
+    ),
+    # Rule 30
+    RubiRulePattern(
+        pattern=Int(_Fx_*(_a_*v_)**m_*(_b_*v_)**n_, x),
+        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), ILtQ(n_ + sympy.S(-1)/2, 0), IntegerQ(m_ + n_),),
+        replacement=Star(_a_**(m_ + sympy.S(-1)/2)*_b_**(n_ + sympy.S.Half)*sqrt(_a_*v_)/sqrt(_b_*v_), Int(_Fx_*v_**(m_ + n_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=30,
+    ),
     # Rule 31
     RubiRulePattern(
         pattern=Int(_Fx_*(_a_*v_)**m_*(_b_*v_)**n_, x),
         constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), IntegerQ(m_ + n_),),
-        replacement=((_a_)**((m_ + n_)) * ((_b_ * v_))**(n_) * (((_a_ * v_))**(sympy.Function('n')(Symbol('Star'))))**(Integer(-1)) * Int(((v_)**((m_ + n_)) * _Fx_), x)),
+        replacement=Star(_a_**(m_ + n_)*(_b_*v_)**n_/(_a_*v_)**n_, Int(_Fx_*v_**(m_ + n_), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=31,
     ),
-    # Rule 32: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'a', ['IntPart', 'n']], ['Power', ['Times', 'a', 'v'], ['FracPart', 'n']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 32
+    RubiRulePattern(
+        pattern=Int(_Fx_*(_a_*v_)**m_*(_b_*v_)**n_, x),
+        constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), Not(IntegerQ(m_ + n_)),),
+        replacement=Star(_b_**IntPart(n_)*(_b_*v_)**FracPart(n_)/(_a_**IntPart(n_)*(_a_*v_)**FracPart(n_)), Int(_Fx_*(_a_*v_)**(m_ + n_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=32,
+    ),
     # Rule 33
     RubiRulePattern(
         pattern=Int(x**m_*Fx_, x),
         constraints=(FractionQ(m_), AlgebraicFunctionQ(Fx_, x),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (sympy.Function('k')(Symbol('Star')) * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * sympy.Function('SubstPower')(Fx_, x, Symbol('k'))), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star(Symbol('k'), Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * sympy.Function('SubstPower')(Fx_, x, Symbol('k'))), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=33,
     ),
@@ -356,8 +391,22 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=35,
     ),
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['FracPart', 'p'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 38: SKIPPED - ValueError: Non-string function head ['FracPart', 'p'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int(_u_*(x**_n_*_d_ + c_)**_q_*(x**_non2_*_b1_ + a1_)**p_*(x**_non2_*_b2_ + a2_)**p_, x),
+        constraints=(),
+        replacement=(x**(_n_/2)*_b1_ + a1_)**FracPart(p_)*(x**(_n_/2)*_b2_ + a2_)**FracPart(p_)/(x**_n_*_b1_*_b2_ + a1_*a2_)**FracPart(p_),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=36,
+    ),
+    # Rule 38
+    RubiRulePattern(
+        pattern=Int(_u_*(x**_non2_*_b1_ + a1_)**_p_*(x**_non2_*_b2_ + a2_)**_p_*(x**_n_*_d_ + x**_n2_*_e_ + c_)**_q_, x),
+        constraints=(),
+        replacement=(x**(_n_/2)*_b1_ + a1_)**FracPart(_p_)*(x**(_n_/2)*_b2_ + a2_)**FracPart(_p_)/(x**_n_*_b1_*_b2_ + a1_*a2_)**FracPart(_p_),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=38,
+    ),
     # Rule 40
     RubiRulePattern(
         pattern=Int((x**n_*_b_ + a_)**_p_*(x**n_*_d_ + c_)**_q_*(x**_n2_*_f1_ + e1_)**_r_*(x**_n2_*_f2_ + e2_)**_r_, x),
@@ -366,11 +415,32 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=40,
     ),
-    # Rule 41: SKIPPED - ValueError: Non-string function head ['FracPart', 'r'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 43: SKIPPED - ValueError: Non-string function head ['Times', 'p', 'q'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 44: SKIPPED - ValueError: Non-string function head ['Times', 'n', 'p', 'q'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 45: SKIPPED - ValueError: Non-string function head ['Simp', ['Times', ['Power', ['Times', 'c', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], 'q']], 'p'], ['Power', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], ['Times', 'p', 'q']], '-1']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 46: SKIPPED - ValueError: Non-string function head ['Simp', ['Times', ['Power', ['Times', 'c', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], 'q']], 'p'], ['Power', ['Power', ['Plus', '1', ['Times', 'b', ['Power', 'x', 'n'], ['Power', 'a', '-1']]], ['Times', 'p', 'q']], '-1']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 41
+    RubiRulePattern(
+        pattern=Int((x**n_*_b_ + a_)**_p_*(x**n_*_d_ + c_)**_q_*(x**_n2_*_f1_ + e1_)**_r_*(x**_n2_*_f2_ + e2_)**_r_, x),
+        constraints=(),
+        replacement=(x**(n_/2)*_f1_ + e1_)**FracPart(_r_)*(x**(n_/2)*_f2_ + e2_)**FracPart(_r_)/(x**n_*_f1_*_f2_ + e1_*e2_)**FracPart(_r_),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=41,
+    ),
+    # Rule 43
+    RubiRulePattern(
+        pattern=Int(_u_*(_c_*(d_*(x*_b_ + _a_))**q_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, q_, p_], x), Not(IntegerQ(q_)), Not(IntegerQ(p_)),),
+        replacement=Star((_c_*(d_*(x*_b_ + _a_))**q_)**p_/(x*_b_ + _a_)**(p_*q_), Int(_u_*(x*_b_ + _a_)**(p_*q_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=43,
+    ),
+    # Rule 44
+    RubiRulePattern(
+        pattern=Int(_u_*(_c_*(_d_*(x*_b_ + _a_)**n_)**q_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, n_, q_, p_], x), Not(IntegerQ(q_)), Not(IntegerQ(p_)),),
+        replacement=Star((_c_*(_d_*(x*_b_ + _a_)**n_)**q_)**p_/(x*_b_ + _a_)**(n_*p_*q_), Int(_u_*(x*_b_ + _a_)**(n_*p_*q_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=44,
+    ),
+    # Rule 45: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 46: SKIPPED - TypeError: unhashable type: 'list'
     # Rule 47
     RubiRulePattern(
         pattern=Int(_u_*(_e_*(x**_n_*_b_ + _a_)**_q_*(x**_n_*_d_ + c_)**_q_)**p_, x),
@@ -399,7 +469,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _n_, p_], x), EqQ(-_a_*_d_ + _b_*c_, 0),),
-        replacement=(((_b_ * _e_ * (_d_)**(Integer(-1))))**(sympy.Function('p')(Symbol('Star'))) * Int(_u_, x)),
+        replacement=Star((_b_*_e_/_d_)**p_, Int(_u_, x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=50,
     ),
@@ -415,25 +485,25 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), FractionQ(p_), IntegerQ(1/_n_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (sympy.Function('n')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=52,
     ),
-    # Rule 53: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', 'c'], ['Times', '-1', ['Times', 'a', 'd']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 53: SKIPPED - TypeError: unhashable type: 'list'
     # Rule 54
     RubiRulePattern(
         pattern=Int(x**_m_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _m_, _n_, p_], x), IntegerQ(Simplify((_m_ + 1)/_n_)),),
-        replacement=((sympy.Function('n')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((x)**((Simplify(((_m_ + Integer(1)) * (_n_)**(Integer(-1)))) + Integer(-1))) * ((_e_ * (_a_ + (_b_ * x)) * ((c_ + (_d_ * x)))**(Integer(-1))))**(p_)), x), x, (x)**(_n_))),
+        replacement=Star(1/_n_, Subst(Int(x**(Simplify((_m_ + 1)/_n_) - 1)*(_e_*(x*_b_ + _a_)/(x*_d_ + c_))**p_, x), x, x**_n_)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=54,
     ),
-    # Rule 55: SKIPPED - ValueError: Non-string function head ['Simp', ['Times', ['Power', ['Times', 'c', 'x'], 'm'], ['Power', ['Power', 'x', 'm'], '-1']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 55: SKIPPED - TypeError: unhashable type: 'list'
     # Rule 56
     RubiRulePattern(
         pattern=Int(u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegerQ(_r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (sympy.Function('n')(Symbol('Star')))**(Integer(-1)) * Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=56,
     ),
@@ -441,7 +511,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegersQ(_m_, _r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (sympy.Function('n')(Symbol('Star')))**(Integer(-1)) * Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=57,
     ),
@@ -453,21 +523,35 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=58,
     ),
-    # Rule 59: SKIPPED - ValueError: Non-string function head ['Simp', ['Times', ['Power', ['Times', 'e', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], 'q'], ['Power', ['Plus', 'c', ['Times', 'd', ['Power', 'x', 'n']]], 'r']], 'p'], ['Power', ['Times', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], ['Times', 'p', 'q']], ['Power', ['Plus', 'c', ['Times', 'd', ['Power', 'x', 'n']]], ['Times', 'p', 'r']]], '-1']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 59
+    RubiRulePattern(
+        pattern=Int(_u_*(_e_*(x**_n_*_b_ + _a_)**_q_*(x**n_*_d_ + c_)**_r_)**p_, x),
+        constraints=(),
+        replacement=Simp((_e_*(x**_n_*_b_ + _a_)**_q_*(x**_n_*_d_ + c_)**_r_)**p_/((x**_n_*_b_ + _a_)**(p_*_q_)*(x**_n_*_d_ + c_)**(p_*_r_))),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=59,
+    ),
     # Rule 61
     RubiRulePattern(
         pattern=Int((_a_ + _b_*(_c_/x)**n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, n_, p_], x),),
-        replacement=((Integer(-1) * sympy.Function('c')(Symbol('Star'))) * Subst(Int((((_a_ + (_b_ * (x)**(n_))))**(p_) * ((x)**(Integer(2)))**(Integer(-1))), x), x, (_c_ * (x)**(Integer(-1))))),
+        replacement=Star(-_c_, Subst(Int((x**n_*_b_ + _a_)**p_/x**2, x), x, _c_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=61,
     ),
-    # Rule 62: SKIPPED - ValueError: Non-string function head ['Plus', 'm', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 62
+    RubiRulePattern(
+        pattern=Int(x**_m_*(_a_ + _b_*(_c_/x)**n_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, n_, p_], x), IntegerQ(_m_),),
+        replacement=Star(-_c_**(_m_ + 1), Subst(Int(x**(-_m_ - 2)*(x**n_*_b_ + _a_)**p_, x), x, _c_/x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=62,
+    ),
     # Rule 63
     RubiRulePattern(
         pattern=Int((x*_d_)**m_*(_a_ + _b_*(_c_/x)**n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, m_, n_, p_], x), Not(IntegerQ(m_)),),
-        replacement=((Integer(-1) * _c_) * ((_d_ * x))**(m_) * ((_c_ * (x)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Subst(Int((((_a_ + (_b_ * (x)**(n_))))**(p_) * ((x)**((m_ + Integer(2))))**(Integer(-1))), x), x, (_c_ * (x)**(Integer(-1))))),
+        replacement=Star(-_c_*(_c_/x)**m_*(x*_d_)**m_, Subst(Int(x**(-m_ - 2)*(x**n_*_b_ + _a_)**p_, x), x, _c_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=63,
     ),
@@ -475,16 +559,23 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*(_d_/x)**n_ + _c_*(_d_/x)**_n2_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, n_, p_], x), EqQ(_n2_, 2*n_),),
-        replacement=((Integer(-1) * sympy.Function('d')(Symbol('Star'))) * Subst(Int((((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(p_) * ((x)**(Integer(2)))**(Integer(-1))), x), x, (_d_ * (x)**(Integer(-1))))),
+        replacement=Star(-_d_, Subst(Int((x**(2*n_)*_c_ + x**n_*_b_ + _a_)**p_/x**2, x), x, _d_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=64,
     ),
-    # Rule 65: SKIPPED - ValueError: Non-string function head ['Plus', 'm', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 65
+    RubiRulePattern(
+        pattern=Int(x**_m_*(a_ + _b_*(_d_/x)**n_ + _c_*(_d_/x)**_n2_)**p_, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, n_, p_], x), EqQ(_n2_, 2*n_), IntegerQ(_m_),),
+        replacement=Star(-_d_**(_m_ + 1), Subst(Int(x**(-_m_ - 2)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x), x, _d_/x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=65,
+    ),
     # Rule 66
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(a_ + _b_*(_d_/x)**n_ + _c_*(_d_/x)**_n2_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, m_, n_, p_], x), EqQ(_n2_, 2*n_), Not(IntegerQ(m_)),),
-        replacement=((Integer(-1) * _d_) * ((_e_ * x))**(m_) * ((_d_ * (x)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Subst(Int((((a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(p_) * ((x)**((m_ + Integer(2))))**(Integer(-1))), x), x, (_d_ * (x)**(Integer(-1))))),
+        replacement=Star(-_d_*(_d_/x)**m_*(x*_e_)**m_, Subst(Int(x**(-m_ - 2)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x), x, _d_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=66,
     ),
@@ -492,20 +583,34 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**_n2_*_c_ + _a_ + _b_*(_d_/x)**n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, n_, p_], x), EqQ(_n2_, -2*n_), IntegerQ(2*n_),),
-        replacement=((Integer(-1) * sympy.Function('d')(Symbol('Star'))) * Subst(Int((((_a_ + (_b_ * (x)**(n_)) + (_c_ * ((_d_)**((Integer(2) * n_)))**(Integer(-1)) * (x)**((Integer(2) * n_)))))**(p_) * ((x)**(Integer(2)))**(Integer(-1))), x), x, (_d_ * (x)**(Integer(-1))))),
+        replacement=Star(-_d_, Subst(Int((x**(2*n_)*_c_/_d_**(2*n_) + x**n_*_b_ + _a_)**p_/x**2, x), x, _d_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=67,
     ),
-    # Rule 68: SKIPPED - ValueError: Non-string function head ['Plus', 'm', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 68
+    RubiRulePattern(
+        pattern=Int(x**_m_*(x**_n2_*_c_ + a_ + _b_*(_d_/x)**n_)**p_, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, n_, p_], x), EqQ(_n2_, -2*n_), IntegerQ(2*n_), IntegerQ(_m_),),
+        replacement=Star(-_d_**(_m_ + 1), Subst(Int(x**(-_m_ - 2)*(x**(2*n_)*_c_/_d_**(2*n_) + x**n_*_b_ + a_)**p_, x), x, _d_/x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=68,
+    ),
     # Rule 69
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(x**_n2_*_c_ + a_ + _b_*(_d_/x)**n_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, n_, p_], x), EqQ(_n2_, -2*n_), Not(IntegerQ(m_)), IntegerQ(2*n_),),
-        replacement=((Integer(-1) * _d_) * ((_e_ * x))**(m_) * ((_d_ * (x)**(Integer(-1))))**(sympy.Function('m')(Symbol('Star'))) * Subst(Int((((a_ + (_b_ * (x)**(n_)) + (_c_ * ((_d_)**((Integer(2) * n_)))**(Integer(-1)) * (x)**((Integer(2) * n_)))))**(p_) * ((x)**((m_ + Integer(2))))**(Integer(-1))), x), x, (_d_ * (x)**(Integer(-1))))),
+        replacement=Star(-_d_*(_d_/x)**m_*(x*_e_)**m_, Subst(Int(x**(-m_ - 2)*(x**(2*n_)*_c_/_d_**(2*n_) + x**n_*_b_ + a_)**p_, x), x, _d_/x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=69,
     ),
-    # Rule 70: SKIPPED - ValueError: Non-string function head ['Times', ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', 'n']]], ['Times', 'p', 'r']], ['Power', ['Plus', 'c', ['Times', 'd', ['Power', 'x', 'n']]], ['Times', 'q', 's']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 70
+    RubiRulePattern(
+        pattern=Int(_u_*(_e_*(x**_n_*_b_ + a_)**_r_)**p_*(_f_*(x**_n_*_d_ + c_)**s_)**q_, x),
+        constraints=(),
+        replacement=(_e_*(x**_n_*_b_ + a_)**_r_)**p_*(_f_*(x**_n_*_d_ + c_)**s_)**q_/((x**_n_*_b_ + a_)**(p_*_r_)*(x**_n_*_d_ + c_)**(q_*s_)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=70,
+    ),
     # Rule 72
     RubiRulePattern(
         pattern=Int(Px_*_u_, x),
@@ -522,8 +627,15 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=73,
     ),
-    # Rule 74: SKIPPED - ValueError: Non-string function head ['Times', ['Expon', 'Px', ['Power', 'x', '2']], 'p'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 74
+    RubiRulePattern(
+        pattern=Int(Px_**p_*_u_, x),
+        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
+        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Integer(0)), Expon(Px_, (x)**(Integer(2))))), Set(Symbol('b'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Expon(Px_, (x)**(Integer(2)))), Expon(Px_, (x)**(Integer(2)))))), Star(((((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**(Expon(Px_, (x)**(Integer(2)))))**(p_) * (((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**((Expon(Px_, (x)**(Integer(2))) * p_)))**(Integer(-1))), Int((_u_ * ((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**((Expon(Px_, (x)**(Integer(2))) * p_))), x))),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=74,
+    ),
 
 ]
 
-# Summary: 47 rules translated, 27 skipped
+# Summary: 63 rules translated, 11 skipped

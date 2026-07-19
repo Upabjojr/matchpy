@@ -82,6 +82,7 @@ FULL_RULESET_INTEGRANDS = [
     log(x), x*log(x), log(x)/x, log(x)**2,
     # --- inverse trig ---
     atan(x),
+    x*atan(x),  # this one tests "Star" nodes
     # --- exponential * trig (incl. Gaussian erf/erfi) ---
     exp(x)*sin(x), exp(x)*cos(x), exp(2*x)*sin(3*x), exp(x)*sin(x**2 + x),
 ]

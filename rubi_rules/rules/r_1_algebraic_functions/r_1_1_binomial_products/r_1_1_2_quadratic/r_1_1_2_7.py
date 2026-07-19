@@ -79,7 +79,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0),),
-        replacement=((c_)**(Integer(2)) * (sympy.Function('a')(Symbol('Star')))**(Integer(-1)) * Int(((c_ + (Integer(-1) * (_d_ * x))))**(Integer(-1)), x)),
+        replacement=Star(c_**2/a_, Int(1/(-x*_d_ + c_), x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=1,
     ),
@@ -87,7 +87,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), NeQ(a_*_d_**2 + _b_*c_**2, 0),),
-        replacement=((sympy.Function('c')(Symbol('Star')) * Int(((a_ + (_b_ * (x)**(Integer(2)))))**(Integer(-1)), x)) + (sympy.Function('d')(Symbol('Star')) * Int((x * ((a_ + (_b_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        replacement=Star(c_, Int(1/(x**2*_b_ + a_), x)) + Star(_d_, Int(x/(x**2*_b_ + a_), x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=2,
     ),
@@ -99,12 +99,19 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=3,
     ),
-    # Rule 4: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 4
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), LtQ(p_, -1), NeQ(p_, sympy.S(-3)/2),),
+        replacement=Star(c_*(2*p_ + 3)/(2*a_*(p_ + 1)), Int((x**2*_b_ + a_)**(p_ + 1), x)) + (x**2*_b_ + a_)**(p_ + 1)*(-x*_b_*c_ + a_*_d_)/(2*a_*_b_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=4,
+    ),
     # Rule 5
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)*(x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _p_], x), Not(LeQ(_p_, -1)),),
-        replacement=((_d_ * ((a_ + (_b_ * (x)**(Integer(2)))))**((_p_ + Integer(1))) * ((Integer(2) * _b_ * (_p_ + Integer(1))))**(Integer(-1))) + (sympy.Function('c')(Symbol('Star')) * Int(((a_ + (_b_ * (x)**(Integer(2)))))**(_p_), x))),
+        replacement=Star(c_, Int((x**2*_b_ + a_)**_p_, x)) + _d_*(x**2*_b_ + a_)**(_p_ + 1)/(2*_b_*(_p_ + 1)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=5,
     ),
@@ -116,7 +123,14 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=6,
     ),
-    # Rule 7: SKIPPED - ValueError: Non-string function head ['Times', 'b', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 7
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**2*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, p_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), LtQ(p_, -1),),
+        replacement=-Star(_d_**2*(p_ + 2)/(_b_*(p_ + 1)), Int((x**2*_b_ + a_)**(p_ + 1), x)) + _d_*(x*_d_ + c_)*(x**2*_b_ + a_)**(p_ + 1)/(_b_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=7,
+    ),
     # Rule 8
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
@@ -125,7 +139,14 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=8,
     ),
-    # Rule 9: SKIPPED - ValueError: Non-string function head ['Plus', 'n', ['Times', '2', 'p'], '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 9
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), IGtQ(Simplify(n_ + p_), 0),),
+        replacement=Star(2*c_*Simplify(n_ + p_)/(n_ + 2*p_ + 1), Int((x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**p_, x)) + _d_*(x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)/(_b_*(n_ + 2*p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=9,
+    ),
     # Rule 10
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
@@ -134,16 +155,30 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=10,
     ),
-    # Rule 11: SKIPPED - ValueError: Non-string function head ['Times', '2', 'c', ['Plus', 'n', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 11
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), ILtQ(Simplify(n_ + 2*p_ + 2), 0), Or(LtQ(n_, -1), GtQ(n_ + p_, 0)),),
+        replacement=Star(Simplify(n_ + 2*p_ + 2)/(2*c_*(n_ + p_ + 1)), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_, x)) - _d_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)/(2*_b_*c_*(n_ + p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=11,
+    ),
     # Rule 12
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_/(x**2*_b_ + a_)**(sympy.S(3)/2), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), IGtQ(n_, 2),),
-        replacement=(((Integer(-1) * (Integer(2))**((n_ + Integer(-1)))) * _d_ * (c_)**((n_ + Integer(-2))) * (c_ + (_d_ * x)) * ((_b_ * sympy.sqrt((a_ + (_b_ * (x)**(Integer(2)))))))**(Integer(-1))) + ((_d_)**(Integer(2)) * (sympy.Function('b')(Symbol('Star')))**(Integer(-1)) * Int(((sympy.sqrt((a_ + (_b_ * (x)**(Integer(2))))))**(Integer(-1)) * ExpandToSum(((((Integer(2))**((n_ + Integer(-1))) * (c_)**((n_ + Integer(-1)))) + (Integer(-1) * ((c_ + (_d_ * x)))**((n_ + Integer(-1))))) * ((c_ + (Integer(-1) * (_d_ * x))))**(Integer(-1))), x)), x))),
+        replacement=-2**(n_ - 1)*c_**(n_ - 2)*_d_*(x*_d_ + c_)/(_b_*sqrt(x**2*_b_ + a_)) + Star(_d_**2/_b_, Int(ExpandToSum((2**(n_ - 1)*c_**(n_ - 1) - (x*_d_ + c_)**(n_ - 1))/(-x*_d_ + c_), x)/sqrt(x**2*_b_ + a_), x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=12,
     ),
-    # Rule 13: SKIPPED - ValueError: Non-string function head ['Plus', 'n', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 13
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), ILtQ(n_, 0), EqQ(n_ + p_, sympy.S(-3)/2),),
+        replacement=-2**(-n_ - 1)*_b_**(-n_ - 2)*_d_**(2*n_ + 3)*(-c_)**(-n_ - 2)*sqrt(x**2*_b_ + a_)/(x*_d_ + c_) - Star(_b_**(-n_ - 1)*_d_**(2*n_ + 2), Int(ExpandToSum((2**(-n_ - 1)*(-c_)**(-n_ - 1) - (x*_d_ - c_)**(-n_ - 1))/(x*_d_ + c_), x)/sqrt(x**2*_b_ + a_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=13,
+    ),
     # Rule 14
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
@@ -152,23 +187,86 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=14,
     ),
-    # Rule 15: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'd', '2'], ['Plus', 'n', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 16: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'd', '2'], ['Plus', 'n', ['Times', '2', 'p'], '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 17: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 18: SKIPPED - ValueError: Non-string function head ['Times', 'b', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 19: SKIPPED - ValueError: Non-string function head ['Plus', 'n', ['Times', '2', 'p'], '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 20: SKIPPED - ValueError: Non-string function head ['Times', '2', 'c', ['Plus', 'n', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 15
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), GtQ(p_, 0), Or(LtQ(n_, -2), EqQ(n_ + 2*p_ + 1, 0)), NeQ(n_ + p_ + 1, 0), IntegerQ(2*p_),),
+        replacement=-Star(_b_*p_/(_d_**2*(n_ + p_ + 1)), Int((x*_d_ + c_)**(n_ + 2)*(x**2*_b_ + a_)**(p_ - 1), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_/(_d_*(n_ + p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=15,
+    ),
+    # Rule 16
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), GtQ(p_, 0), Or(LeQ(-2, n_, 0), EqQ(n_ + p_ + 1, 0)), NeQ(n_ + 2*p_ + 1, 0), IntegerQ(2*p_),),
+        replacement=-Star(2*_b_*c_*p_/(_d_**2*(n_ + 2*p_ + 1)), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ - 1), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_/(_d_*(n_ + 2*p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=16,
+    ),
+    # Rule 17
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), LtQ(p_, -1), LtQ(0, n_, 1), IntegerQ(2*p_),),
+        replacement=Star(c_*(n_ + 2*p_ + 2)/(2*a_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1), x)) - c_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)/(2*a_*_d_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=17,
+    ),
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), LtQ(p_, -1), GtQ(n_, 1), IntegerQ(2*p_),),
+        replacement=-Star(_d_**2*(n_ + p_)/(_b_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 2)*(x**2*_b_ + a_)**(p_ + 1), x)) + _d_*(x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)/(_b_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=18,
+    ),
+    # Rule 19
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, p_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), GtQ(n_, 0), NeQ(n_ + 2*p_ + 1, 0), IntegerQ(2*p_),),
+        replacement=Star(2*c_*(n_ + p_)/(n_ + 2*p_ + 1), Int((x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**p_, x)) + _d_*(x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)/(_b_*(n_ + 2*p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=19,
+    ),
+    # Rule 20
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, p_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), LtQ(n_, 0), NeQ(n_ + p_ + 1, 0), IntegerQ(2*p_),),
+        replacement=Star((n_ + 2*p_ + 2)/(2*c_*(n_ + p_ + 1)), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_, x)) - _d_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)/(2*_b_*c_*(n_ + p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=20,
+    ),
     # Rule 21
     RubiRulePattern(
         pattern=Int(1/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0),),
-        replacement=(Integer(2) * sympy.Function('d')(Symbol('Star')) * Subst(Int((((Integer(2) * _b_ * c_) + ((_d_)**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1)), x), x, (sympy.sqrt((a_ + (_b_ * (x)**(Integer(2))))) * (sympy.sqrt((c_ + (_d_ * x))))**(Integer(-1))))),
+        replacement=Star(2*_d_, Subst(Int(1/(x**2*_d_**2 + 2*_b_*c_), x), x, sqrt(x**2*_b_ + a_)/sqrt(x*_d_ + c_))),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=21,
     ),
-    # Rule 22: SKIPPED - ValueError: Non-string function head ['Plus', 'p', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 23: SKIPPED - ValueError: Non-string function head ['Times', ['Power', ['Plus', '1', ['Times', 'd', 'x', ['Power', 'c', '-1']]], ['Plus', 'p', '1']], ['Power', ['Plus', ['Times', 'a', ['Power', 'c', '-1']], ['Times', ['Times', 'b', 'x'], ['Power', 'd', '-1']]], ['Plus', 'p', '1']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 24: SKIPPED - ValueError: Non-string function head ['FracPart', 'n'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 22
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), Or(IntegerQ(n_), GtQ(c_, 0)), GtQ(a_, 0), Not(And(IntegerQ(n_), Or(IntegerQ(3*p_), IntegerQ(4*p_)))),),
+        replacement=Star(a_**(p_ + 1)*c_**(n_ - 1)*((-x*_d_ + c_)/c_)**(p_ + 1)*(x*_b_/_d_ + a_/c_)**(-p_ - 1), Int((x*_b_/_d_ + a_/c_)**p_*(x*_d_/c_ + 1)**(n_ + p_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=22,
+    ),
+    # Rule 23
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), Or(IntegerQ(n_), GtQ(c_, 0)), Not(GtQ(a_, 0)), Not(And(IntegerQ(n_), Or(IntegerQ(3*p_), IntegerQ(4*p_)))),),
+        replacement=Star(c_**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)*(x*_b_/_d_ + a_/c_)**(-p_ - 1)*(x*_d_/c_ + 1)**(-p_ - 1), Int((x*_b_/_d_ + a_/c_)**p_*(x*_d_/c_ + 1)**(n_ + p_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=23,
+    ),
+    # Rule 24
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), EqQ(a_*_d_**2 + _b_*c_**2, 0), Not(Or(IntegerQ(n_), GtQ(c_, 0))),),
+        replacement=Star(c_**IntPart(n_)*(x*_d_ + c_)**FracPart(n_)/(x*_d_/c_ + 1)**FracPart(n_), Int((x**2*_b_ + a_)**p_*(x*_d_/c_ + 1)**n_, x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=24,
+    ),
     # Rule 25
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**_p_, x),
@@ -189,7 +287,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), ILtQ(p_, 0), IntegerQ(n_), NiceSqrtQ(-_b_/a_), Not(FractionalPowerFactorQ(sqrt(-_b_/a_))),),
-        replacement=((a_)**(sympy.Function('p')(Symbol('Star'))) * Int(ExpandIntegrand((((c_ + (_d_ * x)))**(n_) * ((Integer(1) + (Integer(-1) * (sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)) * x))))**(p_) * ((Integer(1) + (sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)) * x)))**(p_)), x), x)),
+        replacement=Star(a_**p_, Int(ExpandIntegrand((x*_d_ + c_)**n_*(-x*sqrt(-_b_/a_) + 1)**p_*(x*sqrt(-_b_/a_) + 1)**p_, x), x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=27,
     ),
@@ -201,22 +299,43 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=28,
     ),
-    # Rule 29: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 30: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 29
+    RubiRulePattern(
+        pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x),),
+        replacement=_d_*log(x*_d_ + c_)/(a_*_d_**2 + _b_*c_**2) + Star(_b_/(a_*_d_**2 + _b_*c_**2), Int((-x*_d_ + c_)/(x**2*_b_ + a_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=29,
+    ),
+    # Rule 30
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_/(x**2*_b_ + a_), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), ILtQ(n_, -1),),
+        replacement=_d_*(x*_d_ + c_)**(n_ + 1)/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)) + Star(_b_/(a_*_d_**2 + _b_*c_**2), Int((-x*_d_ + c_)*(x*_d_ + c_)**(n_ + 1)/(x**2*_b_ + a_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=30,
+    ),
     # Rule 31
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), GtQ(n_, 1),),
-        replacement=((_d_ * ((c_ + (_d_ * x)))**((n_ + Integer(-1))) * ((_b_ * (n_ + Integer(-1))))**(Integer(-1))) + ((sympy.Function('b')(Symbol('Star')))**(Integer(-1)) * Int((((c_ + (_d_ * x)))**((n_ + Integer(-2))) * Simp(((_b_ * (c_)**(Integer(2))) + (Integer(-1) * (a_ * (_d_)**(Integer(2)))) + (Integer(2) * _b_ * c_ * _d_ * x)), x) * ((a_ + (_b_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        replacement=Star(1/_b_, Int((x*_d_ + c_)**(n_ - 2)*Simp(2*x*_b_*c_*_d_ - a_*_d_**2 + _b_*c_**2, x)/(x**2*_b_ + a_), x)) + _d_*(x*_d_ + c_)**(n_ - 1)/(_b_*(n_ - 1)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=31,
     ),
-    # Rule 32: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 32
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_/(x**2*_b_ + a_), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), LtQ(n_, -1),),
+        replacement=_d_*(x*_d_ + c_)**(n_ + 1)/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)) + Star(_b_/(a_*_d_**2 + _b_*c_**2), Int((-x*_d_ + c_)*(x*_d_ + c_)**(n_ + 1)/(x**2*_b_ + a_), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=32,
+    ),
     # Rule 33
     RubiRulePattern(
         pattern=Int(sqrt(x*_d_ + c_)/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x),),
-        replacement=(Integer(2) * sympy.Function('d')(Symbol('Star')) * Subst(Int(((x)**(Integer(2)) * (((_b_ * (c_)**(Integer(2))) + (a_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(2) * _b_ * c_ * (x)**(Integer(2)))) + (_b_ * (x)**(Integer(4)))))**(Integer(-1))), x), x, sympy.sqrt((c_ + (_d_ * x))))),
+        replacement=Star(2*_d_, Subst(Int(x**2/(x**4*_b_ - 2*x**2*_b_*c_ + a_*_d_**2 + _b_*c_**2), x), x, sqrt(x*_d_ + c_))),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=33,
     ),
@@ -224,7 +343,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(x*_d_ + c_)*(x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x),),
-        replacement=(Integer(2) * sympy.Function('d')(Symbol('Star')) * Subst(Int((((_b_ * (c_)**(Integer(2))) + (a_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(2) * _b_ * c_ * (x)**(Integer(2)))) + (_b_ * (x)**(Integer(4)))))**(Integer(-1)), x), x, sympy.sqrt((c_ + (_d_ * x))))),
+        replacement=Star(2*_d_, Subst(Int(1/(x**4*_b_ - 2*x**2*_b_*c_ + a_*_d_**2 + _b_*c_**2), x), x, sqrt(x*_d_ + c_))),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=34,
     ),
@@ -236,8 +355,22 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=35,
     ),
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'n', '1'], ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 37: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', 'b', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(n_ + 2*p_ + 2, 0), GtQ(p_, 0),),
+        replacement=-Star(2*a_*_b_*p_/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)), Int((x*_d_ + c_)**(n_ + 2)*(x**2*_b_ + a_)**(p_ - 1), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_*(-x*_b_*c_ + a_*_d_)/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=36,
+    ),
+    # Rule 37
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(n_ + 2*p_ + 2, 0), LtQ(p_, -1),),
+        replacement=Star((2*p_ + 3)*(a_*_d_**2 + _b_*c_**2)/(2*a_*_b_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 2)*(x**2*_b_ + a_)**(p_ + 1), x)) + (x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)*(-x*_b_*c_ + a_*_d_)/(2*a_*_b_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=37,
+    ),
     # Rule 38
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
@@ -254,15 +387,78 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=39,
     ),
-    # Rule 40: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 41: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 42: SKIPPED - ValueError: Non-string function head ['Times', 'd', ['Plus', 'n', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 43: SKIPPED - ValueError: Non-string function head ['Times', 'd', ['Plus', 'n', ['Times', '2', 'p'], '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 44: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 45: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', 'b', ['Plus', 'p', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 46: SKIPPED - ValueError: Non-string function head ['Times', '2', 'a', ['Plus', 'p', '1'], ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 47: SKIPPED - ValueError: Non-string function head ['Times', 'b', ['Plus', 'n', ['Times', '2', 'p'], '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 48: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'n', '1'], ['Plus', ['Times', 'b', ['Power', 'c', '2']], ['Times', 'a', ['Power', 'd', '2']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 40
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), EqQ(n_ + 2*p_ + 3, 0), LtQ(p_, -1),),
+        replacement=-x*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)/(2*a_*(p_ + 1)) - Star(c_*n_/(2*a_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=40,
+    ),
+    # Rule 41
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), EqQ(n_ + 2*p_ + 3, 0),),
+        replacement=_d_*(x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ + 1)/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)) + Star(_b_*c_/(a_*_d_**2 + _b_*c_**2), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_, x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=41,
+    ),
+    # Rule 42
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), GtQ(p_, 0), Or(IntegerQ(p_), LtQ(n_, -1)), NeQ(n_, -1), Not(ILtQ(n_ + 2*p_ + 1, 0)), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=-Star(2*_b_*p_/(_d_*(n_ + 1)), Int(x*(x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ - 1), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_/(_d_*(n_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=42,
+    ),
+    # Rule 43
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), GtQ(p_, 0), NeQ(n_ + 2*p_ + 1, 0), Or(Not(RationalQ(n_)), LtQ(n_, 1)), Not(ILtQ(n_ + 2*p_, 0)), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=Star(2*p_/(_d_*(n_ + 2*p_ + 1)), Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ - 1)*(-x*_b_*c_ + a_*_d_), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_/(_d_*(n_ + 2*p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=43,
+    ),
+    # Rule 44
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), LtQ(p_, -1), GtQ(n_, 0), Or(LtQ(n_, 1), And(ILtQ(n_ + 2*p_ + 3, 0), NeQ(n_, 2))), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=-x*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)/(2*a_*(p_ + 1)) + Star(1/(2*a_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)*(x*_d_*(n_ + 2*p_ + 3) + c_*(2*p_ + 3)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=44,
+    ),
+    # Rule 45
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), LtQ(p_, -1), GtQ(n_, 1), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=-Star(1/(2*a_*_b_*(p_ + 1)), Int((x*_d_ + c_)**(n_ - 2)*(x**2*_b_ + a_)**(p_ + 1)*Simp(-x*_b_*c_*_d_*(n_ + 2*p_ + 2) + a_*_d_**2*(n_ - 1) - _b_*c_**2*(2*p_ + 3), x), x)) + (x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)*(-x*_b_*c_ + a_*_d_)/(2*a_*_b_*(p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=45,
+    ),
+    # Rule 46
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_], x), LtQ(p_, -1), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=Star(1/(2*a_*(p_ + 1)*(a_*_d_**2 + _b_*c_**2)), Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**(p_ + 1)*Simp(x*_b_*c_*_d_*(n_ + 2*p_ + 4) + a_*_d_**2*(n_ + 2*p_ + 3) + _b_*c_**2*(2*p_ + 3), x), x)) + (x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ + 1)*(-x*_b_*c_ - a_*_d_)/(2*a_*(p_ + 1)*(a_*_d_**2 + _b_*c_**2)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=46,
+    ),
+    # Rule 47
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), If(RationalQ(n_), GtQ(n_, 1), SumSimplerQ(n_, -2)), NeQ(n_ + 2*p_ + 1, 0), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x),),
+        replacement=Star(1/(_b_*(n_ + 2*p_ + 1)), Int((x*_d_ + c_)**(n_ - 2)*(x**2*_b_ + a_)**p_*Simp(2*x*_b_*c_*_d_*(n_ + p_) - a_*_d_**2*(n_ - 1) + _b_*c_**2*(n_ + 2*p_ + 1), x), x)) + _d_*(x*_d_ + c_)**(n_ - 1)*(x**2*_b_ + a_)**(p_ + 1)/(_b_*(n_ + 2*p_ + 1)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=47,
+    ),
+    # Rule 48
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), NeQ(n_, -1), Or(And(LtQ(n_, -1), IntQuadraticQ(a_, 0, _b_, c_, _d_, n_, p_, x)), And(SumSimplerQ(n_, 1), IntegerQ(p_)), ILtQ(Simplify(n_ + 2*p_ + 3), 0)),),
+        replacement=_d_*(x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ + 1)/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)) + Star(_b_/((n_ + 1)*(a_*_d_**2 + _b_*c_**2)), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_*(-x*_d_*(n_ + 2*p_ + 3) + c_*(n_ + 1)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=48,
+    ),
     # Rule 49
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)**(sympy.S(1)/4)), x),
@@ -271,7 +467,14 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=49,
     ),
-    # Rule 50: SKIPPED - ValueError: Non-string function head ['Times', '1', ['Power', '4', '-1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 50
+    RubiRulePattern(
+        pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)**(sympy.S(1)/4)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(2*a_*_d_**2 + _b_*c_**2, 0), PosQ(a_),),
+        replacement=Star((-x**2*_b_ - a_)**(sympy.S(1)/4)/(x**2*_b_ + a_)**(sympy.S(1)/4), Int(1/((x*_d_ + c_)*(-x**2*_b_ - a_)**(sympy.S(1)/4)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=50,
+    ),
     # Rule 51
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)**(sympy.S(1)/3)), x),
@@ -280,13 +483,27 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=51,
     ),
-    # Rule 52: SKIPPED - ValueError: Non-string function head ['Times', '1', ['Power', '3', '-1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 53: SKIPPED - ValueError: Non-string function head ['Times', '1', ['Power', '3', '-1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 52
+    RubiRulePattern(
+        pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)**(sympy.S(1)/3)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(9*a_*_d_**2 + _b_*c_**2, 0), GtQ(a_, 0),),
+        replacement=Star(a_**(sympy.S(1)/3), Int(1/((x*_d_ + c_)*(-3*x*_d_/c_ + 1)**(sympy.S(1)/3)*(3*x*_d_/c_ + 1)**(sympy.S(1)/3)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=52,
+    ),
+    # Rule 53
+    RubiRulePattern(
+        pattern=Int(1/((x*_d_ + c_)*(x**2*_b_ + a_)**(sympy.S(1)/3)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(9*a_*_d_**2 + _b_*c_**2, 0), Not(GtQ(a_, 0)),),
+        replacement=Star((x**2*_b_/a_ + 1)**(sympy.S(1)/3)/(x**2*_b_ + a_)**(sympy.S(1)/3), Int(1/((x*_d_ + c_)*(x**2*_b_/a_ + 1)**(sympy.S(1)/3)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=53,
+    ),
     # Rule 54
     RubiRulePattern(
         pattern=Int((x**2*_b_ + a_)**p_/(x*_d_ + c_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, p_], x),),
-        replacement=((sympy.Function('c')(Symbol('Star')) * Int((((a_ + (_b_ * (x)**(Integer(2)))))**(p_) * (((c_)**(Integer(2)) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x)) + (Integer(-1) * (sympy.Function('d')(Symbol('Star')) * Int((x * ((a_ + (_b_ * (x)**(Integer(2)))))**(p_) * (((c_)**(Integer(2)) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x)))),
+        replacement=Star(c_, Int((x**2*_b_ + a_)**p_/(-x**2*_d_**2 + c_**2), x)) - Star(_d_, Int(x*(x**2*_b_ + a_)**p_/(-x**2*_d_**2 + c_**2), x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=54,
     ),
@@ -298,38 +515,87 @@ RULES = [
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=55,
     ),
-    # Rule 56: SKIPPED - ValueError: Non-string function head ['Times', 'd', ['Power', ['Plus', '1', ['Times', '-1', ['Times', ['Plus', 'c', ['Times', '-1', ['Times', 'd', 'q']]], ['Power', ['Plus', 'c', ['Times', 'd', 'x']], '-1']]]], 'p'], ['Power', ['Plus', '1', ['Times', '-1', ['Times', ['Plus', 'c', ['Times', 'd', 'q']], ['Power', ['Plus', 'c', ['Times', 'd', 'x']], '-1']]]], 'p']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 56
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, p_], x), ILtQ(n_, -1), NegQ(a_/_b_),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(2)))), Star(((Integer(-1) * ((a_ + (_b_ * (x)**(Integer(2)))))**(p_)) * (((c_ + (_d_ * x)))**(Integer(-1)))**((Integer(2) * p_)) * ((_d_ * ((Integer(1) + (Integer(-1) * ((c_ + (Integer(-1) * (_d_ * Symbol('q')))) * ((c_ + (_d_ * x)))**(Integer(-1))))))**(p_) * ((Integer(1) + (Integer(-1) * ((c_ + (_d_ * Symbol('q'))) * ((c_ + (_d_ * x)))**(Integer(-1))))))**(p_)))**(Integer(-1))), Subst(Int((((Integer(1) + (Integer(-1) * ((c_ + (Integer(-1) * (_d_ * Symbol('q')))) * x))))**(p_) * ((Integer(1) + (Integer(-1) * ((c_ + (_d_ * Symbol('q'))) * x))))**(p_) * ((x)**((n_ + (Integer(2) * p_) + Integer(2))))**(Integer(-1))), x), x, ((c_ + (_d_ * x)))**(Integer(-1))))),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=56,
+    ),
     # Rule 57
     RubiRulePattern(
         pattern=Int(sqrt(x*_d_ + c_)/sqrt(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), PosQ(_b_/a_),),
-        replacement=(Integer(2) * (sympy.Function('d')(Symbol('Star')))**(Integer(-1)) * Subst(Int(((x)**(Integer(2)) * (sympy.sqrt(((((_b_ * (c_)**(Integer(2))) + (a_ * (_d_)**(Integer(2)))) * ((_d_)**(Integer(2)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * c_ * (x)**(Integer(2)) * ((_d_)**(Integer(2)))**(Integer(-1)))) + (_b_ * (x)**(Integer(4)) * ((_d_)**(Integer(2)))**(Integer(-1))))))**(Integer(-1))), x), x, sympy.sqrt((c_ + (_d_ * x))))),
+        replacement=Star(2/_d_, Subst(Int(x**2/sqrt(x**4*_b_/_d_**2 - 2*x**2*_b_*c_/_d_**2 + (a_*_d_**2 + _b_*c_**2)/_d_**2), x), x, sqrt(x*_d_ + c_))),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=57,
     ),
-    # Rule 58: SKIPPED - ValueError: Non-string function head ['Times', ['Sqrt', 'a'], 'q', ['Sqrt', ['Times', 'q', ['Plus', 'c', ['Times', 'd', 'x']], ['Power', ['Plus', 'd', ['Times', 'c', 'q']], '-1']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 59: SKIPPED - ValueError: Non-string function head ['Sqrt', ['Plus', 'a', ['Times', 'b', ['Power', 'x', '2']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 58
+    RubiRulePattern(
+        pattern=Int(sqrt(x*_d_ + c_)/sqrt(x**2*_b_ + a_), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), NegQ(_b_/a_), GtQ(a_, 0),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)))), Star((Integer(-2) * sympy.sqrt((c_ + (_d_ * x))) * ((sympy.sqrt(a_) * Symbol('q') * sympy.sqrt((Symbol('q') * (c_ + (_d_ * x)) * ((_d_ + (c_ * Symbol('q'))))**(Integer(-1))))))**(Integer(-1))), Subst(Int((sympy.sqrt((Integer(1) + (Integer(-1) * (Integer(2) * _d_ * (x)**(Integer(2)) * ((_d_ + (c_ * Symbol('q'))))**(Integer(-1)))))) * (sympy.sqrt((Integer(1) + (Integer(-1) * (x)**(Integer(2))))))**(Integer(-1))), x), x, sympy.sqrt(((Integer(1) + (Integer(-1) * (Symbol('q') * x))) * (Integer(2))**(Integer(-1))))))),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=58,
+    ),
+    # Rule 59
+    RubiRulePattern(
+        pattern=Int(sqrt(x*_d_ + c_)/sqrt(x**2*_b_ + a_), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), NegQ(_b_/a_), Not(GtQ(a_, 0)),),
+        replacement=Star(sqrt(x**2*_b_/a_ + 1)/sqrt(x**2*_b_ + a_), Int(sqrt(x*_d_ + c_)/sqrt(x**2*_b_/a_ + 1), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=59,
+    ),
     # Rule 60
     RubiRulePattern(
         pattern=Int(1/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), PosQ(_b_/a_),),
-        replacement=(Integer(2) * (sympy.Function('d')(Symbol('Star')))**(Integer(-1)) * Subst(Int((sympy.sqrt(((((_b_ * (c_)**(Integer(2))) + (a_ * (_d_)**(Integer(2)))) * ((_d_)**(Integer(2)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * c_ * (x)**(Integer(2)) * ((_d_)**(Integer(2)))**(Integer(-1)))) + (_b_ * (x)**(Integer(4)) * ((_d_)**(Integer(2)))**(Integer(-1))))))**(Integer(-1)), x), x, sympy.sqrt((c_ + (_d_ * x))))),
+        replacement=Star(2/_d_, Subst(Int(1/sqrt(x**4*_b_/_d_**2 - 2*x**2*_b_*c_/_d_**2 + (a_*_d_**2 + _b_*c_**2)/_d_**2), x), x, sqrt(x*_d_ + c_))),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=60,
     ),
-    # Rule 61: SKIPPED - ValueError: Non-string function head ['Times', ['Sqrt', 'a'], 'q', ['Sqrt', ['Plus', 'c', ['Times', 'd', 'x']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 62: SKIPPED - ValueError: Non-string function head ['Sqrt', ['Plus', 'a', ['Times', 'b', ['Power', 'x', '2']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 61
+    RubiRulePattern(
+        pattern=Int(1/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), NegQ(_b_/a_), GtQ(a_, 0),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)))), Star((Integer(-2) * sympy.sqrt((Symbol('q') * (c_ + (_d_ * x)) * ((_d_ + (c_ * Symbol('q'))))**(Integer(-1)))) * ((sympy.sqrt(a_) * Symbol('q') * sympy.sqrt((c_ + (_d_ * x)))))**(Integer(-1))), Subst(Int(((sympy.sqrt((Integer(1) + (Integer(-1) * (Integer(2) * _d_ * (x)**(Integer(2)) * ((_d_ + (c_ * Symbol('q'))))**(Integer(-1)))))) * sympy.sqrt((Integer(1) + (Integer(-1) * (x)**(Integer(2)))))))**(Integer(-1)), x), x, sympy.sqrt(((Integer(1) + (Integer(-1) * (Symbol('q') * x))) * (Integer(2))**(Integer(-1))))))),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=61,
+    ),
+    # Rule 62
+    RubiRulePattern(
+        pattern=Int(1/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), NegQ(_b_/a_), Not(GtQ(a_, 0)),),
+        replacement=Star(sqrt(x**2*_b_/a_ + 1)/sqrt(x**2*_b_ + a_), Int(1/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_/a_ + 1)), x)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=62,
+    ),
     # Rule 63
     RubiRulePattern(
         pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), GtQ(a_, 0), NegQ(_b_/a_),),
-        replacement=((a_)**(sympy.Function('p')(Symbol('Star'))) * Int((((c_ + (_d_ * x)))**(n_) * ((Integer(1) + (sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)) * x)))**(p_) * ((Integer(1) + (Integer(-1) * (sympy.root(((Integer(-1) * _b_) * (a_)**(Integer(-1))), Integer(2)) * x))))**(p_)), x)),
+        replacement=Star(a_**p_, Int((x*_d_ + c_)**n_*(-x*sqrt(-_b_/a_) + 1)**p_*(x*sqrt(-_b_/a_) + 1)**p_, x)),
         module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
         rule_number=63,
     ),
-    # Rule 64: SKIPPED - ValueError: Non-string function head ['Times', 'd', ['Power', ['Plus', '1', ['Times', '-1', ['Times', ['Plus', 'c', ['Times', 'd', 'x']], ['Power', ['Plus', 'c', ['Times', '-1', ['Times', 'd', 'q']]], '-1']]]], 'p'], ['Power', ['Plus', '1', ['Times', '-1', ['Times', ['Plus', 'c', ['Times', 'd', 'x']], ['Power', ['Plus', 'c', ['Times', 'd', 'q']], '-1']]]], 'p']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 65: SKIPPED - ValueError: Non-string function head ['Coefficient', 'u', 'x', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 64
+    RubiRulePattern(
+        pattern=Int((x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), NeQ(a_*_d_**2 + _b_*c_**2, 0),),
+        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(2)))), Star((((a_ + (_b_ * (x)**(Integer(2)))))**(p_) * ((_d_ * ((Integer(1) + (Integer(-1) * ((c_ + (_d_ * x)) * ((c_ + (Integer(-1) * (_d_ * Symbol('q')))))**(Integer(-1))))))**(p_) * ((Integer(1) + (Integer(-1) * ((c_ + (_d_ * x)) * ((c_ + (_d_ * Symbol('q'))))**(Integer(-1))))))**(p_)))**(Integer(-1))), Subst(Int(((x)**(n_) * (Simp((Integer(1) + (Integer(-1) * (x * ((c_ + (_d_ * Symbol('q'))))**(Integer(-1))))), x))**(p_) * (Simp((Integer(1) + (Integer(-1) * (x * ((c_ + (Integer(-1) * (_d_ * Symbol('q')))))**(Integer(-1))))), x))**(p_)), x), x, (c_ + (_d_ * x))))),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=64,
+    ),
+    # Rule 65
+    RubiRulePattern(
+        pattern=Int((a_ + _b_*u_**2)**_p_*(c_ + _d_*u_)**_n_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _n_, _p_], x), LinearQ(u_, x), NeQ(u_, x),),
+        replacement=Star(1/Coefficient(u_, x, 1), Subst(Int((x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_, x), x, u_)),
+        module_name='1.1.2.7 (c+d x)^n (a+b x^2)^p',
+        rule_number=65,
+    ),
 
 ]
 
-# Summary: 27 rules translated, 38 skipped
+# Summary: 65 rules translated, 0 skipped

@@ -104,7 +104,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_m_, x),
         constraints=(FreeQ(_m_, x), PiecewiseLinearQ(u_, x),),
-        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), ((sympy.Function('c')(Symbol('Star')))**(Integer(-1)) * Subst(Int((x)**(_m_), x), x, u_))),
+        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), Star((Symbol('c'))**(Integer(-1)), Subst(Int((x)**(_m_), x), x, u_))),
         module_name='9.2 Derivative integration rules',
         rule_number=22,
     ),
@@ -112,7 +112,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((Symbol('b') * x * (Symbol('a'))**(Integer(-1))) + (Integer(-1) * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (sympy.Function('a')(Symbol('Star')))**(Integer(-1)) * Int((u_)**(Integer(-1)), x))))),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((Symbol('b') * x * (Symbol('a'))**(Integer(-1))) + (Integer(-1) * Star((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Int((u_)**(Integer(-1)), x))))),
         module_name='9.2 Derivative integration rules',
         rule_number=23,
     ),
@@ -120,11 +120,18 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), GtQ(n_, 0), NeQ(n_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((v_)**(n_) * ((Symbol('a') * n_))**(Integer(-1))) + (Integer(-1) * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (sympy.Function('a')(Symbol('Star')))**(Integer(-1)) * Int(((v_)**((n_ + Integer(-1))) * (u_)**(Integer(-1))), x))))),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((v_)**(n_) * ((Symbol('a') * n_))**(Integer(-1))) + (Integer(-1) * Star((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Int(((v_)**((n_ + Integer(-1))) * (u_)**(Integer(-1))), x))))),
         module_name='9.2 Derivative integration rules',
         rule_number=24,
     ),
-    # Rule 25: SKIPPED - ValueError: Non-string function head ['Plus', ['Times', 'b', 'u'], ['Times', '-1', ['Times', 'a', 'v']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 25
+    RubiRulePattern(
+        pattern=Int(1/(u_*v_), x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Star((Symbol('b') * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1))), Int((v_)**(Integer(-1)), x)) + (Integer(-1) * Star((Symbol('a') * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1))), Int((u_)**(Integer(-1)), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=25,
+    ),
     # Rule 26
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
@@ -141,7 +148,14 @@ RULES = [
         module_name='9.2 Derivative integration rules',
         rule_number=27,
     ),
-    # Rule 28: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'n', '1'], ['Plus', ['Times', 'b', 'u'], ['Times', '-1', ['Times', 'a', 'v']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 28
+    RubiRulePattern(
+        pattern=Int(v_**n_/u_, x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), LtQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((v_)**((n_ + Integer(1))) * (((n_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + (Integer(-1) * Star((Symbol('a') * (n_ + Integer(1)) * (((n_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((v_)**((n_ + Integer(1))) * (u_)**(Integer(-1))), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=28,
+    ),
     # Rule 29
     RubiRulePattern(
         pattern=Int(v_**n_/u_, x),
@@ -174,11 +188,46 @@ RULES = [
         module_name='9.2 Derivative integration rules',
         rule_number=32,
     ),
-    # Rule 33: SKIPPED - ValueError: Non-string function head ['Times', 'a', ['Plus', 'm', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 34: SKIPPED - ValueError: Non-string function head ['Times', 'a', ['Plus', 'm', 'n', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 35: SKIPPED - ValueError: Non-string function head ['Times', 'a', ['Plus', 'm', 'n', '1']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'm', '1'], ['Plus', ['Times', 'b', 'u'], ['Times', '-1', ['Times', 'a', 'v']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 37: SKIPPED - ValueError: Non-string function head ['Times', ['Plus', 'm', '1'], ['Plus', ['Times', 'b', 'u'], ['Times', '-1', ['Times', 'a', 'v']]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 33
+    RubiRulePattern(
+        pattern=Int(u_**m_*v_**_n_, x),
+        constraints=(FreeQ([m_, _n_], x), PiecewiseLinearQ(u_, v_, x), NeQ(m_, -1), Or(And(LtQ(m_, -1), GtQ(_n_, 0), Not(And(ILtQ(m_ + _n_, -2), Or(FractionQ(m_), GeQ(m_ + 2*_n_ + 1, 0))))), And(IGtQ(_n_, 0), IGtQ(m_, 0), LeQ(_n_, m_)), And(IGtQ(_n_, 0), Not(IntegerQ(m_))), And(ILtQ(m_, 0), Not(IntegerQ(_n_)))), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(_n_) * ((Symbol('a') * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((Symbol('b') * _n_ * ((Symbol('a') * (m_ + Integer(1))))**(Integer(-1))), Int(((u_)**((m_ + Integer(1))) * (v_)**((_n_ + Integer(-1)))), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=33,
+    ),
+    # Rule 34
+    RubiRulePattern(
+        pattern=Int(u_**m_*v_**_n_, x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + _n_ + 2, 0), GtQ(_n_, 0), NeQ(m_ + _n_ + 1, 0), Not(And(IGtQ(m_, 0), Or(Not(IntegerQ(_n_)), LtQ(0, m_, _n_)))), Not(ILtQ(m_ + _n_, -2)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(_n_) * ((Symbol('a') * (m_ + _n_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((_n_ * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * ((Symbol('a') * (m_ + _n_ + Integer(1))))**(Integer(-1))), Int(((u_)**(m_) * (v_)**((_n_ + Integer(-1)))), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=34,
+    ),
+    # Rule 35
+    RubiRulePattern(
+        pattern=Int(u_**m_*v_**n_, x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 1, 0), Not(RationalQ(n_)), SumSimplerQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(n_) * ((Symbol('a') * (m_ + n_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((n_ * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * ((Symbol('a') * (m_ + n_ + Integer(1))))**(Integer(-1))), Int(((u_)**(m_) * (v_)**(Simplify((n_ + Integer(-1))))), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=35,
+    ),
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int(u_**m_*v_**n_, x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 2, 0), LtQ(m_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((Integer(-1) * (u_)**((m_ + Integer(1)))) * (v_)**((n_ + Integer(1))) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + Star((Symbol('b') * (m_ + n_ + Integer(2)) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((u_)**((m_ + Integer(1))) * (v_)**(n_)), x)))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=36,
+    ),
+    # Rule 37
+    RubiRulePattern(
+        pattern=Int(u_**m_*v_**n_, x),
+        constraints=(PiecewiseLinearQ(u_, v_, x), Not(RationalQ(m_)), SumSimplerQ(m_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
+        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((Integer(-1) * (u_)**((m_ + Integer(1)))) * (v_)**((n_ + Integer(1))) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + Star((Symbol('b') * (m_ + n_ + Integer(2)) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((u_)**(Simplify((m_ + Integer(1)))) * (v_)**(n_)), x)))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=37,
+    ),
     # Rule 38
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
@@ -191,12 +240,19 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_n_*log(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0),),
-        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), (((u_)**(_n_) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * Int((u_)**(_n_), x)) + (Integer(-1) * (Symbol('c') * _n_ * (sympy.Function('b')(Symbol('Star')))**(Integer(-1)) * Int(((u_)**((_n_ + Integer(-1))) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x)))), x))))),
+        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), (((u_)**(_n_) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * Int((u_)**(_n_), x)) + (Integer(-1) * Star((Symbol('c') * _n_ * (_b_)**(Integer(-1))), Int(((u_)**((_n_ + Integer(-1))) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x)))), x))))),
         module_name='9.2 Derivative integration rules',
         rule_number=39,
     ),
-    # Rule 40: SKIPPED - ValueError: Non-string function head ['Plus', 'm', '1'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 40
+    RubiRulePattern(
+        pattern=Int(u_**_n_*(x*_b_ + _a_)**_m_*log(x*_b_ + _a_), x),
+        constraints=(FreeQ([_a_, _b_, _m_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0), NeQ(_m_, -1),),
+        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), (((u_)**(_n_) * ((_a_ + (_b_ * x)))**((_m_ + Integer(1))) * sympy.log((_a_ + (_b_ * x))) * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star(((_m_ + Integer(1)))**(Integer(-1)), Int(((u_)**(_n_) * ((_a_ + (_b_ * x)))**(_m_)), x))) + (Integer(-1) * Star((Symbol('c') * _n_ * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))), Int(((u_)**((_n_ + Integer(-1))) * ((_a_ + (_b_ * x)))**((_m_ + Integer(1))) * sympy.log((_a_ + (_b_ * x)))), x))))),
+        module_name='9.2 Derivative integration rules',
+        rule_number=40,
+    ),
 
 ]
 
-# Summary: 11 rules translated, 29 skipped
+# Summary: 19 rules translated, 21 skipped

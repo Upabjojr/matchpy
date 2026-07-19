@@ -668,6 +668,26 @@ class Dist(MathematicaExpr):
         return _Dist(*self.args)
 
 
+class Star(MathematicaExpr):
+    """Rubi Star[u, v] — display-friendly product; u distributed over terms of v.
+
+    Rubi co-opts Wolfram's meaning-free ``\\[Star]`` infix operator as a product
+    that displays as ``u*v`` and evaluates by distributing ``u`` over the terms of
+    ``v`` (see the module docstring on deferred vs eager nodes). Delegates to the
+    eager :func:`utility_functions.Star`.
+
+    In the source rules this arrives as an infix ``u \\[Star] Int[...]``; the
+    code generator reconstructs it into ``Star(u, v)`` (see
+    ``rubi_rules/codegen/generate.py``), so the coefficient/integral structure is
+    preserved for step reporting and collapses to ``u*v`` on ``doit()``.
+    """
+    def __new__(cls, u, v):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(v))
+    def _evaluate(self, **kwargs):
+        from .utility_functions import Star as _Star
+        return _Star(*self.args)
+
+
 class SimplifyIntegrand(MathematicaExpr):
     """Rubi SimplifyIntegrand[u, x] — simplify integrand."""
     def __new__(cls, *args):

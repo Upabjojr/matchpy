@@ -98,7 +98,7 @@ w_ = WildSymbol('w')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
+        pattern=Int(sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
         constraints=(FreeQ([_a_, _b_, _p_, _q_], x), GtQ(n_, 0),),
         replacement=((x * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))) + (Integer(-1) * (_p_ * _q_ * Int(sympy.polylog((n_ + Integer(-1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -106,7 +106,7 @@ RULES = [
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
+        pattern=Int(sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
         constraints=(FreeQ([_a_, _b_, _p_, _q_], x), LtQ(n_, -1),),
         replacement=((x * sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * ((_p_ * _q_))**(Integer(-1))) + (Integer(-1) * (((_p_ * _q_))**(Integer(-1)) * Int(sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -114,7 +114,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int(sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
+        pattern=Int(sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
         constraints=(FreeQ([_a_, _b_, n_, _p_, _q_], x),),
         replacement=Unintegrable(sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))), x),
         module_name='8.8 Polylogarithm function',
@@ -122,7 +122,7 @@ RULES = [
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((sympy.Function('PolyLog')(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.polylog(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, n_, _p_], x), EqQ(_b_*_d_, _a_*_e_),),
         replacement=(sympy.polylog((n_ + Integer(1)), (_c_ * ((_a_ + (_b_ * x)))**(_p_))) * ((_e_ * _p_))**(Integer(-1))),
         module_name='8.8 Polylogarithm function',
@@ -130,7 +130,7 @@ RULES = [
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, n_, _p_, _q_], x),),
         replacement=(sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * ((_p_ * _q_))**(Integer(-1))),
         module_name='8.8 Polylogarithm function',
@@ -138,7 +138,7 @@ RULES = [
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
+        pattern=Int((((_d_ * x))**(_m_) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
         constraints=(FreeQ([_a_, _b_, _d_, _m_, _p_, _q_], x), NeQ(_m_, -1), GtQ(n_, 0),),
         replacement=((((_d_ * x))**((_m_ + Integer(1))) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_p_ * _q_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_d_ * x))**(_m_) * sympy.polylog((n_ + Integer(-1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -146,7 +146,7 @@ RULES = [
     ),
     # Rule 7
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
+        pattern=Int((((_d_ * x))**(_m_) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
         constraints=(FreeQ([_a_, _b_, _d_, _m_, _p_, _q_], x), NeQ(_m_, -1), LtQ(n_, -1),),
         replacement=((((_d_ * x))**((_m_ + Integer(1))) * sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * ((_d_ * _p_ * _q_))**(Integer(-1))) + (Integer(-1) * ((_m_ + Integer(1)) * ((_p_ * _q_))**(Integer(-1)) * Int((((_d_ * x))**(_m_) * sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -154,7 +154,7 @@ RULES = [
     ),
     # Rule 8
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
+        pattern=Int((((_d_ * x))**(_m_) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
         constraints=(FreeQ([_a_, _b_, _d_, _m_, n_, _p_, _q_], x),),
         replacement=Unintegrable((((_d_ * x))**(_m_) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_)))), x),
         module_name='8.8 Polylogarithm function',
@@ -162,7 +162,7 @@ RULES = [
     ),
     # Rule 9
     RubiRulePattern(
-        pattern=Int(((sympy.log((_c_ * (x)**(_m_))))**(_r_) * sympy.Function('PolyLog')(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * (x)**(Integer(-1))), x),
+        pattern=Int(((sympy.log((_c_ * (x)**(_m_))))**(_r_) * sympy.polylog(n_, (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, n_, _q_, _r_], x), GtQ(_r_, 0),),
         replacement=(((sympy.log((_c_ * (x)**(_m_))))**(_r_) * sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * ((_p_ * _q_))**(Integer(-1))) + (Integer(-1) * (_m_ * _r_ * ((_p_ * _q_))**(Integer(-1)) * Int(((sympy.log((_c_ * (x)**(_m_))))**((_r_ + Integer(-1))) * sympy.polylog((n_ + Integer(1)), (_a_ * ((_b_ * (x)**(_p_)))**(_q_))) * (x)**(Integer(-1))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -170,7 +170,7 @@ RULES = [
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int(sympy.Function('PolyLog')(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_))), x),
+        pattern=Int(sympy.polylog(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _p_], x), GtQ(n_, 0),),
         replacement=((x * sympy.polylog(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_)))) + (Integer(-1) * (_p_ * Int(sympy.polylog((n_ + Integer(-1)), (_c_ * ((_a_ + (_b_ * x)))**(_p_))), x))) + (_a_ * _p_ * Int((sympy.polylog((n_ + Integer(-1)), (_c_ * ((_a_ + (_b_ * x)))**(_p_))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x))),
         module_name='8.8 Polylogarithm function',
@@ -178,7 +178,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), EqQ(_c_*(-_a_*_e_ + _b_*_d_) + _e_, 0),),
         replacement=((sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x)))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * (_e_)**(Integer(-1))) + (_b_ * (_e_)**(Integer(-1)) * Int(((sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x)))))**(Integer(2)) * ((_a_ + (_b_ * x)))**(Integer(-1))), x))),
         module_name='8.8 Polylogarithm function',
@@ -186,7 +186,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), NeQ(_c_*(-_a_*_e_ + _b_*_d_) + _e_, 0),),
         replacement=((sympy.log((_d_ + (_e_ * x))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * (_e_)**(Integer(-1))) + (_b_ * (_e_)**(Integer(-1)) * Int((sympy.log((_d_ + (_e_ * x))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x)))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x))),
         module_name='8.8 Polylogarithm function',
@@ -194,7 +194,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((((_d_ + (_e_ * x)))**(_m_) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int((((_d_ + (_e_ * x)))**(_m_) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_d_ + (_e_ * x)))**((_m_ + Integer(1))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (_b_ * ((_e_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_d_ + (_e_ * x)))**((_m_ + Integer(1))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x)))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x))),
         module_name='8.8 Polylogarithm function',
@@ -202,7 +202,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * sympy.Function('PolyLog')(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_)))), x),
+        pattern=Int(((x)**(_m_) * sympy.polylog(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _p_], x), GtQ(n_, 0), IntegerQ(_m_), NeQ(_m_, -1),),
         replacement=(((Integer(-1) * ((_a_)**((_m_ + Integer(1))) + (Integer(-1) * ((_b_)**((_m_ + Integer(1))) * (x)**((_m_ + Integer(1))))))) * sympy.polylog(n_, (_c_ * ((_a_ + (_b_ * x)))**(_p_))) * (((_m_ + Integer(1)) * (_b_)**((_m_ + Integer(1)))))**(Integer(-1))) + (_p_ * (((_m_ + Integer(1)) * (_b_)**(_m_)))**(Integer(-1)) * Int(ExpandIntegrand(sympy.polylog((n_ + Integer(-1)), (_c_ * ((_a_ + (_b_ * x)))**(_p_))), (((_a_)**((_m_ + Integer(1))) + (Integer(-1) * ((_b_)**((_m_ + Integer(1))) * (x)**((_m_ + Integer(1)))))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x), x))),
         module_name='8.8 Polylogarithm function',
@@ -210,7 +210,7 @@ RULES = [
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _n_], x),),
         replacement=((x * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))) + (_b_ * Int(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x)))) * ExpandIntegrand((x * ((_a_ + (_b_ * x)))**(Integer(-1))), x)), x)) + (Integer(-1) * (_e_ * _h_ * _n_ * Int((sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ExpandIntegrand((x * ((_d_ + (_e_ * x)))**(Integer(-1))), x)), x)))),
         module_name='8.8 Polylogarithm function',
@@ -218,7 +218,7 @@ RULES = [
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int((sympy.log((Integer(1) + (_e_ * x))) * sympy.Function('PolyLog')(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.log((Integer(1) + (_e_ * x))) * sympy.polylog(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _e_], x), EqQ(_c_ + _e_, 0),),
         replacement=((Integer(-1) * (sympy.polylog(Integer(2), (_c_ * x)))**(Integer(2))) * (Integer(2))**(Integer(-1))),
         module_name='8.8 Polylogarithm function',
@@ -226,7 +226,7 @@ RULES = [
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int(((g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(((g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.polylog(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _e_, g_, _h_], x), EqQ(_c_ + _e_, 0),),
         replacement=((g_ * Int((sympy.polylog(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x)) + (_h_ * Int(((sympy.log((Integer(1) + (_e_ * x))) * sympy.polylog(Integer(2), (_c_ * x))) * (x)**(Integer(-1))), x))),
         module_name='8.8 Polylogarithm function',
@@ -234,7 +234,7 @@ RULES = [
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int(((x)**(_m_) * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _n_], x), IntegerQ(_m_), NeQ(_m_, -1),),
         replacement=(((x)**((_m_ + Integer(1))) * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))) * ((_m_ + Integer(1)))**(Integer(-1))) + (_b_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int(ExpandIntegrand(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x))))), ((x)**((_m_ + Integer(1))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x), x)) + (Integer(-1) * (_e_ * _h_ * _n_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int(ExpandIntegrand(sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))), ((x)**((_m_ + Integer(1))) * ((_d_ + (_e_ * x)))**(Integer(-1))), x), x)))),
         module_name='8.8 Polylogarithm function',
@@ -242,7 +242,7 @@ RULES = [
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int((Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int((Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _n_], x), PolyQ(Px_, x),),
         replacement=With(List(Set(Symbol('u'), IntHide(Px_, x))), ((Symbol('u') * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))) + (_b_ * Int(ExpandIntegrand(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x))))), (Symbol('u') * ((_a_ + (_b_ * x)))**(Integer(-1))), x), x)) + (Integer(-1) * (_e_ * _h_ * _n_ * Int(ExpandIntegrand(sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))), (Symbol('u') * ((_d_ + (_e_ * x)))**(Integer(-1))), x), x))))),
         module_name='8.8 Polylogarithm function',
@@ -250,7 +250,7 @@ RULES = [
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * Px_ * (_g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * x))), x),
+        pattern=Int(((x)**(m_) * Px_ * (_g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.polylog(Integer(2), (_c_ * x))), x),
         constraints=(FreeQ([_c_, _e_, _g_, _h_], x), PolyQ(Px_, x), ILtQ(m_, 0), EqQ(_c_ + _e_, 0), NeQ(Coeff(Px_, x, -m_ - 1), 0),),
         replacement=((Coeff(Px_, x, ((Integer(-1) * m_) + Integer(-1))) * Int(((_g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.polylog(Integer(2), (_c_ * x)) * (x)**(Integer(-1))), x)) + Int(((x)**(m_) * (Px_ + (Integer(-1) * (Coeff(Px_, x, ((Integer(-1) * m_) + Integer(-1))) * (x)**(((Integer(-1) * m_) + Integer(-1)))))) * (_g_ + (_h_ * sympy.log((Integer(1) + (_e_ * x))))) * sympy.polylog(Integer(2), (_c_ * x))), x)),
         module_name='8.8 Polylogarithm function',
@@ -258,7 +258,7 @@ RULES = [
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int(((x)**(_m_) * Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _n_], x), PolyQ(Px_, x), IntegerQ(_m_),),
         replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * Px_), x))), ((Symbol('u') * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))) + (_b_ * Int(ExpandIntegrand(((_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.log((Integer(1) + (Integer(-1) * (_a_ * _c_)) + (Integer(-1) * (_b_ * _c_ * x))))), (Symbol('u') * ((_a_ + (_b_ * x)))**(Integer(-1))), x), x)) + (Integer(-1) * (_e_ * _h_ * _n_ * Int(ExpandIntegrand(sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x)))), (Symbol('u') * ((_d_ + (_e_ * x)))**(Integer(-1))), x), x))))),
         module_name='8.8 Polylogarithm function',
@@ -266,7 +266,7 @@ RULES = [
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * _Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.Function('PolyLog')(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
+        pattern=Int(((x)**(m_) * _Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, m_, _n_], x), PolyQ(_Px_, x),),
         replacement=Unintegrable(((x)**(m_) * _Px_ * (_g_ + (_h_ * sympy.log((_f_ * ((_d_ + (_e_ * x)))**(_n_))))) * sympy.polylog(Integer(2), (_c_ * (_a_ + (_b_ * x))))), x),
         module_name='8.8 Polylogarithm function',
@@ -274,7 +274,7 @@ RULES = [
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int(sympy.Function('PolyLog')(n_, (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_))), x),
+        pattern=Int(sympy.polylog(n_, (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_))), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, n_, _p_], x),),
         replacement=(sympy.polylog((n_ + Integer(1)), (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_))) * ((_b_ * _c_ * _p_ * sympy.log(F_)))**(Integer(-1))),
         module_name='8.8 Polylogarithm function',
@@ -282,7 +282,7 @@ RULES = [
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.Function('PolyLog')(n_, (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.polylog(n_, (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_)))), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, n_, _p_], x), GtQ(_m_, 0),),
         replacement=((((_e_ + (_f_ * x)))**(_m_) * sympy.polylog((n_ + Integer(1)), (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_))) * ((_b_ * _c_ * _p_ * sympy.log(F_)))**(Integer(-1))) + (Integer(-1) * (_f_ * _m_ * ((_b_ * _c_ * _p_ * sympy.log(F_)))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(-1))) * sympy.polylog((n_ + Integer(1)), (_d_ * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_p_)))), x)))),
         module_name='8.8 Polylogarithm function',
@@ -290,7 +290,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int((u_ * sympy.Function('PolyLog')(n_, v_)), x),
+        pattern=Int((u_ * sympy.polylog(n_, v_)), x),
         constraints=(FreeQ(n_, x), Not(FalseQ(DerivativeDivides(v_, u_*v_, x))),),
         replacement=With(List(Set(Symbol('w'), DerivativeDivides(v_, (u_ * v_), x))), (Symbol('w') * sympy.polylog((n_ + Integer(1)), v_))),
         module_name='8.8 Polylogarithm function',
@@ -298,7 +298,7 @@ RULES = [
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int((u_ * sympy.log(w_) * sympy.Function('PolyLog')(n_, v_)), x),
+        pattern=Int((u_ * sympy.log(w_) * sympy.polylog(n_, v_)), x),
         constraints=(FreeQ(n_, x), InverseFunctionFreeQ(w_, x), Not(FalseQ(DerivativeDivides(v_, u_*v_, x))),),
         replacement=With(List(Set(Symbol('z'), DerivativeDivides(v_, (u_ * v_), x))), ((Symbol('z') * sympy.log(w_) * sympy.polylog((n_ + Integer(1)), v_)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * D(w_, x) * sympy.polylog((n_ + Integer(1)), v_) * (w_)**(Integer(-1))), x), x)))),
         module_name='8.8 Polylogarithm function',

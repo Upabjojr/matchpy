@@ -144,7 +144,7 @@ RULES = [
         module_name='1.2.1.8 P(x) (a+b x+c x^2)^p',
         rule_number=7,
     ),
-    # Rule 8: SKIPPED - ValueError: Non-string function head ['PolynomialRemainder', 'Px', ['Plus', 'd', ['Times', 'e', 'x']], 'x'] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 8: SKIPPED - TypeError: unhashable type: 'list'
 
 ]
 

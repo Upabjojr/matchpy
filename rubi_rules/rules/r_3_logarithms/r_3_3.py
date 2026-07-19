@@ -563,7 +563,7 @@ RULES = [
     ),
     # Rule 57
     RubiRulePattern(
-        pattern=Int((sympy.Function('PolyLog')(k_, (h_ + (_i_ * x))) * ((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_) * ((f_ + (_g_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.polylog(k_, (h_ + (_i_ * x))) * ((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))))**(_p_) * ((f_ + (_g_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_, h_, _i_, k_, _n_], x), EqQ(-d_*_g_ + _e_*f_, 0), EqQ(-f_*_i_ + _g_*h_, 0), IGtQ(_p_, 0),),
         replacement=((_g_)**(Integer(-1)) * Subst(Int((sympy.polylog(k_, (h_ * x * (d_)**(Integer(-1)))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_) * (x)**(Integer(-1))), x), x, (d_ + (_e_ * x)))),
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',

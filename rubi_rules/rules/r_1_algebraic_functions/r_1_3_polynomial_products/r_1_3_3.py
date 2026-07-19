@@ -214,12 +214,40 @@ RULES = [
         module_name='1.3.3 P(x)^p',
         rule_number=15,
     ),
-    # Rule 16: SKIPPED - ValueError: Non-string function head ['Times', ['Power', '3', ['Times', '3', 'p']], ['Power', 'a', ['Times', '2', 'p']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 17: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'x', ['Times', 'r', ['FracPart', 'p']]], ['Power', ['ExpandToSum', ['Times', 'Px', ['Power', ['Power', 'x', 'r'], '-1']], 'x'], ['FracPart', 'p']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 18: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'x', ['Times', 'p', 'r']], ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', ['Plus', 's', ['Times', '-1', 'r']]]]], 'p']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 19: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'x', ['Times', 'p', 'r']], ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', ['Plus', 's', ['Times', '-1', 'r']]]], ['Times', 'c', ['Power', 'x', ['Plus', 't', ['Times', '-1', 'r']]]]], 'p']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 20: SKIPPED - ValueError: Non-string function head ['Times', ['Power', 'x', ['Times', 'p', 'r']], ['Power', ['Plus', 'a', ['Times', 'b', ['Power', 'x', ['Plus', 's', ['Times', '-1', 'r']]]], ['Times', 'c', ['Power', 'x', ['Plus', 't', ['Times', '-1', 'r']]]], ['Times', 'd', ['Power', 'x', ['Plus', 'q', ['Times', '-1', 'r']]]]], 'p']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 16
+    RubiRulePattern(
+        pattern=Int(Q6_**p_*_u_, x),
+        constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(_u_, x), EqQ(-3*Coeff(Q6_, x, 0)*Coeff(Q6_, x, 4) + Coeff(Q6_, x, 2)**2, 0), EqQ(-27*Coeff(Q6_, x, 0)**2*Coeff(Q6_, x, 6) + Coeff(Q6_, x, 2)**3, 0),),
+        replacement=With(List(Set(Symbol('a'), Coeff(Q6_, x, Integer(0))), Set(Symbol('b'), Coeff(Q6_, x, Integer(2))), Set(Symbol('c'), Coeff(Q6_, x, Integer(3))), Set(Symbol('d'), Coeff(Q6_, x, Integer(4))), Set(Symbol('e'), Coeff(Q6_, x, Integer(6)))), Star((((Integer(3))**((Integer(3) * p_)) * (Symbol('a'))**((Integer(2) * p_))))**(Integer(-1)), Int(ExpandIntegrand((_u_ * (((Integer(3) * Symbol('a')) + (Integer(3) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(-1) * (Integer(3) * (Integer(-1))**((Integer(3))**(Integer(-1))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x)) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(3) * (Integer(-1))**((Integer(2) * (Integer(3))**(Integer(-1)))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_)), x), x))),
+        module_name='1.3.3 P(x)^p',
+        rule_number=16,
+    ),
+    # Rule 17: SKIPPED - ValueError: generated rule not loadable: NameError: name 'Min' is not defined
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int(_Fx_*(x**_r_*_a_ + x**_s_*_b_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, p_, _r_, _s_], x), Not(IntegerQ(p_)), PosQ(-_r_ + _s_), Not(And(EqQ(p_, 1), EqQ(_Fx_, 1))),),
+        replacement=Star((x**_r_*_a_ + x**_s_*_b_)**p_/(x**(p_*_r_)*(x**(-_r_ + _s_)*_b_ + _a_)**p_), Int(x**(p_*_r_)*_Fx_*(x**(-_r_ + _s_)*_b_ + _a_)**p_, x)),
+        module_name='1.3.3 P(x)^p',
+        rule_number=18,
+    ),
+    # Rule 19
+    RubiRulePattern(
+        pattern=Int(_Fx_*(x**_r_*_a_ + x**_s_*_b_ + x**_t_*_c_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, p_, _r_, _s_, _t_], x), Not(IntegerQ(p_)), PosQ(-_r_ + _s_), PosQ(-_r_ + _t_), Not(And(EqQ(p_, 1), EqQ(_Fx_, 1))),),
+        replacement=Star((x**_r_*_a_ + x**_s_*_b_ + x**_t_*_c_)**p_/(x**(p_*_r_)*(x**(-_r_ + _s_)*_b_ + x**(-_r_ + _t_)*_c_ + _a_)**p_), Int(x**(p_*_r_)*_Fx_*(x**(-_r_ + _s_)*_b_ + x**(-_r_ + _t_)*_c_ + _a_)**p_, x)),
+        module_name='1.3.3 P(x)^p',
+        rule_number=19,
+    ),
+    # Rule 20
+    RubiRulePattern(
+        pattern=Int(_Fx_*(x**_q_*_d_ + x**_r_*_a_ + x**_s_*_b_ + x**_t_*_c_)**p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, p_, _r_, _s_, _t_, _q_], x), Not(IntegerQ(p_)), PosQ(-_r_ + _s_), PosQ(-_r_ + _t_), PosQ(_q_ - _r_), Not(And(EqQ(p_, 1), EqQ(_Fx_, 1))),),
+        replacement=Star((x**_q_*_d_ + x**_r_*_a_ + x**_s_*_b_ + x**_t_*_c_)**p_/(x**(p_*_r_)*(x**(_q_ - _r_)*_d_ + x**(-_r_ + _s_)*_b_ + x**(-_r_ + _t_)*_c_ + _a_)**p_), Int(x**(p_*_r_)*_Fx_*(x**(_q_ - _r_)*_d_ + x**(-_r_ + _s_)*_b_ + x**(-_r_ + _t_)*_c_ + _a_)**p_, x)),
+        module_name='1.3.3 P(x)^p',
+        rule_number=20,
+    ),
 
 ]
 
-# Summary: 15 rules translated, 5 skipped
+# Summary: 19 rules translated, 1 skipped

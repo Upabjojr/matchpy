@@ -1131,7 +1131,7 @@ RULES = [
     ),
     # Rule 131
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_e_, _c_**2*d_), EqQ(u_**2 - (1 - 2*I/(x*_c_ + I))**2, 0),),
         replacement=(((Integer(-1) * sympy.I) * ((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * sympy.I * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='5.3.4 u (a+b arctan(c x))^p',
@@ -1139,7 +1139,7 @@ RULES = [
     ),
     # Rule 132
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_e_, _c_**2*d_), EqQ(u_**2 - (1 - 2*I/(x*_c_ + I))**2, 0),),
         replacement=(((Integer(-1) * sympy.I) * ((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * sympy.I * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='5.3.4 u (a+b arctan(c x))^p',
@@ -1147,7 +1147,7 @@ RULES = [
     ),
     # Rule 133
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_e_, _c_**2*d_), EqQ(u_**2 - (1 - 2*I/(-x*_c_ + I))**2, 0),),
         replacement=((sympy.I * ((_a_ + (_b_ * sympy.atan((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * sympy.I * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atan((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='5.3.4 u (a+b arctan(c x))^p',
@@ -1155,7 +1155,7 @@ RULES = [
     ),
     # Rule 134
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.Function('PolyLog')(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        pattern=Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_e_, _c_**2*d_), EqQ(u_**2 - (1 - 2*I/(-x*_c_ + I))**2, 0),),
         replacement=((sympy.I * ((_a_ + (_b_ * sympy.acot((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * sympy.I * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acot((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='5.3.4 u (a+b arctan(c x))^p',

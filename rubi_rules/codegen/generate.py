@@ -128,6 +128,84 @@ def _extract_nested_with_condition(result_ffl):
     return result_ffl, []
 
 
+# =============================================================================
+# Rubi \[Star] operator reconstruction
+# =============================================================================
+#
+# Rubi co-opts Wolfram's otherwise meaning-free ``\[Star]`` infix operator as a
+# display-friendly product: ``Star[u, v]`` shows as ``u*v`` and evaluates to the
+# product of ``u`` and ``v`` with ``u`` distributed over the terms of ``v``. The
+# source rules write it infix, e.g. ``c/(e*(b*c-a*d)) \[Star] Int[...,x]``.
+#
+# SymPy's MathematicaParser has no rule for ``\[Star]`` and parses it as a
+# POSTFIX operator, so ``u \[Star] v`` arrives in the fullformlist as a flat
+# ``Times[.. , [tail, 'Star'], .. , v]`` with the ``'Star'`` marker buried on the
+# last token of ``u`` (typically inside a ``Power`` denominator or exponent). The
+# naive translation then emits nonsense like ``Function('e')(Symbol('Star'))``.
+#
+# Because ``Star[u, v] = u*v`` and ``Times`` is commutative, we can recover the
+# rule exactly: for every ``Times`` that carries a marker and has an integral-like
+# factor ``v``, regroup it into ``Star[u, v]`` with ``u`` = the remaining factors
+# (markers stripped). Any marker not captured this way (no integral factor in the
+# product, or an odd parse) is simply stripped — the value is unchanged either way.
+
+_INT_LIKE_HEADS: Set[str] = {
+    'Int', 'Subst', 'IntHide', 'Dist', 'Integral', 'Unintegrable', 'CannotIntegrate',
+}
+
+
+def _is_star_marker(node) -> bool:
+    """True for a mis-parsed postfix ``\\[Star]`` node ``[operand, 'Star']``."""
+    return isinstance(node, list) and len(node) == 2 and node[1] == 'Star'
+
+
+def _ffl_has_star(node) -> bool:
+    """True if a ``\\[Star]`` marker appears anywhere in ``node``."""
+    if _is_star_marker(node):
+        return True
+    if isinstance(node, list):
+        return any(_ffl_has_star(c) for c in node)
+    return False
+
+
+def _ffl_strip_stars(node):
+    """Drop every ``\\[Star]`` marker, replacing ``[operand, 'Star']`` with ``operand``."""
+    if _is_star_marker(node):
+        return _ffl_strip_stars(node[0])
+    if isinstance(node, list):
+        return [_ffl_strip_stars(c) for c in node]
+    return node
+
+
+def _reconstruct_star(node):
+    """Rebuild ``Star[u, v]`` products from mis-parsed postfix markers (bottom-up).
+
+    Wraps each ``Times`` carrying a marker and an integral-like factor into a
+    proper ``['Star', u, v]`` node (consuming the marker); leaves other markers
+    for :func:`_ffl_strip_stars` to remove.
+    """
+    if not isinstance(node, list):
+        return node
+    node = [_reconstruct_star(c) for c in node]
+    if node and node[0] == 'Times' and _ffl_has_star(node):
+        int_idx = {
+            i for i in range(1, len(node))
+            if isinstance(node[i], list) and node[i] and node[i][0] in _INT_LIKE_HEADS
+        }
+        if int_idx:
+            v_factors = [node[i] for i in sorted(int_idx)]
+            u_factors = [_ffl_strip_stars(node[i]) for i in range(1, len(node)) if i not in int_idx]
+            u = '1' if not u_factors else (u_factors[0] if len(u_factors) == 1 else ['Times', *u_factors])
+            v = v_factors[0] if len(v_factors) == 1 else ['Times', *v_factors]
+            return ['Star', u, v]
+    return node
+
+
+def _apply_star_reconstruction(result_ffl):
+    """Reconstruct ``Star`` products, then strip any leftover markers, in one pass."""
+    return _ffl_strip_stars(_reconstruct_star(result_ffl))
+
+
 
 # =============================================================================
 # Known constraint classes (for import resolution)
@@ -209,6 +287,7 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     "D": "D",
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',
+    'Star': 'Star',  # Rubi \[Star]: display-friendly product (see _reconstruct_star)
     'SimplifyIntegrand': 'SimplifyIntegrand',
     'FreeFactors': 'FreeFactors',
     'NonfreeFactors': 'NonfreeFactors',
@@ -514,12 +593,25 @@ class RubiRuleTranslator:
         for name in all_optional:
             eval_ns[f'_{name}_'] = sympy.Symbol(f'_{name}_')
 
+        # Namespace mirroring the generated module, used to validate that each
+        # rule's emitted code actually loads (references only defined names).
+        # A rule that translates without error can still reference a name the
+        # generator does not support (e.g. the `Min` flag, or an `x_` wildcard
+        # that collides with the fixed integration variable and is therefore not
+        # declared). Such a rule would raise NameError at import time and take the
+        # whole module's `RULES` list down with it, so we skip it here instead.
+        load_ns: Optional[dict] = {}
+        try:
+            exec(header + wc_section, load_ns)
+        except Exception:
+            load_ns = None  # header itself won't exec -> skip per-rule validation
+
         # Generate rules (1-indexed)
         rule_lines = []
         skipped = 0
         for i, rule in enumerate(rules):
             try:
-                code = self._translate_rule(rule, i + 1, module_name, eval_ns)
+                code = self._translate_rule(rule, i + 1, module_name, eval_ns, load_ns)
                 if code:
                     rule_lines.append(code)
                 else:
@@ -615,7 +707,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
     # =========================================================================
 
     def _translate_rule(self, ffl, rule_number: int, module_name: str,
-                        eval_ns: dict = None) -> Optional[str]:
+                        eval_ns: dict = None, load_ns: dict = None) -> Optional[str]:
         """Translate a single SetDelayed FFL rule into a RubiRulePattern string."""
         if not isinstance(ffl, list) or not ffl or ffl[0] != 'SetDelayed':
             return None
@@ -641,6 +733,11 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
             condition_ffls.append(rhs[2])
         result_ffl, nested_condition_ffls = _extract_nested_with_condition(result_ffl)
         condition_ffls.extend(nested_condition_ffls)
+
+        # Rebuild Rubi's ``\[Star]`` products, which SymPy's parser mangles into
+        # stray postfix markers (see _reconstruct_star). Star appears only in
+        # replacements, so this is applied to the result FFL alone.
+        result_ffl = _apply_star_reconstruction(result_ffl)
 
         # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---
         pattern_code, _ns, wild_defs, _symbols = ffl_to_sympy_short_code(
@@ -694,15 +791,28 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
                 constraint_parts.append(code)
         constraint_str = ', '.join(constraint_parts)
 
+        constraints_frag = f"({constraint_str},)" if constraint_str else "()"
+
+        # Validate that the emitted rule actually loads (see load_ns in
+        # translate_module). A NameError/etc. here means the rule references an
+        # unsupported name; skip it rather than let it break the whole module.
+        if load_ns is not None:
+            probe = (
+                f"RubiRulePattern(pattern=Int({pattern_code}, x), "
+                f"constraints={constraints_frag}, replacement={replacement_code}, "
+                f"module_name={module_name!r}, rule_number={rule_number})"
+            )
+            try:
+                eval(compile(probe, f'<{module_name} rule {rule_number}>', 'eval'), load_ns)
+            except Exception as e:
+                raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
+
         # Build the RubiRulePattern entry
         lines_out = []
         lines_out.append(f"    # Rule {rule_number}")
         lines_out.append(f"    RubiRulePattern(")
         lines_out.append(f"        pattern=Int({pattern_code}, x),")
-        if constraint_str:
-            lines_out.append(f"        constraints=({constraint_str},),")
-        else:
-            lines_out.append(f"        constraints=(),")
+        lines_out.append(f"        constraints={constraints_frag},")
         lines_out.append(f"        replacement={replacement_code},")
         lines_out.append(f"        module_name={module_name!r},")
         lines_out.append(f"        rule_number={rule_number},")
