@@ -579,6 +579,11 @@ class ManyToOneMatcher(BaseModel):
     pattern_to_index: Dict[Pattern, int] = Field(default_factory=dict)
     # O(1) lookup index: maps Constraint -> index in self.constraints list (optimization)
     constraint_to_index: Dict[Constraint, int] = Field(default_factory=dict)
+    # O(1) lookup index: maps (variable_name, pattern_index) -> the constraint
+    # indices on that variable that apply to that pattern. Avoids scanning every
+    # constraint sharing a variable name (a, b, m, x, ... are reused across
+    # thousands of rules) when building each transition (optimization).
+    constraint_pattern_map: Dict[Tuple[str, int], Set[int]] = Field(default_factory=dict)
 
     _state_id: ClassVar[int] = 0
 
@@ -694,6 +699,7 @@ class ManyToOneMatcher(BaseModel):
             self.constraint_to_index[constraint] = index
         for var in constraint.variables:
             self.constraint_vars.setdefault(var, set()).add(index)
+            self.constraint_pattern_map.setdefault((var, pattern), set()).add(index)
         return index
 
     def match(self, subject: Expression) -> Iterator[Tuple[Expression, Substitution]]:
@@ -730,14 +736,13 @@ class ManyToOneMatcher(BaseModel):
             if transition.variable_name == variable_name and transition.label == label and transition.subst == subst:
                 transition.patterns.add(index)
                 if variable_name is not None:
-                    constraints = set(
-                        self.constraint_vars[variable_name] if variable_name in self.constraint_vars else []
-                    )
-                    for c in list(constraints):
-                        patterns = self.constraints[c][1]
-                        if patterns.isdisjoint(transition.patterns):
-                            constraints.discard(c)
-                    transition.check_constraints.update(constraints)
+                    # The constraints newly applicable to this transition are exactly
+                    # those on `variable_name` that apply to the pattern `index` we
+                    # just merged in; every constraint applying to a previously-added
+                    # pattern is already in check_constraints (see below).
+                    new_constraints = self.constraint_pattern_map.get((variable_name, index))
+                    if new_constraints:
+                        transition.check_constraints.update(new_constraints)
                 state = transition.target
                 break
         else:
@@ -746,11 +751,8 @@ class ManyToOneMatcher(BaseModel):
                 self.commutative_matchers.append(matcher)
             state = self._create_state(matcher)
             if variable_name is not None:
-                constraints = set(self.constraint_vars[variable_name] if variable_name in self.constraint_vars else [])
-                for c in list(constraints):
-                    patterns = self.constraints[c][1]
-                    if index not in patterns:
-                        constraints.discard(c)
+                # Constraints on `variable_name` that apply to pattern `index`.
+                constraints = set(self.constraint_pattern_map.get((variable_name, index), ()))
             else:
                 constraints = None
             transition = _Transition(label=label, target=state, variable_name=variable_name, patterns={index}, check_constraints=constraints, subst=subst)
