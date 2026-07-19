@@ -12,7 +12,7 @@ from types import LambdaType
 # pylint: disable=unused-import
 from typing import (Callable, Dict, Iterator, List, NamedTuple, Optional, Sequence, Tuple, TypeVar, cast, Union, Any)
 
-from pydantic import BaseModel, ConfigDict
+from ._typed import TypedModel
 # pylint: enable=unused-import
 
 from multiset import Multiset
@@ -26,10 +26,8 @@ __all__ = [
 T = TypeVar('T')
 
 
-class VariableWithCount(BaseModel):
-    """Pydantic model replacing the former NamedTuple."""
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class VariableWithCount(TypedModel):
+    """Typed value object (formerly a NamedTuple / Pydantic model)."""
     name: Optional[str] = None
     count: int = 0
     minimum: int = 0

@@ -2,7 +2,7 @@
 """Expression classes for the MatchPy pattern matching library.
 
 This refactored version uses:
-- Pydantic BaseModel for all expression types
+- TypedModel (matchpy._typed) for all expression types
 - OperationHead objects (instead of class-based Operation subclasses)
 - Singledispatch `to_expression` / `from_expression` for conversions
 - `Operation(head, *operands)` as raw constructor (normalize only, no one_identity)
@@ -14,7 +14,7 @@ from functools import singledispatch, cached_property
 from typing import Callable, Iterator, List, Optional, Set, Tuple, Type, Union, Any
 
 from multiset import Multiset
-from pydantic import BaseModel, ConfigDict
+from .._typed import TypedModel, field
 
 __all__ = [
     'Expression', 'Arity', 'Atom', 'Symbol', 'SymbolWrapper', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern',
@@ -29,15 +29,13 @@ ExpressionsWithPos = Iterator[Tuple['Expression', Tuple[int, ...]]]
 
 # ─── Base Expression ──────────────────────────────────────────────────────────
 
-class Expression(BaseModel):
+class Expression(TypedModel):
     """Base class for all MatchPy expressions.
 
     All expressions have:
     - head: identifies the type (self for atoms, OperationHead for operations)
     - variable_name: optional name when used as a pattern variable
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     head: Any = None
     variable_name: Optional[str] = None
 
@@ -183,7 +181,7 @@ class Arity(Enum):
 
 # ─── OperationHead ────────────────────────────────────────────────────────────
 
-class OperationHead(BaseModel):
+class OperationHead(TypedModel):
     """Metadata describing an operation type.
 
     An OperationHead defines the structural properties of an operation:
@@ -194,8 +192,6 @@ class OperationHead(BaseModel):
     Use `Operation(head, *operands)` directly for the raw constructor that
     only normalizes (flatten associative, sort commutative) without one_identity.
     """
-    model_config = ConfigDict(frozen=True)
-
     name: str
     arity: Arity = Arity.variadic
     commutative: bool = False
@@ -330,7 +326,7 @@ class Operation(Expression):
     (flatten associative, sort commutative) but does NOT apply one_identity.
     Use `head(*operands)` (OperationHead.__call__) for the full factory.
     """
-    operands: List[Expression] = []
+    operands: List[Expression] = field(default_factory=list)
 
     def __init__(self, head, *operands, variable_name=None, **kwargs) -> None:
         # Auto-convert non-Expression operands to expressions
@@ -499,8 +495,6 @@ class SymbolWrapper(Atom):
     This allows patterns to be written with plain Symbol('2') and still match
     against SymbolWrapper(Integer(2)).
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     value: object = None
 
     def __init__(self, value, variable_name=None, **kwargs) -> None:
@@ -723,7 +717,7 @@ class SymbolWildcard(Wildcard):
         st = symbol_type or Symbol
         if not issubclass(st, Symbol):
             raise TypeError(f"symbol_type must be a subclass of Symbol, got {st!r}")
-        BaseModel.__init__(self, min_count=1, fixed_size=True, variable_name=variable_name,
+        TypedModel.__init__(self, min_count=1, fixed_size=True, variable_name=variable_name,
                            default_value=None, symbol_type=st, **kwargs)
         self.head = None
 
@@ -749,15 +743,13 @@ class SymbolWildcard(Wildcard):
 
 # ─── Pattern ──────────────────────────────────────────────────────────────────
 
-class Pattern(BaseModel):
+class Pattern(TypedModel):
     """A pattern wrapping an expression with constraints.
 
     Attributes:
         expression: The expression to match against.
         constraints: Tuple of constraints that must be satisfied.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     expression: Expression
     constraints: Tuple['Constraint', ...] = ()
 
@@ -805,9 +797,6 @@ class Pattern(BaseModel):
         return str(self.expression)
 
 
-# Resolve forward reference to Constraint (defined in .constraints module)
-from .constraints import Constraint  # noqa: E402
-Pattern.model_rebuild()
 
 
 # ─── Built-in operation heads ─────────────────────────────────────────────────

@@ -29,7 +29,7 @@ from collections import OrderedDict
 from typing import Callable, FrozenSet, Dict
 from functools import cached_property
 
-from pydantic import BaseModel, ConfigDict, PrivateAttr
+from .._typed import TypedModel
 
 from . import substitution
 from ..utils import get_short_lambda_source
@@ -77,7 +77,7 @@ def _constraint_parameter_names(constraint):
     return names
 
 
-class Constraint(BaseModel):  # pylint: disable=too-few-public-methods
+class Constraint(TypedModel):  # pylint: disable=too-few-public-methods
     """Base for pattern constraints.
 
     A constraint is essentially a callback, that receives the match :class:`Substitution` and returns a :class:`bool`
@@ -85,8 +85,6 @@ class Constraint(BaseModel):  # pylint: disable=too-few-public-methods
 
     You have to override all the abstract methods if you wish to create your own subclass.
     """
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     def __call__(self, match: substitution.Substitution) -> bool:  # pylint: disable=missing-raises-doc
         """Return True, iff the constraint is fulfilled by the substitution.
 
@@ -142,7 +140,6 @@ class EqualVariablesConstraint(Constraint):  # pylint: disable=too-few-public-me
 
     The constraint tries to unify the substitutions for the variables and is fulfilled iff that succeeds.
     """
-    _variables: FrozenSet[str] = PrivateAttr(default=None)  # set in __init__; static default avoids factory introspection
 
     def __init__(self, *variables: str, **kwargs) -> None:
         """
@@ -203,7 +200,6 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
     constraint: Callable[..., bool]
     # Always assigned in __init__; a static default avoids Pydantic re-introspecting
     # the default_factory (inspect.signature(OrderedDict)) on every construction.
-    _variables: OrderedDict = PrivateAttr(default=None)
 
     def __init__(self, constraint: Callable[..., bool], **kwargs) -> None:
         """

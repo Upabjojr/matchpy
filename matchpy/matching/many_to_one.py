@@ -39,7 +39,7 @@ from collections import deque
 from operator import itemgetter
 from typing import ClassVar, Container, Dict, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Set, Tuple, Type
 
-from pydantic import BaseModel, ConfigDict, Field
+from .._typed import TypedModel, field
 
 try:
     from graphviz import Digraph, Graph
@@ -75,9 +75,8 @@ _VISITED = set()
 # ── LabelType hierarchy ──────────────────────────────────────────────────────
 # Represents the value stored in _Transition.label.
 
-class LabelType(BaseModel):
+class LabelType(TypedModel):
     """Base class for transition labels."""
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     def unwrap(self):
         """Return the raw wrapped value (for downstream isinstance checks)."""
@@ -157,9 +156,8 @@ _LABEL_END = LabelTypeEnd()
 # TransitionKey is the base for all dict keys in _State.transitions.
 # HeadType is a subclass of TransitionKey representing expression heads.
 
-class TransitionKey(BaseModel):
+class TransitionKey(TypedModel):
     """Base class for transition dictionary keys."""
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
 class HeadType(TransitionKey):
     """Base for expression heads used as transition keys."""
@@ -240,9 +238,8 @@ class TransitionKeyPatternId(TransitionKey):
 
 # ── _PatternKey / _PatternValue ──────────────────────────────────────────────
 
-class _PatternKey(BaseModel):
+class _PatternKey(TypedModel):
     """Hashable key for CommutativeMatcher.patterns dict."""
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     subpatterns: Tuple[int, ...]
     variables: Tuple[Tuple, ...]  # Tuple[Tuple[VariableWithCount, bool|Type[Operation]], ...]
@@ -255,19 +252,17 @@ class _PatternKey(BaseModel):
             return self.subpatterns == other.subpatterns and self.variables == other.variables
         return NotImplemented
 
-class _PatternValue(BaseModel):
+class _PatternValue(TypedModel):
     """Value stored in CommutativeMatcher.patterns dict."""
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     index: int
     pattern_set: MultisetOfInt
     variables: Tuple[Tuple, ...]  # Tuple[Tuple[VariableWithCount, bool|Type[Operation]], ...]
 
-class _State(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class _State(TypedModel):
 
     number: int
-    transitions: Dict[TransitionKey, List['_Transition']] = Field(default_factory=dict)
+    transitions: Dict[TransitionKey, List['_Transition']] = field(default_factory=dict)
     matcher: Optional['CommutativeMatcher'] = None
 
     # NOTE: no custom model_dump / transitions field_validator here. JSON
@@ -286,13 +281,12 @@ class _State(BaseModel):
         return NotImplemented
 
 
-class _Transition(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class _Transition(TypedModel):
 
     label: LabelType
     target: _State
     variable_name: Optional[str] = None
-    patterns: Set[int] = Field(default_factory=set)
+    patterns: Set[int] = field(default_factory=set)
     check_constraints: Optional[Set[int]] = None
     subst: Optional[Substitution] = None
 
@@ -545,27 +539,26 @@ class _MatchIter:
         self.associative.pop()
 
 
-class ManyToOneMatcher(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class ManyToOneMatcher(TypedModel):
 
-    patterns: List[Tuple[Pattern, object, List[int]]] = Field(default_factory=list)
-    states: List[_State] = Field(default_factory=list)
+    patterns: List[Tuple[Pattern, object, List[int]]] = field(default_factory=list)
+    states: List[_State] = field(default_factory=list)
     root: Optional[_State] = None
-    pattern_vars: List[Dict[str, str]] = Field(default_factory=list)
-    constraints: List[Tuple[Constraint, Set[int]]] = Field(default_factory=list)
-    constraint_vars: Dict[str, Set[int]] = Field(default_factory=dict)
-    finals: Set[int] = Field(default_factory=set)
+    pattern_vars: List[Dict[str, str]] = field(default_factory=list)
+    constraints: List[Tuple[Constraint, Set[int]]] = field(default_factory=list)
+    constraint_vars: Dict[str, Set[int]] = field(default_factory=dict)
+    finals: Set[int] = field(default_factory=set)
     rename: bool = True
-    commutative_matchers: List['CommutativeMatcher'] = Field(default_factory=list)
+    commutative_matchers: List['CommutativeMatcher'] = field(default_factory=list)
     # O(1) lookup index: maps Pattern -> index in self.patterns list (optimization)
-    pattern_to_index: Dict[Pattern, int] = Field(default_factory=dict)
+    pattern_to_index: Dict[Pattern, int] = field(default_factory=dict)
     # O(1) lookup index: maps Constraint -> index in self.constraints list (optimization)
-    constraint_to_index: Dict[Constraint, int] = Field(default_factory=dict)
+    constraint_to_index: Dict[Constraint, int] = field(default_factory=dict)
     # O(1) lookup index: maps (variable_name, pattern_index) -> the constraint
     # indices on that variable that apply to that pattern. Avoids scanning every
     # constraint sharing a variable name (a, b, m, x, ... are reused across
     # thousands of rules) when building each transition (optimization).
-    constraint_pattern_map: Dict[Tuple[str, int], Set[int]] = Field(default_factory=dict)
+    constraint_pattern_map: Dict[Tuple[str, int], Set[int]] = field(default_factory=dict)
 
     _state_id: ClassVar[int] = 0
 
@@ -576,7 +569,7 @@ class ManyToOneMatcher(BaseModel):
         """
         super().__init__(rename=rename, **kwargs)
         # When reconstructing from serialized data, self.root is already set
-        # by pydantic field initialization. Only create a fresh root for new
+        # by TypedModel field initialization. Only create a fresh root for new
         # matcher instances.
         if self.root is None:
             self.root = self._create_state()
@@ -1105,26 +1098,25 @@ Subgraph = BipartiteGraph[Tuple[int, int], Tuple[int, int], Substitution]
 Matching = Dict[Tuple[int, int], Tuple[int, int]]
 
 
-class CommutativeMatcher(BaseModel):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class CommutativeMatcher(TypedModel):
 
-    patterns: Dict[_PatternKey, '_PatternValue'] = Field(default_factory=dict)
-    subjects: Dict[Expression, Tuple[int, Set[int]]] = Field(default_factory=dict)
-    subjects_by_id: Dict[int, Expression] = Field(default_factory=dict)
+    patterns: Dict[_PatternKey, '_PatternValue'] = field(default_factory=dict)
+    subjects: Dict[Expression, Tuple[int, Set[int]]] = field(default_factory=dict)
+    subjects_by_id: Dict[int, Expression] = field(default_factory=dict)
     automaton: Optional[ManyToOneMatcher] = None
-    bipartite: BipartiteGraph[Tuple[int, int], Tuple[int, int], List[Substitution]] = Field(default_factory=BipartiteGraph)
+    bipartite: BipartiteGraph[Tuple[int, int], Tuple[int, int], List[Substitution]] = field(default_factory=BipartiteGraph)
     associative: Optional[OperationHead] = None
     max_optional_count: int = 0
-    anonymous_patterns: Set[int] = Field(default_factory=set)
+    anonymous_patterns: Set[int] = field(default_factory=set)
     # Dedicated tracking for optional wildcards - avoids mixing None into subjects dict
     optional_subject_id: int = -1  # -1 means not initialized
-    optional_pattern_ids: Set[int] = Field(default_factory=set)
+    optional_pattern_ids: Set[int] = field(default_factory=set)
 
     def __init__(self, associative: Optional[type] = None, **kwargs) -> None:
         super().__init__(associative=associative, **kwargs)
         # Only create fresh automaton/bipartite for new instances.
         # When reconstructing from serialized data, these fields are already
-        # populated by pydantic field initialization.
+        # populated by TypedModel field initialization.
         if self.automaton is None:
             self.automaton = ManyToOneMatcher()
         if self.bipartite is None:
