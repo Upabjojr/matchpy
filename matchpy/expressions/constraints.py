@@ -37,6 +37,45 @@ from ..utils import get_short_lambda_source
 
 __all__ = ['Constraint', 'EqualVariablesConstraint', 'CustomConstraint', 'FreeQ']
 
+_CO_VARARGS = 0x04       # CO_VARARGS  (*args)
+_CO_VARKEYWORDS = 0x08   # CO_VARKEYWORDS (**kwargs)
+
+
+def _constraint_parameter_names(constraint):
+    """Ordered parameter names of a constraint callback.
+
+    Fast path: read them straight off ``constraint.__code__`` (plain
+    functions/lambdas), which avoids the very expensive ``inspect.signature``
+    machinery — this is called hundreds of thousands of times while building a
+    large matcher. Falls back to ``inspect.signature`` for exotic callables
+    (functools.partial, callable objects, builtins). Raises the same ``ValueError``
+    as before for positional-only / ``*args`` / ``**kwargs`` parameters.
+    """
+    code = getattr(constraint, '__code__', None)
+    if (code is not None
+            and not (code.co_flags & (_CO_VARARGS | _CO_VARKEYWORDS))
+            and not getattr(code, 'co_posonlyargcount', 0)
+            and not hasattr(constraint, '__wrapped__')):
+        # Plain function/lambda with only positional-or-keyword / keyword-only
+        # params and no functools.wraps redirection: its code object's names ARE
+        # the signature, so read them directly (avoids inspect.signature).
+        n = code.co_argcount + code.co_kwonlyargcount
+        return code.co_varnames[:n]
+    # Wrappers (functools.wraps), partials, callable objects, or functions with
+    # *args/**kwargs: defer to inspect.signature (it follows __wrapped__ and
+    # raises for genuinely disallowed parameter kinds).
+    names = []
+    for param in inspect.signature(constraint).parameters.values():
+        if param.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY):
+            names.append(param.name)
+        elif param.kind == inspect.Parameter.VAR_KEYWORD:
+            raise ValueError("Constraint cannot have variable keyword arguments ({})".format(param.name))
+        else:
+            raise ValueError(
+                "Constraint cannot have positional-only or variable positional arguments ({})".format(param.name)
+            )
+    return names
+
 
 class Constraint(BaseModel):  # pylint: disable=too-few-public-methods
     """Base for pattern constraints.
@@ -175,21 +214,7 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
                 If the callback has positional-only or variable parameters (\\*args and \\*\\*kwargs).
         """
         super().__init__(constraint=constraint, **kwargs)
-
-        signature = inspect.signature(constraint)
-        variables = OrderedDict()
-
-        for param in signature.parameters.values():
-            if param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD or param.kind == inspect.Parameter.KEYWORD_ONLY:
-                variables[param.name] = param.name
-            elif param.kind == inspect.Parameter.VAR_KEYWORD:
-                raise ValueError("Constraint cannot have variable keyword arguments ({})".format(param.name))
-            else:
-                raise ValueError(
-                    "Constraint cannot have positional-only or variable positional arguments ({})".format(param.name)
-                )
-
-        self._variables = variables
+        self._variables = OrderedDict((name, name) for name in _constraint_parameter_names(constraint))
 
     @cached_property
     def variables(self):
