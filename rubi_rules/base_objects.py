@@ -272,7 +272,11 @@ class _RubiIntegrator:
             previous = current
             current_rules = []
             for intfun in previous.atoms(Int):
-                integfun, matched_rule = self._integration_step(intfun.args[0], intfun.args[1], pattern)
+                # Combine products of exponentials (E^a * E^b -> E^(a+b)) so a
+                # single Pow(E, ...) can match the exponential rule patterns; SymPy
+                # never does this automatically.
+                integrand = sympy.powsimp(intfun.args[0], combine='exp')
+                integfun, matched_rule = self._integration_step(integrand, intfun.args[1], pattern)
                 current = current.replace(intfun, integfun)
                 current_rules.extend(matched_rule)
             if current == previous:
