@@ -39,7 +39,7 @@ from collections import deque
 from operator import itemgetter
 from typing import ClassVar, Container, Dict, Iterable, Iterator, List, NamedTuple, Optional, Sequence, Set, Tuple, Type
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 try:
     from graphviz import Digraph, Graph
@@ -270,30 +270,12 @@ class _State(BaseModel):
     transitions: Dict[TransitionKey, List['_Transition']] = Field(default_factory=dict)
     matcher: Optional['CommutativeMatcher'] = None
 
-    def model_dump(self, **kwargs):
-        """Custom dump: serialize transitions as list of pairs for JSON compatibility."""
-        data = {}
-        data['number'] = self.number
-        data['transitions'] = []
-        for k, ts in self.transitions.items():
-            key_data = k.model_dump()
-            key_data['_type'] = type(k).__name__
-            data['transitions'].append([key_data, [t.model_dump() for t in ts]])
-        data['matcher'] = self.matcher.model_dump() if self.matcher is not None else None
-        return data
-
-    @field_validator('transitions', mode='before')
-    @classmethod
-    def _validate_transitions(cls, v):
-        """Reconstruct transitions dict from serialized list of [key, value] pairs."""
-        if isinstance(v, list):
-            result = {}
-            for key_data, transitions_data in v:
-                key = _deserialize_transition_key(key_data)
-                transitions = [_Transition.model_validate(t) for t in transitions_data]
-                result[key] = transitions
-            return result
-        return v
+    # NOTE: no custom model_dump / transitions field_validator here. JSON
+    # (de)serialization is hand-rolled in matchpy.matching.json_serialization
+    # (it constructs _State with a dict and populates it), so a `mode='before'`
+    # validator only added overhead on every one of the ~260K state constructions
+    # during a matcher build (and referenced an un-imported name for the list
+    # branch that was never exercised).
 
     def __hash__(self):
         return hash(self.number)

@@ -142,7 +142,7 @@ class EqualVariablesConstraint(Constraint):  # pylint: disable=too-few-public-me
 
     The constraint tries to unify the substitutions for the variables and is fulfilled iff that succeeds.
     """
-    _variables: FrozenSet[str] = PrivateAttr(default_factory=frozenset)
+    _variables: FrozenSet[str] = PrivateAttr(default=None)  # set in __init__; static default avoids factory introspection
 
     def __init__(self, *variables: str, **kwargs) -> None:
         """
@@ -201,7 +201,9 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
     variable occurring in the pattern or a surrounding operation.
     """
     constraint: Callable[..., bool]
-    _variables: OrderedDict = PrivateAttr(default_factory=OrderedDict)
+    # Always assigned in __init__; a static default avoids Pydantic re-introspecting
+    # the default_factory (inspect.signature(OrderedDict)) on every construction.
+    _variables: OrderedDict = PrivateAttr(default=None)
 
     def __init__(self, constraint: Callable[..., bool], **kwargs) -> None:
         """
