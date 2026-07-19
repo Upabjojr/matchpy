@@ -182,6 +182,10 @@ def _make_tracing_replacement_fn(replacement_expr, wild_names, rule):
 
     _replacement.__qualname__ = base_replacement.__qualname__
     _replacement.__module__ = base_replacement.__module__
+    # Expose the SymPy replacement expression explicitly so serialization does not
+    # have to guess at closure cell order (the tracing wrapper's closure[0] is the
+    # inner function, not the replacement expression).
+    _replacement._rubi_replacement_expr = replacement_expr
     return _replacement
 
 

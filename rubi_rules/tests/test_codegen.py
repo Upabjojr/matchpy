@@ -197,14 +197,10 @@ class TestModuleGeneration:
         ]
         t = RubiRuleTranslator()
         code = t.translate_module(rules, 'test_module', 'test.m')
-        # Check syntax
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write(code)
-            tmp = f.name
-        try:
-            py_compile.compile(tmp, doraise=True)
-        finally:
-            os.unlink(tmp)
+        # Check syntax by compiling the source directly (no temp file / .pyc write,
+        # which avoids depending on a writable /tmp/__pycache__). Raises
+        # SyntaxError if the generated code is malformed.
+        compile(code, '<generated test_module>', 'exec')
 
     def test_module_has_rules_list(self):
         rules = [

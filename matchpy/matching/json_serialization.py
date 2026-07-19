@@ -663,9 +663,14 @@ def serialize_matcher(matcher) -> dict:
                           'constraints': [_serialize_constraint(c) for c in label.constraints]}
         elif isinstance(label, str):
             label_data = {'_kind': 'string', 'value': label}
-        elif callable(label) and hasattr(label, '__closure__') and label.__closure__:
-            # Replacement function from ManyToOneReplacer — closure[0] is the SymPy expr
-            replacement_expr = label.__closure__[0].cell_contents
+        elif callable(label) and (getattr(label, '_rubi_replacement_expr', None) is not None
+                                  or (hasattr(label, '__closure__') and label.__closure__)):
+            # Replacement function from ManyToOneReplacer. Prefer the explicit
+            # attribute set by the (tracing) replacement factory; fall back to the
+            # closure for plain replacement functions.
+            replacement_expr = getattr(label, '_rubi_replacement_expr', None)
+            if replacement_expr is None:
+                replacement_expr = label.__closure__[0].cell_contents
             label_data = {'_kind': 'replacement_fn',
                           'replacement_expr': serialize_wrapped_value(replacement_expr)}
         else:

@@ -516,14 +516,14 @@ class TestManyToOneReplacerSerialization:
     def test_roundtrip_integrate_sqrt(self, x, replacer_with_rules):
         """After roundtrip, int sqrt(x) dx = 2x^(3/2)/3."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(sqrt(x), x)))[0])
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(sqrt(x), x))))
         assert sympy.simplify(result - 2*x**Rational(3, 2)/3) == 0
 
     def test_roundtrip_integrate_linear(self, x, replacer_with_rules):
         """After roundtrip, int 1/(a+bx) dx = log(a+bx)/b."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
         a, b = sympy.symbols('a b')
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(1/(a + b*x), x)))[0])
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(1/(a + b*x), x))))
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
     def test_roundtrip_integrate_binomial_power(self, x, replacer_with_rules):
@@ -543,5 +543,5 @@ class TestManyToOneReplacerSerialization:
         matcher2 = from_json(json_str2)
         replacer2 = ManyToOneReplacer()
         replacer2.matcher = matcher2
-        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(x**2, x)))[0])
+        result = matchpy_to_sympy(replacer2.replace(to_expression(Int(x**2, x))))
         assert sympy.simplify(result - x**3/3) == 0
