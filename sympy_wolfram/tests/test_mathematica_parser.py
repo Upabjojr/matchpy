@@ -25,7 +25,7 @@ from sympy_wolfram.mathematica_parser import (
     ffl_to_sympy_short_code,
 )
 
-from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
 
 # ---------------------------------------------------------------------------

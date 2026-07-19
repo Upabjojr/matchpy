@@ -13,7 +13,7 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
                    expand, simplify, together, gcd, numer, sign,
                    Poly, frac, floor, Expr)
 
-from sympy_objects import RubiConstraint
+from sympy_matching import RubiConstraint
 from sympy_wolfram.mathematica_expressions import (
     CompoundExpression,
     Head,

@@ -47,8 +47,8 @@ from sympy.polys.rationaltools import together as sym_together
 from sympy.utilities.iterables import flatten
 from sympy.core.random import randint
 
-from sympy_objects import WildSymbol, IDENTITY_ELEMENT
-from sympy_objects.conversion import matchpy_to_sympy
+from sympy_matching import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.conversion import matchpy_to_sympy
 
 
 from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_expression, \

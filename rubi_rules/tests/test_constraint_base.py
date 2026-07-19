@@ -2,13 +2,13 @@
 """Tests for RubiConstraint integration with concrete rubi_rules constraints.
 
 Tests that concrete constraint subclasses (FreeQ, IntegerQ, EqQ, etc.) properly
-integrate with the RubiConstraint base class from sympy_objects:
+integrate with the RubiConstraint base class from sympy_matching:
 - Re-export: rubi_rules.utils.constraints.RubiConstraint is the same object
 - Boolean inheritance and logic composition with concrete constraints
 - Argument normalisation with concrete constraints
 - The SymPy invariant: constraint == constraint.func(*constraint.args)
 - Hash consistency
-- JSON round-trip via sympy_objects.json_ext
+- JSON round-trip via sympy_matching.json_ext
 """
 import sys
 import os
@@ -20,9 +20,9 @@ import sympy
 from sympy import Symbol, Integer, Rational, Tuple
 from sympy.logic.boolalg import Boolean, Not, And, Or
 
-import sympy_objects
-from sympy_objects.constraints import RubiConstraint
-from sympy_objects.json_ext import serialize_wrapped_value, deserialize_wrapped_value
+import sympy_matching
+from sympy_matching.constraints import RubiConstraint
+from sympy_matching.json_ext import serialize_wrapped_value, deserialize_wrapped_value
 
 
 # ---------------------------------------------------------------------------

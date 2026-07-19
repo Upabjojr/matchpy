@@ -9,7 +9,7 @@ This package contains:
 """
 
 # Base constraint class
-from sympy_objects.constraints import RubiConstraint
+from sympy_matching.constraints import RubiConstraint
 
 # Standard Wolfram Mathematica constraints
 from .constraints_wolfram import (

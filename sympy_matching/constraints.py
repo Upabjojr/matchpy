@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Abstract base class for Rubi pattern constraints.
 
-This module is part of sympy_objects and has NO dependency on rubi_rules or
+This module is part of sympy_matching and has NO dependency on rubi_rules or
 MatchPy.  Concrete constraint subclasses (FreeQ, EqQ, IntegerQ, …) live in
 rubi_rules.utils.constraints_wolfram / constraints_rubi and import
 RubiConstraint from here.
@@ -56,7 +56,7 @@ def _normalize_constraint_arg(a):
     Converts Python primitives to their SymPy equivalents so that
     ``constraint.args`` contains only objects that can be:
       * hashed (required for SymPy's Basic.__hash__)
-      * serialised by sympy_objects.json_ext
+      * serialised by sympy_matching.json_ext
     """
     # SymPy objects are already safe — pass through first to avoid
     # accidentally re-wrapping WildSymbol or other Symbol subclasses.
@@ -242,7 +242,7 @@ class RubiConstraint(Boolean):
         if isinstance(val, sympy.Basic):
             return val
         try:
-            from sympy_objects.conversion import matchpy_to_sympy
+            from sympy_matching.conversion import matchpy_to_sympy
             return matchpy_to_sympy(val)
         except (ImportError, TypeError, AttributeError):
             return sympy.sympify(val)

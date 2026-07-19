@@ -24,8 +24,8 @@ from sympy import (
 )
 from sympy.logic.boolalg import Boolean
 
-from sympy_objects.constraints import RubiConstraint
-from sympy_objects.wild import WildSymbol
+from sympy_matching.constraints import RubiConstraint
+from sympy_matching.wild import WildSymbol
 from rubi_rules.utils.constraints_wolfram import FreeQ, FalseQ
 from rubi_rules.utils.constraints_rubi import (
     IntLinearQ, IntBinomialQ, IntQuadraticQ,

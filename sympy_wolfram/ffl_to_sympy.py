@@ -22,7 +22,7 @@ import sympy
 from sympy import Integer, Rational, Symbol
 from sympy.printing.str import StrPrinter
 
-from sympy_objects.wild import IDENTITY_ELEMENT, WildSymbol
+from sympy_matching.wild import IDENTITY_ELEMENT, WildSymbol
 
 
 # =============================================================================

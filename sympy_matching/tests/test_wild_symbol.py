@@ -24,9 +24,9 @@ from matchpy.expressions.constraints import FreeQ
 from matchpy.matching.one_to_one import match as match_one
 from matchpy.matching.many_to_one import ManyToOneMatcher
 
-from sympy_objects.operations import ADD, MUL, POW, SIN
-from sympy_objects.conversion import matchpy_to_sympy
-from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.operations import ADD, MUL, POW, SIN
+from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
 x, y, z = symbols('x y z')
 

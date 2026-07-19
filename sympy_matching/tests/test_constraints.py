@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-"""Tests for sympy_objects.constraints.RubiConstraint base class.
+"""Tests for sympy_matching.constraints.RubiConstraint base class.
 
 Covers (without importing rubi_rules):
-- Module location: RubiConstraint lives in sympy_objects, NOT rubi_rules
-- No import of rubi_rules anywhere in sympy_objects.constraints
+- Module location: RubiConstraint lives in sympy_matching, NOT rubi_rules
+- No import of rubi_rules anywhere in sympy_matching.constraints
 - Boolean inheritance and logic composition (using a local test subclass)
 - Argument normalisation: str->Symbol, int->Integer, list->tuple, dict->tuple-of-pairs
 - The SymPy invariant: constraint == constraint.func(*constraint.args)
 - Hash consistency (equal objects have equal hashes)
-- JSON round-trip via sympy_objects.json_ext
+- JSON round-trip via sympy_matching.json_ext
 """
 import sys
 import os
@@ -21,9 +21,9 @@ import sympy
 from sympy import Symbol, Integer, Rational, Tuple
 from sympy.logic.boolalg import Boolean, Not, And, Or
 
-import sympy_objects  # registers json_ext + conversion handlers
-from sympy_objects.constraints import RubiConstraint
-from sympy_objects.json_ext import serialize_wrapped_value, deserialize_wrapped_value
+import sympy_matching  # registers json_ext + conversion handlers
+from sympy_matching.constraints import RubiConstraint
+from sympy_matching.json_ext import serialize_wrapped_value, deserialize_wrapped_value
 
 
 # ---------------------------------------------------------------------------
@@ -65,19 +65,19 @@ def _roundtrip(constraint):
 
 
 # ---------------------------------------------------------------------------
-# 1. Module location: sympy_objects has NO rubi_rules import
+# 1. Module location: sympy_matching has NO rubi_rules import
 # ---------------------------------------------------------------------------
 
 class TestModuleLocation:
-    """RubiConstraint belongs to sympy_objects, not rubi_rules."""
+    """RubiConstraint belongs to sympy_matching, not rubi_rules."""
 
-    def test_module_is_sympy_objects(self):
-        assert RubiConstraint.__module__ == 'sympy_objects.constraints'
+    def test_module_is_sympy_matching(self):
+        assert RubiConstraint.__module__ == 'sympy_matching.constraints'
 
     def test_no_rubi_import_in_module(self):
-        """sympy_objects.constraints must not import anything from rubi_rules."""
+        """sympy_matching.constraints must not import anything from rubi_rules."""
         import importlib
-        mod = importlib.import_module('sympy_objects.constraints')
+        mod = importlib.import_module('sympy_matching.constraints')
         tree = ast.parse(open(mod.__file__).read())
         rubi_imports = [
             node for node in ast.walk(tree)

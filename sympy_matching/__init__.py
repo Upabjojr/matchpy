@@ -8,8 +8,8 @@ This package provides:
 - Pattern matching utilities for symbolic math
 
 Usage:
-    from sympy_objects import to_sympy_expression, from_sympy_expression, WildSymbol
-    from sympy_objects.operations import ADD, MUL, POW, SIN, COS
+    from sympy_matching import to_sympy_expression, from_sympy_expression, WildSymbol
+    from sympy_matching.operations import ADD, MUL, POW, SIN, COS
 
     import sympy
     from sympy import Eq

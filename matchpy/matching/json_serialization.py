@@ -45,7 +45,7 @@ def _resolve_symbol_type(name: str):
 def serialize_wrapped_value(val):
     """Serialize a value wrapped in SymbolWrapper. Extensible via singledispatch.
 
-    Extensions (e.g. sympy_objects) register handlers for their types.
+    Extensions (e.g. sympy_matching) register handlers for their types.
     The default fallback stores a repr string.
     """
     if val is None:
@@ -691,8 +691,8 @@ def serialize_matcher(matcher) -> dict:
 def _rebuild_replacement_fn(replacement_expr):
     """Rebuild a replacement function from a deserialized SymPy expression."""
     def _replacement(**match_dict):
-        from sympy_objects.conversion import matchpy_to_sympy, to_expression
-        from sympy_objects.wild import WildSymbol
+        from sympy_matching.conversion import matchpy_to_sympy, to_expression
+        from sympy_matching.wild import WildSymbol
         sympy_subs = {}
         for name, matchpy_val in match_dict.items():
             sympy_subs[name] = matchpy_to_sympy(matchpy_val)

@@ -21,9 +21,9 @@ from matchpy.matching.one_to_one import match as match_one_to_one
 from matchpy.matching.many_to_one import ManyToOneMatcher, ManyToOneReplacer
 from matchpy import functions as matchpy_functions
 
-from sympy_objects import to_expression, matchpy_to_sympy
-from sympy_objects.operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
-from sympy_objects.conversion import matchpy_to_sympy
+from sympy_matching import to_expression, matchpy_to_sympy
+from sympy_matching.operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
+from sympy_matching.conversion import matchpy_to_sympy
 
 
 x, y, z = symbols('x y z')

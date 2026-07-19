@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Rubi constraint objects — base class (re-exported from sympy_objects).
+"""Rubi constraint objects — base class (re-exported from sympy_matching).
 
-RubiConstraint now lives in sympy_objects.constraints so that it is
+RubiConstraint now lives in sympy_matching.constraints so that it is
 independent of rubi_rules and MatchPy.
 
 All concrete constraints inherit from RubiConstraint and must implement:
@@ -18,7 +18,7 @@ Concrete constraint subclasses live in:
     - constraints_wolfram.py  (standard Mathematica predicates: FreeQ, IntegerQ, ...)
     - constraints_rubi.py     (RUBI-specific predicates: EqQ, IGtQ, PolyQ, ...)
 """
-# Re-export from sympy_objects so existing imports keep working.
-from sympy_objects.constraints import RubiConstraint  # noqa: F401
+# Re-export from sympy_matching so existing imports keep working.
+from sympy_matching.constraints import RubiConstraint  # noqa: F401
 
 __all__ = ['RubiConstraint']

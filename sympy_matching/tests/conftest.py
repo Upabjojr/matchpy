@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Fixtures for running sympy_objects tests in multiple matching modes.
+"""Fixtures for running sympy_matching tests in multiple matching modes.
 
 Modes:
   - one-to-one: matchpy.matching.one_to_one.match
@@ -22,7 +22,7 @@ from matchpy.matching.code_generation import CodeGenerator
 from matchpy.matching.json_serialization import to_json, from_json
 from matchpy.expressions.functions import preorder_iter
 
-import sympy_objects  # ensure json_ext is registered
+import sympy_matching  # ensure json_ext is registered
 
 
 def pytest_generate_tests(metafunc):

@@ -15,8 +15,8 @@ from matchpy.expressions.expressions import (
 from matchpy.matching.many_to_one import ManyToOneMatcher
 from matchpy.matching.json_serialization import to_json, from_json
 
-import sympy_objects  # registers conversion + json_ext handlers
-from sympy_objects.operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
+import sympy_matching  # registers conversion + json_ext handlers
+from sympy_matching.operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
 
 
 x, y, z = symbols('x y z')

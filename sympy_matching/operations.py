@@ -8,8 +8,8 @@ Special heads (ADD, MUL, POW) with commutative/associative/one_identity
 properties are defined explicitly; everything else is table-driven.
 
 Usage:
-    from sympy_objects.operations import ADD, MUL, POW, SIN, COS
-    from sympy_objects.operations import SYMPY_FUNC_TO_HEAD, HEAD_TO_SYMPY_FUNC
+    from sympy_matching.operations import ADD, MUL, POW, SIN, COS
+    from sympy_matching.operations import SYMPY_FUNC_TO_HEAD, HEAD_TO_SYMPY_FUNC
 """
 import sys
 import os

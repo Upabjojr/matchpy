@@ -11,8 +11,8 @@ import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Eq, Integer, Rational, S
 
 from matchpy.expressions.expressions import Operation, Symbol, SymbolWrapper, to_expression
-from sympy_objects import to_expression, matchpy_to_sympy
-from sympy_objects.operations import (
+from sympy_matching import to_expression, matchpy_to_sympy
+from sympy_matching.operations import (
     ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY,
     SYMPY_NODES, SYMPY_FUNC_TO_HEAD,
 )

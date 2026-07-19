@@ -10,8 +10,8 @@ All constraints operate on SymPy expressions after conversion from MatchPy.
 import sympy
 from sympy import Symbol
 
-from sympy_objects.conversion import matchpy_to_sympy
-from sympy_objects.constraints import RubiConstraint
+from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.constraints import RubiConstraint
 
 
 # =============================================================================

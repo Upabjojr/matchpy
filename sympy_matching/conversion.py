@@ -12,7 +12,7 @@ Special cases (Add, Mul, Pow) that need IDENTITY_ELEMENT resolution are
 still handled by explicit handlers.
 
 Usage:
-    import sympy_objects.conversion  # registers dispatchers as side-effect
+    import sympy_matching.conversion  # registers dispatchers as side-effect
 
     from matchpy import to_expression, from_expression
     import sympy

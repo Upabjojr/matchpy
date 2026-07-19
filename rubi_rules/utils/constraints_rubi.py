@@ -17,7 +17,7 @@ from sympy import asin, acos, atan, acot, asec, acsc
 from sympy import asinh, acosh, atanh, acoth, asech, acsch
 from sympy import log
 
-from sympy_objects.constraints import RubiConstraint
+from sympy_matching.constraints import RubiConstraint
 from .constraints_wolfram import _to_sympy
 
 

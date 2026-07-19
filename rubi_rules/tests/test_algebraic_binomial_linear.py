@@ -12,8 +12,8 @@ from sympy import Symbol, Integer, Rational, log, sqrt, pi, oo
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
-from sympy_objects.conversion import to_expression, matchpy_to_sympy
+from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.conversion import to_expression, matchpy_to_sympy
 from rubi_rules.base_objects import Int, RubiRulePattern, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ
 

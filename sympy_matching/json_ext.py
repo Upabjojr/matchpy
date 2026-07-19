@@ -12,7 +12,7 @@ extracted separately since their `.args` is empty.
 Singletons (pi, E, I, oo, etc.) reconstruct via `func()` alone.
 
 Usage:
-    import sympy_objects.json_ext  # registers as side-effect
+    import sympy_matching.json_ext  # registers as side-effect
 """
 import importlib
 
@@ -75,7 +75,7 @@ def _get_atom_args(obj):
 @serialize_wrapped_value.register(SympyBasic)
 def _serialize_sympy_value(val):
     """Serialize any SymPy object using func + args."""
-    from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+    from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
     func_path = _qualified_name(val.func)
 
@@ -133,7 +133,7 @@ def _resolve_sympy_func(func_path: str):
 
 def _deserialize_sympy_value(data):
     """Deserialize a SymPy object from func + args."""
-    from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+    from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
     func = _resolve_sympy_func(data['func'])
 
@@ -211,7 +211,7 @@ def deserialize_sympy_expr(data, wild_cache=None):
 
 def _deserialize_with_cache(data, wild_cache):
     """Internal: recursively deserialize using wild_cache for WildSymbol sharing."""
-    from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+    from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
     if not isinstance(data, dict):
         return data

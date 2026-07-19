@@ -7,8 +7,8 @@ from sympy import Symbol, S
 
 from matchpy import to_expression
 
-from sympy_objects.conversion import matchpy_to_sympy
-from sympy_objects.operations import SYMPY_NODES
+from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.operations import SYMPY_NODES
 
 
 x = Symbol('x')

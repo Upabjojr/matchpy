@@ -14,10 +14,10 @@ from matchpy.expressions.constraints import CustomConstraint
 from matchpy.matching.many_to_one import ManyToOneReplacer
 from matchpy.functions import ReplacementRule
 
-from sympy_objects.conversion import register_sympy_head, matchpy_to_sympy
-from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
+from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
-from sympy_objects.constraints import RubiConstraint
+from sympy_matching.constraints import RubiConstraint
 
 
 class Int(sympy.Function):

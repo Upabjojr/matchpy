@@ -16,12 +16,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import sympy
 from sympy import Symbol, Integer, Rational, log, sqrt, sin, cos, pi
 
-from sympy_objects.wild import WildSymbol, IDENTITY_ELEMENT
-from sympy_objects.conversion import to_expression, matchpy_to_sympy
-import sympy_objects  # registers json_ext handlers
+from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.conversion import to_expression, matchpy_to_sympy
+import sympy_matching  # registers json_ext handlers
 
 from matchpy.matching.json_serialization import serialize_wrapped_value, deserialize_wrapped_value
-from sympy_objects.json_ext import deserialize_sympy_expr
+from sympy_matching.json_ext import deserialize_sympy_expr
 
 from rubi_rules.base_objects import Int, RubiRulePattern, _rubi_integrator, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ, PositiveQ, NegativeQ
