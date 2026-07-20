@@ -84,6 +84,15 @@ class Subst(MathematicaExpr):
 
     In Rubi, Subst also simplifies constant terms to 0 in antiderivatives,
     but for rule generation we use plain substitution.
+
+    Special case ``Subst[Int[g, x], x, v]``: Rubi integrates the inner ``Int``
+    first (``G = ∫g dx``) and only then substitutes ``x -> v`` (giving ``G(v)``).
+    Substituting *before* the integral is resolved would capture the ``Int``'s
+    bound variable — and ``v`` often reintroduces ``x`` (e.g. ``v = log(x)``),
+    which silently produces a wrong answer. So while ``expr`` still holds an
+    unevaluated ``Int`` we stay deferred; the DFS integrator reduces that ``Int``
+    to an antiderivative and then performs the substitution itself (see
+    ``_dfs_reduce_result`` in ``base_objects``).
     """
 
     def __new__(cls, expr, x, v):
@@ -91,6 +100,8 @@ class Subst(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         expr, x, v = self.args
+        if any(type(a).__name__ == 'Int' for a in expr.atoms(sympy.Function)):
+            return self
         return expr.subs(x, v)
 
 

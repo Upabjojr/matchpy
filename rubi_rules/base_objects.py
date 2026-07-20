@@ -417,7 +417,25 @@ def _dfs_reduce_result(result, x, path, replacer, applied, budget, trace=None):
         )
         result = result.replace(intfun, reduced)
         blocked_any = blocked_any or blocked
+    result = _collapse_resolved_substs(result)
     return result, blocked_any
+
+
+def _collapse_resolved_substs(result):
+    """Perform ``Subst[G, x, v] -> G.subs(x, v)`` once the inner integral is gone.
+
+    ``rubi_utils.Subst`` stays deferred while it wraps an unevaluated ``Int`` (so
+    the substitution cannot capture the integral's bound variable); after the
+    round-trip through MatchPy it is a plain ``Function('Subst')`` node. Once the
+    enclosing reduction has turned that inner ``Int`` into an antiderivative
+    ``G(x)``, apply the postponed substitution here — never before, or ``v`` (often
+    containing ``x``, e.g. ``log(x)``) would capture the bound variable.
+    """
+    def _resolved(e):
+        return (type(e).__name__ == 'Subst' and len(e.args) == 3
+                and not any(type(a).__name__ == 'Int' for a in e.args[0].atoms(sympy.Function)))
+
+    return result.replace(_resolved, lambda e: e.args[0].subs(e.args[1], e.args[2]))
 
 
 def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
