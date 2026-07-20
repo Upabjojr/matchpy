@@ -609,6 +609,24 @@ def rubi_integrate(
     with _exp_is_pow(True):
         expr = sympy.sympify(expr).replace(sympy.exp, lambda u: sympy.exp(u))
         x = sympy.sympify(x).replace(sympy.exp, lambda u: sympy.exp(u))
+        # A non-symbol integration variable (e.g. sin(x)) is only meaningful when the
+        # integrand is a function of that whole expression — i.e. substituting
+        # u = <var> removes every trace of the underlying symbols. Otherwise the
+        # change of variables is not trivial (x*sin(x) is not a function of sin(x)
+        # alone), and integrating "with respect to sin(x)" while treating the leftover
+        # x as a constant silently gives a wrong answer. Refuse it and tell the caller
+        # to introduce the substitution themselves.
+        if not isinstance(x, sympy.Symbol):
+            _u = sympy.Dummy('u')
+            residual = sorted(expr.subs(x, _u).free_symbols & x.free_symbols, key=str)
+            if residual:
+                raise ValueError(
+                    f"Cannot integrate with respect to the expression {x}: after the "
+                    f"substitution u = {x}, the integrand still depends on "
+                    f"{', '.join(map(str, residual))}, so it is not a function of {x} "
+                    f"alone. Introduce the substitution yourself — solve u = {x} for the "
+                    f"integrand, then call rubi_integrate(<integrand in u>, u)."
+                )
         # When return_trace is set, collect a record of every rule the DFS tried
         # (accepted AND rejected, with the reason) — see format_trace().
         trace = [] if return_trace else None

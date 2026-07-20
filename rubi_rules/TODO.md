@@ -69,7 +69,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
       DFS itself is fast (~3s once cached).
 - [ ] (Rejected) Making rule 43 not undo rule 42 would need editing generated
       rules / codegen — out of scope: rules are codegen-owned.
-- [ ] rubi_integrate(sin(x), sin(x)) returns correctly sin(x)**2/2, but rubi_integrate(x*sin(x), sin(x))
+- [X] rubi_integrate(sin(x), sin(x)) returns correctly sin(x)**2/2, but rubi_integrate(x*sin(x), sin(x))
       probably returns an incorrect result, it should rather raise an exception and tell the user to use a solver to replace the variable u=sin(x)
       (i.e. allow complex expressions to be integration variables only if the integrand depends trivially on them, in the example before all instances of variable x get replaced with a simple u=sin(x) substitution)
 - [ ] Use MatchPy codegen to generate a static decision tree for all rules. Is it correct?

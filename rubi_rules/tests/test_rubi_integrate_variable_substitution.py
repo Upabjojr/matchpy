@@ -14,9 +14,13 @@ r_1_1_1_1 rule set) so they run without loading the full rule library.
 """
 import pytest
 import sympy
-from sympy import Symbol, Rational, simplify, symbols
+from sympy import Symbol, Rational, cos, exp, log, sin, simplify, symbols
 
-from rubi_rules.base_objects import _preprocess_integrate, build_tracing_replacer
+from rubi_rules.base_objects import (
+    _preprocess_integrate,
+    build_tracing_replacer,
+    rubi_integrate,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -182,3 +186,50 @@ class TestSymmetry:
         result_x = _integrate(x**2 * y**2, x, replacer)   # x**3*y**2/3
         result_y = _integrate(x**2 * y**2, y, replacer)   # x**2*y**3/3
         assert simplify(result_x.xreplace({x: y, y: x}) - result_y) == 0
+
+
+# ---------------------------------------------------------------------------
+# Non-symbol integration variable (e.g. sin(x))
+# ---------------------------------------------------------------------------
+
+class TestNonSymbolIntegrationVariable:
+    """rubi_integrate(f, v) with v a non-symbol expression.
+
+    Allowed only when f is a function of v alone (u = v removes every trace of
+    v's underlying symbols); otherwise the change of variables is not trivial and
+    must be refused rather than silently returning a wrong answer.
+    """
+
+    # -- refused: integrand is not a function of v alone (fast: raises before any
+    #    rule loading, so no @pytest.mark.slow needed) --
+
+    @pytest.mark.parametrize("integrand, var", [
+        (x * sin(x), sin(x)),   # the reported bug: had returned x*sin(x)**2/2
+        (x, sin(x)),
+        (cos(x), sin(x)),       # cos(x) is not structurally a function of sin(x)
+        (x * exp(x), exp(x)),
+        (sin(x) + x, sin(x)),
+    ])
+    def test_non_trivial_dependence_raises(self, integrand, var):
+        with pytest.raises(ValueError, match="not a function of"):
+            rubi_integrate(integrand, var)
+
+    def test_error_names_the_residual_symbol(self):
+        with pytest.raises(ValueError, match=r"still depends on .*\bx\b"):
+            rubi_integrate(x * sin(x), sin(x))
+
+    # -- allowed: integrand is a function of v alone. Post-substitution these are
+    #    all monomial integrals (int u^k du), so scope the load to the binomial
+    #    rules instead of the whole set to keep the test fast. --
+
+    _MONOMIAL_RULES = 'r_1_algebraic_functions/r_1_1_binomial_products/**'
+
+    @pytest.mark.parametrize("integrand, var, expected", [
+        (sin(x), sin(x), sin(x)**2 / 2),
+        (sin(x)**2, sin(x), sin(x)**3 / 3),
+        (1 / log(x), log(x), sympy.log(log(x))),  # int du/u = log(u)
+        (5, sin(x), 5 * sin(x)),                    # constant integrand
+    ])
+    def test_trivial_dependence_integrates(self, integrand, var, expected):
+        result = rubi_integrate(integrand, var, pattern=self._MONOMIAL_RULES)
+        assert simplify(result - expected) == 0
