@@ -803,3 +803,100 @@ class TestMathematicaToSympyRoundTrip:
         )
         body = If(sympy.Gt(x, Integer(3)), Integer(100), Integer(0))
         assert result == With(List(Set(x, Integer(5))), body)
+
+
+# ── _condition_holds lazy / short-circuit evaluation ─────────────────────────
+# Regression guard: _condition_holds used to _eval the WHOLE test up-front, so a
+# combined And could build/sort a structure embedding a non-Expr sentinel (a util
+# returning the symbol False, e.g. DerivativeDivides) -> sympy sort crash
+# ('bool' object has no attribute 'is_Float'). It now evaluates And/Or/Not
+# lazily, operand-by-operand, matching Mathematica's short-circuiting.
+
+def test_condition_holds_short_circuits_and_or():
+    from sympy_wolfram.mathematica_expressions import _condition_holds, MathematicaExpr
+    from sympy.logic.boolalg import And, Or
+
+    class _Boom(MathematicaExpr):
+        def __new__(cls):
+            return sympy.Expr.__new__(cls)
+        def _evaluate(self, **kwargs):
+            raise AssertionError("operand was evaluated despite short-circuit")
+
+    # And(False, Boom): first operand False -> False, Boom must not be evaluated.
+    assert _condition_holds(And(S.false, _Boom(), evaluate=False)) is False
+    # Or(True, Boom): first operand True -> True, Boom must not be evaluated.
+    assert _condition_holds(Or(S.true, _Boom(), evaluate=False)) is True
+
+
+def test_condition_holds_basic_connectives():
+    from sympy_wolfram.mathematica_expressions import _condition_holds
+    from sympy.logic.boolalg import And, Or, Not
+    assert _condition_holds(And(S.true, S.true, evaluate=False)) is True
+    assert _condition_holds(And(S.true, S.false, evaluate=False)) is False
+    assert _condition_holds(Or(S.false, S.false, evaluate=False)) is False
+    assert _condition_holds(Not(S.false)) is True
+    assert _condition_holds(Not(S.true)) is False
+
+
+# ── Condition (expr /; test) ─────────────────────────────────────────────────
+
+def test_condition_holds_returns_body():
+    from sympy_wolfram.mathematica_expressions import Condition
+    assert Condition(Integer(5), S.true).doit() == 5
+
+
+def test_condition_fails_raises_stopiteration():
+    from sympy_wolfram.mathematica_expressions import Condition
+    with pytest.raises(StopIteration):
+        Condition(Integer(5), S.false).doit()
+
+
+def test_condition_body_not_evaluated_when_test_fails():
+    # The body must not be evaluated when the test fails (Mathematica semantics;
+    # the default deep doit would have reduced the body first).
+    from sympy_wolfram.mathematica_expressions import Condition, MathematicaExpr
+
+    class _Boom(MathematicaExpr):
+        def __new__(cls):
+            return sympy.Expr.__new__(cls)
+        def _evaluate(self, **kwargs):
+            raise AssertionError("body evaluated despite failing test")
+
+    with pytest.raises(StopIteration):
+        Condition(_Boom(), S.false).doit()
+
+
+def test_condition_set_in_test_binds_body():
+    # Set[q, 7] inside the test binds q for the body (Mathematica side effect).
+    from sympy_wolfram.mathematica_expressions import Condition, Set
+    q = Symbol('q')
+    cond = Condition(q + 1, Set(q, Integer(7)) > 0)
+    assert cond.doit() == 8
+
+
+# ── rename_scoped_locals (lexical scoping for With/Module/Block) ──────────────
+
+def test_rename_scoped_locals_basic():
+    from sympy_wolfram.mathematica_expressions import With, List, Set, rename_scoped_locals
+    a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
+    renamed = rename_scoped_locals(With(List(Set(a, Integer(1))), a + b * x))
+    local = renamed.args[0].args[0].args[0]      # the (renamed) local symbol
+    assert local != a and local.name.startswith('a$')
+    assert renamed.doit() == 1 + b * x           # value unchanged
+
+
+def test_rename_scoped_locals_prevents_capture():
+    # The core bug: a local named `a` must not clobber an `a` that is substituted
+    # into the body later (as a rewrite system fills a pattern variable).
+    from sympy_wolfram.mathematica_expressions import With, List, Set, rename_scoped_locals
+    a, b, u = Symbol('a'), Symbol('b'), Symbol('u')
+    tmpl = With(List(Set(a, u)), a * u)                  # local a = u; body a*u
+    substituted = rename_scoped_locals(tmpl).subs(u, a + b)   # u carries a symbol named 'a'
+    assert substituted.doit() == (a + b)**2             # local=(a+b); NOT (a+b)*(a+2b)
+
+
+def test_rename_scoped_locals_noop_without_scopes():
+    from sympy_wolfram.mathematica_expressions import rename_scoped_locals
+    a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
+    expr = a * x + b
+    assert rename_scoped_locals(expr) == expr

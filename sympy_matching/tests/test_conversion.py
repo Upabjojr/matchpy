@@ -220,3 +220,28 @@ class TestConversions:
         from sympy.functions.elementary.piecewise import Piecewise
         expr = Piecewise((x, x > 0), (S(0), True))
         assert matchpy_to_sympy(to_expression(expr)) == expr
+
+
+# ── hyper / meijerg / appellf1 round-trip ────────────────────────────────────
+# These special functions store their parameter lists in TupleArg containers.
+# matchpy_to_sympy used to rebuild them as cls(*args), passing the TupleArg back
+# in, which the constructor rejects (hyper does Tuple(*ap) -> TypeError). The fix
+# unwraps TupleArg operands to plain tuples. Regression guard for the crash that
+# broke sqrt(a+b*x)/x, 1/(x*sqrt(a+b*x)), x^k/(a+b*x)^(3/2), ... integration.
+
+def test_hyper_roundtrip():
+    a, b, c, w = symbols('a b c w')
+    h = hyper((a, b), (c,), w)
+    assert matchpy_to_sympy(to_expression(h)) == h
+
+
+def test_meijerg_roundtrip():
+    a, b, c, d, w = symbols('a b c d w')
+    g = meijerg(((a,), (b,)), ((c,), (d,)), w)
+    assert matchpy_to_sympy(to_expression(g)) == g
+
+
+def test_appellf1_roundtrip():
+    a, b1, b2, c, x1, y1 = symbols('a b1 b2 c x1 y1')
+    f = appellf1(a, b1, b2, c, x1, y1)
+    assert matchpy_to_sympy(to_expression(f)) == f

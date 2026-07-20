@@ -99,7 +99,15 @@ standard Wolfram language or to Rubi-specific project utilities:
 ```
 
 - **Standard library components** — anything native to the official Wolfram
-  Language spec must live in `sympy_wolfram/`.
+  Language spec must live in `sympy_wolfram/`. This covers not just the *nodes*
+  (`Sin`, `List`, `Times`, `With`, `Module`, `Block`, `Set`, `Condition`, `If`, …)
+  but their **generic evaluation semantics and any bug fixes to them**. Rule of
+  thumb: if the behaviour would be wrong for *any* consumer of `sympy_wolfram/`
+  (not just Rubi), it is a `sympy_wolfram/` concern — `sympy_wolfram/` is the
+  reusable SymPy↔Wolfram connector, so fix it there and add its tests under
+  `sympy_wolfram/tests/`, even if `rubi_rules/` is currently the only caller.
+  E.g. `Condition[expr, test]`, and `rename_scoped_locals` (lexical scoping for
+  `With`/`Module`/`Block` locals) both live in `sympy_wolfram/mathematica_expressions.py`.
 - **Rubi extension components** — anything custom-defined for the Rubi codebase
   (e.g. functions from `IntegrationUtilityFunctions.m`) must live in
   `rubi_rules/utils/*` as a subclass of `MathematicaExpr`.

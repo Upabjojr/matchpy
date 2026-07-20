@@ -75,6 +75,21 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] Use MatchPy codegen to generate a static decision tree for all rules. Is it correct?
       Can we reduce it to a reasonable size?
 - [ ] do we even need to be able to serialize ManyToOneMatcher to JSON?
+- [ ] clean up `ffl_to_sympy_code_short`: it should accept
+      the namespace of defined variables instead of returning it (what's the point of returning it btw?),
+      furthermore, it should have an optional parameter of type StrPrinter (the class defined in SymPy).
+      By default, simplify the expression if eval(str_printer.print(obj), ...namespace...) == obj,
+      but str_printer could be a custom subclass of StrPrinter. Make sure the code generating the namespace
+      is clear to read in rubi_rules/codegen/generate.py. Clean up the code in generate.py and make it more human readable.
+      Make sure that all of these edits do not impact the way rubi_rules/rules/** are generated... the generated code has to
+      remain equal to what it was.
+- [ ] keep checking if Wolfram Mathematica does the same
+- [ ] more tests in sympy_wolfram/ ==> make some nested Module / With / Block and check that variables with same name bind correctly (bindings in the inner scope vs outer scope). Make some calls to Wolfram Mathematica to check that the behaviour is the same.
+- [ ] test looper functions in sympy_wolfram/ (check that all https://reference.wolfram.com/language/guide/LoopingConstructs.html work)
+- [ ] only one slow test should be allowed to test rubi_integrate( ) full loading. Please merge all tests into a single one. Add a note in AGENTS.md to specify this feature, also comment it in the notes of that single slow test.
+- [ ] code generator for rubi_rules/rules/** should avoid creating Symbol('...') objects in the code... just define them at the start of the file.
+- [ ] move more stuff unrelated to rubi_rules/ to sympy_wolfram/
+- [ ] restructure sympy_wolfram/ to clearly separate the parser, the interpreter and the implemented mathematica objects.
 
 ### Already fixed on the way to this (for context)
 

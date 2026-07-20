@@ -875,7 +875,15 @@ RULES = [
         module_name='2.3 Miscellaneous exponentials',
         rule_number=95,
     ),
-    # Rule 96: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 96
+    # NOTE: dropped guard (function-head wildcard, not yet translatable): Not[MatchQ[u, Condition[Times[...], And[...]]]]
+    RubiRulePattern(
+        pattern=Int(u_, x),
+        constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))),),
+        replacement=With(List(Set(Symbol('v'), FunctionOfExponential(u_, x))), (Symbol('v') * (D(Symbol('v'), x))**(Integer(-1)) * Subst(Int((FunctionOfExponentialFunction(u_, x) * (x)**(Integer(-1))), x), x, Symbol('v')))),
+        module_name='2.3 Miscellaneous exponentials',
+        rule_number=96,
+    ),
     # Rule 97
     RubiRulePattern(
         pattern=Int(_u_*(F_**v_*_a_ + F_**w_*_b_)**n_, x),
@@ -967,4 +975,4 @@ RULES = [
 
 ]
 
-# Summary: 106 rules translated, 1 skipped
+# Summary: 107 rules translated, 0 skipped

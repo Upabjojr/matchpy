@@ -15,7 +15,7 @@ d/dx(result) must equal the integrand at several sample points.
 """
 import pytest
 import sympy
-from sympy import exp, sin, cos, tan, log, sqrt, atan, Symbol, I, Function
+from sympy import exp, sin, cos, tan, log, sqrt, atan, atanh, acoth, Symbol, I, Function
 
 from rubi_rules.base_objects import rubi_integrate
 
@@ -77,6 +77,11 @@ FULL_RULESET_INTEGRANDS = [
     (1/(3*x + 2), None), ((3*x + 2)**4, None),
     (1/(x**2 + 1), None), ((x**2 + 1)**(-2), None), (1/(x**2 + 4), None),
     (1/sqrt(x**2 + 1), None), (sqrt(x**2 + 1), None), (1/(x*(x + 1)), None),
+    (1/(x*(6*x + 4)), None),   # Simplify nc_simplify RecursionError fix
+    # hyper/TupleArg round-trip fix + DerivativeDivides/Condition bool-leak fix:
+    # these raised (Counter(Tuple) TypeError / 'bool' has no is_Float) before.
+    (sqrt(2 + 3*x)/x, None), (1/(x*sqrt(2 + 3*x)), None),
+    (1/(x*(2 + 3*x)**sympy.Rational(3, 2)), None),
     # --- exponential ---
     (exp(x), None), (exp(3*x), None), (x*exp(x), None), (x**2*exp(x), None),
     (exp(x**2), None), (exp(x**2 + x), None), (exp(-x**2), None),   # -> erf / erfi
@@ -100,25 +105,214 @@ FULL_RULESET_INTEGRANDS = [
 ]
 
 
-@pytest.mark.slow
-def test_full_ruleset():
-    """Every integrand integrates to a closed form whose derivative is the integrand.
+def _numeric_matches(result, integrand, subs0, pts):
+    """True iff d/dx(result) == integrand at >=2 of the sample points `pts`.
 
-    A single test so the whole (slow) rule set is loaded once. All integrands are
-    checked and every failure is reported together, rather than aborting on the
-    first. Also guards the Subst variable-capture bug (the x*log(log(x)) family).
+    `subs0` binds the symbolic coefficients to concrete values first.
+    """
+    d = sympy.diff(result, x) - integrand
+    matched = 0
+    for pt in pts:
+        try:
+            val = complex(d.subs(subs0).subs(x, pt).evalf())
+        except Exception:
+            continue
+        if val == val and abs(val) < 1e-8:  # not NaN and ~0
+            matched += 1
+    return matched >= 2
+
+
+def _check_full_ruleset():
+    """Each integrand -> closed form whose derivative is the integrand.
+
+    Also guards the Subst variable-capture bug (the x*log(log(x)) family).
+    Returns a list of failure descriptions (empty == all good).
     """
     failures = []
     for integrand, points in FULL_RULESET_INTEGRANDS:
         try:
             result = rubi_integrate(integrand, x)
             if result == 0:
-                failures.append(f"{integrand}: collapsed to 0")
+                failures.append(f"[full] {integrand}: collapsed to 0")
             elif 'Subst' in str(result):
-                failures.append(f"{integrand}: unresolved Subst -> {result}")
+                failures.append(f"[full] {integrand}: unresolved Subst -> {result}")
             elif not _derivative_matches(
                     result, integrand, **({'points': points} if points else {})):
-                failures.append(f"{integrand}: d/dx != integrand -> {result}")
+                failures.append(f"[full] {integrand}: d/dx != integrand -> {result}")
         except Exception as exc:  # noqa: BLE001 - report which integrand blew up
-            failures.append(f"{integrand}: {type(exc).__name__}: {exc}")
-    assert not failures, "integrals failed:\n" + "\n".join(failures)
+            failures.append(f"[full] {integrand}: {type(exc).__name__}: {exc}")
+    return failures
+
+
+# Symbolic-coefficient integrals: Rubi rules use With[{a=D[u,x], b=D[v,x]}, ...]
+# with locals literally named a, b, ... Naive substitution let those locals
+# clobber the integrand's symbolic a, b (a+b*x -> D[u,x]+b*x), silently corrupting
+# the result. Guards the With/Module/Block lexical-scoping fix (base_objects
+# _rename_scoped_locals) plus the hyper TupleArg round-trip fix. Checked
+# numerically (d/dx == integrand) at concrete parameter values.
+_a, _b, _c, _d = sympy.symbols('a b c d')
+_SYMBOLIC_COEFF_INTEGRANDS = [
+    (_a + _b*x)**3,
+    x*(_a + _b*x)**2,
+    x**2*(_a + _b*x)**3,
+    sqrt(_a + _b*x),
+    1/sqrt(_a + _b*x),
+    (_a + _b*x)**(-2),
+    1/((_a + _b*x)*(_c + _d*x)),
+    x*exp(_a + _b*x),
+    exp(_a + _b*x)/x,
+    sin(_a + _b*x),
+    sqrt(_a + _b*x)/x,          # hyper round-trip fix
+    1/(x*sqrt(_a + _b*x)),      # hyper round-trip fix
+    x/(_a + _b*x),              # SubstFor deferred-delegation fix (was b x too big)
+    (_a + _b*x)/(_c + _d*x),    # SubstFor fix
+    log(_a + _b*x),             # SubstFor fix
+    log(_a + _b*x)/x,           # PolynomialRemainder transcendental fix (-> polylog)
+    x**2/(_a + _b*x)**sympy.Rational(3, 2),   # SubstFor fix
+]
+
+
+# log(c*x^n) times a polynomial in x. Rubi integrates these by parts through
+# IntHide[u,x] := Block[{$ShowSteps=False}, Int[u,x]] (which recursively integrates
+# the polynomial factor) and a 2-arg Dist[u,v] that distributes u over v's terms.
+# IntHide used to be a no-op stub (returned itself) and 2-arg Dist raised a
+# missing-argument TypeError, so these came back Unintegrable. Verified numerically.
+_e, _n = sympy.symbols('e n')
+_LOG_POLY_INTEGRANDS = [
+    x**3*(_a + _b*log(_c*x**_n))*(_d + _e*x),
+    x**2*(_a + _b*log(_c*x**_n)),
+    x*(_a + _b*log(_c*x**_n)),
+]
+
+
+def _check_symbolic_group(label, integrands, subs0, pts, unsolved_markers):
+    """Shared body for the symbolic-coefficient integrand groups.
+
+    Returns a list of failure descriptions (empty == all good). `unsolved_markers`
+    are substrings that mark an unsolved result (e.g. 'CannotIntegrate').
+    """
+    failures = []
+    for integrand in integrands:
+        try:
+            result = rubi_integrate(integrand, x)
+            if result.has(Function('Int')) or any(m in str(result) for m in unsolved_markers):
+                failures.append(f"[{label}] {integrand}: unsolved -> {result}")
+            elif not _numeric_matches(result, integrand, subs0, pts):
+                failures.append(f"[{label}] {integrand}: d/dx != integrand -> {result}")
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"[{label}] {integrand}: {type(exc).__name__}: {exc}")
+    return failures
+
+
+def _check_log_times_polynomial():
+    """log(c*x^n)*poly(x) integrals resolve via IntHide + 2-arg Dist (by parts).
+
+    Regression guard for the IntHide no-op-stub bug and the 2-arg Dist[u,v]
+    missing-argument bug; both made these come back Unintegrable.
+    """
+    return _check_symbolic_group(
+        'log*poly', _LOG_POLY_INTEGRANDS,
+        {_a: 2, _b: 3, _c: 5, _d: 7, _e: 11, _n: 2}, (0.35, 0.6, 1.1, 1.7),
+        ('Unintegrable', 'CannotIntegrate'))
+
+
+# Rational functions of a single exponential f(E^(a+b x)). Rubi integrates these
+# via the FunctionOfExponential substitution (rule 2.3:[96] / MMA rule 2692):
+# v = FunctionOfExponential[u,x] = E^(a+b x), then Int[FunctionOfExponentialFunction[u,x]/x].
+# That rule was DROPPED by codegen (its guard has an F_[v_] function-head wildcard),
+# so the whole family returned CannotIntegrate. Codegen now drops only the
+# untranslatable exclusionary guard and keeps the rule. Verified against Rubi on
+# the Pi (e.g. 1/(a+b E^x) -> x/a - Log[a+b E^x]/a). Checked numerically.
+_a2, _b2, _c2, _d2 = sympy.symbols('a b c d')
+_FUNCTION_OF_EXP_INTEGRANDS = [
+    1/(_a2 + _b2*exp(x)),
+    1/(1 + exp(x)),
+    1/(_a2 + _b2*exp(_c2 + _d2*x)),
+    exp(x)/(_a2 + _b2*exp(2*x)),
+    1/(exp(x) - exp(-x)),
+]
+
+
+def _check_function_of_exponential():
+    """Rational functions of a single exponential integrate via rule 2.3:[96].
+
+    Regression guard for the FunctionOfExponential substitution rule, recovered by
+    making codegen tolerate an untranslatable exclusionary (function-head-wildcard)
+    guard instead of dropping the whole rule.
+    """
+    return _check_symbolic_group(
+        'f(e^x)', _FUNCTION_OF_EXP_INTEGRANDS,
+        {_a2: 2, _b2: 3, _c2: 5, _d2: 7}, (0.35, 0.6, 1.1, 1.7),
+        ('CannotIntegrate',))
+
+
+def _check_symbolic_coefficients():
+    """Integrals with symbolic coefficients a, b, c, d integrate correctly.
+
+    Regression guard for the With/Module/Block local-variable capture bug and the
+    hyper TupleArg round-trip bug.
+    """
+    return _check_symbolic_group(
+        'symbolic', _SYMBOLIC_COEFF_INTEGRANDS,
+        {_a: 2, _b: 3, _c: 5, _d: 7}, (0.35, 0.6, 1.1, 1.7),
+        ('CannotIntegrate',))
+
+
+# Integrands that used to crash the DFS via a deferred-node / utility-function bug
+# (all now solved; verified numerically). Guards:
+#  - Coeff[u,x,n] with symbolic n (deferred re-impl did int(n) -> TypeError)
+#  - atanh(a+b*x)^2: Less/Greater on a non-real (-2*I) raised TypeError
+_p3, _A3, _B3 = sympy.symbols('p A B')
+_DEFERRED_CRASH_INTEGRANDS = [
+    x**3*(_a + _b*atanh(_c*x)),                      # symbolic-n Coeff (atanh family)
+    x**2*log(_c*(_a + _b*x**2)**_p3),                # symbolic-n Coeff (log family)
+    atanh(_a + _b*x)**2,                             # Less/Greater non-real guard
+    exp(acoth(_a*x)),                                # zoo-result must be rejected
+    x*exp(acoth(_a*x)),                              # (finite rule preferred over zoo)
+]
+
+
+def _check_deferred_crash_fixes():
+    """Integrands that used to abort the DFS with a TypeError in a deferred node
+    or comparison utility. See bugs 10-11 in the project memory."""
+    return _check_symbolic_group(
+        'crash-fix', _DEFERRED_CRASH_INTEGRANDS,
+        {_a: 2, _b: 3, _c: 5, _p3: sympy.Rational(3, 2), _A3: 1, _B3: 1},
+        (0.35, 0.6, 1.1, 1.7), ('CannotIntegrate',))
+
+
+def _check_inthide():
+    """IntHide[u,x] := Block[{$ShowSteps=False}, Int[u,x]] actually integrates u.
+
+    It used to be a no-op stub (returned itself), breaking every rule that binds a
+    With/Module local to IntHide[...] (3.1.4, inverse-hyperbolic families, ...).
+    Needs the full rule set because IntHide calls rubi_integrate internally.
+    """
+    from rubi_rules.utils.rubi_utils import IntHide as _IntHide
+    d, e = sympy.Symbol('d'), sympy.Symbol('e')
+    got = _IntHide(x**3*(d + e*x), x).doit()
+    if sympy.simplify(got - (d*x**4/4 + e*x**5/5)) != 0:
+        return [f"[IntHide] x^3*(d+e*x): {got} != d*x^4/4 + e*x^5/5"]
+    return []
+
+
+@pytest.mark.slow
+def test_full_ruleset_integrals():
+    """The one test that loads the entire Rubi rule set (~50s, then cached).
+
+    Loading the full rule set is a costly one-time operation, so EVERY check that
+    needs it lives here: each `_check_*` subfunction returns its failures and they
+    are asserted together, so the rule set is loaded exactly once and every failing
+    integrand across all groups is reported in a single message. Do NOT add more
+    `@pytest.mark.slow` full-rule-set tests -- add a `_check_*` subfunction and call
+    it from here instead.
+    """
+    failures = []
+    failures += _check_full_ruleset()            # broad spread across categories
+    failures += _check_symbolic_coefficients()   # symbolic a,b,c,d (scoping/hyper)
+    failures += _check_log_times_polynomial()     # IntHide + 2-arg Dist (by parts)
+    failures += _check_function_of_exponential()  # FunctionOfExponential subst (rule 96)
+    failures += _check_inthide()                  # IntHide delegates to rubi_integrate
+    failures += _check_deferred_crash_fixes()     # symbolic-n Coeff + non-real compare
+    assert not failures, (
+        f"{len(failures)} integral(s) failed:\n" + "\n".join(failures))

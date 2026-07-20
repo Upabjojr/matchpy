@@ -19,6 +19,7 @@ from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
 from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.mathematica_expressions import rename_scoped_locals
 
 
 class Int(sympy.Function):
@@ -52,6 +53,8 @@ def _collect_wild_symbols(expr) -> dict:
 
 
 def _make_replacement_fn(replacement_expr, wild_names, rule):
+    replacement_expr = rename_scoped_locals(replacement_expr)
+
     def _replacement(**match_dict):
         sympy_subs = {}
         for name, matchpy_val in match_dict.items():
@@ -379,15 +382,24 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
 # ── DFS integrator with path-aware cycle detection ───────────────────────────
 
 def _dfs_is_clean(expr) -> bool:
-    """True if `expr` is a finished antiderivative: no unresolved `Int` and no
-    `CannotIntegrate` marker.
+    """True if `expr` is a finished antiderivative: no unresolved `Int`, no
+    `CannotIntegrate` marker, and no degenerate `zoo`/`nan` value.
 
     `CannotIntegrate` is matched by head *name*: round-tripping a rule's
     replacement through MatchPy can turn the `rubi_utils.CannotIntegrate` node into
     a plain undefined `Function('CannotIntegrate')`, so an isinstance/atoms check
     against the imported class misses it.
+
+    A result containing `zoo` (ComplexInfinity) or `nan` is a degenerate
+    evaluation (a coefficient divided by zero, etc.), never a valid closed form.
+    Rejecting it here keeps such a result from being preferred over the correct
+    finite one when several rules match and the matcher's (hash-ordered) yield
+    order happens to surface the degenerate rule first -- otherwise the returned
+    antiderivative varies run-to-run.
     """
     if expr.atoms(Int):
+        return False
+    if expr.has(sympy.zoo, sympy.nan):
         return False
     return not any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
 
@@ -527,9 +539,12 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
             applied.extend(local)
             return reduced, False
         # A terminal result that still has an Int/CannotIntegrate: keep the first
-        # one as a fallback, but keep looking for a clean result.
+        # one as a fallback, but keep looking for a clean result. A degenerate
+        # zoo/nan result is never a useful partial answer -- skip it entirely so a
+        # pure-degenerate integrand is left unevaluated (honest "unsolved") rather
+        # than returning a wrong zoo.
         _record(rule, 'candidate (non-clean)')
-        if fallback is None:
+        if fallback is None and not reduced.has(sympy.zoo, sympy.nan):
             fallback = (reduced, rule, local)
 
     if fallback is not None:

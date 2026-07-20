@@ -1157,17 +1157,24 @@ def _substitute_body(body, substitutions):
 
 
 def _condition_holds(test, **kwargs) -> bool:
-    test = _eval(test, **kwargs) if hasattr(test, 'doit') else test
-    if _is_true(test):
-        return True
-    if _is_false(test):
-        return False
+    # Evaluate boolean connectives LAZILY, conjunct-by-conjunct, BEFORE evaluating
+    # the whole test. Mathematica's And/Or/Not are short-circuiting; more
+    # importantly, evaluating a combined And upfront (via _eval) can build/sort a
+    # structure that embeds a non-Expr sentinel (a utility function returning the
+    # symbol False, e.g. DerivativeDivides), which sympy's canonical sort chokes on
+    # ('bool' object has no attribute 'is_Float'). Evaluating each operand in
+    # isolation avoids that and lets a False conjunct short-circuit cleanly.
     if isinstance(test, sympy.logic.boolalg.Not):
         return not _condition_holds(test.args[0], **kwargs)
     if isinstance(test, sympy.logic.boolalg.And):
         return all(_condition_holds(arg, **kwargs) for arg in test.args)
     if isinstance(test, sympy.logic.boolalg.Or):
         return any(_condition_holds(arg, **kwargs) for arg in test.args)
+    test = _eval(test, **kwargs) if hasattr(test, 'doit') else test
+    if _is_true(test):
+        return True
+    if _is_false(test):
+        return False
     if hasattr(test, 'check') and callable(test.check):
         return bool(test.check(**kwargs))
     return False
@@ -1175,6 +1182,92 @@ def _condition_holds(test, **kwargs) -> bool:
 
 def _fresh_symbol(symbol: Symbol) -> Symbol:
     return Symbol(f'{symbol.name}${next(_MODULE_COUNTER)}')
+
+
+class Condition(MathematicaExpr):
+    """Mathematica ``Condition[expr, test]`` (``expr /; test``).
+
+    Evaluates the *test* first and returns ``expr`` (evaluated) only when the test
+    holds; a failing test raises ``StopIteration`` (the "no pattern match" signal).
+
+    The default deep ``doit`` would evaluate ``expr`` (an argument) BEFORE the test,
+    which is wrong — the body may be invalid when the test fails, and Mathematica's
+    ``Set[sym, value]`` assignments inside the test bind locals the body then uses
+    (e.g. ``Module[{q,r}, q*r*… /; (Set[q,…] =!= False && Set[r,…] =!= False)]``).
+    Since these expressions are immutable, we capture each ``Set``'s value while
+    evaluating the test and substitute those bindings into the body when it holds.
+    """
+
+    def __new__(cls, expr, test):
+        return Expr.__new__(cls, expr, test)
+
+    def doit(self, **kwargs):
+        return self._eval_condition(**kwargs)
+
+    def _evaluate(self, **kwargs):
+        return self._eval_condition(**kwargs)
+
+    def _eval_condition(self, **kwargs):
+        expr, test = self.args
+        bindings = {}
+
+        def _eval_set(node):
+            sym, val = node.args
+            value = val.doit(**kwargs) if hasattr(val, 'doit') else val
+            bindings[sym] = value
+            return value
+
+        test_eval = test
+        if isinstance(test, sympy.Basic):
+            test_eval = test.replace(lambda n: isinstance(n, Set), _eval_set)
+        if _condition_holds(test_eval, **kwargs):
+            body = expr.subs(bindings) if bindings else expr
+            return body.doit(**kwargs) if hasattr(body, 'doit') else body
+        raise StopIteration
+
+
+def rename_scoped_locals(expr):
+    """Alpha-rename ``With``/``Module``/``Block`` local variables to unique symbols.
+
+    Mathematica scopes ``With``/``Module``/``Block`` locals lexically, but here they
+    are bound by ``subs`` at evaluation time. If a local shares a name with a symbol
+    that later appears in the body (e.g. a caller substitutes symbolic values in, or
+    a pattern replacement fills a wildcard with an expression containing that name),
+    the local binding would clobber it -- ``With[{a=D[u,x]}, … a+b*x …]`` with the
+    body's ``a`` coming from elsewhere becomes ``… D[u,x]+b*x …``, silently corrupting
+    the result. Renaming the locals to fresh unique symbols (``a$N``) restores proper
+    lexical scoping. A no-op when there are no scoping nodes.
+
+    Apply this to an expression *before* any further symbol substitution into it
+    (e.g. a rewrite system should rename a rule's template locals before binding its
+    pattern variables).
+    """
+    if not isinstance(expr, sympy.Basic):
+        return expr
+    if isinstance(expr, (With, Module, Block)):
+        bindings, body = expr.args
+        locals_map = {}
+        new_items = []
+        for item in _list_items(bindings):
+            if isinstance(item, Set) and isinstance(item.args[0], Symbol):
+                sym, val = item.args
+                fresh = _fresh_symbol(sym)
+                locals_map[sym] = fresh
+                new_items.append(Set(fresh, rename_scoped_locals(val)))  # value uses OUTER scope
+            elif isinstance(item, Symbol):
+                fresh = _fresh_symbol(item)
+                locals_map[item] = fresh
+                new_items.append(fresh)
+            else:
+                new_items.append(rename_scoped_locals(item))
+        new_body = rename_scoped_locals(body).xreplace(locals_map)
+        return type(expr)(List(*new_items), new_body)
+    if expr.args:
+        try:
+            return expr.func(*[rename_scoped_locals(a) for a in expr.args])
+        except (TypeError, ValueError):
+            return expr
+    return expr
 
 
 def _apply_function(function, *items):

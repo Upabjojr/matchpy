@@ -24,7 +24,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import im, re, Abs, sign
 from sympy.functions.elementary.exponential import exp as sym_exp, log as sym_log, LambertW, exp, log
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
-from sympy.functions.elementary.integers import floor, frac
+from sympy.functions.elementary.integers import floor, frac, ceiling
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2, sin, cos, tan, cot, csc, sec
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
@@ -133,8 +133,15 @@ def exception_means_false(f):
 
 
 def Simplify(expr):
-    expr = simplify(expr)
-    return expr
+    # Resolve any unevaluated deferred MathematicaExpr nodes (e.g. Coeff, D) before
+    # handing the expression to sympy.simplify: a product of unevaluated nodes such
+    # as Coeff(v,x,0)*Coeff(v,x,4) drives sympy's nc_simplify into unbounded
+    # recursion (RecursionError). Doing this only when such nodes are present leaves
+    # ordinary expressions untouched.
+    from sympy_wolfram.mathematica_expressions import MathematicaExpr
+    if isinstance(expr, Basic) and expr.has(MathematicaExpr):
+        expr = expr.doit()
+    return simplify(expr)
 
 def Set(expr, value):
     return {expr: value}
@@ -185,11 +192,6 @@ def ZeroQ(*expr):
     else:
         return all(ZeroQ(i) for i in expr)
 
-def OneQ(a):
-    if a == S(1):
-        return True
-    return False
-
 def NegativeQ(u):
     u = Simplify(_ensure_sympy(u))
     if u in (zoo, oo):
@@ -212,11 +214,6 @@ def FreeQ(nodes, var):
         nodes = S(_ensure_sympy(nodes))
         return not nodes.has(var)
 
-def NFreeQ(nodes, var):
-    """ Note that in rubi 4.10.8 this function was not defined in `Integration Utility Functions.m`,
-    but was used in rules. So explicitly its returning `False`
-    """
-    return False
     # return not FreeQ(nodes, var)
 
 def List(*var):
@@ -280,9 +277,6 @@ def RealNumericQ(u):
 
 def PositiveOrZeroQ(u):
     return u.is_real and u >= 0
-
-def NegativeOrZeroQ(u):
-    return u.is_real and u <= 0
 
 def FractionOrNegativeQ(u):
     return FractionQ(u) or NegativeQ(u)
@@ -521,21 +515,23 @@ def Not(var):
 
 
 def FractionalPart(a):
-    return frac(a)
+    # FractionalPart[a] = a - IntegerPart[a]; carries the sign of a (Mathematica),
+    # e.g. FractionalPart[-7/2] = -1/2. sympy's frac() is floor-based (-> 1/2).
+    a = sympify(a)
+    return a - IntegerPart(a)
 
 def IntegerPart(a):
+    # Mathematica IntegerPart truncates toward zero (NOT floor): IntegerPart[-7/2]
+    # = -3 and IntegerPart[-3.6] = -3. floor would give -4.
+    a = sympify(a)
+    if a.is_number and a.is_real:
+        return floor(a) if a.is_nonnegative else ceiling(a)
     return floor(a)
 
 AppellF1 = appellf1
 
 def EllipticPi(*args):
     return elliptic_pi(*args)
-
-def EllipticE(*args):
-    return elliptic_e(*args)
-
-def EllipticF(Phi, m):
-    return elliptic_f(Phi, m)
 
 def ArcTan(a, b = None):
     if b is None:
@@ -561,18 +557,6 @@ def ArcSinh(a):
 def ArcCos(a):
     return acos(a)
 
-def ArcCsc(a):
-    return acsc(a)
-
-def ArcSec(a):
-    return asec(a)
-
-def ArcCsch(a):
-    return acsch(a)
-
-def ArcSech(a):
-    return asech(a)
-
 def Sinh(u):
     return sinh(u)
 
@@ -596,7 +580,10 @@ def LessEqual(*args):
         try:
             if (args[i] > args[i + 1]) != False:
                 return False
-        except (IndexError, NotImplementedError):
+        except (IndexError, NotImplementedError, TypeError):
+            # TypeError: sympy raises on an ordering comparison of a non-real
+            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
+            # the predicate is not provably true -> False (as for the other cases).
             return False
     return True
 
@@ -605,7 +592,10 @@ def Less(*args):
         try:
             if (args[i] >= args[i + 1]) != False:
                 return False
-        except (IndexError, NotImplementedError):
+        except (IndexError, NotImplementedError, TypeError):
+            # TypeError: sympy raises on an ordering comparison of a non-real
+            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
+            # the predicate is not provably true -> False (as for the other cases).
             return False
     return True
 
@@ -614,7 +604,10 @@ def Greater(*args):
         try:
             if (args[i] <= args[i + 1]) != False:
                 return False
-        except (IndexError, NotImplementedError):
+        except (IndexError, NotImplementedError, TypeError):
+            # TypeError: sympy raises on an ordering comparison of a non-real
+            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
+            # the predicate is not provably true -> False (as for the other cases).
             return False
     return True
 
@@ -623,7 +616,10 @@ def GreaterEqual(*args):
         try:
             if (args[i] < args[i + 1]) != False:
                 return False
-        except (IndexError, NotImplementedError):
+        except (IndexError, NotImplementedError, TypeError):
+            # TypeError: sympy raises on an ordering comparison of a non-real
+            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
+            # the predicate is not provably true -> False (as for the other cases).
             return False
     return True
 
@@ -678,11 +674,6 @@ def IntegerPowerQ(u):
     if isinstance(u, sym_exp): #special case for exp
         return IntegerQ(u.args[0])
     return PowerQ(u) and IntegerQ(u.args[1])
-
-def PositiveIntegerPowerQ(u):
-    if isinstance(u, sym_exp):
-        return IntegerQ(u.args[0]) and PositiveQ(u.args[0])
-    return PowerQ(u) and IntegerQ(u.args[1]) and PositiveQ(u.args[1])
 
 def FractionalPowerQ(u):
     if isinstance(u, sym_exp):
@@ -790,9 +781,6 @@ def InverseTrigQ(u):
     else:
         x = Head(u)
     return MemberQ([asin, acos, atan, acot, asec, acsc], x)
-
-def SinCosQ(f):
-    return MemberQ([sin, cos, sec, csc], Head(f))
 
 def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
@@ -1614,6 +1602,13 @@ def NonfreeFactors(u, x):
         return u
 
 def RemoveContentAux(expr, x):
+    # An expression free of x has no x-content to strip; Rubi returns it unchanged
+    # (e.g. RemoveContent[2*a+4*b, x] reduces to RemoveContentAux[1, x] -> 1).
+    # Guarding here also avoids feeding a bare atom to the matchpy replacer, which
+    # would mis-bind it and raise (matchpy Symbol has no .is_Add).
+    expr = sympify(expr)
+    if not expr.has(x):
+        return expr
     result = RemoveContentAux_replacer.replace(UtilityOperator(expr, x))
     if isinstance(result, Operation) and result.head == UtilityOp:
         return expr
@@ -1831,7 +1826,7 @@ def LeadDegree(u):
     v = LeadFactor(u)
     if PowerQ(v):
         return v.exp
-    return v
+    return S(1)
 
 def Numer(expr):
     # returns the numerator of u.
@@ -1850,9 +1845,6 @@ def Denom(u):
     elif ProductQ(u):
         return Mul(*[Denom(i) for i in u.args])
     return Denominator(u)
-
-def hypergeom(n, d, z):
-    return hyper(n, d, z)
 
 def Expon(expr, form):
     return Exponent(Together(expr), form)
@@ -2483,10 +2475,16 @@ def MinimumMonomialExponent(u, x):
     0
     """
 
-    n =MonomialExponent(First(u), x)
+    # In Mathematica MonomialExponent[i,x] stays unevaluated for a non-monomial
+    # term, so PosQ[n - <held>] is False and that term is skipped. The Python port
+    # returns None instead, so skip those terms explicitly (else `n - None` raises).
+    n = MonomialExponent(First(u), x)
     for i in u.args:
-        if PosQ(n - MonomialExponent(i, x)):
-            n = MonomialExponent(i, x)
+        e = MonomialExponent(i, x)
+        if e is None:
+            continue
+        if n is None or PosQ(n - e):
+            n = e
 
     return n
 
@@ -2609,6 +2607,11 @@ def QuotientOfLinearsMatchQ(u, x):
             return False
 
 def PolynomialTermQ(u, x):
+    # Rubi: FreeQ[u,x] || MatchQ[u, a_.*x^n_. /; FreeQ[a,x] && IntegerQ[n] && n>0].
+    # A constant (free of x) IS a polynomial term; the missing FreeQ clause used to
+    # push it into NonpolynomialTerms.
+    if FreeQ(u, x):
+        return True
     a = Wild('a', exclude=[x])
     n = Wild('n', exclude=[x])
     Match = u.match(a*x**n)
@@ -3568,10 +3571,10 @@ def SubstForExpn(u, v, w):
     if AtomQ(u):
         return u
     else:
-        k = 0
-        for i in u.args:
-            k +=  SubstForExpn(i, v, w)
-        return k
+        # Rubi: Map[SubstForExpn[#,v,w], u] -- recurse into args and rebuild with u's
+        # head (was incorrectly SUMMING the results, so SubstForExpn[x^2,x,a] gave
+        # a+2 instead of a^2).
+        return u.func(*[SubstForExpn(i, v, w) for i in u.args])
 
 def ExpandToSum(u, *x):
     if len(x) == 1:
@@ -5576,81 +5579,6 @@ def stdev(lst):
 
     return sd
 
-def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=False, _numerical=False):
-    #Returns True if (expr - optimal_output) is equal to 0 or a constant
-    #expr: integrated expression
-    #x: integration variable
-    #expand=True equates `expr` with `optimal_output` in expanded form
-    #_hyper_check=True evaluates numerically
-    #_diff=True differentiates the expressions before equating
-    #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
-    from sympy.simplify.simplify import nsimplify
-    if not expr.has(csc, sec, cot, csch, sech, coth):
-        optimal_output = process_trig(optimal_output)
-    if expr == optimal_output:
-        return True
-    if simplify(expr) == simplify(optimal_output):
-        return True
-
-    if nsimplify(expr) == nsimplify(optimal_output):
-        return True
-
-    if expr.has(sym_exp):
-        expr = powsimp(powdenest(expr), force=True)
-        if simplify(expr) == simplify(powsimp(optimal_output, force=True)):
-            return True
-    res = expr - optimal_output
-    if _numerical:
-        args = res.free_symbols
-        rand_val = []
-        try:
-            for i in range(0, 5): # check at 5 random points
-                rand_x = randint(1, 40)
-                substitutions = {s: rand_x for s in args}
-                rand_val.append(float(abs(res.subs(substitutions).n())))
-
-            if stdev(rand_val) < Pow(10, -3):
-                return True
-        except:
-            pass
-            # return False
-
-    dres = res.diff(x)
-    if _numerical:
-        args = dres.free_symbols
-        rand_val = []
-        try:
-            for i in range(0, 5): # check at 5 random points
-                rand_x = randint(1, 40)
-                substitutions = {s: rand_x for s in args}
-                rand_val.append(float(abs(dres.subs(substitutions).n())))
-            if stdev(rand_val) < Pow(10, -3):
-                return True
-            # return False
-        except:
-            pass
-            # return False
-
-
-
-    r = Simplify(nsimplify(res))
-    if r == 0 or (not r.has(x)):
-        return True
-
-    if _diff:
-        if dres == 0:
-            return True
-        elif Simplify(dres) == 0:
-            return True
-
-    if expand: # expands the expression and equates
-        e = res.expand()
-        if Simplify(e) == 0 or (not e.has(x)):
-            return True
-
-
-    return False
-
 
 def If(cond, t, f):
     # returns t if condition is true else f
@@ -6852,9 +6780,6 @@ class Discriminant(Function):
             return discriminant(a, b)
         except PolynomialError:
             return None  # stay unevaluated
-
-def Negative(x):
-    return x < S(0)
 
 def Quotient(m, n):
     return Floor(m/n)

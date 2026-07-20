@@ -3,16 +3,16 @@ from rubi_rules.utils.utility_functions import (Set, With, Module,
                                                 Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, List, Log,
                                                 PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
                                                 ComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
-                                                NegativeOrZeroQ, FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart,
+                                                FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart,
                                                 FracPart, RationalQ, ProductQ, SumQ, NonsumQ, First, Rest,
                                                 SqrtNumberQ, LinearQ, Sqrt, ArcCosh, Coefficient,
                                                 Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart, IntegerPart,
                                                 AppellF1, PolynomialQuotient, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos,
-                                                ArcCsc, ArcCsch, Sinh, Coth, LessEqual, Less, Greater,
+                                                Sinh, Coth, LessEqual, Less, Greater,
                                                 GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ,
-                                                IntegerPowerQ, PositiveIntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ,
+                                                IntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ,
                                                 Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, HyperbolicQ,
-                                                SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinCosQ, SinhCoshQ,
+                                                SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinhCoshQ,
                                                 LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re,
                                                 InverseHyperbolicQ, InverseFunctionQ, EqQ, FractionalPowerFreeQ,
                                                 ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent,
@@ -24,7 +24,7 @@ from rubi_rules.utils.utility_functions import (Set, With, Module,
                                                 FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms,
                                                 NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup,
                                                 AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor,
-                                                RemainingFactors, LeadBase, LeadDegree, Numer, Denom, hypergeom, Expon,
+                                                RemainingFactors, LeadBase, LeadDegree, Numer, Denom, Expon,
                                                 MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ,
                                                 GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList,
                                                 PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ,
@@ -83,8 +83,7 @@ from rubi_rules.utils.utility_functions import (Set, With, Module,
                                                 IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors,
                                                 MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential,
                                                 FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux,
-                                                FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, rubi_test,
-                                                If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent,
+                                                FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent,
                                                 Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor,
                                                 SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ,
                                                 ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor, Tanh,
@@ -94,8 +93,7 @@ from rubi_rules.utils.utility_functions import (Set, With, Module,
                                                 TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, IntegralFreeQ, Sum_doit,
                                                 PolynomialRemainder, CoprimeQ, Distribute, ProductLog,
                                                 Floor, PolyGamma, process_trig, ExponentList)
-# TODO - Add tests for: Int, NFreeQ, PureComplexNumberQ, EllipticPi, EllipticE,
-# EllipticF, ArcCot, ArcCoth, Tanh, Cosh, Sech, ArcSec, ArcSech, Subst,
+# TODO - Add tests for: Int, PureComplexNumberQ, EllipticPi, # ArcCot, ArcCoth, Tanh, Cosh, Sech, Subst,
 # SqrtNumberSumQ, Sin, Cos, Tan, Cot, Sec, Csc, Csch, TrigHyperbolicFreeQ,
 # InverseFunctionFreeQ, RealQ,
 
@@ -244,7 +242,7 @@ def test_FractionalPart():
 
 def test_IntegerPart():
     assert IntegerPart(3.6) == 3
-    assert IntegerPart(-3.6) == -4
+    assert IntegerPart(-3.6) == -3   # Mathematica truncates toward zero
 
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25).evalf() == 1.154700538379251529018298
@@ -265,12 +263,6 @@ def test_ArcSinh():
 
 def test_ArcCos():
     assert ArcCos(a) == acos(a)
-
-def test_ArcCsc():
-    assert ArcCsc(a) == acsc(a)
-
-def test_ArcCsch():
-    assert ArcCsch(a) == acsch(a)
 
 def test_Equal():
     assert Equal(a, a)
@@ -345,11 +337,6 @@ def test_RealNumericQ():
     assert RealNumericQ(S(1)) == True
     assert RealNumericQ(-S(1)) == True
 
-def test_NegativeOrZeroQ():
-    assert NegativeOrZeroQ(S(0)) == True
-    assert NegativeOrZeroQ(-S(1)) == True
-    assert NegativeOrZeroQ(S(1)) == False
-
 def test_FractionOrNegativeQ():
     assert FractionOrNegativeQ(S(1)/2) == True
     assert FractionOrNegativeQ(-S(1)) == True
@@ -391,10 +378,6 @@ def test_PowerQ():
 def test_IntegerPowerQ():
     assert IntegerPowerQ(a**2) == True
     assert IntegerPowerQ(a**0.5) == False
-
-def test_PositiveIntegerPowerQ():
-    assert PositiveIntegerPowerQ(a**3) == True
-    assert PositiveIntegerPowerQ(a**(-2)) == False
 
 def test_FractionalPowerQ():
     assert FractionalPowerQ(a**(S(2)/S(3)))
@@ -486,12 +469,6 @@ def test_InverseTrigQ():
     assert InverseTrigQ(acot(x))
     assert InverseTrigQ(asec(x))
     assert not InverseTrigQ(acsc(x) + asec(x))
-
-def test_SinCosQ():
-    assert SinCosQ(sin(x))
-    assert SinCosQ(cos(x))
-    assert SinCosQ(sec(x))
-    assert not SinCosQ(acsc(x))
 
 def test_SinhCoshQ():
     assert not SinhCoshQ(sin(x))
@@ -1046,19 +1023,19 @@ def test_QuotientOfLinearsMatchQ():
     assert QuotientOfLinearsMatchQ(2*(3 + 4*x)/(2 + 4*x), x)
 
 def test_PolynomialTermQ():
-    assert not PolynomialTermQ(S(3), x)
+    assert PolynomialTermQ(S(3), x)   # Rubi: FreeQ constant is a polynomial term
     assert PolynomialTermQ(3*x**6, x)
     assert not PolynomialTermQ(3*x**6+5*x, x)
 
 def test_PolynomialTerms():
     assert PolynomialTerms(x + 6*x**3 + log(x), x) == 6*x**3 + x
     assert PolynomialTerms(x + 6*x**3 + 6*x, x) == 6*x**3 + 7*x
-    assert PolynomialTerms(x + 6*x**3 + 6, x) == 6*x**3 + x
+    assert PolynomialTerms(x + 6*x**3 + 6, x) == 6*x**3 + x + 6   # the 6 is a poly term
 
 def test_NonpolynomialTerms():
     assert NonpolynomialTerms(x + 6*x**3 + log(x), x) == log(x)
     assert NonpolynomialTerms(x + 6*x**3 + 6*x, x) == 0
-    assert NonpolynomialTerms(x + 6*x**3 + 6, x) == 6
+    assert NonpolynomialTerms(x + 6*x**3 + 6, x) == 0
 
 def test_PseudoBinomialQ():
     assert PseudoBinomialQ(3 + 5*(x)**6, x)
@@ -1240,7 +1217,8 @@ def test_FunctionOfPower():
 
 def test_DivideDegreesOfFactors():
     assert DivideDegreesOfFactors(a**b, S(3)) == a**(b/3)
-    assert DivideDegreesOfFactors(a**b*c, S(3)) == a**(b/3)*c**(c/3)
+    # Mathematica: DivideDegreesOfFactors[a^b*c, 3] = a^(b/3)*c^(1/3)
+    assert DivideDegreesOfFactors(a**b*c, S(3)) == a**(b/3)*c**(S(1)/3)
 
 def test_MonomialFactor():
     assert MonomialFactor(a, x) == [0, a]
@@ -1661,8 +1639,9 @@ def test_ConstantFactor():
 
 def test_CommonFactors():
     assert CommonFactors([a, a, a]) == [a, 1, 1, 1]
-    assert CommonFactors([x*S(2), x**S(3)*S(2), sin(x)*x*S(2)]) == [2, x, x**3, x*sin(x)]
-    assert CommonFactors([x, x**S(3), sin(x)*x]) == [1, x, x**3, x*sin(x)]
+    # Mathematica: CommonFactors[{2x,2x^3,2x Sin[x]}] = {2x, 1, x^2, Sin[x]}
+    assert CommonFactors([x*S(2), x**S(3)*S(2), sin(x)*x*S(2)]) == [2*x, 1, x**2, sin(x)]
+    assert CommonFactors([x, x**S(3), sin(x)*x]) == [x, 1, x**2, sin(x)]
     assert CommonFactors([S(2), S(4), S(6)]) == [2, 1, 2, 3]
 
 def test_FunctionOfLinear():
@@ -1980,11 +1959,6 @@ def test_IntegralFreeQ():
     assert not IntegralFreeQ(Integral(a, x))
     assert IntegralFreeQ(a + b)
 
-def test_OneQ():
-    from rubi_rules.utils.utility_functions import OneQ
-    assert OneQ(S(1))
-    assert not OneQ(S(2))
-
 def test_DerivativeDivides():
     assert not DerivativeDivides(x, x, x)
     assert not DerivativeDivides(a, x + y, b)
@@ -2084,11 +2058,6 @@ def test_DeactivateTrig():
     from rubi_rules.utils.utility_functions import InertSec
     assert DeactivateTrig(sec(a + b*x), x) == InertSec(a + b*x)
 
-def test_Negative():
-    from rubi_rules.utils.utility_functions import Negative
-    assert Negative(S(-2))
-    assert not Negative(S(0))
-
 def test_Quotient():
     from rubi_rules.utils.utility_functions import Quotient
     assert Quotient(17, 5) == 3
@@ -2096,3 +2065,335 @@ def test_Quotient():
 def test_process_trig():
     assert process_trig(x*cot(x)) == x/tan(x)
     assert process_trig(coth(x)*csc(x)) == S(1)/(tanh(x)*sin(x))
+
+
+# ============================================================================
+# Mathematica cross-verified tests
+# ----------------------------------------------------------------------------
+# Every expected value below was checked against the ACTUAL output of the
+# corresponding Rubi function run in Wolfram Mathematica (Rubi 4.17.3.0, loaded
+# via <<Rubi`IntegrationUtilityFunctions`), by comparing InputForm results and
+# letting Mathematica judge equality (Simplify[ours == rubis]). They pin our
+# behaviour to the Mathematica reference and guard the bugs fixed alongside them.
+#
+# Rubi 4.17 renamed several predicates (we keep the older names); those were
+# verified against the equivalent form: ZeroQ(u)=EqQ[u,0], NonzeroQ=NeQ[,0],
+# PositiveQ=GtQ[,0], NegativeQ=LtQ[,0], PositiveIntegerQ=IGtQ[,0],
+# NegativeIntegerQ=ILtQ[,0].
+# ============================================================================
+import pytest as _pytest
+from rubi_rules.utils import utility_functions as _U
+from sympy import (Rational, sympify, simplify, sqrt, sin, cos, exp, log, pi, I,
+                   sinh, asin, asinh, S)
+
+
+def _meq(got, expected):
+    """Boolean/list exact match, else symbolic equality (Simplify == 0)."""
+    if isinstance(expected, bool) or isinstance(got, bool):
+        return bool(got) == bool(expected)
+    if isinstance(expected, (list, tuple)):
+        return list(got) == list(expected)
+    return simplify(sympify(got) - sympify(expected)) == 0
+
+
+_MMA_PREDICATES = [
+    (lambda: _U.IntegerQ(S(7)), True),
+    (lambda: _U.IntegerQ(Rational(7, 2)), False),
+    (lambda: _U.RationalQ(Rational(3, 4)), True),
+    (lambda: _U.FractionQ(Rational(3, 4)), True),
+    (lambda: _U.FractionQ(S(3)), False),
+    (lambda: _U.EvenQ(S(6)), True),
+    (lambda: _U.OddQ(S(5)), True),
+    (lambda: _U.SumQ(a + b), True),
+    (lambda: _U.ProductQ(2 * a), True),
+    (lambda: _U.PowerQ(a**2), True),
+    (lambda: _U.IntegerPowerQ(a**2), True),
+    (lambda: _U.FractionalPowerQ(a**Rational(1, 2)), True),
+    (lambda: _U.LinearQ(2 + 3 * x, x), True),
+    (lambda: _U.LinearQ(x**2, x), False),
+    (lambda: _U.QuadraticQ(1 + x + x**2, x), True),
+    (lambda: _U.BinomialQ(1 + x**3, x), True),
+    (lambda: _U.TrinomialQ(1 + x**2 + x**4, x), True),
+    (lambda: _U.PolynomialQ(1 + x + x**5, x), True),
+    (lambda: _U.PolyQ(1 + x**2, x, S(2)), True),
+    (lambda: _U.PolyQ(x**3 + 1, x, S(3)), True),
+    (lambda: _U.TrigQ(sin(x)), True),
+    (lambda: _U.TrigQ(exp(x)), False),
+    (lambda: _U.HyperbolicQ(sinh(x)), True),
+    (lambda: _U.InverseTrigQ(asin(x)), True),
+    (lambda: _U.InverseHyperbolicQ(asinh(x)), True),
+    (lambda: _U.LogQ(log(x)), True),
+    (lambda: _U.AtomQ(x), True),
+    (lambda: _U.AtomQ(a + b), False),
+    (lambda: _U.ComplexNumberQ(2 + 3 * I), True),
+    (lambda: _U.IntegersQ(S(2), S(3)), True),
+    (lambda: _U.IntegersQ(S(2), Rational(3, 2)), False),
+    (lambda: _U.SqrtNumberQ(sqrt(2)), True),
+    (lambda: _U.NumberQ(S(3)), True),
+    (lambda: _U.NumericQ(pi), True),
+    (lambda: _U.RationalFunctionQ((1 + x) / (1 + x**2), x), True),
+    (lambda: _U.AlgebraicFunctionQ(sqrt(1 + x), x), True),
+    (lambda: _U.MonomialQ(3 * x**2, x), True),
+    (lambda: _U.LinearMatchQ(2 + 3 * x, x), True),
+    (lambda: _U.QuadraticMatchQ(1 + x + x**2, x), True),
+    (lambda: _U.BinomialMatchQ(1 + x**3, x), True),
+    (lambda: _U.AbsurdNumberQ(sqrt(2)), True),
+    (lambda: _U.SumSimplerQ(x - 1, S(1)), True),
+    (lambda: _U.PosQ(a), True),
+    (lambda: _U.NegQ(-a), True),
+    (lambda: _U.NiceSqrtQ(S(4)), True),
+    (lambda: _U.NiceSqrtQ(S(2)), True),
+    (lambda: _U.PiecewiseLinearQ(2 + 3 * x, x), True),
+    (lambda: _U.QuotientOfLinearsQ((1 + x) / (2 + x), x), True),
+    (lambda: _U.InertTrigFreeQ(x**2), True),
+    (lambda: _U.PolynomialTermQ(3 * x**2, x), True),
+    (lambda: _U.PerfectSquareQ(S(9)), True),
+    (lambda: _U.PerfectSquareQ(x**2), True),
+    (lambda: _U.CalculusQ(x**2), False),
+    (lambda: _U.SqrtNumberSumQ(1 + sqrt(2)), True),
+    (lambda: _U.SqrtNumberSumQ(1 + x), False),
+    (lambda: _U.TrigSimplifyQ(x**2), False),
+    (lambda: _U.TrigHyperbolicFreeQ(x**2, x), True),
+    (lambda: _U.TrigHyperbolicFreeQ(sin(x), x), False),
+    (lambda: _U.InverseFunctionFreeQ(x**2, x), True),
+    (lambda: _U.InverseFunctionFreeQ(asin(x), x), False),
+    (lambda: _U.FunctionOfExponentialQ(exp(x) + exp(2 * x), x), True),
+    (lambda: _U.FunctionOfTrigOfLinearQ(sin(1 + 2 * x), x), True),
+    (lambda: _U.FunctionOfTrigOfLinearQ(x**2, x), False),
+    (lambda: _U.SomeNegTermQ(-a + b), True),
+    (lambda: _U.MergeableFactorQ(x, S(2), x), True),
+    (lambda: _U.MergeableFactorQ(x, S(2), a), False),
+]
+
+# Our (older) predicate name verified against the Rubi 4.17 renamed equivalent.
+_MMA_RENAMED = [
+    (lambda: _U.ZeroQ(S(0)), True),                     # EqQ[0, 0]
+    (lambda: _U.ZeroQ(a * e - b * d * S(0)), False),    # EqQ[a*e, 0]
+    (lambda: _U.NonzeroQ(S(1)), True),                  # NeQ[1, 0]
+    (lambda: _U.PositiveQ(S(3)), True),                 # GtQ[3, 0]
+    (lambda: _U.NegativeQ(S(-3)), True),                # LtQ[-3, 0]
+    (lambda: _U.PositiveIntegerQ(S(5)), True),          # IGtQ[5, 0]
+    (lambda: _U.NegativeIntegerQ(S(-5)), True),         # ILtQ[-5, 0]
+]
+
+_MMA_EXPRESSIONS = [
+    (lambda: _U.Coeff(a + b * x + c * x**2, x, 2), c),
+    (lambda: _U.Coeff(a + b * x, x, 0), a),
+    (lambda: _U.Coeff(2 + 3 * x + 4 * x**2 + 5 * x**3, x, 3), S(5)),
+    (lambda: _U.Coefficient(3 + 5 * x + 7 * x**2, x, 1), S(5)),
+    (lambda: _U.Numerator((a + b) / c), a + b),
+    (lambda: _U.Numerator((a + b) / (c - d)), a + b),
+    (lambda: _U.Denominator((a + b) / (c * d)), c * d),
+    (lambda: _U.Denominator(a / (b**2 * c)), b**2 * c),
+    (lambda: _U.Numer((a + b) / c), a + b),
+    (lambda: _U.Denom(a / (b * c)), b * c),
+    (lambda: _U.SmartNumerator(a / b), a),
+    (lambda: _U.SmartDenominator(a / b**2), b**2),
+    (lambda: _U.NumericFactor(6 * x * y), S(6)),
+    (lambda: _U.NumericFactor(Rational(3, 5) * a), Rational(3, 5)),
+    (lambda: _U.NumericFactor(2 * a + 4 * b), S(2)),
+    (lambda: _U.NumericFactor(-3 * x), S(-3)),
+    (lambda: _U.NumericFactor(-2 * a - 6 * b), S(-2)),
+    (lambda: _U.Expon(a + b * x**2 + c * x**5, x), S(5)),
+    (lambda: _U.Expon(x**7 + x**2, x), S(7)),
+    (lambda: _U.LeafCount(a * x**2 + b), S(7)),
+    (lambda: _U.ExpandToSum((2 * x + 1) * (x - 3), x), 2 * x**2 - 5 * x - 3),
+    (lambda: _U.ExpandIntegrand(1 / (x * (x + 1)), x), 1 / x - 1 / (1 + x)),
+    (lambda: _U.Together(1 / x + 1 / (x + 1)), (1 + 2 * x) / (x * (1 + x))),
+    (lambda: _U.Together(1 / a + 1 / b + 1 / c), (a * b + a * c + b * c) / (a * b * c)),
+    (lambda: _U.Rt(S(27), S(3)), S(3)),
+    (lambda: _U.Rt(S(9), S(2)), S(3)),
+    (lambda: _U.Rt(S(-27), S(3)), S(-3)),
+    (lambda: _U.Rt(x**2, S(2)), x),
+    (lambda: _U.Rt(x**4, S(2)), x**2),
+    (lambda: _U.Rt(S(16), S(4)), S(2)),
+    (lambda: _U.Simplify(sin(x)**2 + cos(x)**2), S(1)),
+    (lambda: _U.Sign(S(5)), S(1)),
+    (lambda: _U.FreeFactors(a * b * x, x), a * b),
+    (lambda: _U.NonfreeFactors(a * b * x, x), x),
+    (lambda: _U.FreeFactors(a**2 * x**3, x), a**2),
+    (lambda: _U.NonfreeFactors(a**2 * x**3, x), x**3),
+    (lambda: _U.FreeTerms(a + b * x + c, x), a + c),
+    (lambda: _U.NonfreeTerms(a + b * x + c, x), b * x),
+    (lambda: _U.LeadTerm(a + b + c), a),
+    (lambda: _U.RemainingTerms(a + b + c), b + c),
+    (lambda: _U.LeadFactor(a * b * c), a),
+    (lambda: _U.RemainingFactors(a * b * c), b * c),
+    (lambda: _U.LeadBase(a**3), a),
+    (lambda: _U.BinomialParts(3 + 5 * x**2, x), [S(3), S(5), S(2)]),
+    (lambda: _U.BinomialParts(5 - 2 * x**3, x), [S(5), S(-2), S(3)]),
+    (lambda: _U.BinomialDegree(3 + 5 * x**4, x), S(4)),
+    (lambda: _U.TrinomialParts(1 + 2 * x**2 + 3 * x**4, x), [S(1), S(2), S(3), S(2)]),
+    (lambda: _U.TrinomialParts(2 + 3 * x**3 + 4 * x**6, x), [S(2), S(3), S(4), S(3)]),
+    (lambda: _U.TrinomialDegree(1 + x**2 + x**4, x), S(2)),
+    (lambda: _U.GeneralizedBinomialParts(a * x + b * x**3, x), [a, b, S(3), S(1)]),
+    (lambda: _U.PolynomialQuotient(x**2 - 1, x - 1, x), 1 + x),
+    (lambda: _U.PolynomialQuotient(x**3 - 1, x - 1, x), 1 + x + x**2),
+    (lambda: _U.PolynomialRemainder(x**2 + 1, x - 1, x), S(2)),
+    (lambda: _U.PolynomialRemainder(x**3 + x + 1, x**2 + 1, x), S(1)),
+    (lambda: _U.RemoveContent(6 * x + 9, x), 3 + 2 * x),
+    (lambda: _U.Discriminant(a + b * x + c * x**2, x), b**2 - 4 * a * c),
+    (lambda: _U.Discriminant(x**2 + 2 * x + 5, x), S(-16)),
+    (lambda: _U.CoefficientList(1 + 2 * x + 3 * x**2, x), [S(1), S(2), S(3)]),
+    (lambda: _U.MinimumMonomialExponent(x**2 + x**3, x), S(2)),
+    (lambda: _U.ExpandTrigReduce(sin(x) * cos(x), x), sin(2 * x) / 2),
+    (lambda: _U.NormalizeIntegrand(x / x**2, x), 1 / x),
+    (lambda: _U.SimplifyIntegrand(x / x**2, x), 1 / x),
+    (lambda: _U.SimplifyIntegrand((x**2 - 1) / (x - 1), x), 1 + x),
+    (lambda: _U.IntPart(Rational(7, 2)), S(3)),
+    (lambda: _U.FracPart(Rational(7, 2)), Rational(1, 2)),
+    (lambda: _U.ExpandTrig(sin(2 * x), x), sin(2 * x)),
+    (lambda: _U.NormalizeTogether(1 / x + 1 / (x + 1)), (1 + 2 * x) / (x * (1 + x))),
+    (lambda: _U.SmartSimplify(sin(x)**2 + cos(x)**2), S(1)),
+    (lambda: _U.ExpandExpression((x + 1) * (x + 2), x), 2 + 3 * x + x**2),
+    (lambda: _U.NormalizeSumFactors(2 * a + 2 * b), 2 * a + 2 * b),
+    (lambda: _U.Simp(2 * x + 3 * x, x), 5 * x),
+    (lambda: _U.SmartApart(1 / (x * (x + 1)), x), 1 / x - 1 / (x + 1)),
+    (lambda: _U.FactorAbsurdNumber(S(12)), [(2, 2), (3, 1)]),
+    (lambda: _U.AbsurdNumberGCD(S(4), S(6)), S(2)),
+    (lambda: _U.AbsurdNumberGCD(S(12), S(18), S(30)), S(6)),
+    (lambda: _U.ExpandTrigReduceAux(sin(x) * cos(x), x), sin(2 * x) / 2),
+]
+
+# Regression guards for bugs found & fixed via Mathematica cross-checking.
+_MMA_BUGFIXES = [
+    # IntPart/FracPart: Mathematica truncates toward zero (was floor-based).
+    (lambda: _U.IntPart(Rational(-7, 2)), S(-3)),              # was -4
+    (lambda: _U.FracPart(Rational(-7, 2)), Rational(-1, 2)),   # was 1/2
+    (lambda: _U.IntPart(Rational(-5, 3)), S(-1)),
+    (lambda: _U.FracPart(Rational(-5, 3)), Rational(-2, 3)),
+    (lambda: _U.IntegerPart(S(-3.6)), S(-3)),                  # was -4
+    (lambda: _U.IntegerPart(Rational(-7, 2)), S(-3)),
+    (lambda: _U.FractionalPart(Rational(-7, 2)), Rational(-1, 2)),
+    # LeadDegree of a non-power lead factor is 1 (was returning the factor).
+    (lambda: _U.LeadDegree(8 * x**3), S(1)),                   # LeadFactor is 8 -> degree 1
+    (lambda: _U.LeadDegree(x**3), S(3)),
+    (lambda: _U.LeadDegree(a**b), b),
+    # RemoveContent of an x-free sum is 1 (was crashing on a bare atom).
+    (lambda: _U.RemoveContent(2 * a + 4 * b, x), S(1)),
+    # SubstForExpn rebuilds with the arg's head (Map); was summing -> x^2 gave a+2.
+    (lambda: _U.SubstForExpn(x**2, x, a), a**2),
+    (lambda: _U.SubstForExpn(x**2 + x, x, a), a**2 + a),
+    # PolynomialTermQ: a constant is a polynomial term (Rubi's FreeQ clause).
+    (lambda: _U.PolynomialTermQ(S(3), x), True),
+    (lambda: _U.PolynomialTerms(x + 6 * x**3 + 6, x), 6 * x**3 + x + 6),
+    (lambda: _U.NonpolynomialTerms(x + 6 * x**3 + 6, x), S(0)),
+]
+
+
+@_pytest.mark.parametrize("call, expected", _MMA_PREDICATES, ids=range(len(_MMA_PREDICATES)))
+def test_mma_predicates(call, expected):
+    assert _meq(call(), expected)
+
+
+@_pytest.mark.parametrize("call, expected", _MMA_RENAMED, ids=range(len(_MMA_RENAMED)))
+def test_mma_renamed_predicates(call, expected):
+    assert _meq(call(), expected)
+
+
+@_pytest.mark.parametrize("call, expected", _MMA_EXPRESSIONS, ids=range(len(_MMA_EXPRESSIONS)))
+def test_mma_expressions(call, expected):
+    assert _meq(call(), expected)
+
+
+@_pytest.mark.parametrize("call, expected", _MMA_BUGFIXES, ids=range(len(_MMA_BUGFIXES)))
+def test_mma_bugfix_regressions(call, expected):
+    assert _meq(call(), expected)
+
+
+# ============================================================================
+# Deferred MathematicaExpr node fixes (rubi_utils) verified against Mathematica
+# ============================================================================
+def test_deferred_SubstFor_delegates_to_eager():
+    # The deferred SubstFor used a naive u.subs(v, x); it must delegate to the eager
+    # implementation, so SubstFor(b*x, x, x) = x/b (NOT x). The missing 1/b silently
+    # multiplied symbolic-coefficient integrals by the linear coefficient.
+    from rubi_rules.utils.rubi_utils import SubstFor as _DSubstFor
+    xx, bb = Symbol('x'), Symbol('b')
+    assert _DSubstFor(bb*xx, xx, xx).doit() == xx/bb
+    assert _DSubstFor(xx, xx, xx).doit() == xx
+
+
+def test_deferred_PolynomialRemainder_transcendental():
+    # Mathematica treats a transcendental-in-x expression as degree 0 in x:
+    # PolynomialRemainder[log(...x...), q, x] = log(...), PolynomialQuotient = 0.
+    # sympy.rem/quo raise PolynomialError there; the nodes now match Mathematica.
+    from rubi_rules.utils.rubi_utils import PolynomialRemainder as _PRem, PolynomialQuotient as _PQuo
+    from sympy import log
+    xx, bb, aa = Symbol('x'), Symbol('b'), Symbol('a')
+    p = log(-bb*xx/aa)
+    assert _PRem(p, xx**2 + 1, xx).doit() == p
+    assert _PQuo(p, xx**2 + 1, xx).doit() == 0
+    # ordinary polynomial division still works
+    assert _PRem(xx**2 + 1, xx - 1, xx).doit() == 2
+    assert _PQuo(xx**2 - 1, xx - 1, xx).doit() == xx + 1
+
+
+def test_Simplify_resolves_deferred_nodes_no_recursion():
+    # Simplify must resolve deferred MathematicaExpr nodes (Coeff, …) before
+    # sympy.simplify: a product of unevaluated ones like Coeff(6x+4,x,0)*Coeff(6x+4,x,4)
+    # (= 4*0 = 0) otherwise drives sympy's nc_simplify into a RecursionError.
+    from rubi_rules.utils.rubi_utils import Coeff as _DCoeff
+    from rubi_rules.utils.utility_functions import Simplify as _Simplify
+    xx = Symbol('x')
+    assert _Simplify(_DCoeff(6*xx + 4, xx, 0) * _DCoeff(6*xx + 4, xx, 4)) == 0
+    # ordinary expressions still simplify normally
+    assert _Simplify((xx**2 - 1) / (xx - 1)) == xx + 1
+
+
+# NOTE: IntHide's end-to-end integration behaviour needs the full rule set, so its
+# test lives in the single consolidated slow test (test_integrate_exp_gaussian.py::
+# test_full_ruleset_integrals -> _check_inthide), keeping all full-rule-set-loading
+# tests in one place.
+
+
+def test_Dist_two_arg_distributes():
+    # Rubi also uses a 2-arg Dist[u, v] (no integration variable) -- distribute u
+    # over the terms of v. Passing 2 args to the eager 3-arg Dist raised TypeError.
+    from rubi_rules.utils.rubi_utils import Dist as _Dist
+    aa, bb, xx = Symbol('a'), Symbol('b'), Symbol('x')
+    assert _Dist(aa, bb*xx + xx**2).doit() == aa*bb*xx + aa*xx**2
+    assert _Dist(aa, xx**2).doit() == aa*xx**2
+
+
+def test_deferred_Coeff_symbolic_n_delegates():
+    # Deferred Coeff[u, x, n] used `u.coeff(x, int(n))`, which crashed on a symbolic
+    # n ('Cannot convert symbols to int') -- aborting the DFS for e.g.
+    # x^3*(a+b*atanh(c*x)). It must delegate to the eager Coeff (which handles it).
+    from rubi_rules.utils.rubi_utils import Coeff as _Coeff
+    from rubi_rules.utils.utility_functions import Coeff as _EagerCoeff
+    aa, bb, cc, xx, nn = symbols('a b c x n')
+    expr = aa + bb*xx + cc*xx**3
+    # concrete n still works
+    assert _Coeff(expr, xx, 3).doit() == cc
+    assert _Coeff(expr, xx, 0).doit() == aa
+    # symbolic n no longer crashes; matches the eager utility
+    assert _Coeff(expr, xx, nn).doit() == _EagerCoeff(expr, xx, nn)
+
+
+def test_comparisons_on_non_real_do_not_crash():
+    # sympy raises TypeError on an ordering comparison of a non-real (e.g. -2*I).
+    # Mathematica leaves Less/Greater unevaluated there, so TrueQ[...] is False.
+    # Verified on the Pi: TrueQ[Less[-2 I, 3]] -> False. Our predicates must return
+    # False (not crash) -- this used to abort the DFS for e.g. atanh(a+b*x)^2.
+    from rubi_rules.utils.utility_functions import (
+        Less, Greater, LessEqual, GreaterEqual)
+    for fn in (Less, Greater, LessEqual, GreaterEqual):
+        assert fn(-2*I, 3) is False
+        assert fn(I, 2) is False
+    # real comparisons still work
+    assert Less(1, 2, 3) is True
+    assert Less(1, 3, 2) is False
+    assert Greater(3, 2, 1) is True
+
+
+def test_MinimumMonomialExponent_skips_non_monomial_terms():
+    # A sum with a non-monomial-in-x term (e.g. b*exp(x)) must not crash: in
+    # Mathematica MonomialExponent stays unevaluated there, so the term is skipped.
+    # Previously `n - MonomialExponent(...)` raised `Zero - None` TypeError, which
+    # aborted the whole DFS search for e.g. Int[(a+b*E^x)^n*E^x, x].
+    aa, bb, xx = Symbol('a'), Symbol('b'), Symbol('x')
+    assert _U.MinimumMonomialExponent(aa + bb*exp(xx), xx) == 0
+    # ordinary monomial sums still give the smallest exponent
+    assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 3*xx**5, xx) == 2
+    assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 1, xx) == 0

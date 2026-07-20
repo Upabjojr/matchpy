@@ -193,6 +193,19 @@ def _symbol_wrapper_from_expression(expr: SymbolWrapper):
     return expr.value
 
 
+def _unwrap_tuplearg(v):
+    """Recursively turn hyper/meijerg TupleArg containers back into plain tuples.
+
+    hyper/meijerg/appellf1 constructors accept plain lists/tuples for their
+    parameter groups but reject an already-built ``TupleArg`` (e.g. hyper does
+    ``Tuple(*ap)``, which cannot unpack one).  meijerg nests them
+    (``((a,), (b,))``), so the unwrap must recurse.
+    """
+    if type(v).__name__ == 'TupleArg':
+        return tuple(_unwrap_tuplearg(e) for e in v.args)
+    return v
+
+
 def matchpy_to_sympy(expr):
     """Convert a MatchPy expression tree back to a SymPy expression.
 
@@ -216,6 +229,12 @@ def matchpy_to_sympy(expr):
             # base**1 = base.  SympyPow(base) would raise TypeError, so unwrap.
             if sympy_class is SympyPow and len(args) == 1:
                 return args[0]
+            # hyper/meijerg/appellf1 store their parameter lists in TupleArg
+            # containers.  Their constructors accept plain lists/tuples and wrap
+            # them, but reject an already-built TupleArg (hyper does Tuple(*ap),
+            # which cannot unpack a TupleArg), so unwrap those back to tuples --
+            # recursively, since meijerg nests them (((a,),(b,)), ...).
+            args = [_unwrap_tuplearg(a) for a in args]
             return sympy_class(*args)
         if head == LIST_HEAD:
             return [matchpy_to_sympy(op) for op in expr.operands]

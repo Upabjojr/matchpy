@@ -40,6 +40,7 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
 from sympy_matching import RubiConstraint
 from sympy_wolfram.mathematica_expressions import (
     CompoundExpression,
+    Condition,   # standard Wolfram node; defined in sympy_wolfram, re-exported here
     Head,
     If,
     List,
@@ -236,8 +237,12 @@ class Coeff(MathematicaExpr):
         return Expr.__new__(cls, u, x, n)
 
     def _evaluate(self, **kwargs):
+        # Delegate to the eager utility, which handles a symbolic n (via
+        # Util_Coefficient) -- `u.coeff(x, int(n))` crashed on symbolic n
+        # ('Cannot convert symbols to int').
+        from .utility_functions import Coeff as _Coeff
         u, x, n = self.args
-        return u.coeff(x, int(n))
+        return _Coeff(u, x, n)
 
 
 # =============================================================================
@@ -297,7 +302,13 @@ class PolynomialQuotient(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         p, q, x = self.args
-        return sympy.quo(p, q, x)
+        try:
+            return sympy.quo(p, q, x)
+        except sympy.PolynomialError:
+            # p is transcendental in x (e.g. contains log(...x...)); Mathematica
+            # treats such a term as degree 0 in x, so the quotient by a
+            # positive-degree q is 0 (remainder is p).
+            return sympy.Integer(0)
 
 
 # =============================================================================
@@ -312,7 +323,13 @@ class PolynomialRemainder(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         p, q, x = self.args
-        return sympy.rem(p, q, x)
+        try:
+            return sympy.rem(p, q, x)
+        except sympy.PolynomialError:
+            # p is transcendental in x (e.g. contains log(...x...)); Mathematica
+            # treats such a term as degree 0 in x, so it is its own remainder mod a
+            # positive-degree q (quotient is 0).
+            return p
 
 
 # =============================================================================
@@ -338,26 +355,6 @@ class CannotIntegrate(MathematicaExpr):
 # =============================================================================
 # Condition[expr, test] — conditional expression
 # =============================================================================
-
-class Condition(MathematicaExpr):
-    """Mathematica Condition[expr, test].
-
-    Returns expr at evaluation time. The condition was already verified by the
-    Rubi pattern-matching constraints at match time.
-    """
-
-    def __new__(cls, expr, test):
-        return Expr.__new__(cls, expr, test)
-
-    def _evaluate(self, **kwargs):
-        expr, test = self.args
-        # Enforce Mathematica's Condition semantics directly at evaluation time.
-        if _condition_holds(test, **kwargs):
-            return expr.doit() if hasattr(expr, 'doit') else expr
-        if test is False or test == sympy.S.false:
-            raise StopIteration
-        raise StopIteration
-
 
 # =============================================================================
 # Rule[lhs, rhs] — Mathematica substitution rule (lhs -> rhs)
@@ -418,16 +415,25 @@ class Unintegrable(MathematicaExpr):
 # =============================================================================
 
 class IntHide(MathematicaExpr):
-    """Rubi IntHide[u, x] — calls Int[u, x] with step display suppressed.
+    """Rubi ``IntHide[u, x] := Block[{$ShowSteps=False}, Int[u, x]]``.
 
-    Kept unevaluated in this implementation (no step display machinery).
+    IntHide actually integrates ``u`` (only the step display is suppressed). Many
+    rules bind a local to ``IntHide[...]`` and then use its antiderivative (3.1.4,
+    the inverse-hyperbolic families, …); leaving it unevaluated breaks all of them.
     """
 
     def __new__(cls, u, x):
         return Expr.__new__(cls, u, x)
 
     def _evaluate(self, **kwargs):
-        return self
+        u, x = self.args
+        from rubi_rules.base_objects import rubi_integrate, Int
+        result = rubi_integrate(u, x)
+        # If integration didn't finish, fall back to the passive Int so the caller
+        # can proceed (and never leave an unevaluated IntHide behind).
+        if result.has(Int) or 'CannotIntegrate' in str(result) or 'Unintegrable' in str(result):
+            return Int(u, x)
+        return result
 
 
 # =============================================================================
@@ -482,6 +488,34 @@ class Together(MathematicaExpr):
     def _evaluate(self, **kwargs):
         expr, = self.args
         return together(expr)
+
+
+class FunctionOfExponential(MathematicaExpr):
+    """Deferred FunctionOfExponential[u, x] -- delegates to the eager utility.
+
+    Returns the base exponential ``E^(a+b x)`` that ``u`` is a function of.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import FunctionOfExponential as _f
+        return _f(*self.args)
+
+
+class FunctionOfExponentialFunction(MathematicaExpr):
+    """Deferred FunctionOfExponentialFunction[u, x] -- delegates to the eager utility.
+
+    Rewrites ``u`` as a function of a new variable standing in for the exponential.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import FunctionOfExponentialFunction as _f
+        return _f(*self.args)
 
 
 # =============================================================================
@@ -641,14 +675,12 @@ class SubstFor(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
-        if len(self.args) == 3:
-            v, u, x = self.args
-            return u.subs(v, x)
-        elif len(self.args) == 4:
-            w, v, u, x = self.args
-            inner = SubstFor(v, u, x).doit()
-            return simplify(w * inner)
-        return self
+        # Delegate to the eager implementation. The naive `u.subs(v, x)` used before
+        # is wrong when v has a free factor: SubstFor[b*x, x, x] must be x/b (the
+        # eager one factors it out), not x — the missing 1/b silently multiplied
+        # many symbolic-coefficient results by the linear coefficient.
+        from .utility_functions import SubstFor as _SubstFor
+        return _SubstFor(*self.args)
 
 
 # Backward-compatible alias (user listed 'SubstrFor'; Rubi calls it 'SubstFor')
@@ -670,11 +702,21 @@ SubstrFor = SubstFor
 # =============================================================================
 
 class Dist(MathematicaExpr):
-    """Rubi Dist[u, v, x] — distribute u over v."""
+    """Rubi Dist[u, v, x] — distribute u over v.
+
+    Rubi also uses a 2-arg ``Dist[u, v]`` (e.g. 3.1.4#3, several inverse-hyperbolic
+    rules) with no integration variable: it just distributes ``u`` over the terms of
+    ``v`` (there is no free-of-x normalisation to do without ``x``).
+    """
     def __new__(cls, *args):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
+        if len(self.args) == 2:
+            u, v = self.args
+            if getattr(v, 'is_Add', False):
+                return sympy.Add(*[u * t for t in v.args])
+            return u * v
         from .utility_functions import Dist as _Dist
         return _Dist(*self.args)
 

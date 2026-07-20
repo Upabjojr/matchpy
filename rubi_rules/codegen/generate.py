@@ -101,6 +101,28 @@ def _ffl_substitute_symbols(expr, substitutions: Dict[str, object]):
     return expr
 
 
+def _summarize_ffl_guard(ffl) -> str:
+    """Short human-readable summary of an FFL guard, for a dropped-guard comment.
+
+    Renders heads and atoms compactly (e.g. ``Not[MatchQ[u, ...]]``) without the
+    full nested structure, purely so the emitted comment is traceable.
+    """
+    def render(node, depth=0):
+        if isinstance(node, str):
+            return node
+        if not isinstance(node, list) or not node:
+            return repr(node)
+        head = node[0]
+        head_str = render(head) if not isinstance(head, str) else head
+        if depth >= 3:
+            return f"{head_str}[...]"
+        args = ', '.join(render(a, depth + 1) for a in node[1:])
+        return f"{head_str}[{args}]"
+
+    text = render(ffl)
+    return text if len(text) <= 160 else text[:157] + '...'
+
+
 def _extract_nested_with_condition(result_ffl):
     """Lift ``With[..., Condition(expr, test)]`` into an outer rule condition.
 
@@ -284,6 +306,8 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'EllipticPi': 'EllipticPi',
     'NormalizePseudoBinomial': 'NormalizePseudoBinomial',
     'SubstFor': 'SubstFor',
+    'FunctionOfExponential': 'FunctionOfExponential',
+    'FunctionOfExponentialFunction': 'FunctionOfExponentialFunction',
     "D": "D",
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',
@@ -767,28 +791,52 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         # --- Constraints: use ffl_to_sympy_short_code with custom_functions ---
         # If condition is And[...], flatten into separate constraint items
         # (the constraints tuple already implies conjunction).
+        #
+        # Constraints that reference a function-head wildcard (``F_[v_]``) cannot
+        # be translated yet (see ffl_to_sympy). Rather than drop the WHOLE rule,
+        # we drop *only* an EXCLUSIONARY ``Not[... MatchQ ...]`` conjunct and keep
+        # the rest. Removing an exclusion merely broadens which integrands the
+        # rule is *offered*; for these substitution meta-rules the result is still
+        # correct (verified for rule 2692 -> the FunctionOfExponential family) and
+        # the matcher's natural rule ordering keeps it from stealing forms a
+        # specific rule handles. We must NOT drop a *positive* requirement (a bare
+        # ``MatchQ`` or an ``Or[..., MatchQ]`` disjunction): removing it broadens
+        # the rule unsafely and can yield wrong answers -- such a rule stays fully
+        # skipped, exactly as before. Dropped guards are recorded in a comment.
         constraint_parts: List[str] = []
-        for condition_ffl in condition_ffls:
-            if isinstance(condition_ffl, list) and condition_ffl[0] == 'And':
-                # Flatten top-level And into separate constraints.
-                for child in condition_ffl[1:]:
-                    code, _, _, _symbols = ffl_to_sympy_short_code(
-                        child,
-                        fixed_var=fixed_var,
-                        custom_functions=_CONSTRAINT_CUSTOM,
-                        wildcards=non_opt_wildcards,
-                        optional_wildcards=opt_wildcards,
-                    )
-                    constraint_parts.append(code)
-            else:
-                code, _, _, _symbols = ffl_to_sympy_short_code(
-                    condition_ffl,
+        dropped_guards: List[str] = []
+
+        def _translate_conjunct(child):
+            try:
+                code, _, _, _ = ffl_to_sympy_short_code(
+                    child,
                     fixed_var=fixed_var,
                     custom_functions=_CONSTRAINT_CUSTOM,
                     wildcards=non_opt_wildcards,
                     optional_wildcards=opt_wildcards,
                 )
-                constraint_parts.append(code)
+                return code
+            except ValueError as exc:
+                is_fhw = ('function-head wildcard' in str(exc)
+                          or 'Non-string function head' in str(exc))
+                # Only tolerate the FHW error for an exclusionary Not[...] guard.
+                is_exclusion = isinstance(child, list) and child and child[0] == 'Not'
+                if is_fhw and is_exclusion:
+                    dropped_guards.append(_summarize_ffl_guard(child))
+                    return None
+                raise
+
+        for condition_ffl in condition_ffls:
+            if isinstance(condition_ffl, list) and condition_ffl[0] == 'And':
+                # Flatten top-level And into separate constraints.
+                for child in condition_ffl[1:]:
+                    code = _translate_conjunct(child)
+                    if code is not None:
+                        constraint_parts.append(code)
+            else:
+                code = _translate_conjunct(condition_ffl)
+                if code is not None:
+                    constraint_parts.append(code)
         constraint_str = ', '.join(constraint_parts)
 
         constraints_frag = f"({constraint_str},)" if constraint_str else "()"
@@ -810,6 +858,10 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         # Build the RubiRulePattern entry
         lines_out = []
         lines_out.append(f"    # Rule {rule_number}")
+        for g in dropped_guards:
+            lines_out.append(
+                f"    # NOTE: dropped guard (function-head wildcard, not yet translatable): {g}"
+            )
         lines_out.append(f"    RubiRulePattern(")
         lines_out.append(f"        pattern=Int({pattern_code}, x),")
         lines_out.append(f"        constraints={constraints_frag},")

@@ -17,10 +17,26 @@ import sympy
 from sympy import Symbol, Rational, cos, exp, log, sin, simplify, symbols
 
 from rubi_rules.base_objects import (
+    _dfs_is_clean,
     _preprocess_integrate,
     build_tracing_replacer,
     rubi_integrate,
 )
+
+
+def test_dfs_is_clean_rejects_degenerate_results():
+    """A finished antiderivative must be finite: `zoo`/`nan` are degenerate and
+    must not count as a clean result, else a divide-by-zero rule branch can be
+    preferred over the correct finite one (run-to-run-varying `zoo` answers, e.g.
+    for exp(acoth(a*x))).
+    """
+    xx, aa = Symbol('x'), Symbol('a')
+    assert _dfs_is_clean(xx**2 / 2) is True
+    assert _dfs_is_clean(aa * sympy.sqrt(1 - 1/(aa**2 * xx**2))) is True
+    # degenerate values are not clean
+    assert _dfs_is_clean(xx + sympy.zoo * xx**2) is False
+    assert _dfs_is_clean(sympy.nan) is False
+    assert _dfs_is_clean(xx * sympy.zoo) is False
 
 
 # ---------------------------------------------------------------------------
