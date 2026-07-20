@@ -65,35 +65,60 @@ class TestExponentialGaussian:
         assert _derivative_matches(result, integrand)
 
 
-# Integrands the full rule set integrates to a verified closed form. Grouped by
-# category; each is checked by differentiating the result (see _derivative_matches).
+# Integrands the full rule set integrates to a verified closed form, each paired
+# with the sample points used to check d/dx(result) == integrand. `None` uses the
+# default spread; log(log(x)) cases must be sampled at x > 1 to stay real. Grouped
+# by category. The x*log(log(x)) family also guards the Subst variable-capture bug
+# (see TestSubstNoVariableCapture note below).
+_LOGLOG_POINTS = (1.2, 1.6, 2.1, 2.7, 3.3)
 FULL_RULESET_INTEGRANDS = [
     # --- algebraic ---
-    1/x, x**2, x**5, sqrt(x), 1/sqrt(x), 1/(3*x + 2), (3*x + 2)**4,
-    1/(x**2 + 1), (x**2 + 1)**(-2), 1/(x**2 + 4),
-    1/sqrt(x**2 + 1), sqrt(x**2 + 1), 1/(x*(x + 1)),
+    (1/x, None), (x**2, None), (x**5, None), (sqrt(x), None), (1/sqrt(x), None),
+    (1/(3*x + 2), None), ((3*x + 2)**4, None),
+    (1/(x**2 + 1), None), ((x**2 + 1)**(-2), None), (1/(x**2 + 4), None),
+    (1/sqrt(x**2 + 1), None), (sqrt(x**2 + 1), None), (1/(x*(x + 1)), None),
     # --- exponential ---
-    exp(x), exp(3*x), x*exp(x), x**2*exp(x),
-    exp(x**2), exp(x**2 + x), exp(-x**2),          # -> erf / erfi
+    (exp(x), None), (exp(3*x), None), (x*exp(x), None), (x**2*exp(x), None),
+    (exp(x**2), None), (exp(x**2 + x), None), (exp(-x**2), None),   # -> erf / erfi
     # --- trigonometric ---
-    sin(x), cos(x), sin(3*x), sin(x)**2, sin(x)*cos(x), x*sin(x), x**2*sin(x), tan(x),
-    sin(x**2), cos(x**2),                          # -> Fresnel
+    (sin(x), None), (cos(x), None), (sin(3*x), None), (sin(x)**2, None),
+    (sin(x)*cos(x), None), (x*sin(x), None), (x**2*sin(x), None), (tan(x), None),
+    (sin(x**2), None), (cos(x**2), None),                          # -> Fresnel
     # --- logarithmic ---
-    log(x), x*log(x), log(x)/x, log(x)**2,
+    (log(x), None), (x*log(x), None), (log(x)/x, None), (log(x)**2, None),
+    # Subst[Int[g, x], x, v] with v = log(x) reintroducing x: guards the variable-
+    # capture bug where the old eager `expr.subs(x, v)` substituted into the still-
+    # unevaluated inner Int and silently gave a wrong answer (x*log(log(x)) -> 0).
+    (x*log(log(x)), _LOGLOG_POINTS), (log(log(x)), _LOGLOG_POINTS),
+    (x**2*log(log(x)), _LOGLOG_POINTS), (x/log(x), _LOGLOG_POINTS),
     # --- inverse trig ---
-    atan(x),
-    x*atan(x),  # this one tests "Star" nodes
+    (atan(x), None),
+    (x*atan(x), None),  # this one tests "Star" nodes
     # --- exponential * trig (incl. Gaussian erf/erfi) ---
-    exp(x)*sin(x), exp(x)*cos(x), exp(2*x)*sin(3*x), exp(x)*sin(x**2 + x),
+    (exp(x)*sin(x), None), (exp(x)*cos(x), None), (exp(2*x)*sin(3*x), None),
+    (exp(x)*sin(x**2 + x), None),
 ]
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("integrand", FULL_RULESET_INTEGRANDS, ids=str)
-def test_full_ruleset(integrand):
-    """Each integrand integrates to a closed form whose derivative is the integrand.
+def test_full_ruleset():
+    """Every integrand integrates to a closed form whose derivative is the integrand.
 
-    Uses the full rule set (loaded once, then cached across the parametrized cases).
+    A single test so the whole (slow) rule set is loaded once. All integrands are
+    checked and every failure is reported together, rather than aborting on the
+    first. Also guards the Subst variable-capture bug (the x*log(log(x)) family).
     """
-    result = rubi_integrate(integrand, x)
-    assert _derivative_matches(result, integrand)
+    failures = []
+    for integrand, points in FULL_RULESET_INTEGRANDS:
+        try:
+            result = rubi_integrate(integrand, x)
+            if result == 0:
+                failures.append(f"{integrand}: collapsed to 0")
+            elif 'Subst' in str(result):
+                failures.append(f"{integrand}: unresolved Subst -> {result}")
+            elif not _derivative_matches(
+                    result, integrand, **({'points': points} if points else {})):
+                failures.append(f"{integrand}: d/dx != integrand -> {result}")
+        except Exception as exc:  # noqa: BLE001 - report which integrand blew up
+            failures.append(f"{integrand}: {type(exc).__name__}: {exc}")
+    assert not failures, "integrals failed:\n" + "\n".join(failures)
