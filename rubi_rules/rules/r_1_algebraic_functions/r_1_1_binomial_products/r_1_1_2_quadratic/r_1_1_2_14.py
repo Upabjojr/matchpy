@@ -97,8 +97,15 @@ RULES = [
         module_name='1.1.2.14 P(x) (c+d x)^m (e+f x)^n (a+b x^2)^p',
         rule_number=2,
     ),
-    # Rule 3: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 3
+    RubiRulePattern(
+        pattern=Int(Px_*(x*_d_ + c_)**_m_*(x*_f_ + e_)**_n_*(x**2*_b_ + _a_)**_p_, x),
+        constraints=(FreeQ([_a_, _b_, c_, _d_, e_, _f_, _n_, _p_], x), PolynomialQ(Px_, x), LtQ(_m_, 0), Not(IntegerQ(_n_)), IntegersQ(2*_m_, 2*_n_, 2*_p_),),
+        replacement=Int((x*_d_ + c_)**(_m_ + 1)*(x*_f_ + e_)**_n_*(x**2*_b_ + _a_)**_p_*PolynomialQuotient(Px_, x*_d_ + c_, x), x) + Star(PolynomialRemainder(Px_, x*_d_ + c_, x), Int((x*_d_ + c_)**_m_*(x*_f_ + e_)**_n_*(x**2*_b_ + _a_)**_p_, x)),
+        module_name='1.1.2.14 P(x) (c+d x)^m (e+f x)^n (a+b x^2)^p',
+        rule_number=3,
+    ),
 
 ]
 
-# Summary: 2 rules translated, 1 skipped
+# Summary: 3 rules translated, 0 skipped

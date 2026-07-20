@@ -622,8 +622,16 @@ def rubi_integrate(
     # built as Pow(E, u); and rebuild any exp(...) already present in the incoming
     # expression (it was created before we entered the context) into that form.
     with _exp_is_pow(True):
-        expr = sympy.sympify(expr).replace(sympy.exp, lambda u: sympy.exp(u))
-        x = sympy.sympify(x).replace(sympy.exp, lambda u: sympy.exp(u))
+        # Rebuild pre-existing exp(...) into Pow(E, ...). The lambda must accept a
+        # variable arg count: for a NESTED exp (e.g. exp(x + exp(x))) sympy rebuilds
+        # the outer node into Pow(E, ...) mid-walk, and `.replace(sympy.exp, ...)`
+        # then re-matches that Pow and calls the replacement with its TWO args
+        # (E, u) instead of one -- a 1-arg `lambda u:` crashed there. Using the last
+        # arg handles both exp(u) (args=(u,)) and Pow(E,u) (args=(E,u)); rebuilding
+        # exp(u) under exp_is_pow is idempotent (it is already Pow(E,u)).
+        _to_pow = lambda *a: sympy.exp(a[-1])
+        expr = sympy.sympify(expr).replace(sympy.exp, _to_pow)
+        x = sympy.sympify(x).replace(sympy.exp, _to_pow)
         # A non-symbol integration variable (e.g. sin(x)) is only meaningful when the
         # integrand is a function of that whole expression — i.e. substituting
         # u = <var> removes every trace of the underlying symbols. Otherwise the

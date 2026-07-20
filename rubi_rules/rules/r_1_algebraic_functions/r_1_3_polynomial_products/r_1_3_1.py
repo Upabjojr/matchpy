@@ -231,20 +231,20 @@ RULES = [
     # Rule 19
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*(x**3*_d_ + x**2*_c_ + x*_b_ + _a_)**p_, x),
-        constraints=(),
-        replacement=(x**3*_d_ + x**2*_c_ + x*_b_ + _a_)**p_/((x*(-6*_b_*_d_ + 2*_c_**2) - 9*_a_*_d_ + _b_*_c_)**(2*p_)*(x*_d_*(-3*_b_*_d_ + _c_**2) + 9*_a_*_d_**2 - 4*_b_*_c_*_d_ + _c_**3)**p_),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, p_], x), NeQ(-3*_b_*_d_ + _c_**2, 0), EqQ(-27*_a_**2*_d_**2 + 18*_a_*_b_*_c_*_d_ - 4*_a_*_c_**3 - 4*_b_**3*_d_ + _b_**2*_c_**2, 0), Not(IntegerQ(p_)),),
+        replacement=Star((x**3*_d_ + x**2*_c_ + x*_b_ + _a_)**p_/((x*(-6*_b_*_d_ + 2*_c_**2) - 9*_a_*_d_ + _b_*_c_)**(2*p_)*(x*_d_*(-3*_b_*_d_ + _c_**2) + 9*_a_*_d_**2 - 4*_b_*_c_*_d_ + _c_**3)**p_), Int((x*_f_ + _e_)**_m_*(x*(-6*_b_*_d_ + 2*_c_**2) - 9*_a_*_d_ + _b_*_c_)**(2*p_)*(x*_d_*(-3*_b_*_d_ + _c_**2) + 9*_a_*_d_**2 - 4*_b_*_c_*_d_ + _c_**3)**p_, x)),
         module_name='1.3.1 u (a+b x+c x^2+d x^3)^p',
         rule_number=19,
     ),
-    # Rule 21
+    # Rule 20
     RubiRulePattern(
         pattern=Int(P3_**_p_*(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([_e_, _f_, _m_, _p_], x), PolyQ(P3_, x, 3), NeQ(Coeff(P3_, x, 2), 0),),
         replacement=With(List(Set(Symbol('a'), Coeff(P3_, x, Integer(0))), Set(Symbol('b'), Coeff(P3_, x, Integer(1))), Set(Symbol('c'), Coeff(P3_, x, Integer(2))), Set(Symbol('d'), Coeff(P3_, x, Integer(3)))), Subst(Int(((((((Integer(3) * Symbol('d') * _e_) + (Integer(-1) * (Symbol('c') * _f_))) * ((Integer(3) * Symbol('d')))**(Integer(-1))) + (_f_ * x)))**(_m_) * (Simp(((((Integer(2) * (Symbol('c'))**(Integer(3))) + (Integer(-1) * (Integer(9) * Symbol('b') * Symbol('c') * Symbol('d'))) + (Integer(27) * Symbol('a') * (Symbol('d'))**(Integer(2)))) * ((Integer(27) * (Symbol('d'))**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (((Symbol('c'))**(Integer(2)) + (Integer(-1) * (Integer(3) * Symbol('b') * Symbol('d')))) * x * ((Integer(3) * Symbol('d')))**(Integer(-1)))) + (Symbol('d') * (x)**(Integer(3)))), x))**(_p_)), x), x, (x + (Symbol('c') * ((Integer(3) * Symbol('d')))**(Integer(-1)))))),
         module_name='1.3.1 u (a+b x+c x^2+d x^3)^p',
-        rule_number=21,
+        rule_number=20,
     ),
 
 ]
 
-# Summary: 20 rules translated, 1 skipped
+# Summary: 20 rules translated, 0 skipped

@@ -273,3 +273,55 @@ class TestMFileParser:
         ffls, err = parse_m_file(f)
         assert err is None
         assert ffls == []
+
+
+# ---------------------------------------------------------------------------
+# \[Star] handling: a Rubi `factor \[Star] Int[...]` must keep its Int factor;
+# a rule whose Int was dropped by the parser must be skipped, not emitted as a
+# non-integral replacement (which would silently give a wrong answer).
+# ---------------------------------------------------------------------------
+from rubi_rules.codegen.generate import _ffl_has_int_head, _ffl_has_star
+
+
+class TestStarIntHandling:
+
+    def test_ffl_has_int_head(self):
+        assert _ffl_has_int_head(['Int', ['Times', 'u'], 'x']) is True
+        assert _ffl_has_int_head(['Times', ['Subst', 'a'], 'b']) is True
+        assert _ffl_has_int_head(['Simp', ['Times', 'a', 'b']]) is False
+        # a non-string head (list) must not crash the search
+        assert _ffl_has_int_head([['Simp', 'x'], 'Star']) is False
+
+    def test_dropped_int_after_star_is_detectable(self):
+        # `Simp[...] \[Star] Int[...]` where the parser lost the Int leaves a bare
+        # star marker: has a Star but NO Int-like head. The translator skips such a
+        # rule instead of emitting a non-integral replacement (a silent wrong
+        # answer). Guards the 50 algebraic rules whose Int was dropped at parse time.
+        dropped = [['Simp', ['Times', 'a', 'b']], 'Star']
+        assert _ffl_has_star(dropped) is True
+        assert _ffl_has_int_head(dropped) is False
+        # a well-parsed factor*Int keeps its Int-like head
+        assert _ffl_has_int_head(['Times', ['Simp', 'f'], ['Int', 'u', 'x']]) is True
+
+
+class TestStableRuleNumbering:
+    """rule_number must count only actual rules, so an orphan expression (e.g. a
+    stray Int[...] the parser split off a mangled \\[Star]) never shifts numbering.
+    """
+
+    def _rule(self, m_exp):
+        # SetDelayed[Int[x^m_, x], x^(m_exp)] -- a minimal translatable rule.
+        return ['SetDelayed',
+                ['Int', ['Power', 'x', ['Pattern', 'm', ['Blank']]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Power', 'x', m_exp]]
+
+    def test_orphan_expression_does_not_shift_numbering(self):
+        import re as _re
+        tr = RubiRuleTranslator()
+        orphan = ['Int', 'x', 'x']  # non-SetDelayed: an orphaned fragment
+        # rule, ORPHAN, rule -> the second rule must still be Rule 2, not Rule 3.
+        rules = [self._rule('2'), orphan, self._rule('3')]
+        code = tr.translate_module(rules, module_name='test')
+        nums = [int(n) for n in _re.findall(r'rule_number=(\d+)', code)]
+        assert nums == [1, 2], f"expected [1, 2], got {nums}"

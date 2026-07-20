@@ -426,23 +426,23 @@ RULES = [
         module_name='3.5 Miscellaneous logarithms',
         rule_number=41,
     ),
-    # Rule 43
+    # Rule 42
     RubiRulePattern(
         pattern=Int((_u_ * sympy.log(Gamma(v_))), x),
         constraints=(),
         replacement=(((sympy.log(Gamma(v_)) + (Integer(-1) * sympy.loggamma(v_))) * Int(_u_, x)) + Int((_u_ * sympy.loggamma(v_)), x)),
         module_name='3.5 Miscellaneous logarithms',
-        rule_number=43,
+        rule_number=42,
     ),
-    # Rule 44
+    # Rule 43
     RubiRulePattern(
         pattern=Int(_u_*(x**_m_*_a_ + x**_r_*_b_*log(x**_n_*_c_)**_q_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, _n_, _p_, _q_, _r_], x), IntegerQ(_p_),),
         replacement=Int(x**(_p_*_r_)*_u_*(x**(_m_ - _r_)*_a_ + _b_*log(x**_n_*_c_)**_q_)**_p_, x),
         module_name='3.5 Miscellaneous logarithms',
-        rule_number=44,
+        rule_number=43,
     ),
 
 ]
 
-# Summary: 43 rules translated, 1 skipped
+# Summary: 43 rules translated, 0 skipped

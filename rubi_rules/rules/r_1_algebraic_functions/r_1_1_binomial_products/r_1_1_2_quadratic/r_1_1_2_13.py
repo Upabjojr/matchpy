@@ -87,7 +87,14 @@ RULES = [
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=1,
     ),
-    # Rule 2: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 2
+    RubiRulePattern(
+        pattern=Int(Px_*(x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_/x, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _n_, _p_], x), PolynomialQ(Px_, x),),
+        replacement=Int((x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_*PolynomialQuotient(Px_, x, x), x) + Star(PolynomialRemainder(Px_, x, x), Int((x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_/x, x)),
+        module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
+        rule_number=2,
+    ),
     # Rule 3
     RubiRulePattern(
         pattern=Int(Px_*(x*_e_)**m_/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
@@ -112,8 +119,15 @@ RULES = [
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=5,
     ),
-    # Rule 6: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 6
+    RubiRulePattern(
+        pattern=Int(Px_*(x*_e_)**_m_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**_p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _m_, _p_], x), PolynomialQ(Px_, x), LtQ(n_, 0),),
+        replacement=Int((x*_e_)**_m_*(x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**_p_*PolynomialQuotient(Px_, x*_d_ + c_, x), x) + Star(PolynomialRemainder(Px_, x*_d_ + c_, x), Int((x*_e_)**_m_*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**_p_, x)),
+        module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
+        rule_number=6,
+    ),
 
 ]
 
-# Summary: 4 rules translated, 2 skipped
+# Summary: 6 rules translated, 0 skipped

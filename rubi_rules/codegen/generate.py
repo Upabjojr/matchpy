@@ -199,6 +199,15 @@ def _ffl_strip_stars(node):
     return node
 
 
+def _ffl_has_int_head(node) -> bool:
+    """True if an Int-like head (``Int``/``Subst``/…) appears anywhere in ``node``."""
+    if isinstance(node, list):
+        if node and isinstance(node[0], str) and node[0] in _INT_LIKE_HEADS:
+            return True
+        return any(_ffl_has_int_head(c) for c in node)
+    return False
+
+
 def _reconstruct_star(node):
     """Rebuild ``Star[u, v]`` products from mis-parsed postfix markers (bottom-up).
 
@@ -212,7 +221,8 @@ def _reconstruct_star(node):
     if node and node[0] == 'Times' and _ffl_has_star(node):
         int_idx = {
             i for i in range(1, len(node))
-            if isinstance(node[i], list) and node[i] and node[i][0] in _INT_LIKE_HEADS
+            if isinstance(node[i], list) and node[i]
+            and isinstance(node[i][0], str) and node[i][0] in _INT_LIKE_HEADS
         }
         if int_idx:
             v_factors = [node[i] for i in sorted(int_idx)]
@@ -630,21 +640,33 @@ class RubiRuleTranslator:
         except Exception:
             load_ns = None  # header itself won't exec -> skip per-rule validation
 
-        # Generate rules (1-indexed)
+        # Generate rules, numbered by their ordinal position among the module's
+        # actual rules (``SetDelayed`` entries) -- NOT by raw expression index.
+        # SymPy's parser can split a stray fragment (e.g. an ``Int[...]`` orphaned by
+        # a mangled ``\[Star]``) into an extra top-level expression; counting those
+        # would shift every following rule's number whenever parsing changes. Numbering
+        # only real rules keeps ``rule_number`` == the rule's position as it appears in
+        # the source/JSON, stable across such parser fixes.
         rule_lines = []
         skipped = 0
-        for i, rule in enumerate(rules):
+        rule_number = 0
+        for rule in rules:
+            if not (isinstance(rule, list) and rule and rule[0] == 'SetDelayed'):
+                continue  # orphan / non-rule expression: don't number or emit it
+            rule_number += 1
             try:
-                code = self._translate_rule(rule, i + 1, module_name, eval_ns, load_ns)
+                code = self._translate_rule(rule, rule_number, module_name, eval_ns, load_ns)
                 if code:
                     rule_lines.append(code)
                 else:
                     skipped += 1
             except Exception as e:
                 skipped += 1
-                rule_lines.append(f"    # Rule {i + 1}: SKIPPED - {type(e).__name__}: {e}")
+                rule_lines.append(f"    # Rule {rule_number}: SKIPPED - {type(e).__name__}: {e}")
 
-        footer = self._generate_footer(len(rules) - skipped, skipped)
+        # rule_number is the count of actual rules (SetDelayed); of those, `skipped`
+        # could not be translated. (Orphan/non-rule expressions are excluded above.)
+        footer = self._generate_footer(rule_number - skipped, skipped)
         rules_body = '\n'.join(rule_lines)
         return header + wc_section + 'RULES = [\n' + rules_body + '\n' + footer
 
@@ -759,8 +781,10 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         condition_ffls.extend(nested_condition_ffls)
 
         # Rebuild Rubi's ``\[Star]`` products, which SymPy's parser mangles into
-        # stray postfix markers (see _reconstruct_star). Star appears only in
-        # replacements, so this is applied to the result FFL alone.
+        # stray postfix markers (see _reconstruct_star), into proper ``Star[u, v]``
+        # nodes. The parser now keeps `\[Star]` inline (parse_rubi_to_ffl joins the
+        # line-continuation), so the right operand is always present to rebuild.
+        # Star appears only in replacements, so this is applied to the result FFL.
         result_ffl = _apply_star_reconstruction(result_ffl)
 
         # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---

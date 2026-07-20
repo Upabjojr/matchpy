@@ -90,6 +90,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] code generator for rubi_rules/rules/** should avoid creating Symbol('...') objects in the code... just define them at the start of the file.
 - [ ] move more stuff unrelated to rubi_rules/ to sympy_wolfram/
 - [ ] restructure sympy_wolfram/ to clearly separate the parser, the interpreter and the implemented mathematica objects.
+- [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in MatchPy-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
+- [ ] rename `to_expression` (and also get rid of `from_expression`)
 
 ### Already fixed on the way to this (for context)
 

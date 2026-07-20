@@ -281,6 +281,29 @@ def _check_deferred_crash_fixes():
         (0.35, 0.6, 1.1, 1.7), ('CannotIntegrate',))
 
 
+# Integrands that used to raise inside rubi_integrate's own preprocessing (not a
+# rule): a NESTED exp such as exp(x + exp(x)) is rebuilt into Pow(E, ...) mid-walk
+# under exp_is_pow, so `.replace(sympy.exp, lambda u: ...)` re-matched the new Pow
+# and called the 1-arg lambda with the Pow's 2 args. These must integrate or return
+# CannotIntegrate -- never raise.
+_NO_CRASH_INTEGRANDS = [
+    (exp(x) + 1)*exp(x + exp(x))/(x + exp(x)),
+    exp(x + exp(x)),
+    exp(exp(x)),
+]
+
+
+def _check_no_crash():
+    """Previously-crashing integrands must not raise (solved or CannotIntegrate)."""
+    failures = []
+    for integrand in _NO_CRASH_INTEGRANDS:
+        try:
+            rubi_integrate(integrand, x)
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"[no-crash] {integrand}: {type(exc).__name__}: {exc}")
+    return failures
+
+
 def _check_inthide():
     """IntHide[u,x] := Block[{$ShowSteps=False}, Int[u,x]] actually integrates u.
 
@@ -314,5 +337,6 @@ def test_full_ruleset_integrals():
     failures += _check_function_of_exponential()  # FunctionOfExponential subst (rule 96)
     failures += _check_inthide()                  # IntHide delegates to rubi_integrate
     failures += _check_deferred_crash_fixes()     # symbolic-n Coeff + non-real compare
+    failures += _check_no_crash()                 # nested-exp preprocessing crash
     assert not failures, (
         f"{len(failures)} integral(s) failed:\n" + "\n".join(failures))

@@ -140,8 +140,22 @@ def Simplify(expr):
     # ordinary expressions untouched.
     from sympy_wolfram.mathematica_expressions import MathematicaExpr
     if isinstance(expr, Basic) and expr.has(MathematicaExpr):
-        expr = expr.doit()
-    return simplify(expr)
+        try:
+            expr = expr.doit()
+        except (AttributeError, TypeError):
+            # See below: a deferred predicate (BinomialDegree/TrinomialDegree/...)
+            # evaluated to a Boolean inside an arithmetic node during doit.
+            return expr
+    # A Boolean (e.g. BinomialDegree/TrinomialDegree returning False on a
+    # non-binomial/-trinomial) sitting inside an arithmetic node cannot be combined
+    # or simplified numerically -- sympy raises 'BooleanFalse has no as_coeff_Mul'.
+    # Such an expression has no numeric value; return it unevaluated so a downstream
+    # `== 0` (in ZeroQ/EqQ) is simply False -- matching Mathematica, which leaves a
+    # False-vs-number comparison unequal rather than erroring.
+    try:
+        return simplify(expr)
+    except (AttributeError, TypeError):
+        return expr
 
 def Set(expr, value):
     return {expr: value}

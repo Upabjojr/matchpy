@@ -197,7 +197,14 @@ RULES = [
         module_name='1.3.4 P(x) Q(x)^p',
         rule_number=12,
     ),
-    # Rule 13: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 13
+    RubiRulePattern(
+        pattern=Int((x**n_*_B_ + A_)/(x**2*_b_ + x**n_*_c_ + x**n2_*_d_ + a_), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, A_, _B_, n_], x), EqQ(n2_, 2*n_), NeQ(n_, 2), EqQ(-A_**2*_d_*(n_ - 1)**2 + _B_**2*a_, 0), EqQ(2*A_*_d_*(n_ - 1) + _B_*_c_, 0),),
+        replacement=Star(A_**2*(n_ - 1), Subst(Int(1/(x**2*A_**2*_b_*(n_ - 1)**2 + a_), x), x, x/(-x**n_*_B_ + A_*(n_ - 1)))),
+        module_name='1.3.4 P(x) Q(x)^p',
+        rule_number=13,
+    ),
     # Rule 14
     RubiRulePattern(
         pattern=Int(x**_m_*(x**_n_*_B_ + A_)/(x**_k_*_b_ + x**_n_*_c_ + x**n2_*_d_ + a_), x),
@@ -222,8 +229,22 @@ RULES = [
         module_name='1.3.4 P(x) Q(x)^p',
         rule_number=16,
     ),
-    # Rule 17: SKIPPED - TypeError: unhashable type: 'list'
-    # Rule 18: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 17
+    RubiRulePattern(
+        pattern=Int(Pm_/Qn_, x),
+        constraints=(PolyQ(Pm_, x), PolyQ(Qn_, x), EqQ(Expon(Pm_, x), Expon(Qn_, x) - 1), EqQ(D(Simplify(Pm_ - Coeff(Pm_, x, Expon(Pm_, x))*D(Qn_, x)/(Coeff(Qn_, x, Expon(Qn_, x))*Expon(Qn_, x))), x), 0),),
+        replacement=With(List(Set(Symbol('m'), Expon(Pm_, x)), Set(Symbol('n'), Expon(Qn_, x))), ((Coeff(Pm_, x, Symbol('m')) * sympy.log(Qn_) * ((Symbol('n') * Coeff(Qn_, x, Symbol('n'))))**(Integer(-1))) + Star(Simplify((Pm_ + (Integer(-1) * (Coeff(Pm_, x, Symbol('m')) * D(Qn_, x) * ((Symbol('n') * Coeff(Qn_, x, Symbol('n'))))**(Integer(-1)))))), Int((Qn_)**(Integer(-1)), x)))),
+        module_name='1.3.4 P(x) Q(x)^p',
+        rule_number=17,
+    ),
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int(Pm_*Qn_**p_, x),
+        constraints=(FreeQ(p_, x), PolyQ(Pm_, x), PolyQ(Qn_, x), NeQ(p_, -1), EqQ(Expon(Pm_, x), Expon(Qn_, x) - 1), EqQ(D(Simplify(Pm_ - Coeff(Pm_, x, Expon(Pm_, x))*D(Qn_, x)/(Coeff(Qn_, x, Expon(Qn_, x))*Expon(Qn_, x))), x), 0),),
+        replacement=With(List(Set(Symbol('m'), Expon(Pm_, x)), Set(Symbol('n'), Expon(Qn_, x))), ((Coeff(Pm_, x, Symbol('m')) * (Qn_)**((p_ + Integer(1))) * ((Symbol('n') * (p_ + Integer(1)) * Coeff(Qn_, x, Symbol('n'))))**(Integer(-1))) + Star(Simplify((Pm_ + (Integer(-1) * (Coeff(Pm_, x, Symbol('m')) * D(Qn_, x) * ((Symbol('n') * Coeff(Qn_, x, Symbol('n'))))**(Integer(-1)))))), Int((Qn_)**(p_), x)))),
+        module_name='1.3.4 P(x) Q(x)^p',
+        rule_number=18,
+    ),
     # Rule 19
     RubiRulePattern(
         pattern=Int(Pm_/Qn_, x),
@@ -251,4 +272,4 @@ RULES = [
 
 ]
 
-# Summary: 18 rules translated, 3 skipped
+# Summary: 21 rules translated, 0 skipped

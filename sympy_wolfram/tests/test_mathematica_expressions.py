@@ -828,6 +828,25 @@ def test_condition_holds_short_circuits_and_or():
     assert _condition_holds(Or(S.true, _Boom(), evaluate=False)) is True
 
 
+def test_doit_stays_unevaluated_when_evaluate_returns_none():
+    from sympy_wolfram.mathematica_expressions import MathematicaExpr
+
+    class _NoneNode(MathematicaExpr):
+        def __new__(cls, arg):
+            return sympy.Expr.__new__(cls, sympy.sympify(arg))
+        def _evaluate(self, **kwargs):
+            return None  # utility couldn't compute a value for this input
+
+    node = _NoneNode(Symbol('x'))
+    # doit must NOT return None (that would break an enclosing Add/Mul via
+    # sympify(None)); it stays the unevaluated node instead.
+    assert node.doit() is not None
+    assert isinstance(node.doit(), _NoneNode)
+    # and it must survive being embedded in arithmetic + doit'd
+    expr = Symbol('y') * node
+    assert expr.doit() is not None
+
+
 def test_condition_holds_basic_connectives():
     from sympy_wolfram.mathematica_expressions import _condition_holds
     from sympy.logic.boolalg import And, Or, Not

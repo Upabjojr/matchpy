@@ -2387,6 +2387,21 @@ def test_comparisons_on_non_real_do_not_crash():
     assert Greater(3, 2, 1) is True
 
 
+def test_Simplify_robust_to_boolean_from_non_binomial():
+    # BinomialDegree/TrinomialDegree return False on a non-binomial/-trinomial.
+    # An EqQ of two such degrees (used as a rule constraint) forms
+    # `BinomialDegree(u1,x) - BinomialDegree(u2,x)`, whose doit/simplify hits a
+    # BooleanFalse inside arithmetic ('BooleanFalse has no as_coeff_Mul'). Simplify
+    # must swallow that and ZeroQ/EqQ must return a plain bool, not crash.
+    from rubi_rules.utils.utility_functions import Simplify as _S, ZeroQ as _Z, EqQ as _E
+    from rubi_rules.utils.rubi_utils import BinomialDegree as _BD
+    xx, aa, bb = Symbol('x'), Symbol('a'), Symbol('b')
+    expr = _BD(exp(xx), xx) - _BD(aa + bb*exp(xx), xx)
+    _S(expr)  # must not raise
+    assert _Z(expr) in (True, False)
+    assert _E(_BD(exp(xx), xx), _BD(aa + bb*exp(xx), xx)) in (True, False)
+
+
 def test_MinimumMonomialExponent_skips_non_monomial_terms():
     # A sum with a non-monomial-in-x term (e.g. b*exp(x)) must not crash: in
     # Mathematica MonomialExponent stays unevaluated there, so the term is skipped.

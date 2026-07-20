@@ -282,1338 +282,1354 @@ RULES = [
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=24,
     ),
-    # Rule 27
+    # Rule 25
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - _d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*tanh(x*_b_ + _a_)) + _b_*Int(x/(_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=27,
+        rule_number=25,
     ),
-    # Rule 28
+    # Rule 26
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - _d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*tanh(x*_b_ + _a_)) + _b_*Int(x/(_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=28,
+        rule_number=26,
     ),
-    # Rule 29
+    # Rule 27
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - _d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*coth(x*_b_ + _a_)) + _b_*Int(x/(-_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=29,
+        rule_number=27,
     ),
-    # Rule 30
+    # Rule 28
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - _d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*coth(x*_b_ + _a_)) + _b_*Int(x/(-_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=30,
+        rule_number=28,
     ),
-    # Rule 31
+    # Rule 29
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - _d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*tanh(x*_b_ + _a_)) + _b_*(-_c_ - _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ + (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x) - _b_*(_c_ + _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ + (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=31,
+        rule_number=29,
     ),
-    # Rule 32
+    # Rule 30
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - _d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*tanh(x*_b_ + _a_)) + _b_*(-_c_ - _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ + (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x) - _b_*(_c_ + _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ + (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=32,
+        rule_number=30,
     ),
-    # Rule 33
+    # Rule 31
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - _d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*coth(x*_b_ + _a_)) - _b_*(-_c_ - _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ - (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x) + _b_*(_c_ + _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ - (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=33,
+        rule_number=31,
     ),
-    # Rule 34
+    # Rule 32
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - _d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*coth(x*_b_ + _a_)) - _b_*(-_c_ - _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ - (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x) + _b_*(_c_ + _d_ + 1)*Int(x*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ - (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=34,
+        rule_number=32,
     ),
-    # Rule 35
+    # Rule 33
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - _d_)**2, 1),),
         replacement=_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*tanh(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=35,
+        rule_number=33,
     ),
-    # Rule 36
+    # Rule 34
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - _d_)**2, 1),),
         replacement=_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*tanh(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=36,
+        rule_number=34,
     ),
-    # Rule 37
+    # Rule 35
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - _d_)**2, 1),),
         replacement=_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(-_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*coth(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=37,
+        rule_number=35,
     ),
-    # Rule 38
+    # Rule 36
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - _d_)**2, 1),),
         replacement=_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(-_c_*exp(2*x*_b_ + 2*_a_) + _c_ - _d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*coth(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=38,
+        rule_number=36,
     ),
-    # Rule 39
+    # Rule 37
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - _d_)**2, 1),),
         replacement=_b_*(-_c_ - _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ + (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) - _b_*(_c_ + _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ + (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*tanh(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=39,
+        rule_number=37,
     ),
-    # Rule 40
+    # Rule 38
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*tanh(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - _d_)**2, 1),),
         replacement=_b_*(-_c_ - _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ + (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) - _b_*(_c_ + _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ + (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*tanh(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=40,
+        rule_number=38,
     ),
-    # Rule 41
+    # Rule 39
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - _d_)**2, 1),),
         replacement=-_b_*(-_c_ - _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ - (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + _b_*(_c_ + _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ - (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*coth(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=41,
+        rule_number=39,
     ),
-    # Rule 42
+    # Rule 40
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*coth(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - _d_)**2, 1),),
         replacement=-_b_*(-_c_ - _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(-_c_ + _d_ - (-_c_ - _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + _b_*(_c_ + _d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*x*_b_ + 2*_a_)/(_c_ - _d_ - (_c_ + _d_ + 1)*exp(2*x*_b_ + 2*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*coth(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=42,
+        rule_number=40,
     ),
-    # Rule 43
+    # Rule 41
     RubiRulePattern(
         pattern=Int(atanh(tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=x*atanh(tan(x*_b_ + _a_)) - _b_*Int(x*sec(2*x*_b_ + 2*_a_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=43,
+        rule_number=41,
     ),
-    # Rule 44
+    # Rule 42
     RubiRulePattern(
         pattern=Int(acoth(tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=x*acoth(tan(x*_b_ + _a_)) - _b_*Int(x*sec(2*x*_b_ + 2*_a_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=44,
+        rule_number=42,
     ),
-    # Rule 45
+    # Rule 43
     RubiRulePattern(
         pattern=Int(atanh(cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=x*atanh(cot(x*_b_ + _a_)) - _b_*Int(x*sec(2*x*_b_ + 2*_a_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=45,
+        rule_number=43,
     ),
-    # Rule 46
+    # Rule 44
     RubiRulePattern(
         pattern=Int(acoth(cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=x*acoth(cot(x*_b_ + _a_)) - _b_*Int(x*sec(2*x*_b_ + 2*_a_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=46,
+        rule_number=44,
     ),
-    # Rule 47
+    # Rule 45
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=-_b_*Int((x*_f_ + _e_)**(_m_ + 1)*sec(2*x*_b_ + 2*_a_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=47,
+        rule_number=45,
     ),
-    # Rule 48
+    # Rule 46
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=-_b_*Int((x*_f_ + _e_)**(_m_ + 1)*sec(2*x*_b_ + 2*_a_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=48,
+        rule_number=46,
     ),
-    # Rule 49
+    # Rule 47
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=-_b_*Int((x*_f_ + _e_)**(_m_ + 1)*sec(2*x*_b_ + 2*_a_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=49,
+        rule_number=47,
     ),
-    # Rule 50
+    # Rule 48
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=-_b_*Int((x*_f_ + _e_)**(_m_ + 1)*sec(2*x*_b_ + 2*_a_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=50,
+        rule_number=48,
     ),
-    # Rule 51
+    # Rule 49
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ + I*_d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*tan(x*_b_ + _a_)) + I*_b_*Int(x/(_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ + I*_d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=51,
+        rule_number=49,
     ),
-    # Rule 52
+    # Rule 50
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ + I*_d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*tan(x*_b_ + _a_)) + I*_b_*Int(x/(_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ + I*_d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=52,
+        rule_number=50,
     ),
-    # Rule 53
+    # Rule 51
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - I*_d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*cot(x*_b_ + _a_)) + I*_b_*Int(x/(-_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ - I*_d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=53,
+        rule_number=51,
     ),
-    # Rule 54
+    # Rule 52
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), EqQ((_c_ - I*_d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*cot(x*_b_ + _a_)) + I*_b_*Int(x/(-_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ - I*_d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=54,
+        rule_number=52,
     ),
-    # Rule 55
+    # Rule 53
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ + I*_d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*tan(x*_b_ + _a_)) + I*_b_*(-_c_ + I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ - I*_d_ + (-_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x) - I*_b_*(_c_ - I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ + I*_d_ + (_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=55,
+        rule_number=53,
     ),
-    # Rule 56
+    # Rule 54
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ + I*_d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*tan(x*_b_ + _a_)) + I*_b_*(-_c_ + I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ - I*_d_ + (-_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x) - I*_b_*(_c_ - I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ + I*_d_ + (_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=56,
+        rule_number=54,
     ),
-    # Rule 57
+    # Rule 55
     RubiRulePattern(
         pattern=Int(atanh(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - I*_d_)**2, 1),),
         replacement=x*atanh(_c_ + _d_*cot(x*_b_ + _a_)) - I*_b_*(-_c_ - I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ + I*_d_ - (-_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x) + I*_b_*(_c_ + I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ - I*_d_ - (_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=57,
+        rule_number=55,
     ),
-    # Rule 58
+    # Rule 56
     RubiRulePattern(
         pattern=Int(acoth(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NeQ((_c_ - I*_d_)**2, 1),),
         replacement=x*acoth(_c_ + _d_*cot(x*_b_ + _a_)) - I*_b_*(-_c_ - I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ + I*_d_ - (-_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x) + I*_b_*(_c_ + I*_d_ + 1)*Int(x*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ - I*_d_ - (_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=58,
+        rule_number=56,
     ),
-    # Rule 59
+    # Rule 57
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ + I*_d_)**2, 1),),
         replacement=I*_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ + I*_d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=59,
+        rule_number=57,
     ),
-    # Rule 60
+    # Rule 58
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ + I*_d_)**2, 1),),
         replacement=I*_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ + I*_d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=60,
+        rule_number=58,
     ),
-    # Rule 61
+    # Rule 59
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - I*_d_)**2, 1),),
         replacement=I*_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(-_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ - I*_d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=61,
+        rule_number=59,
     ),
-    # Rule 62
+    # Rule 60
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), EqQ((_c_ - I*_d_)**2, 1),),
         replacement=I*_b_*Int((x*_f_ + _e_)**(_m_ + 1)/(-_c_*exp(2*I*x*_b_ + 2*I*_a_) + _c_ - I*_d_), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=62,
+        rule_number=60,
     ),
-    # Rule 63
+    # Rule 61
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ + I*_d_)**2, 1),),
         replacement=I*_b_*(-_c_ + I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ - I*_d_ + (-_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) - I*_b_*(_c_ - I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ + I*_d_ + (_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=63,
+        rule_number=61,
     ),
-    # Rule 64
+    # Rule 62
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*tan(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ + I*_d_)**2, 1),),
         replacement=I*_b_*(-_c_ + I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ - I*_d_ + (-_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) - I*_b_*(_c_ - I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ + I*_d_ + (_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*tan(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=64,
+        rule_number=62,
     ),
-    # Rule 65
+    # Rule 63
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*atanh(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - I*_d_)**2, 1),),
         replacement=-I*_b_*(-_c_ - I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ + I*_d_ - (-_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + I*_b_*(_c_ + I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ - I*_d_ - (_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*atanh(_c_ + _d_*cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=65,
+        rule_number=63,
     ),
-    # Rule 66
+    # Rule 64
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*acoth(_c_ + _d_*cot(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ((_c_ - I*_d_)**2, 1),),
         replacement=-I*_b_*(-_c_ - I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(-_c_ + I*_d_ - (-_c_ - I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + I*_b_*(_c_ + I*_d_ + 1)*Int((x*_f_ + _e_)**(_m_ + 1)*exp(2*I*x*_b_ + 2*I*_a_)/(_c_ - I*_d_ - (_c_ + I*_d_ + 1)*exp(2*I*x*_b_ + 2*I*_a_) + 1), x)/(_f_*(_m_ + 1)) + (x*_f_ + _e_)**(_m_ + 1)*acoth(_c_ + _d_*cot(x*_b_ + _a_))/(_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=66,
+        rule_number=64,
     ),
-    # Rule 67
+    # Rule 65
     RubiRulePattern(
         pattern=Int(atanh(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x),),
         replacement=x*atanh(u_) - Int(SimplifyIntegrand(x*D(u_, x)/(1 - u_**2), x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=67,
+        rule_number=65,
     ),
-    # Rule 68
+    # Rule 66
     RubiRulePattern(
         pattern=Int(acoth(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x),),
         replacement=x*acoth(u_) - Int(SimplifyIntegrand(x*D(u_, x)/(1 - u_**2), x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=68,
+        rule_number=66,
     ),
-    # Rule 69
+    # Rule 67
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), FalseQ(PowerVariableExpn(u_, _m_ + 1, x)),),
         replacement=-_b_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(1 - u_**2), x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*atanh(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=69,
+        rule_number=67,
     ),
-    # Rule 70
+    # Rule 68
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(u_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1), InverseFunctionFreeQ(u_, x), Not(FunctionOfQ((x*_d_ + _c_)**(_m_ + 1), u_, x)), FalseQ(PowerVariableExpn(u_, _m_ + 1, x)),),
         replacement=-_b_*Int(SimplifyIntegrand((x*_d_ + _c_)**(_m_ + 1)*D(u_, x)/(1 - u_**2), x), x)/(_d_*(_m_ + 1)) + (_a_ + _b_*acoth(u_))*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=70,
+        rule_number=68,
     ),
-    # Rule 71
+    # Rule 69
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*atanh(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*atanh(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
         replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.atanh(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (Integer(-1) * (u_)**(Integer(2)))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=71,
+        rule_number=69,
     ),
-    # Rule 72
+    # Rule 70
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acoth(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*acoth(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
         replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acoth(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (Integer(-1) * (u_)**(Integer(2)))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=72,
+        rule_number=70,
     ),
-    # Rule 73
+    # Rule 71
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0), GtQ(_m_, 0),),
         replacement=-d_*_f_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**_p_/(x*_e_ + d_), x)/_e_ + _f_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**_p_, x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=73,
+        rule_number=71,
     ),
-    # Rule 74
+    # Rule 72
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_/(x*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0), GtQ(_m_, 0),),
         replacement=-d_*_f_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**_p_/(x*_e_ + d_), x)/_e_ + _f_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**_p_, x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=74,
+        rule_number=72,
     ),
-    # Rule 75
+    # Rule 73
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*(x*_e_ + d_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0),),
         replacement=-_b_*_c_*_p_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ - 1)*log(2 - 2/(x*_e_/d_ + 1))/(-x**2*_c_**2 + 1), x)/d_ + (_a_ + _b_*atanh(x*_c_))**_p_*log(2 - 2/(x*_e_/d_ + 1))/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=75,
+        rule_number=73,
     ),
-    # Rule 76
+    # Rule 74
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*(x*_e_ + d_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0),),
         replacement=-_b_*_c_*_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*log(2 - 2/(x*_e_/d_ + 1))/(-x**2*_c_**2 + 1), x)/d_ + (_a_ + _b_*acoth(x*_c_))**_p_*log(2 - 2/(x*_e_/d_ + 1))/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=76,
+        rule_number=74,
     ),
-    # Rule 77
+    # Rule 75
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0), LtQ(m_, -1),),
         replacement=-_e_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_/(x*_e_ + d_), x)/(d_*_f_) + Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_, x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=77,
+        rule_number=75,
     ),
-    # Rule 78
+    # Rule 76
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/(x*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_**2 - _e_**2, 0), LtQ(m_, -1),),
         replacement=-_e_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))**_p_/(x*_e_ + d_), x)/(d_*_f_) + Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_, x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=78,
+        rule_number=76,
     ),
-    # Rule 79
+    # Rule 77
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))*(x*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _q_], x), NeQ(_q_, -1), IntegerQ(2*_m_), Or(And(IGtQ(_m_, 0), IGtQ(_q_, 0)), And(ILtQ(_m_ + _q_ + 1, 0), LtQ(_m_*_q_, 0))),),
         replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=79,
+        rule_number=77,
     ),
-    # Rule 80
+    # Rule 78
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))*(x*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _q_], x), NeQ(_q_, -1), IntegerQ(2*_m_), Or(And(IGtQ(_m_, 0), IGtQ(_q_, 0)), And(ILtQ(_m_ + _q_ + 1, 0), LtQ(_m_*_q_, 0))),),
         replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=80,
+        rule_number=78,
     ),
-    # Rule 81
+    # Rule 79
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**p_*(x*_e_ + _d_)**q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, q_], x), IGtQ(p_, 1), EqQ(_c_**2*_d_**2 - _e_**2, 0), IntegersQ(_m_, q_), NeQ(_m_, -1), NeQ(q_, -1), ILtQ(_m_ + q_ + 1, 0), LtQ(_m_*q_, 0),),
         replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(q_)), x))), (Dist(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(p_), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * p_ * Int(ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((p_ + Integer(-1))), (Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=81,
+        rule_number=79,
     ),
-    # Rule 82
+    # Rule 80
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**p_*(x*_e_ + _d_)**q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, q_], x), IGtQ(p_, 1), EqQ(_c_**2*_d_**2 - _e_**2, 0), IntegersQ(_m_, q_), NeQ(_m_, -1), NeQ(q_, -1), ILtQ(_m_ + q_ + 1, 0), LtQ(_m_*q_, 0),),
         replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(q_)), x))), (Dist(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(p_), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * p_ * Int(ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((p_ + Integer(-1))), (Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=82,
+        rule_number=80,
     ),
-    # Rule 83
+    # Rule 81
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IGtQ(_p_, 0), IntegerQ(_q_), Or(GtQ(_q_, 0), NeQ(_a_, 0), IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x*_e_ + d_)**_q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=83,
+        rule_number=81,
     ),
-    # Rule 84
+    # Rule 82
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IGtQ(_p_, 0), IntegerQ(_q_), Or(GtQ(_q_, 0), NeQ(_a_, 0), IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x*_e_ + d_)**_q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=84,
+        rule_number=82,
     ),
-    # Rule 85
+    # Rule 83
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0),),
         replacement=x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**_q_/(2*_q_ + 1) + _b_*(x**2*_e_ + d_)**_q_/(2*_c_*_q_*(2*_q_ + 1)) + 2*d_*_q_*Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=85,
+        rule_number=83,
     ),
-    # Rule 86
+    # Rule 84
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0),),
         replacement=x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**_q_/(2*_q_ + 1) + _b_*(x**2*_e_ + d_)**_q_/(2*_c_*_q_*(2*_q_ + 1)) + 2*d_*_q_*Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=86,
+        rule_number=84,
     ),
-    # Rule 87
+    # Rule 85
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), GtQ(p_, 1),),
         replacement=x*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**_q_/(2*_q_ + 1) - _b_**2*d_*p_*(p_ - 1)*Int((_a_ + _b_*atanh(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_*(2*_q_ + 1)) + _b_*p_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**_q_/(2*_c_*_q_*(2*_q_ + 1)) + 2*d_*_q_*Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=87,
+        rule_number=85,
     ),
-    # Rule 88
+    # Rule 86
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), GtQ(p_, 1),),
         replacement=x*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**_q_/(2*_q_ + 1) - _b_**2*d_*p_*(p_ - 1)*Int((_a_ + _b_*acoth(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_*(2*_q_ + 1)) + _b_*p_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**_q_/(2*_c_*_q_*(2*_q_ + 1)) + 2*d_*_q_*Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(_q_ - 1), x)/(2*_q_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=88,
+        rule_number=86,
     ),
-    # Rule 89
+    # Rule 87
     RubiRulePattern(
         pattern=Int(1/((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
         replacement=log(_a_ + _b_*atanh(x*_c_))/(_b_*_c_*d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=89,
+        rule_number=87,
     ),
-    # Rule 90
+    # Rule 88
     RubiRulePattern(
         pattern=Int(1/((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
         replacement=log(_a_ + _b_*acoth(x*_c_))/(_b_*_c_*d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=90,
+        rule_number=88,
     ),
-    # Rule 91
+    # Rule 89
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(_p_, -1),),
         replacement=(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(_b_*_c_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=91,
+        rule_number=89,
     ),
-    # Rule 92
+    # Rule 90
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(_p_, -1),),
         replacement=(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(_b_*_c_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=92,
+        rule_number=90,
     ),
-    # Rule 93
+    # Rule 91
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))/sqrt(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
         replacement=((Integer(-2) * (_a_ + (_b_ * sympy.atanh((_c_ * x)))) * sympy.atan((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1))) + (Integer(-1) * (sympy.I * _b_ * sympy.polylog(Integer(2), ((Integer(-1) * sympy.I) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1)))) + (sympy.I * _b_ * sympy.polylog(Integer(2), (sympy.I * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=93,
+        rule_number=91,
     ),
-    # Rule 94
+    # Rule 92
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))/sqrt(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
         replacement=((Integer(-2) * (_a_ + (_b_ * sympy.acoth((_c_ * x)))) * sympy.atan((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1))) + (Integer(-1) * (sympy.I * _b_ * sympy.polylog(Integer(2), ((Integer(-1) * sympy.I) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1)))) + (sympy.I * _b_ * sympy.polylog(Integer(2), (sympy.I * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1)))) * ((_c_ * sympy.sqrt(d_)))**(Integer(-1)))),
+        module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
+        rule_number=92,
+    ),
+    # Rule 93
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), GtQ(d_, 0),),
+        replacement=Subst(Int((x*_b_ + _a_)**_p_*sech(x), x), x, atanh(x*_c_))/(_c_*sqrt(d_)),
+        module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
+        rule_number=93,
+    ),
+    # Rule 94
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), GtQ(d_, 0),),
+        replacement=-x*sqrt(1 - 1/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*csch(x), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=94,
     ),
     # Rule 95
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), GtQ(d_, 0),),
-        replacement=Subst(Int((x*_b_ + _a_)**_p_*sech(x), x), x, atanh(x*_c_))/(_c_*sqrt(d_)),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
+        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_/sqrt(-x**2*_c_**2 + 1), x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=95,
     ),
     # Rule 96
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), GtQ(d_, 0),),
-        replacement=-x*sqrt(1 - 1/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*csch(x), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
+        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*acoth(x*_c_))**_p_/sqrt(-x**2*_c_**2 + 1), x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=96,
     ),
     # Rule 97
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
-        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_/sqrt(-x**2*_c_**2 + 1), x)/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))**_p_/(2*d_*(x**2*_e_ + d_)) - _b_*_c_*_p_*Int(x*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/2 + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(2*_b_*_c_*d_**2*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=97,
     ),
     # Rule 98
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
-        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*acoth(x*_c_))**_p_/sqrt(-x**2*_c_**2 + 1), x)/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))**_p_/(2*d_*(x**2*_e_ + d_)) - _b_*_c_*_p_*Int(x*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/2 + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(2*_b_*_c_*d_**2*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=98,
     ),
     # Rule 99
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))**_p_/(2*d_*(x**2*_e_ + d_)) - _b_*_c_*_p_*Int(x*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/2 + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(2*_b_*_c_*d_**2*(_p_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))/(d_*sqrt(x**2*_e_ + d_)) - _b_/(_c_*d_*sqrt(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=99,
     ),
     # Rule 100
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))**_p_/(2*d_*(x**2*_e_ + d_)) - _b_*_c_*_p_*Int(x*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/2 + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(2*_b_*_c_*d_**2*(_p_ + 1)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))/(d_*sqrt(x**2*_e_ + d_)) - _b_/(_c_*d_*sqrt(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=100,
     ),
     # Rule 101
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))/(d_*sqrt(x**2*_e_ + d_)) - _b_/(_c_*d_*sqrt(x**2*_e_ + d_)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-3)/2),),
+        replacement=-x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=101,
     ),
     # Rule 102
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))/(d_*sqrt(x**2*_e_ + d_)) - _b_/(_c_*d_*sqrt(x**2*_e_ + d_)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-3)/2),),
+        replacement=-x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=102,
     ),
     # Rule 103
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-3)/2),),
-        replacement=-x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(p_, 1),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))**p_/(d_*sqrt(x**2*_e_ + d_)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*atanh(x*_c_))**(p_ - 2)/(x**2*_e_ + d_)**(sympy.S(3)/2), x) - _b_*p_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)/(_c_*d_*sqrt(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=103,
     ),
     # Rule 104
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-3)/2),),
-        replacement=-x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(p_, 1),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))**p_/(d_*sqrt(x**2*_e_ + d_)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*acoth(x*_c_))**(p_ - 2)/(x**2*_e_ + d_)**(sympy.S(3)/2), x) - _b_*p_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)/(_c_*d_*sqrt(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=104,
     ),
     # Rule 105
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(p_, 1),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))**p_/(d_*sqrt(x**2*_e_ + d_)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*atanh(x*_c_))**(p_ - 2)/(x**2*_e_ + d_)**(sympy.S(3)/2), x) - _b_*p_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)/(_c_*d_*sqrt(x**2*_e_ + d_)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), GtQ(p_, 1), NeQ(q_, sympy.S(-3)/2),),
+        replacement=-x*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*atanh(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/(4*(q_ + 1)**2) - _b_*p_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=105,
     ),
     # Rule 106
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_)**(sympy.S(3)/2), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(p_, 1),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))**p_/(d_*sqrt(x**2*_e_ + d_)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*acoth(x*_c_))**(p_ - 2)/(x**2*_e_ + d_)**(sympy.S(3)/2), x) - _b_*p_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)/(_c_*d_*sqrt(x**2*_e_ + d_)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), GtQ(p_, 1), NeQ(q_, sympy.S(-3)/2),),
+        replacement=-x*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*acoth(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/(4*(q_ + 1)**2) - _b_*p_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=106,
     ),
     # Rule 107
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), GtQ(p_, 1), NeQ(q_, sympy.S(-3)/2),),
-        replacement=-x*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*atanh(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/(4*(q_ + 1)**2) - _b_*p_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), LtQ(p_, -1),),
+        replacement=2*_c_*(q_ + 1)*Int(x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(p_ + 1)) + (_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=107,
     ),
     # Rule 108
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), GtQ(p_, 1), NeQ(q_, sympy.S(-3)/2),),
-        replacement=-x*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*(q_ + 1)) + _b_**2*p_*(p_ - 1)*Int((_a_ + _b_*acoth(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/(4*(q_ + 1)**2) - _b_*p_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_*d_*(q_ + 1)**2) + (2*q_ + 3)*Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(2*d_*(q_ + 1)),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), LtQ(p_, -1),),
+        replacement=2*_c_*(q_ + 1)*Int(x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(p_ + 1)) + (_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=108,
     ),
     # Rule 109
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), LtQ(p_, -1),),
-        replacement=2*_c_*(q_ + 1)*Int(x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(p_ + 1)) + (_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Or(IntegerQ(q_), GtQ(d_, 0)),),
+        replacement=d_**q_*Subst(Int((x*_b_ + _a_)**_p_*cosh(x)**(-2*q_ - 2), x), x, atanh(x*_c_))/_c_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=109,
     ),
     # Rule 110
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), LtQ(p_, -1),),
-        replacement=2*_c_*(q_ + 1)*Int(x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(p_ + 1)) + (_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Not(Or(IntegerQ(q_), GtQ(d_, 0))),),
+        replacement=d_**(q_ + sympy.S.Half)*sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_*(-x**2*_c_**2 + 1)**q_, x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=110,
     ),
     # Rule 111
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Or(IntegerQ(q_), GtQ(d_, 0)),),
-        replacement=d_**q_*Subst(Int((x*_b_ + _a_)**_p_*cosh(x)**(-2*q_ - 2), x), x, atanh(x*_c_))/_c_,
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), IntegerQ(q_),),
+        replacement=-(-d_)**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-2*q_ - 2), x), x, acoth(x*_c_))/_c_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=111,
     ),
     # Rule 112
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Not(Or(IntegerQ(q_), GtQ(d_, 0))),),
-        replacement=d_**(q_ + sympy.S.Half)*sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_*(-x**2*_c_**2 + 1)**q_, x)/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Not(IntegerQ(q_)),),
+        replacement=-x*(-d_)**(q_ + sympy.S.Half)*sqrt((x**2*_c_**2 - 1)/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-2*q_ - 2), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=112,
     ),
     # Rule 113
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), IntegerQ(q_),),
-        replacement=-(-d_)**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-2*q_ - 2), x), x, acoth(x*_c_))/_c_,
+        pattern=Int(atanh(x*_c_)/(x**2*_e_ + _d_), x),
+        constraints=(FreeQ([_c_, _d_, _e_], x),),
+        replacement=-Int(log(-x*_c_ + 1)/(x**2*_e_ + _d_), x)/2 + Int(log(x*_c_ + 1)/(x**2*_e_ + _d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=113,
     ),
     # Rule 114
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), ILtQ(2*q_ + 2, 0), Not(IntegerQ(q_)),),
-        replacement=-x*(-d_)**(q_ + sympy.S.Half)*sqrt((x**2*_c_**2 - 1)/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-2*q_ - 2), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
+        pattern=Int(acoth(x*_c_)/(x**2*_e_ + _d_), x),
+        constraints=(FreeQ([_c_, _d_, _e_], x),),
+        replacement=-Int(log(1 - 1/(x*_c_))/(x**2*_e_ + _d_), x)/2 + Int(log(1 + 1/(x*_c_))/(x**2*_e_ + _d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=114,
     ),
     # Rule 115
     RubiRulePattern(
-        pattern=Int(atanh(x*_c_)/(x**2*_e_ + _d_), x),
-        constraints=(FreeQ([_c_, _d_, _e_], x),),
-        replacement=-Int(log(-x*_c_ + 1)/(x**2*_e_ + _d_), x)/2 + Int(log(x*_c_ + 1)/(x**2*_e_ + _d_), x)/2,
+        pattern=Int((a_ + _b_*atanh(x*_c_))/(x**2*_e_ + _d_), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x),),
+        replacement=a_*Int(1/(x**2*_e_ + _d_), x) + _b_*Int(atanh(x*_c_)/(x**2*_e_ + _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=115,
     ),
     # Rule 116
     RubiRulePattern(
-        pattern=Int(acoth(x*_c_)/(x**2*_e_ + _d_), x),
-        constraints=(FreeQ([_c_, _d_, _e_], x),),
-        replacement=-Int(log(1 - 1/(x*_c_))/(x**2*_e_ + _d_), x)/2 + Int(log(1 + 1/(x*_c_))/(x**2*_e_ + _d_), x)/2,
+        pattern=Int((a_ + _b_*acoth(x*_c_))/(x**2*_e_ + _d_), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x),),
+        replacement=a_*Int(1/(x**2*_e_ + _d_), x) + _b_*Int(acoth(x*_c_)/(x**2*_e_ + _d_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=116,
     ),
     # Rule 117
     RubiRulePattern(
-        pattern=Int((a_ + _b_*atanh(x*_c_))/(x**2*_e_ + _d_), x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x),),
-        replacement=a_*Int(1/(x**2*_e_ + _d_), x) + _b_*Int(atanh(x*_c_)/(x**2*_e_ + _d_), x),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=117,
     ),
     # Rule 118
     RubiRulePattern(
-        pattern=Int((a_ + _b_*acoth(x*_c_))/(x**2*_e_ + _d_), x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x),),
-        replacement=a_*Int(1/(x**2*_e_ + _d_), x) + _b_*Int(acoth(x*_c_)/(x**2*_e_ + _d_), x),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=118,
     ),
     # Rule 119
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_q_), IGtQ(_p_, 0),),
+        replacement=Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x**2*_e_ + d_)**_q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=119,
     ),
     # Rule 120
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_q_), IGtQ(_p_, 0),),
+        replacement=Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x**2*_e_ + d_)**_q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=120,
     ),
     # Rule 121
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_q_), IGtQ(_p_, 0),),
-        replacement=Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x**2*_e_ + d_)**_q_, x), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), GtQ(m_, 1),),
+        replacement=-d_*_f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x)/_e_ + _f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_, x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=121,
     ),
     # Rule 122
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_q_), IGtQ(_p_, 0),),
-        replacement=Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x**2*_e_ + d_)**_q_, x), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), GtQ(m_, 1),),
+        replacement=-d_*_f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x)/_e_ + _f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_, x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=122,
     ),
     # Rule 123
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), GtQ(m_, 1),),
-        replacement=-d_*_f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x)/_e_ + _f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_, x)/_e_,
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, -1),),
+        replacement=-_e_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x)/(d_*_f_**2) + Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_, x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=123,
     ),
     # Rule 124
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), GtQ(m_, 1),),
-        replacement=-d_*_f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x)/_e_ + _f_**2*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_, x)/_e_,
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, -1),),
+        replacement=-_e_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x)/(d_*_f_**2) + Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_, x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=124,
     ),
     # Rule 125
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, -1),),
-        replacement=-_e_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x)/(d_*_f_**2) + Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_, x)/d_,
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(-x*_c_ + 1), x)/(_c_*d_) + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(_b_*_e_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=125,
     ),
     # Rule 126
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, -1),),
-        replacement=-_e_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x)/(d_*_f_**2) + Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_, x)/d_,
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(-x*_c_ + 1), x)/(_c_*d_) + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(_b_*_e_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=126,
     ),
     # Rule 127
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(-x*_c_ + 1), x)/(_c_*d_) + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(_b_*_e_*(_p_ + 1)),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), Not(IGtQ(p_, 0)), NeQ(p_, -1),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)) - Int((_a_ + _b_*atanh(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=127,
     ),
     # Rule 128
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(-x*_c_ + 1), x)/(_c_*d_) + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(_b_*_e_*(_p_ + 1)),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), Not(IGtQ(p_, 0)), NeQ(p_, -1),),
+        replacement=-x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)) - Int((_a_ + _b_*acoth(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=128,
     ),
     # Rule 129
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), Not(IGtQ(p_, 0)), NeQ(p_, -1),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)) - Int((_a_ + _b_*atanh(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*(x*_c_ + 1)), x)/d_ + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(_b_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=129,
     ),
     # Rule 130
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), Not(IGtQ(p_, 0)), NeQ(p_, -1),),
-        replacement=-x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)) - Int((_a_ + _b_*acoth(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*(x*_c_ + 1)), x)/d_ + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(_b_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=130,
     ),
     # Rule 131
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*(x*_c_ + 1)), x)/d_ + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(_b_*d_*(_p_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1),),
+        replacement=-_f_*m_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)) + (x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=131,
     ),
     # Rule 132
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*(x*_c_ + 1)), x)/d_ + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(_b_*d_*(_p_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1),),
+        replacement=-_f_*m_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)) + (x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=132,
     ),
     # Rule 133
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1),),
-        replacement=-_f_*m_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)) + (x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_m_), Not(And(EqQ(_m_, 1), NeQ(_a_, 0))),),
+        replacement=Int(ExpandIntegrand(_a_ + _b_*atanh(x*_c_), x**_m_/(x**2*_e_ + d_), x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=133,
     ),
     # Rule 134
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1),),
-        replacement=-_f_*m_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(p_ + 1), x)/(_b_*_c_*d_*(p_ + 1)) + (x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_m_), Not(And(EqQ(_m_, 1), NeQ(_a_, 0))),),
+        replacement=Int(ExpandIntegrand(_a_ + _b_*acoth(x*_c_), x**_m_/(x**2*_e_ + d_), x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=134,
     ),
     # Rule 135
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_m_), Not(And(EqQ(_m_, 1), NeQ(_a_, 0))),),
-        replacement=Int(ExpandIntegrand(_a_ + _b_*atanh(x*_c_), x**_m_/(x**2*_e_ + d_), x), x),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), NeQ(_q_, -1),),
+        replacement=_b_*_p_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(2*_c_*(_q_ + 1)) + (_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=135,
     ),
     # Rule 136
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IntegerQ(_m_), Not(And(EqQ(_m_, 1), NeQ(_a_, 0))),),
-        replacement=Int(ExpandIntegrand(_a_ + _b_*acoth(x*_c_), x**_m_/(x**2*_e_ + d_), x), x),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), NeQ(_q_, -1),),
+        replacement=_b_*_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(2*_c_*(_q_ + 1)) + (_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=136,
     ),
     # Rule 137
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), NeQ(_q_, -1),),
-        replacement=_b_*_p_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(2*_c_*(_q_ + 1)) + (_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1), NeQ(p_, -2),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)*(x**2*_e_ + d_)) + 4*Int(x*(_a_ + _b_*atanh(x*_c_))**(p_ + 2)/(x**2*_e_ + d_)**2, x)/(_b_**2*(p_ + 1)*(p_ + 2)) + (_a_ + _b_*atanh(x*_c_))**(p_ + 2)*(x**2*_c_**2 + 1)/(_b_**2*_e_*(p_ + 1)*(p_ + 2)*(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=137,
     ),
     # Rule 138
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), NeQ(_q_, -1),),
-        replacement=_b_*_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(2*_c_*(_q_ + 1)) + (_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1), NeQ(p_, -2),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)*(x**2*_e_ + d_)) + 4*Int(x*(_a_ + _b_*acoth(x*_c_))**(p_ + 2)/(x**2*_e_ + d_)**2, x)/(_b_**2*(p_ + 1)*(p_ + 2)) + (_a_ + _b_*acoth(x*_c_))**(p_ + 2)*(x**2*_c_**2 + 1)/(_b_**2*_e_*(p_ + 1)*(p_ + 2)*(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=138,
     ),
     # Rule 139
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1), NeQ(p_, -2),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)*(x**2*_e_ + d_)) + 4*Int(x*(_a_ + _b_*atanh(x*_c_))**(p_ + 2)/(x**2*_e_ + d_)**2, x)/(_b_**2*(p_ + 1)*(p_ + 2)) + (_a_ + _b_*atanh(x*_c_))**(p_ + 2)*(x**2*_c_**2 + 1)/(_b_**2*_e_*(p_ + 1)*(p_ + 2)*(x**2*_e_ + d_)),
+        pattern=Int(x**2*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-5)/2),),
+        replacement=-x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*_c_**2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_**3*d_*(q_ + 1)**2) + Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*_c_**2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=139,
     ),
     # Rule 140
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(p_, -1), NeQ(p_, -2),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)/(_b_*_c_*d_*(p_ + 1)*(x**2*_e_ + d_)) + 4*Int(x*(_a_ + _b_*acoth(x*_c_))**(p_ + 2)/(x**2*_e_ + d_)**2, x)/(_b_**2*(p_ + 1)*(p_ + 2)) + (_a_ + _b_*acoth(x*_c_))**(p_ + 2)*(x**2*_c_**2 + 1)/(_b_**2*_e_*(p_ + 1)*(p_ + 2)*(x**2*_e_ + d_)),
+        pattern=Int(x**2*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-5)/2),),
+        replacement=-x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*_c_**2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_**3*d_*(q_ + 1)**2) + Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*_c_**2*d_*(q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=140,
     ),
     # Rule 141
     RubiRulePattern(
-        pattern=Int(x**2*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-5)/2),),
-        replacement=-x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*_c_**2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_**3*d_*(q_ + 1)**2) + Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*_c_**2*d_*(q_ + 1)),
+        pattern=Int(x**2*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))**_p_/(2*_c_**2*d_*(x**2*_e_ + d_)) - _b_*_p_*Int(x*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/(2*_c_) - (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(2*_b_*_c_**3*d_**2*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=141,
     ),
     # Rule 142
     RubiRulePattern(
-        pattern=Int(x**2*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), LtQ(q_, -1), NeQ(q_, sympy.S(-5)/2),),
-        replacement=-x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(2*_c_**2*d_*(q_ + 1)) - _b_*(x**2*_e_ + d_)**(q_ + 1)/(4*_c_**3*d_*(q_ + 1)**2) + Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(2*_c_**2*d_*(q_ + 1)),
+        pattern=Int(x**2*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))**_p_/(2*_c_**2*d_*(x**2*_e_ + d_)) - _b_*_p_*Int(x*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/(2*_c_) - (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(2*_b_*_c_**3*d_**2*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=142,
     ),
     # Rule 143
     RubiRulePattern(
-        pattern=Int(x**2*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))**_p_/(2*_c_**2*d_*(x**2*_e_ + d_)) - _b_*_p_*Int(x*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/(2*_c_) - (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(2*_b_*_c_**3*d_**2*(_p_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1),),
+        replacement=-_b_*(x*_f_)**m_*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=143,
     ),
     # Rule 144
     RubiRulePattern(
-        pattern=Int(x**2*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))**_p_/(2*_c_**2*d_*(x**2*_e_ + d_)) - _b_*_p_*Int(x*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_)**2, x)/(2*_c_) - (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(2*_b_*_c_**3*d_**2*(_p_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1),),
+        replacement=-_b_*(x*_f_)**m_*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=144,
     ),
     # Rule 145
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1),),
-        replacement=-_b_*(x*_f_)**m_*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1), GtQ(p_, 1),),
+        replacement=_b_**2*p_*(p_ - 1)*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/m_**2 - _b_*p_*(x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=145,
     ),
     # Rule 146
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1),),
-        replacement=-_b_*(x*_f_)**m_*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1), GtQ(p_, 1),),
+        replacement=_b_**2*p_*(p_ - 1)*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/m_**2 - _b_*p_*(x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=146,
     ),
     # Rule 147
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1), GtQ(p_, 1),),
-        replacement=_b_**2*p_*(p_ - 1)*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/m_**2 - _b_*p_*(x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 2, 0), LtQ(p_, -1),),
+        replacement=-_f_*_m_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**_q_, x)/(_b_*_c_*(p_ + 1)) + (x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=147,
     ),
     # Rule 148
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(m_ + 2*q_ + 2, 0), LtQ(q_, -1), GtQ(p_, 1),),
-        replacement=_b_**2*p_*(p_ - 1)*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ - 2)*(x**2*_e_ + d_)**q_, x)/m_**2 - _b_*p_*(x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**(p_ - 1)*(x**2*_e_ + d_)**(q_ + 1)/(_c_*d_*m_**2) - _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1), x)/(_c_**2*d_*m_) + _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**(q_ + 1)/(_c_**2*d_*m_),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 2, 0), LtQ(p_, -1),),
+        replacement=-_f_*_m_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**_q_, x)/(_b_*_c_*(p_ + 1)) + (x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=148,
     ),
     # Rule 149
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 2, 0), LtQ(p_, -1),),
-        replacement=-_f_*_m_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**_q_, x)/(_b_*_c_*(p_ + 1)) + (x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 3, 0), GtQ(_p_, 0), NeQ(_m_, -1),),
+        replacement=-_b_*_c_*_p_*Int((x*_f_)**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(_m_ + 1) + (x*_f_)**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(d_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=149,
     ),
     # Rule 150
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 2, 0), LtQ(p_, -1),),
-        replacement=-_f_*_m_*Int((x*_f_)**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**_q_, x)/(_b_*_c_*(p_ + 1)) + (x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**(p_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_b_*_c_*d_*(p_ + 1)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 3, 0), GtQ(_p_, 0), NeQ(_m_, -1),),
+        replacement=-_b_*_c_*_p_*Int((x*_f_)**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(_f_*(_m_ + 1)) + (x*_f_)**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(d_*_f_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=150,
     ),
     # Rule 151
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 3, 0), GtQ(_p_, 0), NeQ(_m_, -1),),
-        replacement=-_b_*_c_*_p_*Int((x*_f_)**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(_m_ + 1) + (x*_f_)**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(d_*(_m_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))*sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(m_, -2),),
+        replacement=-_b_*_c_*d_*Int((x*_f_)**(m_ + 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 2)) + d_*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))/sqrt(x**2*_e_ + d_), x)/(m_ + 2) + (x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))*sqrt(x**2*_e_ + d_)/(_f_*(m_ + 2)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=151,
     ),
     # Rule 152
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), EqQ(_c_**2*d_ + _e_, 0), EqQ(_m_ + 2*_q_ + 3, 0), GtQ(_p_, 0), NeQ(_m_, -1),),
-        replacement=-_b_*_c_*_p_*Int((x*_f_)**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(x**2*_e_ + d_)**_q_, x)/(_f_*(_m_ + 1)) + (x*_f_)**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ + 1)/(d_*_f_*(_m_ + 1)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))*sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(m_, -2),),
+        replacement=-_b_*_c_*d_*Int((x*_f_)**(m_ + 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 2)) + d_*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))/sqrt(x**2*_e_ + d_), x)/(m_ + 2) + (x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))*sqrt(x**2*_e_ + d_)/(_f_*(m_ + 2)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=152,
     ),
     # Rule 153
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))*sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(m_, -2),),
-        replacement=-_b_*_c_*d_*Int((x*_f_)**(m_ + 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 2)) + d_*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))/sqrt(x**2*_e_ + d_), x)/(m_ + 2) + (x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))*sqrt(x**2*_e_ + d_)/(_f_*(m_ + 2)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(q_, 1),),
+        replacement=Int(ExpandIntegrand((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=153,
     ),
     # Rule 154
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))*sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), NeQ(m_, -2),),
-        replacement=-_b_*_c_*d_*Int((x*_f_)**(m_ + 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 2)) + d_*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))/sqrt(x**2*_e_ + d_), x)/(m_ + 2) + (x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))*sqrt(x**2*_e_ + d_)/(_f_*(m_ + 2)),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(q_, 1),),
+        replacement=Int(ExpandIntegrand((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=154,
     ),
     # Rule 155
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(q_, 1),),
-        replacement=Int(ExpandIntegrand((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), IGtQ(_p_, 0), Or(RationalQ(m_), And(EqQ(_p_, 1), IntegerQ(_q_))),),
+        replacement=-_c_**2*d_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x)/_f_**2 + d_*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=155,
     ),
     # Rule 156
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(q_, 1),),
-        replacement=Int(ExpandIntegrand((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), IGtQ(_p_, 0), Or(RationalQ(m_), And(EqQ(_p_, 1), IntegerQ(_q_))),),
+        replacement=-_c_**2*d_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x)/_f_**2 + d_*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=156,
     ),
     # Rule 157
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), IGtQ(_p_, 0), Or(RationalQ(m_), And(EqQ(_p_, 1), IntegerQ(_q_))),),
-        replacement=-_c_**2*d_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x)/_f_**2 + d_*Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), GtQ(m_, 1),),
+        replacement=_b_*_f_*_p_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_c_*m_) + _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_c_**2*m_) - _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=157,
     ),
     # Rule 158
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_q_, 0), IGtQ(_p_, 0), Or(RationalQ(m_), And(EqQ(_p_, 1), IntegerQ(_q_))),),
-        replacement=-_c_**2*d_*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x)/_f_**2 + d_*Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(_q_ - 1), x),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), GtQ(m_, 1),),
+        replacement=_b_*_f_*_p_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_c_*m_) + _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_c_**2*m_) - _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(_c_**2*d_*m_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=158,
     ),
     # Rule 159
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), GtQ(m_, 1),),
-        replacement=_b_*_f_*_p_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_c_*m_) + _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_c_**2*m_) - _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(_c_**2*d_*m_),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
+        replacement=((Integer(-2) * (sympy.sqrt(d_))**(Integer(-1)) * (_a_ + (_b_ * sympy.atanh((_c_ * x)))) * sympy.atanh((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), ((Integer(-1) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x))))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (Integer(-1) * (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), (sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=159,
     ),
     # Rule 160
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), GtQ(m_, 1),),
-        replacement=_b_*_f_*_p_*Int((x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_c_*m_) + _f_**2*(m_ - 1)*Int((x*_f_)**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_c_**2*m_) - _f_*(x*_f_)**(m_ - 1)*(_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(_c_**2*d_*m_),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
+        replacement=((Integer(-2) * (sympy.sqrt(d_))**(Integer(-1)) * (_a_ + (_b_ * sympy.acoth((_c_ * x)))) * sympy.atanh((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), ((Integer(-1) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x))))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (Integer(-1) * (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), (sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=160,
     ),
     # Rule 161
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
-        replacement=((Integer(-2) * (sympy.sqrt(d_))**(Integer(-1)) * (_a_ + (_b_ * sympy.atanh((_c_ * x)))) * sympy.atanh((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), ((Integer(-1) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x))))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (Integer(-1) * (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), (sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))))),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_, 0), GtQ(d_, 0),),
+        replacement=Subst(Int((x*_b_ + _a_)**p_*csch(x), x), x, atanh(x*_c_))/sqrt(d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=161,
     ),
     # Rule 162
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(d_, 0),),
-        replacement=((Integer(-2) * (sympy.sqrt(d_))**(Integer(-1)) * (_a_ + (_b_ * sympy.acoth((_c_ * x)))) * sympy.atanh((sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), ((Integer(-1) * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x))))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))) + (Integer(-1) * (_b_ * (sympy.sqrt(d_))**(Integer(-1)) * sympy.polylog(Integer(2), (sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * (sympy.sqrt((Integer(1) + (_c_ * x))))**(Integer(-1))))))),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_, 0), GtQ(d_, 0),),
+        replacement=-x*_c_*sqrt(1 - 1/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**p_*sech(x), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=162,
     ),
     # Rule 163
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**p_/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_, 0), GtQ(d_, 0),),
-        replacement=Subst(Int((x*_b_ + _a_)**p_*csch(x), x), x, atanh(x*_c_))/sqrt(d_),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
+        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(-x**2*_c_**2 + 1)), x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=163,
     ),
     # Rule 164
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**p_/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(p_, 0), GtQ(d_, 0),),
-        replacement=-x*_c_*sqrt(1 - 1/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**p_*sech(x), x), x, acoth(x*_c_))/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
+        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(-x**2*_c_**2 + 1)), x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=164,
     ),
     # Rule 165
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
-        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(-x**2*_c_**2 + 1)), x)/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=_b_*_c_*_p_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x*sqrt(x**2*_e_ + d_)), x) - (_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(x*d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=165,
     ),
     # Rule 166
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), Not(GtQ(d_, 0)),),
-        replacement=sqrt(-x**2*_c_**2 + 1)*Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(-x**2*_c_**2 + 1)), x)/sqrt(x**2*_e_ + d_),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*sqrt(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
+        replacement=_b_*_c_*_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x*sqrt(x**2*_e_ + d_)), x) - (_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(x*d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=166,
     ),
     # Rule 167
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=_b_*_c_*_p_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x*sqrt(x**2*_e_ + d_)), x) - (_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(x*d_),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), LtQ(m_, -1), NeQ(m_, -2),),
+        replacement=-_b_*_c_*_p_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 1)) + _c_**2*(m_ + 2)*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_f_**2*(m_ + 1)) + (x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(d_*_f_*(m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=167,
     ),
     # Rule 168
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*sqrt(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0),),
-        replacement=_b_*_c_*_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/(x*sqrt(x**2*_e_ + d_)), x) - (_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(x*d_),
+        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), LtQ(m_, -1), NeQ(m_, -2),),
+        replacement=-_b_*_c_*_p_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 1)) + _c_**2*(m_ + 2)*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_f_**2*(m_ + 1)) + (x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(d_*_f_*(m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=168,
     ),
     # Rule 169
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), LtQ(m_, -1), NeQ(m_, -2),),
-        replacement=-_b_*_c_*_p_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 1)) + _c_**2*(m_ + 2)*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_f_**2*(m_ + 1)) + (x*_f_)**(m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(d_*_f_*(m_ + 1)),
+        pattern=Int(x**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), IGtQ(m_, 1), NeQ(_p_, -1),),
+        replacement=-d_*Int(x**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/_e_ + Int(x**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=169,
     ),
     # Rule 170
     RubiRulePattern(
-        pattern=Int((x*_f_)**m_*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_], x), EqQ(_c_**2*d_ + _e_, 0), GtQ(_p_, 0), LtQ(m_, -1), NeQ(m_, -2),),
-        replacement=-_b_*_c_*_p_*Int((x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ - 1)/sqrt(x**2*_e_ + d_), x)/(_f_*(m_ + 1)) + _c_**2*(m_ + 2)*Int((x*_f_)**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_/sqrt(x**2*_e_ + d_), x)/(_f_**2*(m_ + 1)) + (x*_f_)**(m_ + 1)*(_a_ + _b_*acoth(x*_c_))**_p_*sqrt(x**2*_e_ + d_)/(d_*_f_*(m_ + 1)),
+        pattern=Int(x**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), IGtQ(m_, 1), NeQ(_p_, -1),),
+        replacement=-d_*Int(x**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/_e_ + Int(x**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/_e_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=170,
     ),
     # Rule 171
     RubiRulePattern(
         pattern=Int(x**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), IGtQ(m_, 1), NeQ(_p_, -1),),
-        replacement=-d_*Int(x**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/_e_ + Int(x**(m_ - 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/_e_,
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), ILtQ(m_, 0), NeQ(_p_, -1),),
+        replacement=-_e_*Int(x**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/d_ + Int(x**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=171,
     ),
     # Rule 172
     RubiRulePattern(
         pattern=Int(x**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), IGtQ(m_, 1), NeQ(_p_, -1),),
-        replacement=-d_*Int(x**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/_e_ + Int(x**(m_ - 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/_e_,
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), ILtQ(m_, 0), NeQ(_p_, -1),),
+        replacement=-_e_*Int(x**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/d_ + Int(x**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/d_,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=172,
     ),
     # Rule 173
     RubiRulePattern(
-        pattern=Int(x**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), ILtQ(m_, 0), NeQ(_p_, -1),),
-        replacement=-_e_*Int(x**(m_ + 2)*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/d_ + Int(x**m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/d_,
+        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(_m_), LtQ(q_, -1), LtQ(_p_, -1), NeQ(_m_ + 2*q_ + 2, 0),),
+        replacement=x**_m_*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(_p_ + 1)) + _c_*(_m_ + 2*q_ + 2)*Int(x**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(_p_ + 1)) - _m_*Int(x**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*_c_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=173,
     ),
     # Rule 174
     RubiRulePattern(
-        pattern=Int(x**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegersQ(_p_, 2*q_), LtQ(q_, -1), ILtQ(m_, 0), NeQ(_p_, -1),),
-        replacement=-_e_*Int(x**(m_ + 2)*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x)/d_ + Int(x**m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**(q_ + 1), x)/d_,
+        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(_m_), LtQ(q_, -1), LtQ(_p_, -1), NeQ(_m_ + 2*q_ + 2, 0),),
+        replacement=x**_m_*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(_p_ + 1)) + _c_*(_m_ + 2*q_ + 2)*Int(x**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(_p_ + 1)) - _m_*Int(x**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*_c_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=174,
     ),
     # Rule 175
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(_m_), LtQ(q_, -1), LtQ(_p_, -1), NeQ(_m_ + 2*q_ + 2, 0),),
-        replacement=x**_m_*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(_p_ + 1)) + _c_*(_m_ + 2*q_ + 2)*Int(x**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(_p_ + 1)) - _m_*Int(x**(_m_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*_c_*(_p_ + 1)),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Or(IntegerQ(q_), GtQ(d_, 0)),),
+        replacement=_c_**(-_m_ - 1)*d_**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**_m_*cosh(x)**(-_m_ - 2*q_ - 2), x), x, atanh(x*_c_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=175,
     ),
     # Rule 176
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(_m_), LtQ(q_, -1), LtQ(_p_, -1), NeQ(_m_ + 2*q_ + 2, 0),),
-        replacement=x**_m_*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(_b_*_c_*d_*(_p_ + 1)) + _c_*(_m_ + 2*q_ + 2)*Int(x**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*(_p_ + 1)) - _m_*Int(x**(_m_ - 1)*(_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*(x**2*_e_ + d_)**q_, x)/(_b_*_c_*(_p_ + 1)),
+        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Not(Or(IntegerQ(q_), GtQ(d_, 0))),),
+        replacement=d_**(q_ + sympy.S.Half)*sqrt(-x**2*_c_**2 + 1)*Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(-x**2*_c_**2 + 1)**q_, x)/sqrt(x**2*_e_ + d_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=176,
     ),
     # Rule 177
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Or(IntegerQ(q_), GtQ(d_, 0)),),
-        replacement=_c_**(-_m_ - 1)*d_**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**_m_*cosh(x)**(-_m_ - 2*q_ - 2), x), x, atanh(x*_c_)),
+        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), IntegerQ(q_),),
+        replacement=-_c_**(-_m_ - 1)*(-d_)**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-_m_ - 2*q_ - 2)*cosh(x)**_m_, x), x, acoth(x*_c_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=177,
     ),
     # Rule 178
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Not(Or(IntegerQ(q_), GtQ(d_, 0))),),
-        replacement=d_**(q_ + sympy.S.Half)*sqrt(-x**2*_c_**2 + 1)*Int(x**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(-x**2*_c_**2 + 1)**q_, x)/sqrt(x**2*_e_ + d_),
+        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Not(IntegerQ(q_)),),
+        replacement=-x*(-d_)**(q_ + sympy.S.Half)*sqrt((x**2*_c_**2 - 1)/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-_m_ - 2*q_ - 2)*cosh(x)**_m_, x), x, acoth(x*_c_))/(_c_**_m_*sqrt(x**2*_e_ + d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=178,
     ),
     # Rule 179
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), IntegerQ(q_),),
-        replacement=-_c_**(-_m_ - 1)*(-d_)**q_*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-_m_ - 2*q_ - 2)*cosh(x)**_m_, x), x, acoth(x*_c_)),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _q_], x), NeQ(_q_, -1),),
+        replacement=-_b_*_c_*Int((x**2*_e_ + _d_)**(_q_ + 1)/(-x**2*_c_**2 + 1), x)/(2*_e_*(_q_ + 1)) + (_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=179,
     ),
     # Rule 180
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _p_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), ILtQ(_m_ + 2*q_ + 1, 0), Not(IntegerQ(q_)),),
-        replacement=-x*(-d_)**(q_ + sympy.S.Half)*sqrt((x**2*_c_**2 - 1)/(x**2*_c_**2))*Subst(Int((x*_b_ + _a_)**_p_*sinh(x)**(-_m_ - 2*q_ - 2)*cosh(x)**_m_, x), x, acoth(x*_c_))/(_c_**_m_*sqrt(x**2*_e_ + d_)),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _q_], x), NeQ(_q_, -1),),
+        replacement=-_b_*_c_*Int((x**2*_e_ + _d_)**(_q_ + 1)/(-x**2*_c_**2 + 1), x)/(2*_e_*(_q_ + 1)) + (_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=180,
     ),
     # Rule 181
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _q_], x), NeQ(_q_, -1),),
-        replacement=-_b_*_c_*Int((x**2*_e_ + _d_)**(_q_ + 1)/(-x**2*_c_**2 + 1), x)/(2*_e_*(_q_ + 1)) + (_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
+        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=181,
     ),
     # Rule 182
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _q_], x), NeQ(_q_, -1),),
-        replacement=-_b_*_c_*Int((x**2*_e_ + _d_)**(_q_ + 1)/(-x**2*_c_**2 + 1), x)/(2*_e_*(_q_ + 1)) + (_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**(_q_ + 1)/(2*_e_*(_q_ + 1)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
+        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=182,
     ),
     # Rule 183
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=183,
     ),
     # Rule 184
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
+        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=184,
     ),
     # Rule 185
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*atanh(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*atanh(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=185,
     ),
     # Rule 186
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*acoth(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*acoth(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
+        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
+        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=186,
     ),
     # Rule 187
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
+        pattern=Int((x*_f_)**_m_*(a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x),),
+        replacement=a_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x) + _b_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*atanh(x*_c_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=187,
     ),
     # Rule 188
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
+        pattern=Int((x*_f_)**_m_*(a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**_q_, x),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x),),
+        replacement=a_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x) + _b_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*acoth(x*_c_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=188,
     ),
     # Rule 189
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x),),
-        replacement=a_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x) + _b_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*atanh(x*_c_), x),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x*_g_ + f_)**_m_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0),),
+        replacement=Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), (x*_g_ + f_)**_m_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=189,
     ),
     # Rule 190
     RubiRulePattern(
-        pattern=Int((x*_f_)**_m_*(a_ + _b_*acoth(x*_c_))*(x**2*_e_ + d_)**_q_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x),),
-        replacement=a_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x) + _b_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*acoth(x*_c_), x),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x*_g_ + f_)**_m_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0),),
+        replacement=Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), (x*_g_ + f_)**_m_, x), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=190,
     ),
     # Rule 191
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*(x*_g_ + f_)**_m_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0),),
-        replacement=Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), (x*_g_ + f_)**_m_, x), x),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*atanh(u_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=-Int((_a_ + _b_*atanh(x*_c_))**_p_*log(1 - u_)/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_ + 1)/(x**2*_e_ + d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=191,
     ),
     # Rule 192
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(x*_g_ + f_)**_m_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0),),
-        replacement=Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_/(x**2*_e_ + d_), (x*_g_ + f_)**_m_, x), x),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*acoth(u_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=-Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 - 1/u_, x))/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 + 1/u_, x))/(x**2*_e_ + d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=192,
     ),
     # Rule 193
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*atanh(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
         replacement=-Int((_a_ + _b_*atanh(x*_c_))**_p_*log(1 - u_)/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_ + 1)/(x**2*_e_ + d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=193,
@@ -1621,324 +1637,308 @@ RULES = [
     # Rule 194
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*acoth(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
         replacement=-Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 - 1/u_, x))/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 + 1/u_, x))/(x**2*_e_ + d_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=194,
     ),
     # Rule 195
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*atanh(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=-Int((_a_ + _b_*atanh(x*_c_))**_p_*log(1 - u_)/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_ + 1)/(x**2*_e_ + d_), x)/2,
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*log(x*_g_ + f_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(_c_**2*f_**2 - _g_**2, 0),),
+        replacement=-_g_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(x*_g_ + f_), x)/(_b_*_c_*d_*(_p_ + 1)) + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*log(x*_g_ + f_)/(_b_*_c_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=195,
     ),
     # Rule 196
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*acoth(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=-Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 - 1/u_, x))/(x**2*_e_ + d_), x)/2 + Int((_a_ + _b_*acoth(x*_c_))**_p_*log(SimplifyIntegrand(1 + 1/u_, x))/(x**2*_e_ + d_), x)/2,
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*log(x*_g_ + f_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(_c_**2*f_**2 - _g_**2, 0),),
+        replacement=-_g_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(x*_g_ + f_), x)/(_b_*_c_*d_*(_p_ + 1)) + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*log(x*_g_ + f_)/(_b_*_c_*d_*(_p_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=196,
     ),
     # Rule 197
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*log(x*_g_ + f_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(_c_**2*f_**2 - _g_**2, 0),),
-        replacement=-_g_*Int((_a_ + _b_*atanh(x*_c_))**(_p_ + 1)/(x*_g_ + f_), x)/(_b_*_c_*d_*(_p_ + 1)) + (_a_ + _b_*atanh(x*_c_))**(_p_ + 1)*log(x*_g_ + f_)/(_b_*_c_*d_*(_p_ + 1)),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=197,
     ),
     # Rule 198
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*log(x*_g_ + f_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(_c_**2*f_**2 - _g_**2, 0),),
-        replacement=-_g_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ + 1)/(x*_g_ + f_), x)/(_b_*_c_*d_*(_p_ + 1)) + (_a_ + _b_*acoth(x*_c_))**(_p_ + 1)*log(x*_g_ + f_)/(_b_*_c_*d_*(_p_ + 1)),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=198,
     ),
     # Rule 199
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
-        replacement=((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
+        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_)) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=199,
     ),
     # Rule 200
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
-        replacement=((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
+        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_)) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=200,
     ),
     # Rule 201
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_)) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=201,
     ),
     # Rule 202
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*log(u_)/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ((1 - u_)**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_)) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * u_))) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
+        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=202,
     ),
     # Rule 203
     RubiRulePattern(
         pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
-        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
+        replacement=((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=203,
     ),
     # Rule 204
     RubiRulePattern(
         pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(x*_c_ + 1))**2, 0),),
-        replacement=(((Integer(-1) * ((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_)) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x))),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
+        replacement=((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=204,
     ),
     # Rule 205
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
+        pattern=Int(1/((_a_ + _b_*acoth(x*_c_))*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
+        replacement=(-log(_a_ + _b_*acoth(x*_c_)) + log(_a_ + _b_*atanh(x*_c_)))/(_b_**2*_c_*d_*(acoth(x*_c_) - atanh(x*_c_))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=205,
     ),
     # Rule 206
     RubiRulePattern(
-        pattern=Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog(k_, u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, k_], x), IGtQ(_p_, 0), EqQ(_c_**2*d_ + _e_, 0), EqQ(u_**2 - (1 - 2/(-x*_c_ + 1))**2, 0),),
-        replacement=((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_) * sympy.polylog((k_ + Integer(1)), u_) * ((Integer(2) * _c_ * d_))**(Integer(-1))) + (Integer(-1) * (_b_ * _p_ * (Integer(2))**(Integer(-1)) * Int((((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((_p_ + Integer(-1))) * sympy.polylog((k_ + Integer(1)), u_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1))), x)))),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGeQ(_m_, _p_),),
+        replacement=-_p_*Int((_a_ + _b_*acoth(x*_c_))**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_), x)/(_m_ + 1) + (_a_ + _b_*acoth(x*_c_))**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_/(_b_*_c_*d_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=206,
     ),
     # Rule 207
     RubiRulePattern(
-        pattern=Int(1/((_a_ + _b_*acoth(x*_c_))*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + d_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0),),
-        replacement=(-log(_a_ + _b_*acoth(x*_c_)) + log(_a_ + _b_*atanh(x*_c_)))/(_b_**2*_c_*d_*(acoth(x*_c_) - atanh(x*_c_))),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(_a_ + _b_*atanh(x*_c_))**_m_/(x**2*_e_ + d_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(_m_, _p_),),
+        replacement=-_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_m_ + 1)/(x**2*_e_ + d_), x)/(_m_ + 1) + (_a_ + _b_*acoth(x*_c_))**_p_*(_a_ + _b_*atanh(x*_c_))**(_m_ + 1)/(_b_*_c_*d_*(_m_ + 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=207,
     ),
     # Rule 208
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_m_*(_a_ + _b_*atanh(x*_c_))**_p_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGeQ(_m_, _p_),),
-        replacement=-_p_*Int((_a_ + _b_*acoth(x*_c_))**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**(_p_ - 1)/(x**2*_e_ + d_), x)/(_m_ + 1) + (_a_ + _b_*acoth(x*_c_))**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))**_p_/(_b_*_c_*d_*(_m_ + 1)),
+        pattern=Int(atanh(x*_a_)/(x**_n_*_d_ + c_), x),
+        constraints=(FreeQ([_a_, c_, _d_], x), IntegerQ(_n_), Not(And(EqQ(_n_, 2), EqQ(_a_**2*c_ + _d_, 0))),),
+        replacement=-Int(log(-x*_a_ + 1)/(x**_n_*_d_ + c_), x)/2 + Int(log(x*_a_ + 1)/(x**_n_*_d_ + c_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=208,
     ),
     # Rule 209
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))**_p_*(_a_ + _b_*atanh(x*_c_))**_m_/(x**2*_e_ + d_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0), IGtQ(_m_, _p_),),
-        replacement=-_p_*Int((_a_ + _b_*acoth(x*_c_))**(_p_ - 1)*(_a_ + _b_*atanh(x*_c_))**(_m_ + 1)/(x**2*_e_ + d_), x)/(_m_ + 1) + (_a_ + _b_*acoth(x*_c_))**_p_*(_a_ + _b_*atanh(x*_c_))**(_m_ + 1)/(_b_*_c_*d_*(_m_ + 1)),
+        pattern=Int(acoth(x*_a_)/(x**_n_*_d_ + c_), x),
+        constraints=(FreeQ([_a_, c_, _d_], x), IntegerQ(_n_), Not(And(EqQ(_n_, 2), EqQ(_a_**2*c_ + _d_, 0))),),
+        replacement=-Int(log(1 - 1/(x*_a_))/(x**_n_*_d_ + c_), x)/2 + Int(log(1 + 1/(x*_a_))/(x**_n_*_d_ + c_), x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=209,
     ),
     # Rule 210
     RubiRulePattern(
-        pattern=Int(atanh(x*_a_)/(x**_n_*_d_ + c_), x),
-        constraints=(FreeQ([_a_, c_, _d_], x), IntegerQ(_n_), Not(And(EqQ(_n_, 2), EqQ(_a_**2*c_ + _d_, 0))),),
-        replacement=-Int(log(-x*_a_ + 1)/(x**_n_*_d_ + c_), x)/2 + Int(log(x*_a_ + 1)/(x**_n_*_d_ + c_), x)/2,
+        pattern=Int(log(x**_m_*_d_)*atanh(x**_n_*_c_)/x, x),
+        constraints=(FreeQ([_c_, _d_, _m_, _n_], x),),
+        replacement=-Int(log(x**_m_*_d_)*log(-x**_n_*_c_ + 1)/x, x)/2 + Int(log(x**_m_*_d_)*log(x**_n_*_c_ + 1)/x, x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=210,
     ),
     # Rule 211
     RubiRulePattern(
-        pattern=Int(acoth(x*_a_)/(x**_n_*_d_ + c_), x),
-        constraints=(FreeQ([_a_, c_, _d_], x), IntegerQ(_n_), Not(And(EqQ(_n_, 2), EqQ(_a_**2*c_ + _d_, 0))),),
-        replacement=-Int(log(1 - 1/(x*_a_))/(x**_n_*_d_ + c_), x)/2 + Int(log(1 + 1/(x*_a_))/(x**_n_*_d_ + c_), x)/2,
+        pattern=Int(log(x**_m_*_d_)*acoth(x**_n_*_c_)/x, x),
+        constraints=(FreeQ([_c_, _d_, _m_, _n_], x),),
+        replacement=-Int(log(x**_m_*_d_)*log(1 - 1/(x**_n_*_c_))/x, x)/2 + Int(log(x**_m_*_d_)*log(1 + 1/(x**_n_*_c_))/x, x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=211,
     ),
     # Rule 212
     RubiRulePattern(
-        pattern=Int(log(x**_m_*_d_)*atanh(x**_n_*_c_)/x, x),
-        constraints=(FreeQ([_c_, _d_, _m_, _n_], x),),
-        replacement=-Int(log(x**_m_*_d_)*log(-x**_n_*_c_ + 1)/x, x)/2 + Int(log(x**_m_*_d_)*log(x**_n_*_c_ + 1)/x, x)/2,
+        pattern=Int((a_ + _b_*atanh(x**_n_*_c_))*log(x**_m_*_d_)/x, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _n_], x),),
+        replacement=a_*Int(log(x**_m_*_d_)/x, x) + _b_*Int(log(x**_m_*_d_)*atanh(x**_n_*_c_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=212,
     ),
     # Rule 213
     RubiRulePattern(
-        pattern=Int(log(x**_m_*_d_)*acoth(x**_n_*_c_)/x, x),
-        constraints=(FreeQ([_c_, _d_, _m_, _n_], x),),
-        replacement=-Int(log(x**_m_*_d_)*log(1 - 1/(x**_n_*_c_))/x, x)/2 + Int(log(x**_m_*_d_)*log(1 + 1/(x**_n_*_c_))/x, x)/2,
+        pattern=Int((a_ + _b_*acoth(x**_n_*_c_))*log(x**_m_*_d_)/x, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _n_], x),),
+        replacement=a_*Int(log(x**_m_*_d_)/x, x) + _b_*Int(log(x**_m_*_d_)*acoth(x**_n_*_c_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=213,
     ),
     # Rule 214
     RubiRulePattern(
-        pattern=Int((a_ + _b_*atanh(x**_n_*_c_))*log(x**_m_*_d_)/x, x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _n_], x),),
-        replacement=a_*Int(log(x**_m_*_d_)/x, x) + _b_*Int(log(x**_m_*_d_)*atanh(x**_n_*_c_)/x, x),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
+        replacement=x*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)) - _b_*_c_*Int(x*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x) - 2*_e_*_g_*Int(x**2*(_a_ + _b_*atanh(x*_c_))/(x**2*_g_ + _f_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=214,
     ),
     # Rule 215
     RubiRulePattern(
-        pattern=Int((a_ + _b_*acoth(x**_n_*_c_))*log(x**_m_*_d_)/x, x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _n_], x),),
-        replacement=a_*Int(log(x**_m_*_d_)/x, x) + _b_*Int(log(x**_m_*_d_)*acoth(x**_n_*_c_)/x, x),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
+        replacement=x*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)) - _b_*_c_*Int(x*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x) - 2*_e_*_g_*Int(x**2*(_a_ + _b_*acoth(x*_c_))/(x**2*_g_ + _f_), x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=215,
     ),
     # Rule 216
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
-        replacement=x*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)) - _b_*_c_*Int(x*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x) - 2*_e_*_g_*Int(x**2*(_a_ + _b_*atanh(x*_c_))/(x**2*_g_ + _f_), x),
+        pattern=Int(log(x**2*_g_ + _f_)*atanh(x*_c_)/x, x),
+        constraints=(FreeQ([_c_, _f_, _g_], x), EqQ(_c_**2*_f_ + _g_, 0),),
+        replacement=(-log(-x*_c_ + 1) - log(x*_c_ + 1) + log(x**2*_g_ + _f_))*Int(atanh(x*_c_)/x, x) - Int(log(-x*_c_ + 1)**2/x, x)/2 + Int(log(x*_c_ + 1)**2/x, x)/2,
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=216,
     ),
     # Rule 217
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
-        replacement=x*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)) - _b_*_c_*Int(x*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x) - 2*_e_*_g_*Int(x**2*(_a_ + _b_*acoth(x*_c_))/(x**2*_g_ + _f_), x),
+        pattern=Int(log(x**2*_g_ + _f_)*acoth(x*_c_)/x, x),
+        constraints=(FreeQ([_c_, _f_, _g_], x), EqQ(_c_**2*_f_ + _g_, 0),),
+        replacement=(-log(-x**2*_c_**2) - log(1 - 1/(x*_c_)) - log(1 + 1/(x*_c_)) + log(x**2*_g_ + _f_))*Int(acoth(x*_c_)/x, x) - Int(log(1 - 1/(x*_c_))**2/x, x)/2 + Int(log(1 + 1/(x*_c_))**2/x, x)/2 + Int(log(-x**2*_c_**2)*acoth(x*_c_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=217,
     ),
     # Rule 218
     RubiRulePattern(
-        pattern=Int(log(x**2*_g_ + _f_)*atanh(x*_c_)/x, x),
-        constraints=(FreeQ([_c_, _f_, _g_], x), EqQ(_c_**2*_f_ + _g_, 0),),
-        replacement=(-log(-x*_c_ + 1) - log(x*_c_ + 1) + log(x**2*_g_ + _f_))*Int(atanh(x*_c_)/x, x) - Int(log(-x*_c_ + 1)**2/x, x)/2 + Int(log(x*_c_ + 1)**2/x, x)/2,
+        pattern=Int((a_ + _b_*atanh(x*_c_))*log(x**2*_g_ + _f_)/x, x),
+        constraints=(FreeQ([a_, _b_, _c_, _f_, _g_], x),),
+        replacement=a_*Int(log(x**2*_g_ + _f_)/x, x) + _b_*Int(log(x**2*_g_ + _f_)*atanh(x*_c_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=218,
     ),
     # Rule 219
     RubiRulePattern(
-        pattern=Int(log(x**2*_g_ + _f_)*acoth(x*_c_)/x, x),
-        constraints=(FreeQ([_c_, _f_, _g_], x), EqQ(_c_**2*_f_ + _g_, 0),),
-        replacement=(-log(-x**2*_c_**2) - log(1 - 1/(x*_c_)) - log(1 + 1/(x*_c_)) + log(x**2*_g_ + _f_))*Int(acoth(x*_c_)/x, x) - Int(log(1 - 1/(x*_c_))**2/x, x)/2 + Int(log(1 + 1/(x*_c_))**2/x, x)/2 + Int(log(-x**2*_c_**2)*acoth(x*_c_)/x, x),
+        pattern=Int((a_ + _b_*acoth(x*_c_))*log(x**2*_g_ + _f_)/x, x),
+        constraints=(FreeQ([a_, _b_, _c_, _f_, _g_], x),),
+        replacement=a_*Int(log(x**2*_g_ + _f_)/x, x) + _b_*Int(log(x**2*_g_ + _f_)*acoth(x*_c_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=219,
     ),
     # Rule 220
     RubiRulePattern(
-        pattern=Int((a_ + _b_*atanh(x*_c_))*log(x**2*_g_ + _f_)/x, x),
-        constraints=(FreeQ([a_, _b_, _c_, _f_, _g_], x),),
-        replacement=a_*Int(log(x**2*_g_ + _f_)/x, x) + _b_*Int(log(x**2*_g_ + _f_)*atanh(x*_c_)/x, x),
+        pattern=Int((_a_ + _b_*atanh(x*_c_))*(d_ + _e_*log(x**2*_g_ + _f_))/x, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_], x),),
+        replacement=d_*Int((_a_ + _b_*atanh(x*_c_))/x, x) + _e_*Int((_a_ + _b_*atanh(x*_c_))*log(x**2*_g_ + _f_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=220,
     ),
     # Rule 221
     RubiRulePattern(
-        pattern=Int((a_ + _b_*acoth(x*_c_))*log(x**2*_g_ + _f_)/x, x),
-        constraints=(FreeQ([a_, _b_, _c_, _f_, _g_], x),),
-        replacement=a_*Int(log(x**2*_g_ + _f_)/x, x) + _b_*Int(log(x**2*_g_ + _f_)*acoth(x*_c_)/x, x),
+        pattern=Int((_a_ + _b_*acoth(x*_c_))*(d_ + _e_*log(x**2*_g_ + _f_))/x, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_], x),),
+        replacement=d_*Int((_a_ + _b_*acoth(x*_c_))/x, x) + _e_*Int((_a_ + _b_*acoth(x*_c_))*log(x**2*_g_ + _f_)/x, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=221,
     ),
     # Rule 222
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*atanh(x*_c_))*(d_ + _e_*log(x**2*_g_ + _f_))/x, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_], x),),
-        replacement=d_*Int((_a_ + _b_*atanh(x*_c_))/x, x) + _e_*Int((_a_ + _b_*atanh(x*_c_))*log(x**2*_g_ + _f_)/x, x),
+        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_m_/2, 0),),
+        replacement=x**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_))/(_m_ + 1) - _b_*_c_*Int(x**(_m_ + 1)*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x)/(_m_ + 1) - 2*_e_*_g_*Int(x**(_m_ + 2)*(_a_ + _b_*atanh(x*_c_))/(x**2*_g_ + _f_), x)/(_m_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=222,
     ),
     # Rule 223
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*acoth(x*_c_))*(d_ + _e_*log(x**2*_g_ + _f_))/x, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_], x),),
-        replacement=d_*Int((_a_ + _b_*acoth(x*_c_))/x, x) + _e_*Int((_a_ + _b_*acoth(x*_c_))*log(x**2*_g_ + _f_)/x, x),
+        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_m_/2, 0),),
+        replacement=x**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_))/(_m_ + 1) - _b_*_c_*Int(x**(_m_ + 1)*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x)/(_m_ + 1) - 2*_e_*_g_*Int(x**(_m_ + 2)*(_a_ + _b_*acoth(x*_c_))/(x**2*_g_ + _f_), x)/(_m_ + 1),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=223,
     ),
     # Rule 224
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_m_/2, 0),),
-        replacement=x**(_m_ + 1)*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_))/(_m_ + 1) - _b_*_c_*Int(x**(_m_ + 1)*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x)/(_m_ + 1) - 2*_e_*_g_*Int(x**(_m_ + 2)*(_a_ + _b_*atanh(x*_c_))/(x**2*_g_ + _f_), x)/(_m_ + 1),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=224,
     ),
     # Rule 225
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_m_/2, 0),),
-        replacement=x**(_m_ + 1)*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_))/(_m_ + 1) - _b_*_c_*Int(x**(_m_ + 1)*(_d_ + _e_*log(x**2*_g_ + _f_))/(-x**2*_c_**2 + 1), x)/(_m_ + 1) - 2*_e_*_g_*Int(x**(_m_ + 2)*(_a_ + _b_*acoth(x*_c_))/(x**2*_g_ + _f_), x)/(_m_ + 1),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=225,
     ),
     # Rule 226
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.atanh((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=226,
     ),
     # Rule 227
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
+        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.acoth((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=227,
     ),
     # Rule 228
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.atanh((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, f_, _g_], x), EqQ(_c_**2*f_ + _g_, 0),),
+        replacement=-x**2*_e_*(_a_ + _b_*atanh(x*_c_))**2/2 + _b_*_c_*_e_*Int(x**2*(_a_ + _b_*atanh(x*_c_))/(-x**2*_c_**2 + 1), x) + _b_*Int((_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + f_)), x)/_c_ + (_a_ + _b_*atanh(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_))*(x**2*_g_ + f_)/(2*_g_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=228,
     ),
     # Rule 229
     RubiRulePattern(
-        pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.acoth((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, f_, _g_], x), EqQ(_c_**2*f_ + _g_, 0),),
+        replacement=-x**2*_e_*(_a_ + _b_*acoth(x*_c_))**2/2 + _b_*_c_*_e_*Int(x**2*(_a_ + _b_*acoth(x*_c_))/(-x**2*_c_**2 + 1), x) + _b_*Int((_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + f_)), x)/_c_ + (_a_ + _b_*acoth(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_))*(x**2*_g_ + f_)/(2*_g_),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=229,
     ),
     # Rule 230
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*atanh(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, f_, _g_], x), EqQ(_c_**2*f_ + _g_, 0),),
-        replacement=-x**2*_e_*(_a_ + _b_*atanh(x*_c_))**2/2 + _b_*_c_*_e_*Int(x**2*(_a_ + _b_*atanh(x*_c_))/(-x**2*_c_**2 + 1), x) + _b_*Int((_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + f_)), x)/_c_ + (_a_ + _b_*atanh(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_))*(x**2*_g_ + f_)/(2*_g_),
+        pattern=Int(_u_*(_a_ + _b_*atanh(x*_c_))**_p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _p_], x), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ + (_e_ * x)))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x))), MatchQ(_u_, Condition(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x)))),),
+        replacement=Unintegrable(_u_*(_a_ + _b_*atanh(x*_c_))**_p_, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=230,
     ),
     # Rule 231
     RubiRulePattern(
-        pattern=Int(x*(_a_ + _b_*acoth(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, f_, _g_], x), EqQ(_c_**2*f_ + _g_, 0),),
-        replacement=-x**2*_e_*(_a_ + _b_*acoth(x*_c_))**2/2 + _b_*_c_*_e_*Int(x**2*(_a_ + _b_*acoth(x*_c_))/(-x**2*_c_**2 + 1), x) + _b_*Int((_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + f_)), x)/_c_ + (_a_ + _b_*acoth(x*_c_))**2*(_d_ + _e_*log(x**2*_g_ + f_))*(x**2*_g_ + f_)/(2*_g_),
-        module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=231,
-    ),
-    # Rule 232
-    RubiRulePattern(
-        pattern=Int(_u_*(_a_ + _b_*atanh(x*_c_))**_p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _p_], x), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ + (_e_ * x)))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x))), MatchQ(_u_, Condition(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x)))),),
-        replacement=Unintegrable(_u_*(_a_ + _b_*atanh(x*_c_))**_p_, x),
-        module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=232,
-    ),
-    # Rule 233
-    RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*acoth(x*_c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _p_], x), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ + (_e_ * x)))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x))), MatchQ(_u_, Condition(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), FreeQ([_d_, _e_, _q_], x))), MatchQ(_u_, Condition((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), FreeQ([_d_, _e_, _f_, _m_, _q_], x)))),),
         replacement=Unintegrable(_u_*(_a_ + _b_*acoth(x*_c_))**_p_, x),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
-        rule_number=233,
+        rule_number=231,
     ),
 
 ]
 
-# Summary: 231 rules translated, 2 skipped
+# Summary: 231 rules translated, 0 skipped

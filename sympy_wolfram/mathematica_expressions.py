@@ -126,7 +126,13 @@ class MathematicaExpr(Expr):
             instance = Expr.__new__(self.__class__, *new_args)
         else:
             instance = self
-        return instance._evaluate(**kwargs)
+        result = instance._evaluate(**kwargs)
+        # A node whose eager utility couldn't compute a value returns Python None.
+        # Propagating None breaks the enclosing sympy operation (Add/Mul builds it
+        # via sympify(None) -> SympifyError). Stay UNEVALUATED instead so the node
+        # remains a legal expression; the DFS then treats the result as non-clean
+        # and moves on rather than crashing.
+        return instance if result is None else result
 
     def _evaluate(self, **kwargs):
         raise NotImplementedError
@@ -1141,7 +1147,16 @@ def _binding_substitutions(bindings, evaluate_values: bool, **kwargs):
     for item in _list_items(bindings):
         if isinstance(item, Set):
             symbol, value = item.args
-            subs[symbol] = _eval(value, **kwargs) if evaluate_values else value
+            if evaluate_values:
+                evaluated = _eval(value, **kwargs)
+                # A utility can evaluate to Python None (it couldn't compute the
+                # binding for this input). Substituting None would raise
+                # SympifyError in xreplace; keep the raw (still-valid, possibly
+                # deferred) value instead so the binding stays a legal expression --
+                # the rule then simply yields a non-clean result and the DFS moves on.
+                subs[symbol] = value if evaluated is None else evaluated
+            else:
+                subs[symbol] = value
     return subs
 
 

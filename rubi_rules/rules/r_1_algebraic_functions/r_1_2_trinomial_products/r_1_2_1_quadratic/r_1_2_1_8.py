@@ -144,8 +144,15 @@ RULES = [
         module_name='1.2.1.8 P(x) (a+b x+c x^2)^p',
         rule_number=7,
     ),
-    # Rule 8: SKIPPED - TypeError: unhashable type: 'list'
+    # Rule 8
+    RubiRulePattern(
+        pattern=Int(Px_*(x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(x**2*_c_ + x*_b_ + _a_)**_p_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _n_, _p_], x), PolynomialQ(Px_, x), LtQ(_m_, 0), Not(IntegerQ(_n_)), IntegersQ(2*_m_, 2*_n_, 2*_p_),),
+        replacement=Int((x*_e_ + _d_)**(_m_ + 1)*(x*_g_ + _f_)**_n_*(x**2*_c_ + x*_b_ + _a_)**_p_*PolynomialQuotient(Px_, x*_e_ + _d_, x), x) + Star(PolynomialRemainder(Px_, x*_e_ + _d_, x), Int((x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(x**2*_c_ + x*_b_ + _a_)**_p_, x)),
+        module_name='1.2.1.8 P(x) (a+b x+c x^2)^p',
+        rule_number=8,
+    ),
 
 ]
 
-# Summary: 7 rules translated, 1 skipped
+# Summary: 8 rules translated, 0 skipped

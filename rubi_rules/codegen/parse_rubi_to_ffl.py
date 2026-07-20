@@ -27,6 +27,7 @@ Dependencies
 
 import argparse
 import json
+import re
 import sys
 import traceback
 from collections import defaultdict
@@ -91,6 +92,19 @@ def parse_m_file(path: Path) -> Tuple[Optional[List], Optional[str]]:
         clean = _remove_comments(raw).strip()
         if not clean:
             return [], None
+        # Rubi co-opts Wolfram's ``\[Star]`` infix operator as a display-friendly
+        # product. SymPy's parser has no rule for ``\[Star]`` and parses it as a
+        # POSTFIX operator; when ``\[Star]`` and its right operand are on the SAME
+        # line the operand survives (as a flat ``Times[.., [tail,'Star'], .., v]``
+        # that codegen's _reconstruct_star rebuilds into ``Star[u, v]``), but when
+        # the ``\[Star]`` ends a source LINE before the next factor
+        # (``Simp[...] \[Star]\n Int[...]``) the right operand is silently DROPPED --
+        # turning an integral into a non-integral (a wrong answer). Join that
+        # line-continuation (collapse the whitespace after ``\[Star]`` to a single
+        # space) so every ``\[Star]`` is inline and its operand is preserved; the
+        # ``Star`` marker itself is kept and rebuilt downstream into a Star[u, v]
+        # node (whose runtime behaviour is defined in rubi_utils).
+        clean = re.sub(r"\\\[Star\]\s+", r"\\[Star] ", clean)
         tokens = _GLOBAL_PARSER._from_mathematica_to_tokens(clean)
         ffl = _GLOBAL_PARSER._from_tokens_to_fullformlist(tokens)
         # Multiple top-level expressions arrive as CompoundExpression[e1, e2, ...]
