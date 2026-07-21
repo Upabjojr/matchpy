@@ -647,3 +647,121 @@ class TestPowerOfLinearMatchQ:
         c = PowerOfLinearMatchQ('u', x)
         assert c.check(u=(1 + 2*x)**3) == True
         assert c.check(u=x**2 + 1) == False
+
+
+# =============================================================================
+# MatchQ -- Mathematica MatchQ[expr, pattern], with pattern /; test
+#
+# This was a stub returning True, so all 201 rules carrying a MatchQ guard were
+# unrestricted. Two independent layers had to be fixed, and both are asserted here:
+#   1. check() now really matches;
+#   2. a constraint may only declare variables the PATTERN binds -- MatchQ's inner
+#      pattern variables are local to it, and declaring them made MatchPy's
+#      CustomConstraint short-circuit to True on a KeyError, bypassing check()
+#      entirely (47 of 29154 constraints were in that state).
+# =============================================================================
+
+class TestMatchQMatches:
+
+    def _mq(self, subject, pattern):
+        from rubi_rules.utils.constraints_wolfram import MatchQ
+        return MatchQ(subject, pattern)
+
+    def test_a_structural_match_is_accepted(self):
+        from sympy_matching.wild import WildSymbol
+        xx, n = Symbol('x'), Symbol('n')
+        u_, c_, m_ = WildSymbol('u'), WildSymbol('c'), WildSymbol('m')
+        mq = self._mq(u_, (c_ * xx) ** m_)
+        assert mq.check(u=(3 * xx) ** n) is True
+
+    def test_a_non_match_is_rejected(self):
+        """The whole point: this used to return True unconditionally."""
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, c_, m_ = WildSymbol('u'), WildSymbol('c'), WildSymbol('m')
+        mq = self._mq(u_, (c_ * xx) ** m_)
+        assert mq.check(u=sympy.sin(xx)) is False
+
+    def test_head_must_agree(self):
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, c_ = WildSymbol('u'), WildSymbol('c')
+        assert self._mq(u_, sympy.log(c_ + xx)).check(u=sympy.log(1 + xx)) is True
+        assert self._mq(u_, sympy.sin(c_ + xx)).check(u=sympy.log(1 + xx)) is False
+
+    def test_a_sum_pattern(self):
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, c_, d_ = WildSymbol('u'), WildSymbol('c'), WildSymbol('d')
+        mq = self._mq(u_, c_ * xx + d_)
+        assert mq.check(u=3 * xx + 5) is True
+        assert mq.check(u=sympy.sin(xx) + sympy.cos(xx)) is False
+
+    def test_an_outer_bound_name_matches_only_its_value(self):
+        """Names the enclosing rule bound are substituted in, so they are literals
+        here; only MatchQ-local names are free for the matcher to solve."""
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, a_, m_ = WildSymbol('u'), WildSymbol('a'), WildSymbol('m')
+        mq = self._mq(u_, (a_ + xx) ** m_)
+        assert mq.check(u=(7 + xx) ** 2, a=Integer(7)) is True
+        assert mq.check(u=(7 + xx) ** 2, a=Integer(9)) is False
+
+    def test_a_failing_guard_rejects_a_structural_match(self):
+        from sympy_wolfram.objects import Condition
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, c_, m_ = WildSymbol('u'), WildSymbol('c'), WildSymbol('m')
+        never = Condition((c_ * xx) ** m_, sympy.false)
+        assert self._mq(u_, never).check(u=(3 * xx) ** Symbol('n')) is False
+
+    def test_a_holding_guard_keeps_the_match(self):
+        from sympy_wolfram.objects import Condition
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, c_, m_ = WildSymbol('u'), WildSymbol('c'), WildSymbol('m')
+        always = Condition((c_ * xx) ** m_, sympy.true)
+        assert self._mq(u_, always).check(u=(3 * xx) ** Symbol('n')) is True
+
+    def test_an_unconvertible_subject_is_simply_no_match(self):
+        """A guard must never abort the surrounding rule search."""
+        from sympy_matching.wild import WildSymbol
+        u_, c_ = WildSymbol('u'), WildSymbol('c')
+        assert self._mq(u_, c_).check(u=object()) in (True, False)
+
+
+class TestConstraintVariablesAreRestrictedToThePattern:
+    """MatchPy's CustomConstraint returns True when a declared variable is missing
+    from the match. Declaring a MatchQ-local variable therefore silenced the whole
+    guard, so only pattern-bound variables may be declared."""
+
+    def test_only_pattern_bound_variables_are_declared(self):
+        from rubi_rules.base_objects import _make_matchpy_constraint
+        from rubi_rules.utils.constraints_wolfram import MatchQ
+        from sympy_matching.wild import WildSymbol
+        u_, local_ = WildSymbol('u'), WildSymbol('localvar')
+        cc = _make_matchpy_constraint(MatchQ(u_, local_ * Symbol('x')), ['u'], {'u'})
+        assert set(cc._variables) == {'u'}          # 'localvar' must NOT be declared
+
+    def test_the_constraint_is_actually_evaluated(self):
+        """Previously the unbound local caused a KeyError -> silent True."""
+        from matchpy.expressions.substitution import Substitution
+        from rubi_rules.base_objects import _make_matchpy_constraint
+        from rubi_rules.utils.constraints_wolfram import MatchQ
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, m_ = WildSymbol('u'), WildSymbol('m')
+        cc = _make_matchpy_constraint(MatchQ(u_, xx ** m_), ['u'], {'u'})
+        assert cc(Substitution({'u': xx ** 2})) is True
+        assert cc(Substitution({'u': sympy.cos(xx)})) is False   # was True before
+
+    def test_negation_now_discriminates(self):
+        from matchpy.expressions.substitution import Substitution
+        from rubi_rules.base_objects import _make_matchpy_constraint
+        from rubi_rules.utils.constraints_wolfram import MatchQ
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        u_, m_ = WildSymbol('u'), WildSymbol('m')
+        cc = _make_matchpy_constraint(sympy.Not(MatchQ(u_, xx ** m_)), ['u'], {'u'})
+        assert cc(Substitution({'u': xx ** 2})) is False
+        assert cc(Substitution({'u': sympy.cos(xx)})) is True

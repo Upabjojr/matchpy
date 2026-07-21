@@ -635,3 +635,142 @@ class TestUpstreamArityTypoIsLabelledAsFaithful:
         code = RubiRuleTranslator().translate_module([rule], module_name='test')
         assert 'SKIPPED' not in code
         assert 'upstream Rubi arity typo' not in code
+
+
+class TestHeadWildcardsInsideMatchQ:
+    """``MatchQ[u, (d_.*trig_[e+f*x])^m_. /; MemberQ[{sin,...}, trig]]`` uses a
+    wildcard as a function HEAD inside a GUARD rather than in the rule's integrand.
+    `_extract_fhw_from_pattern` only ever saw the integrand, so these rules were
+    skipped outright -- 6 trig rules, plus one guard that was silently DROPPED
+    (rule 2692), which the generator itself warns broadens a rule unsafely.
+    """
+
+    def _matchq(self, pattern):
+        return ['MatchQ', 'u', pattern]
+
+    def test_a_head_wildcard_in_the_pattern_is_rewritten(self):
+        from rubi_rules.codegen.generate import _rewrite_fhw_in_matchq
+        node = self._matchq([_PAT('trig'), 'x'])
+        assert _rewrite_fhw_in_matchq(node) == \
+            ['MatchQ', 'u', ['WildHeadApp', _PAT('trig'), 'x']]
+
+    def test_it_reaches_inside_a_condition_guard(self):
+        from rubi_rules.codegen.generate import _rewrite_fhw_in_matchq
+        node = self._matchq(['Condition', [_PAT('trig'), 'x'], ['MemberQ', 'l', 'trig']])
+        out = _rewrite_fhw_in_matchq(node)
+        assert out[2][0] == 'Condition'
+        assert out[2][1] == ['WildHeadApp', _PAT('trig'), 'x']
+        assert out[2][2] == ['MemberQ', 'l', 'trig']      # the test is left alone
+
+    def test_the_subject_is_not_treated_as_a_pattern(self):
+        """Argument 1 of MatchQ is an ordinary expression, not a pattern."""
+        from rubi_rules.codegen.generate import _rewrite_fhw_in_matchq
+        node = ['MatchQ', ['Sin', 'x'], [_PAT('trig'), 'x']]
+        out = _rewrite_fhw_in_matchq(node)
+        assert out[1] == ['Sin', 'x']
+
+    def test_a_matchq_without_head_wildcards_is_unchanged(self):
+        from rubi_rules.codegen.generate import _rewrite_fhw_in_matchq
+        node = ['MatchQ', 'u', ['Power', 'x', _PAT('m')]]
+        assert _rewrite_fhw_in_matchq(node) == node
+
+    def test_it_finds_a_matchq_nested_in_a_guard(self):
+        from rubi_rules.codegen.generate import _rewrite_fhw_in_matchq
+        node = ['And', ['FreeQ', 'a', 'x'], ['Not', self._matchq([_PAT('F'), 'v'])]]
+        out = _rewrite_fhw_in_matchq(node)
+        assert out[2][1][2] == ['WildHeadApp', _PAT('F'), 'v']
+
+    def test_such_a_rule_now_translates_and_declares_its_guard_local_wildcard(self):
+        rule = ['SetDelayed',
+                ['Int', ['Times', ['Optional', ['Pattern', 'u', ['Blank']]],
+                         ['Power', 'x', ['Pattern', 'p', ['Blank']]]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Condition', ['Power', 'x', '2'],
+                 ['MatchQ', 'u', ['Condition', [_PAT('trig'), 'x'],
+                                  ['FreeQ', 'u', 'x']]]]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'SKIPPED' not in code
+        assert 'WildHeadApp(trig_' in code
+        # the guard-local head wildcard must be DECLARED, or the module won't import
+        assert "trig_ = WildSymbol('trig')" in code
+
+    def test_no_guard_is_dropped_for_a_head_wildcard_any_more(self):
+        rule = ['SetDelayed',
+                ['Int', ['Times', ['Optional', ['Pattern', 'u', ['Blank']]],
+                         ['Power', 'x', ['Pattern', 'p', ['Blank']]]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Condition', ['Power', 'x', '2'],
+                 ['Not', ['MatchQ', 'u', [_PAT('F'), 'x']]]]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'dropped guard' not in code
+        assert 'Not(MatchQ(' in code
+
+
+class TestGeneratedRulesetInvariants:
+    """Whole-ruleset guards. These read the CHECKED-IN generated files, so they are
+    fast (no rule set is loaded) and they fail loudly if a future codegen change
+    silently starts skipping rules or dropping guards again."""
+
+    RULES_DIR = Path(__file__).resolve().parents[1] / 'rules'
+
+    def _all_text(self):
+        return [(p, p.read_text(encoding='utf-8'))
+                for p in self.RULES_DIR.rglob('*.py')]
+
+    def test_no_guard_is_ever_dropped(self):
+        """A dropped guard broadens a rule and can yield wrong answers, so the
+        ruleset must ship with none."""
+        offenders = [str(p) for p, t in self._all_text() if 'dropped guard' in t]
+        assert offenders == []
+
+    def test_the_only_skipped_rule_is_the_upstream_rubi_typo(self):
+        """Everything Rubi can actually run must translate. The single exception is
+        Rubi's own `NeQ[e^2-4*d*f]` (one argument), which Mathematica leaves
+        unevaluated so the rule never fires there either -- verified against real
+        Rubi. Any OTHER skip is a regression in this port."""
+        skips = [line.strip()
+                 for _p, t in self._all_text()
+                 for line in t.splitlines() if 'SKIPPED' in line]
+        assert len(skips) == 1, skips
+        assert 'upstream Rubi arity typo' in skips[0]
+
+    def test_head_wildcards_inside_matchq_guards_are_emitted(self):
+        """The 6 trig rules whose guard matches `trig_[e+f*x]` for any trig head."""
+        n = sum(t.count('WildHeadApp(trig_') for _p, t in self._all_text())
+        assert n >= 6
+
+
+class TestPostfixDerivativeIsParsedNatively:
+    r"""Rubi writes 6 rules with the postfix derivative ``f_'[x_]``. We used to
+    normalise that to ``Derivative[1][f_][x_]`` textually because SymPy mis-parsed
+    it in an INFIX context (``f'[x]*g[x]`` swallowed the operator). SymPy handles it
+    now and the workaround is gone, so these pin the dependency: if the parser
+    regresses, the product/quotient rules silently vanish from the ruleset again.
+    """
+
+    def test_a_bare_prime_application(self):
+        assert parse_mathematica_to_fullformlist("f'[x]") == \
+            [[['Derivative', '1'], 'f'], 'x']
+
+    def test_a_prime_followed_by_an_infix_operator(self):
+        """The case that used to break: the application swallowed the operator."""
+        assert parse_mathematica_to_fullformlist("f'[x]*g[x]") == \
+            ['Times', [[['Derivative', '1'], 'f'], 'x'], ['g', 'x']]
+
+    def test_a_prime_on_a_pattern_inside_a_full_rule(self):
+        ffl = parse_mathematica_to_fullformlist(
+            "Int[f_'[x_]*g_[x_] + f_[x_]*g_'[x_], x_Symbol]")
+        assert ffl[0] == 'Int'
+        assert ffl[1][0] == 'Plus'          # a real sum, not a mangled application
+
+    def test_the_second_derivative_form(self):
+        assert parse_mathematica_to_fullformlist("f''[x]") == \
+            [[['Derivative', '2'], 'f'], 'x']
+
+    def test_the_product_and_quotient_rules_are_in_the_shipped_ruleset(self):
+        """End-to-end: those 6 rules must actually be emitted."""
+        rules_dir = Path(__file__).resolve().parents[1] / 'rules' / 'r_9_miscellaneous'
+        text = '\n'.join(p.read_text(encoding='utf-8') for p in rules_dir.glob('*.py'))
+        # Int[f'g + f g'] -> f g  and the quotient-rule shape
+        assert text.count('WildHeadDeriv(f_, x, 1)') >= 2
+        assert 'WFApply(f_, x)*WFApply(g_, x)' in text
