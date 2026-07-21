@@ -245,3 +245,47 @@ def test_appellf1_roundtrip():
     a, b1, b2, c, x1, y1 = symbols('a b1 b2 c x1 y1')
     f = appellf1(a, b1, b2, c, x1, y1)
     assert matchpy_to_sympy(to_expression(f)) == f
+
+
+class TestSympyTupleHead:
+    """``sympy.Tuple`` is a container, not a function, so it was easy to miss when
+    registering heads -- but ``Derivative`` stores its ``(var, order)`` spec as one.
+    While it was unregistered it fell through to the generic path and came back as
+    an UNDEFINED function named "Tuple", so any generic ``expr.func(*expr.args)``
+    traversal silently turned a Derivative into a non-derivative.
+    """
+
+    def test_roundtrips_as_a_real_sympy_tuple(self):
+        t = sympy.Tuple(x, S(1))
+        rt = matchpy_to_sympy(to_expression(t))
+        assert rt == t
+        assert type(rt) is sympy.Tuple
+
+    def test_a_plain_python_tuple_still_roundtrips_separately(self):
+        """TUPLE_HEAD ('tuple') and the new TUPLE head ('Tuple') must not collide."""
+        rt = matchpy_to_sympy(to_expression((x, S(1))))
+        assert rt == (x, S(1))
+        assert type(rt) is tuple
+
+    def test_the_two_heads_are_distinct(self):
+        from sympy_matching.conversion import TUPLE_HEAD
+        assert to_expression(sympy.Tuple(x)).head != TUPLE_HEAD
+        assert to_expression((x,)).head == TUPLE_HEAD
+
+    def test_nested_inside_a_derivative_survives(self):
+        f = sympy.Function('f')
+        d = sympy.Derivative(f(x), (x, 3))
+        assert matchpy_to_sympy(to_expression(d)) == d
+
+    def test_rebuilding_from_args_is_identity_after_a_roundtrip(self):
+        """The exact traversal (TrigSimplifyRecur) that used to corrupt Derivative."""
+        f = sympy.Function('f')
+        d = sympy.Derivative(f(x), (x, 2))
+        rebuilt_args = [matchpy_to_sympy(to_expression(a)) for a in d.args]
+        assert d.func(*rebuilt_args) == d
+
+    def test_hyper_tuplearg_is_not_captured_by_the_tuple_registration(self):
+        """TupleArg subclasses Tuple; head lookup is by EXACT type, so hyper keeps
+        its own handling and still roundtrips."""
+        expr = hyper((S(1), S(2)), (S(3),), x)
+        assert matchpy_to_sympy(to_expression(expr)) == expr

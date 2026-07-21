@@ -319,6 +319,59 @@ def _check_inthide():
     return []
 
 
+# Rules over an UNKNOWN function: Derivative[n_][f_][x_], plus the sum-patterned
+# product/quotient rules. These cover three things that were each separately broken:
+#   * WildcardOperationHead matching (a wildcard used as a function HEAD);
+#   * the sympy.Tuple head registration -- Derivative stores its (var, order) spec
+#     as a Tuple, and while that was unregistered a round-trip silently turned
+#     Derivative into an undefined function, which made the inert-trig catch-all
+#     misfire and return 0 for the product rule;
+#   * offering a SUM to the matcher before splitting it term-by-term, without which
+#     a rule whose pattern IS a sum can never fire.
+_f, _g = Function('f'), Function('g')
+
+
+def _check_derivative_of_unknown_function():
+    fp = sympy.Derivative(_f(x), x)
+    gp = sympy.Derivative(_g(x), x)
+    cases = [
+        ("f'", fp, _f(x)),
+        ("f''", sympy.Derivative(_f(x), (x, 2)), sympy.Derivative(_f(x), x)),
+        ("g'''", sympy.Derivative(_g(x), (x, 3)), sympy.Derivative(_g(x), (x, 2))),
+        ("product rule", fp*_g(x) + _f(x)*gp, _f(x)*_g(x)),
+        ("quotient rule", (fp*_g(x) - _f(x)*gp)/_g(x)**2, _f(x)/_g(x)),
+    ]
+    failures = []
+    for name, integrand, expected in cases:
+        try:
+            got = rubi_integrate(integrand, x)
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"[deriv] {name}: {type(exc).__name__}: {exc}")
+            continue
+        if 'CannotIntegrate' in str(got) or 'Int(' in str(got):
+            failures.append(f"[deriv] {name}: unsolved -> {got}")
+            continue
+        if sympy.simplify(got - expected) != 0:
+            failures.append(f"[deriv] {name}: {got} != {expected}")
+    return failures
+
+
+def _check_plain_sums_still_split():
+    """The whole-sum attempt must not disturb ordinary term-by-term integration."""
+    cases = [
+        (x**2 + sin(x), x**3/3 - cos(x)),
+        (exp(x) + 1/x + cos(x), exp(x) + log(x) + sin(x)),
+        (1/(1 + x) + 1/(1 + x**2), log(x + 1) + atan(x)),
+        (sqrt(x) + x**3 - 5, 2*x**sympy.Rational(3, 2)/3 + x**4/4 - 5*x),
+    ]
+    failures = []
+    for integrand, expected in cases:
+        got = rubi_integrate(integrand, x)
+        if sympy.simplify(got - expected) != 0:
+            failures.append(f"[sum] {integrand}: {got} != {expected}")
+    return failures
+
+
 @pytest.mark.slow
 def test_full_ruleset_integrals():
     """The one test that loads the entire Rubi rule set (~50s, then cached).
@@ -338,5 +391,7 @@ def test_full_ruleset_integrals():
     failures += _check_inthide()                  # IntHide delegates to rubi_integrate
     failures += _check_deferred_crash_fixes()     # symbolic-n Coeff + non-real compare
     failures += _check_no_crash()                 # nested-exp preprocessing crash
+    failures += _check_derivative_of_unknown_function()  # Derivative[n_][f_][x_] + sum rules
+    failures += _check_plain_sums_still_split()         # whole-sum attempt is non-invasive
     assert not failures, (
         f"{len(failures)} integral(s) failed:\n" + "\n".join(failures))
