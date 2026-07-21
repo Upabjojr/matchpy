@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -78,6 +78,8 @@ _c_ = WildSymbol('c', optional_value=IDENTITY_ELEMENT)
 c_ = WildSymbol('c')
 _d_ = WildSymbol('d', optional_value=IDENTITY_ELEMENT)
 d_ = WildSymbol('d')
+f_ = WildSymbol('f')
+g_ = WildSymbol('g')
 _j_ = WildSymbol('j', optional_value=IDENTITY_ELEMENT)
 j_ = WildSymbol('j')
 _m_ = WildSymbol('m', optional_value=IDENTITY_ELEMENT)
@@ -108,16 +110,16 @@ RULES = [
     # Rule 9: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 10: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 11: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 12: SKIPPED - ValueError: Non-string function head ['Pattern', 'f', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 12: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 13: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 14: SKIPPED - ValueError: Non-string function head ['Pattern', 'g', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 14: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 15: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 16: SKIPPED - ValueError: Non-string function head ['Pattern', 'f', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 16: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 17: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 18: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 19: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', [['Pattern', 'x', ['Blank']]], [['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', [['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 20: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', [['Pattern', 'x', ['Blank']]], [['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', [['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 21: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', [['Pattern', 'x', ['Blank']]], [['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', [['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 19: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 20: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 21: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
     # Rule 22
     RubiRulePattern(
         pattern=Int(_u_*(x**_n_*_b_ + a_)**_p_, x),

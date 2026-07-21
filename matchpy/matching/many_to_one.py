@@ -49,7 +49,8 @@ except ImportError:
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, Symbol, SymbolWildcard, Wildcard, Pattern
+    Expression, Operation, OperationHead, Symbol, SymbolWildcard, SymbolWrapper,
+    Wildcard, WildcardOperationHead, Pattern
 )
 from ..expressions.constraints import Constraint
 from ..expressions.substitution import Substitution
@@ -210,6 +211,25 @@ class HeadTypeNone(HeadType):
 
 # Singleton for the None/wildcard head
 _HEAD_NONE = HeadTypeNone()
+
+
+class HeadTypeAnyOperation(HeadType):
+    """Key for patterns whose operation HEAD is itself a wildcard.
+
+    A pattern built with a :class:`WildcardOperationHead` (e.g. Rubi's ``F_[v_]``)
+    must be reachable for an operation subject with ANY head, so it is filed under
+    this single key instead of under its own head; every operation subject offers
+    this key in addition to its concrete head (see ``_get_heads``).
+    """
+
+    def __hash__(self):
+        return hash('HeadTypeAnyOperation')
+
+    def __eq__(self, other):
+        return isinstance(other, HeadTypeAnyOperation)
+
+# Singleton for the "any operation head" key
+_HEAD_ANY_OP = HeadTypeAnyOperation()
 
 class TransitionKeyEnd(TransitionKey):
     """Key for OPERATION_END transitions."""
@@ -480,6 +500,9 @@ class _MatchIter:
     def _get_heads(expression: Expression) -> Iterator[TransitionKey]:
         if isinstance(expression, Operation):
             yield HeadTypeOperation(value=expression.head)
+            # Also offer the "any operation head" key so that patterns whose head
+            # is a WildcardOperationHead are reachable for this subject.
+            yield _HEAD_ANY_OP
         else:
             # For Symbols, traverse class hierarchy for SymbolWildcard matching
             for base in type(expression).__mro__:
@@ -547,6 +570,22 @@ class _MatchIter:
         after_subjects = self.subjects
         operand_subjects = self.subjects = deque(op_iter(subject))
         new_associative = transition.label.value if isinstance(transition.label, LabelTypeOperation) and isinstance(transition.label.value, OperationHead) and transition.label.value.associative else None
+        # A WildcardOperationHead pattern matches an operation with ANY head; bind
+        # the subject's head to the head variable (wrapped so it is a regular
+        # expression). Restored on backtrack, like any other binding.
+        head_var = None
+        head_old = None
+        label_head = transition.label.value if isinstance(transition.label, LabelTypeOperation) else None
+        if isinstance(label_head, WildcardOperationHead) and label_head.variable_name:
+            head_var = label_head.variable_name
+            try:
+                head_old = self.substitution.get(head_var, None)
+                self.substitution.try_add_variable(head_var, SymbolWrapper(subject.head))
+            except ValueError:
+                # Conflicts with an existing binding for the same head variable.
+                self.subjects = after_subjects
+                self.subjects.appendleft(subject)
+                return
         self.associative.append(new_associative)
         for new_state in self._check_transition(transition, subject, False):
             self.subjects = after_subjects
@@ -558,6 +597,11 @@ class _MatchIter:
         self.subjects = after_subjects
         self.subjects.appendleft(subject)
         self.associative.pop()
+        if head_var is not None:  # undo the wildcard-head binding on backtrack
+            if head_old is None:
+                self.substitution.pop(head_var, None)
+            else:
+                self.substitution[head_var] = head_old
 
 
 class ManyToOneMatcher(TypedModel):
@@ -780,6 +824,11 @@ class ManyToOneMatcher(TypedModel):
         if isinstance(expression, LabelTypeEpsilon) or expression is _EPS:
             return _EPS, _HEAD_NONE
         if isinstance(expression, Operation):
+            if isinstance(expression.head, WildcardOperationHead):
+                # A wildcard head matches any operation head, so this pattern must
+                # not be filed under its own head -- file it under the shared
+                # "any operation" key, which every operation subject offers.
+                return LabelTypeOperation(value=expression.head), _HEAD_ANY_OP
             return LabelTypeOperation(value=expression.head), HeadTypeOperation(value=expression.head)
         else:
             if isinstance(expression, SymbolWildcard):

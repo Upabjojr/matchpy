@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,9 +62,12 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+_A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
+_C_ = WildSymbol('C', optional_value=IDENTITY_ELEMENT)
+C_ = WildSymbol('C')
 F_ = WildSymbol('F')
 Fx_ = WildSymbol('Fx')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
@@ -105,10 +108,38 @@ y_ = WildSymbol('y')
 z_ = WildSymbol('z')
 
 RULES = [
-    # Rule 1: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 2: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 3: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 4: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 1
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*WildHeadApp(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**_n_/(x**2*_C_ + x*_B_ + _A_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _A_, _B_, _C_, F_], x), EqQ(-_A_*_e_*_g_ + _C_*_d_*_f_, 0), EqQ(_B_*_e_*_g_ - _C_*(_d_*_g_ + _e_*_f_), 0), IGtQ(_n_, 0),),
+        replacement=Star(2*_e_*_g_/(_C_*(-_d_*_g_ + _e_*_f_)), Subst(Int((_a_ + _b_*WFApply(F_, x*_c_))**_n_/x, x), x, sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_))),
+        module_name='9.3 Miscellaneous integration rules',
+        rule_number=1,
+    ),
+    # Rule 2
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*WildHeadApp(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**_n_/(x**2*_C_ + _A_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _A_, _C_, F_], x), EqQ(-_A_*_e_*_g_ + _C_*_d_*_f_, 0), EqQ(_d_*_g_ + _e_*_f_, 0), IGtQ(_n_, 0),),
+        replacement=Star(2*_e_*_g_/(_C_*(-_d_*_g_ + _e_*_f_)), Subst(Int((_a_ + _b_*WFApply(F_, x*_c_))**_n_/x, x), x, sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_))),
+        module_name='9.3 Miscellaneous integration rules',
+        rule_number=2,
+    ),
+    # Rule 3
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*WildHeadApp(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**n_/(x**2*_C_ + x*_B_ + _A_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _A_, _B_, _C_, F_, n_], x), EqQ(-_A_*_e_*_g_ + _C_*_d_*_f_, 0), EqQ(_B_*_e_*_g_ - _C_*(_d_*_g_ + _e_*_f_), 0), Not(IGtQ(n_, 0)),),
+        replacement=Unintegrable((_a_ + _b_*WFApply(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**n_/(x**2*_C_ + x*_B_ + _A_), x),
+        module_name='9.3 Miscellaneous integration rules',
+        rule_number=3,
+    ),
+    # Rule 4
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*WildHeadApp(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**n_/(x**2*_C_ + A_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, A_, _C_, F_, n_], x), EqQ(-A_*_e_*_g_ + _C_*_d_*_f_, 0), EqQ(_d_*_g_ + _e_*_f_, 0), Not(IGtQ(n_, 0)),),
+        replacement=Unintegrable((_a_ + _b_*WFApply(F_, _c_*sqrt(x*_e_ + _d_)/sqrt(x*_g_ + _f_)))**n_/(x**2*_C_ + A_), x),
+        module_name='9.3 Miscellaneous integration rules',
+        rule_number=4,
+    ),
     # Rule 5
     RubiRulePattern(
         pattern=Int(u_/y_, x),
@@ -696,4 +727,4 @@ RULES = [
 
 ]
 
-# Summary: 73 rules translated, 4 skipped
+# Summary: 77 rules translated, 0 skipped

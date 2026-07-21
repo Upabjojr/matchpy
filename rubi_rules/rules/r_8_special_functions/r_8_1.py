@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,6 +62,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+F_ = WildSymbol('F')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -72,6 +73,8 @@ _d_ = WildSymbol('d', optional_value=IDENTITY_ELEMENT)
 d_ = WildSymbol('d')
 _e_ = WildSymbol('e', optional_value=IDENTITY_ELEMENT)
 e_ = WildSymbol('e')
+_f_ = WildSymbol('f', optional_value=IDENTITY_ELEMENT)
+f_ = WildSymbol('f')
 g_ = WildSymbol('g')
 _h_ = WildSymbol('h', optional_value=IDENTITY_ELEMENT)
 h_ = WildSymbol('h')
@@ -489,7 +492,14 @@ RULES = [
         module_name='8.1 Error functions',
         rule_number=51,
     ),
-    # Rule 52: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 52
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(F_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/x, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi')], F_),),
+        replacement=Subst(WFApply(F_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
+        module_name='8.1 Error functions',
+        rule_number=52,
+    ),
     # Rule 53
     RubiRulePattern(
         pattern=Int((((_e_ * x))**(_m_) * sympy.erf((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
@@ -610,9 +620,23 @@ RULES = [
         module_name='8.1 Error functions',
         rule_number=67,
     ),
-    # Rule 68: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 69: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 68
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi'), Symbol('FresnelS'), Symbol('FresnelC'), Symbol('ExpIntegralEi'), Symbol('SinIntegral'), Symbol('CosIntegral'), Symbol('SinhIntegral'), Symbol('CoshIntegral')], F_),),
+        replacement=Subst(Int(WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
+        module_name='8.1 Error functions',
+        rule_number=68,
+    ),
+    # Rule 69
+    RubiRulePattern(
+        pattern=Int((x*_h_ + g_)**_m_*WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi'), Symbol('FresnelS'), Symbol('FresnelC'), Symbol('ExpIntegralEi'), Symbol('SinIntegral'), Symbol('CosIntegral'), Symbol('SinhIntegral'), Symbol('CoshIntegral')], F_),),
+        replacement=Subst(Int((x*g_/d_)**_m_*WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
+        module_name='8.1 Error functions',
+        rule_number=69,
+    ),
 
 ]
 
-# Summary: 66 rules translated, 3 skipped
+# Summary: 69 rules translated, 0 skipped

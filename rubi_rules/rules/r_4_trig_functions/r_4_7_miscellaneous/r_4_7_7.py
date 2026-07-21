@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -63,6 +63,8 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # optional wildcards (can match identity element if absent in commutative ops)
 
 F_ = WildSymbol('F')
+G_ = WildSymbol('G')
+H_ = WildSymbol('H')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -372,7 +374,14 @@ RULES = [
         module_name='4.7.7 F^(c (a+b x)) trig(d+e x)^n',
         rule_number=35,
     ),
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['Pattern', 'G', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int(F_**(_c_*u_)*WildHeadApp(G_, v_)**_n_, x),
+        constraints=(FreeQ([F_, _c_, _n_], x), TrigQ(G_), LinearQ([u_, v_], x), Not(LinearMatchQ([u_, v_], x)),),
+        replacement=Int(F_**(_c_*ExpandToSum(u_, x))*WFApply(G_, ExpandToSum(v_, x))**_n_, x),
+        module_name='4.7.7 F^(c (a+b x)) trig(d+e x)^n',
+        rule_number=36,
+    ),
     # Rule 37
     RubiRulePattern(
         pattern=Int(F_**(_c_*(x*_b_ + _a_))*(x*_f_)**_m_*sin(x*_e_ + _d_)**_n_, x),
@@ -421,7 +430,14 @@ RULES = [
         module_name='4.7.7 F^(c (a+b x)) trig(d+e x)^n',
         rule_number=42,
     ),
-    # Rule 43: SKIPPED - ValueError: Non-string function head ['Pattern', 'G', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 43
+    RubiRulePattern(
+        pattern=Int(F_**(_c_*(x*_b_ + _a_))*WildHeadApp(G_, x*_e_ + _d_)**_m_*WildHeadApp(H_, x*_e_ + _d_)**_n_, x),
+        constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_], x), IGtQ(_m_, 0), IGtQ(_n_, 0), TrigQ(G_), TrigQ(H_),),
+        replacement=Int(ExpandTrigToExp(F_**(_c_*(x*_b_ + _a_)), WFApply(G_, x*_e_ + _d_)**_m_*WFApply(H_, x*_e_ + _d_)**_n_, x), x),
+        module_name='4.7.7 F^(c (a+b x)) trig(d+e x)^n',
+        rule_number=43,
+    ),
     # Rule 44
     RubiRulePattern(
         pattern=Int(F_**u_*sin(v_)**_n_, x),
@@ -449,4 +465,4 @@ RULES = [
 
 ]
 
-# Summary: 44 rules translated, 2 skipped
+# Summary: 46 rules translated, 0 skipped

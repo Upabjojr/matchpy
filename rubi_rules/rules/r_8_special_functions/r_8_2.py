@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,6 +62,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+F_ = WildSymbol('F')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -494,7 +495,14 @@ RULES = [
         module_name='8.2 Fresnel integral functions',
         rule_number=52,
     ),
-    # Rule 53: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 53
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(F_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/x, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([Symbol('FresnelS'), Symbol('FresnelC')], F_),),
+        replacement=Subst(WFApply(F_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
+        module_name='8.2 Fresnel integral functions',
+        rule_number=53,
+    ),
     # Rule 54
     RubiRulePattern(
         pattern=Int((((_e_ * x))**(_m_) * sympy.Function('FresnelS')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
@@ -514,4 +522,4 @@ RULES = [
 
 ]
 
-# Summary: 54 rules translated, 1 skipped
+# Summary: 55 rules translated, 0 skipped

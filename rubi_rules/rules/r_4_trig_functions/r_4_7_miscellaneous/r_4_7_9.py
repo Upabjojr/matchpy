@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -65,6 +65,8 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
+F_ = WildSymbol('F')
+G_ = WildSymbol('G')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -271,8 +273,22 @@ RULES = [
         module_name='4.7.9 Active trig functions',
         rule_number=22,
     ),
-    # Rule 23: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 24: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 23
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sin(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_], x), TrigQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sin(x*_d_ + _c_)), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=23,
+    ),
+    # Rule 24
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*cos(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_], x), TrigQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_/(a_ + _b_*cos(x*_d_ + _c_)), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=24,
+    ),
     # Rule 25
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*sin(x*_d_ + _c_)**_n_*cos(x*_d_ + _c_)**_p_/(a_ + _b_*sin(x*_d_ + _c_)), x),
@@ -337,12 +353,54 @@ RULES = [
         module_name='4.7.9 Active trig functions',
         rule_number=32,
     ),
-    # Rule 33: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 34: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 35: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 37: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 38: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 33
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*cos(x*_d_ + _c_)**_p_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sin(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_, _p_], x), TrigQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*cos(x*_d_ + _c_)**_p_/(a_ + _b_*sin(x*_d_ + _c_)), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=33,
+    ),
+    # Rule 34
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*sin(x*_d_ + _c_)**_p_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*cos(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_], x), TrigQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*sin(x*_d_ + _c_)**_p_/(a_ + _b_*cos(x*_d_ + _c_)), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=34,
+    ),
+    # Rule 35
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sec(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), TrigQ(F_), IntegersQ(_m_, _n_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*cos(x*_d_ + _c_)/(a_*cos(x*_d_ + _c_) + _b_), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=35,
+    ),
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*csc(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), TrigQ(F_), IntegersQ(_m_, _n_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*sin(x*_d_ + _c_)/(a_*sin(x*_d_ + _c_) + _b_), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=36,
+    ),
+    # Rule 37
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*sec(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), TrigQ(F_), TrigQ(G_), IntegersQ(_m_, _n_, _p_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_*cos(x*_d_ + _c_)/(a_*cos(x*_d_ + _c_) + _b_), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=37,
+    ),
+    # Rule 38
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*csc(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), TrigQ(F_), TrigQ(G_), IntegersQ(_m_, _n_, _p_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_*sin(x*_d_ + _c_)/(a_*sin(x*_d_ + _c_) + _b_), x),
+        module_name='4.7.9 Active trig functions',
+        rule_number=38,
+    ),
     # Rule 39
     RubiRulePattern(
         pattern=Int(sin(x*_b_ + _a_)**_p_*sin(x*_d_ + _c_)**_q_, x),
@@ -874,4 +932,4 @@ RULES = [
 
 ]
 
-# Summary: 96 rules translated, 8 skipped
+# Summary: 104 rules translated, 0 skipped

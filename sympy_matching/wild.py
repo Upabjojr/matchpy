@@ -22,6 +22,7 @@ Naming convention:
     This makes SymPy-side names like `a_`, `b_`, `c_` line up with MatchPy
     constraint variables such as `FreeQ('a', 'x')`.
 """
+from sympy import Expr as SympyExpr
 from sympy import Symbol as SympySymbol
 
 
@@ -106,3 +107,52 @@ class WildSymbol(SympySymbol):
     def is_optional(self):
         """Whether this symbol should convert to a MatchPy optional wildcard."""
         return self._optional_value is not None
+
+
+# ─── Wildcard function heads ──────────────────────────────────────────────────
+
+class HeadRef(SympySymbol):
+    """A matched function HEAD, wrapped so it is a substitutable SymPy object.
+
+    A wildcard operation head (see :class:`WildHeadApp`) binds to a real function
+    such as ``sin``. A function *class* is not a SymPy expression, so it cannot be
+    substituted into a replacement template; this wraps it in a Symbol (named after
+    the function) that carries the class, so a replacement can substitute it and
+    re-apply it (see ``rubi_rules.utils.rubi_utils.WFApply``).
+    """
+
+    def __new__(cls, func, **assumptions):
+        name = getattr(func, '__name__', None) or str(func)
+        cls._sanitize(assumptions, cls)
+        obj = SympySymbol.__xnew__(cls, name, **assumptions)
+        object.__setattr__(obj, '_func_class', func)
+        return obj
+
+    @property
+    def func_class(self):
+        """The wrapped SymPy function (callable), e.g. ``sin``."""
+        return self._func_class
+
+
+class WildHeadApp(SympyExpr):
+    """Pattern node: a wildcard function HEAD applied to arguments — ``F_[args]``.
+
+    Converts to a MatchPy ``Operation`` whose head is a ``WildcardOperationHead``,
+    so it matches an application of ANY function. The head is bound to the head
+    wildcard's name, and the arguments are matched by MatchPy in the normal way —
+    argument wildcards (and any constraints on them) therefore behave exactly as
+    in an ordinary pattern.
+    """
+
+    def __new__(cls, head_wild, *args):
+        return SympyExpr.__new__(cls, head_wild, *args)
+
+    @property
+    def head_wild(self):
+        """The wildcard standing for the function head."""
+        return self.args[0]
+
+    @property
+    def applied_args(self):
+        """The arguments the wildcard head is applied to."""
+        return self.args[1:]

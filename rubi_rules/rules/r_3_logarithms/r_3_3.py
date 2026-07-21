@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -63,6 +63,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # optional wildcards (can match identity element if absent in commutative ops)
 
 AFx_ = WildSymbol('AFx')
+F_ = WildSymbol('F')
 Polyx_ = WildSymbol('Polyx')
 _Px_ = WildSymbol('Px', optional_value=IDENTITY_ELEMENT)
 Px_ = WildSymbol('Px')
@@ -569,7 +570,14 @@ RULES = [
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',
         rule_number=57,
     ),
-    # Rule 58: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 58
+    RubiRulePattern(
+        pattern=Int(_Px_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))*WildHeadApp(F_, _f_*(x*_h_ + _g_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_, _h_, _n_], x), PolynomialQ(_Px_, x), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcTan'), Symbol('ArcCot'), Symbol('ArcSinh'), Symbol('ArcCosh'), Symbol('ArcTanh'), Symbol('ArcCoth')], F_),),
+        replacement=With(List(Set(Symbol('u'), IntHide((_Px_ * WFApply(F_, (_f_ * (_g_ + (_h_ * x))))), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * x)))**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _e_ * _n_ * Int(SimplifyIntegrand((Symbol('u') * ((d_ + (_e_ * x)))**(Integer(-1))), x), x))))),
+        module_name='3.3 u (a+b log(c (d+e x)^n))^p',
+        rule_number=58,
+    ),
     # Rule 59
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*log(_c_*v_**_n_))**_p_, x),
@@ -597,4 +605,4 @@ RULES = [
 
 ]
 
-# Summary: 60 rules translated, 1 skipped
+# Summary: 61 rules translated, 0 skipped

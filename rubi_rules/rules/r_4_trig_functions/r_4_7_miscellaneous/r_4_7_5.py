@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,6 +62,9 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+F_ = WildSymbol('F')
+G_ = WildSymbol('G')
+H_ = WildSymbol('H')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -72,12 +75,18 @@ _d_ = WildSymbol('d', optional_value=IDENTITY_ELEMENT)
 d_ = WildSymbol('d')
 _e_ = WildSymbol('e', optional_value=IDENTITY_ELEMENT)
 e_ = WildSymbol('e')
+_f_ = WildSymbol('f', optional_value=IDENTITY_ELEMENT)
+f_ = WildSymbol('f')
 _m_ = WildSymbol('m', optional_value=IDENTITY_ELEMENT)
 m_ = WildSymbol('m')
 _n_ = WildSymbol('n', optional_value=IDENTITY_ELEMENT)
 n_ = WildSymbol('n')
 _p_ = WildSymbol('p', optional_value=IDENTITY_ELEMENT)
 p_ = WildSymbol('p')
+_q_ = WildSymbol('q', optional_value=IDENTITY_ELEMENT)
+q_ = WildSymbol('q')
+_r_ = WildSymbol('r', optional_value=IDENTITY_ELEMENT)
+r_ = WildSymbol('r')
 _u_ = WildSymbol('u', optional_value=IDENTITY_ELEMENT)
 u_ = WildSymbol('u')
 v_ = WildSymbol('v')
@@ -86,10 +95,38 @@ y_ = WildSymbol('y')
 z_ = WildSymbol('z')
 
 RULES = [
-    # Rule 1: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 2: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 3: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 4: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 1
+    RubiRulePattern(
+        pattern=Int((_a_*WildHeadApp(F_, x*_d_ + _c_)**p_)**n_, x),
+        constraints=(FreeQ([_a_, _c_, _d_, n_, p_], x), InertTrigQ(F_), Not(IntegerQ(n_)), IntegerQ(p_),),
+        replacement=With(List(Set(Symbol('v'), ActivateTrig(WFApply(F_, (_c_ + (_d_ * x)))))), ((_a_)**(IntPart(n_)) * ((Symbol('v') * (NonfreeFactors(Symbol('v'), x))**(Integer(-1))))**((p_ * IntPart(n_))) * ((_a_ * (Symbol('v'))**(p_)))**(FracPart(n_)) * ((NonfreeFactors(Symbol('v'), x))**((p_ * FracPart(n_))))**(Integer(-1)) * Int((NonfreeFactors(Symbol('v'), x))**((n_ * p_)), x))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=1,
+    ),
+    # Rule 2
+    RubiRulePattern(
+        pattern=Int((_a_*(_b_*WildHeadApp(F_, x*_d_ + _c_))**p_)**_n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, p_], x), InertTrigQ(F_), Not(IntegerQ(_n_)), Not(IntegerQ(p_)),),
+        replacement=With(List(Set(Symbol('v'), ActivateTrig(WFApply(F_, (_c_ + (_d_ * x)))))), ((_a_)**(IntPart(_n_)) * ((_a_ * ((_b_ * Symbol('v')))**(p_)))**(FracPart(_n_)) * (((_b_ * Symbol('v')))**((p_ * FracPart(_n_))))**(Integer(-1)) * Int(((_b_ * Symbol('v')))**((_n_ * p_)), x))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=2,
+    ),
+    # Rule 3
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=3,
+    ),
+    # Rule 4
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=4,
+    ),
     # Rule 5
     RubiRulePattern(
         pattern=Int(u_*cosh(_c_*(x*_b_ + _a_)), x),
@@ -106,8 +143,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=6,
     ),
-    # Rule 7: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 8: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 7
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor((x)**(Integer(-1)), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=7,
+    ),
+    # Rule 8
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), (Integer(-1) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor((x)**(Integer(-1)), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=8,
+    ),
     # Rule 9
     RubiRulePattern(
         pattern=Int(u_*coth(_c_*(x*_b_ + _a_)), x),
@@ -124,7 +175,14 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=10,
     ),
-    # Rule 11: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 11
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, Symbol('Sec')), EqQ(F_, Symbol('sec'))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.tan((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=11,
+    ),
     # Rule 12
     RubiRulePattern(
         pattern=Int(u_/cos(_c_*(x*_b_ + _a_))**2, x),
@@ -133,7 +191,14 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=12,
     ),
-    # Rule 13: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 13
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**2, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, Symbol('Csc')), EqQ(F_, Symbol('csc'))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cot((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=13,
+    ),
     # Rule 14
     RubiRulePattern(
         pattern=Int(u_/sin(_c_*(x*_b_ + _a_))**2, x),
@@ -158,8 +223,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=16,
     ),
-    # Rule 17: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 18: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 17
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*cot(_c_*(x*_b_ + _a_))**_n_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.tan((_c_ * (_a_ + (_b_ * x)))), x))), (((_b_ * _c_ * (Symbol('d'))**((_n_ + Integer(-1)))))**(Integer(-1)) * Subst(Int(SubstFor((((x)**(_n_) * (Integer(1) + ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1)), (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=17,
+    ),
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*tan(_c_*(x*_b_ + _a_))**_n_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cot((_c_ * (_a_ + (_b_ * x)))), x))), (Integer(-1) * ((_b_ * _c_ * (Symbol('d'))**((_n_ + Integer(-1)))))**(Integer(-1)) * Subst(Int(SubstFor((((x)**(_n_) * (Integer(1) + ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1)), (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=18,
+    ),
     # Rule 19
     RubiRulePattern(
         pattern=Int(u_*coth(_c_*(x*_b_ + _a_))**_n_, x),
@@ -176,10 +255,38 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=20,
     ),
-    # Rule 21: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 22: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 23: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 24: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 21
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Or(EqQ(F_, Symbol('sin')), EqQ(F_, Symbol('cos'))), Or(EqQ(G_, Symbol('sin')), EqQ(G_, Symbol('cos'))), IGtQ(_p_, 0), IGtQ(_q_, 0),),
+        replacement=Int(ExpandTrigReduce(ActivateTrig(WFApply(F_, x*_b_ + _a_)**_p_*WFApply(G_, x*_d_ + _c_)**_q_), x), x),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=21,
+    ),
+    # Rule 22
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_*WildHeadApp(H_, x*_f_ + _e_)**_r_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), Or(EqQ(F_, Symbol('sin')), EqQ(F_, Symbol('cos'))), Or(EqQ(G_, Symbol('sin')), EqQ(G_, Symbol('cos'))), Or(EqQ(H_, Symbol('sin')), EqQ(H_, Symbol('cos'))), IGtQ(_p_, 0), IGtQ(_q_, 0), IGtQ(_r_, 0),),
+        replacement=Int(ExpandTrigReduce(ActivateTrig(WFApply(F_, x*_b_ + _a_)**_p_*WFApply(G_, x*_d_ + _c_)**_q_*WFApply(H_, x*_f_ + _e_)**_r_), x), x),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=22,
+    ),
+    # Rule 23
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=23,
+    ),
+    # Rule 24
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=24,
+    ),
     # Rule 25
     RubiRulePattern(
         pattern=Int(u_*cosh(_c_*(x*_b_ + _a_)), x),
@@ -196,8 +303,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=26,
     ),
-    # Rule 27: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 28: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 27
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor((x)**(Integer(-1)), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=27,
+    ),
+    # Rule 28
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), (Integer(-1) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor((x)**(Integer(-1)), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=28,
+    ),
     # Rule 29
     RubiRulePattern(
         pattern=Int(u_*coth(_c_*(x*_b_ + _a_)), x),
@@ -214,10 +335,38 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=30,
     ),
-    # Rule 31: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 32: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 33: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 34: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 31
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(((n_ + Integer(-1)) * (Integer(2))**(Integer(-1)))), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=31,
+    ),
+    # Rule 32
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sec')), EqQ(F_, Symbol('sec'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**((((Integer(-1) * n_) + Integer(-1)) * (Integer(2))**(Integer(-1)))), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=32,
+    ),
+    # Rule 33
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(((n_ + Integer(-1)) * (Integer(2))**(Integer(-1)))), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=33,
+    ),
+    # Rule 34
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Csc')), EqQ(F_, Symbol('csc'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**((((Integer(-1) * n_) + Integer(-1)) * (Integer(2))**(Integer(-1)))), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=34,
+    ),
     # Rule 35
     RubiRulePattern(
         pattern=Int(u_*cosh(_c_*(x*_b_ + _a_))**n_, x),
@@ -250,8 +399,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=38,
     ),
-    # Rule 39: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 40: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 39
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (((_b_ * _c_ * (Symbol('d'))**((n_ + Integer(-1)))))**(Integer(-1)) * Subst(Int(SubstFor((((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(((n_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((x)**(n_))**(Integer(-1))), (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.sin((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=39,
+    ),
+    # Rule 40
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), (Integer(-1) * ((_b_ * _c_ * (Symbol('d'))**((n_ + Integer(-1)))))**(Integer(-1)) * Subst(Int(SubstFor((((Integer(1) + (Integer(-1) * ((Symbol('d'))**(Integer(2)) * (x)**(Integer(2))))))**(((n_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((x)**(n_))**(Integer(-1))), (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cos((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=40,
+    ),
     # Rule 41
     RubiRulePattern(
         pattern=Int(u_*coth(_c_*(x*_b_ + _a_))**n_, x),
@@ -268,8 +431,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=42,
     ),
-    # Rule 43: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 44: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 43
+    RubiRulePattern(
+        pattern=Int(u_*(_d_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_ + v_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('e'), FreeFactors(sympy.sin((_c_ * (_a_ + (_b_ * x)))), x))), (Int(ActivateTrig((u_ * v_)), x) + (_d_ * Int((ActivateTrig(u_) * (sympy.cos((_c_ * (_a_ + (_b_ * x)))))**(_n_)), x)))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=43,
+    ),
+    # Rule 44
+    RubiRulePattern(
+        pattern=Int(u_*(_d_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_ + v_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        replacement=With(List(Set(Symbol('e'), FreeFactors(sympy.cos((_c_ * (_a_ + (_b_ * x)))), x))), (Int(ActivateTrig((u_ * v_)), x) + (_d_ * Int((ActivateTrig(u_) * (sympy.sin((_c_ * (_a_ + (_b_ * x)))))**(_n_)), x)))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=44,
+    ),
     # Rule 45
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*cos(x*_e_ + _d_)**2 + _c_*sin(x*_e_ + _d_)**2)**_p_, x),
@@ -326,8 +503,22 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=51,
     ),
-    # Rule 52: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 53: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 52
+    RubiRulePattern(
+        pattern=Int(_u_*(_a_*WildHeadApp(F_, x*_d_ + _c_)**p_)**n_, x),
+        constraints=(FreeQ([_a_, _c_, _d_, n_, p_], x), InertTrigQ(F_), Not(IntegerQ(n_)), IntegerQ(p_),),
+        replacement=With(List(Set(Symbol('v'), ActivateTrig(WFApply(F_, (_c_ + (_d_ * x)))))), ((_a_)**(IntPart(n_)) * ((Symbol('v') * (NonfreeFactors(Symbol('v'), x))**(Integer(-1))))**((p_ * IntPart(n_))) * ((_a_ * (Symbol('v'))**(p_)))**(FracPart(n_)) * ((NonfreeFactors(Symbol('v'), x))**((p_ * FracPart(n_))))**(Integer(-1)) * Int((ActivateTrig(_u_) * (NonfreeFactors(Symbol('v'), x))**((n_ * p_))), x))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=52,
+    ),
+    # Rule 53
+    RubiRulePattern(
+        pattern=Int(_u_*(_a_*(_b_*WildHeadApp(F_, x*_d_ + _c_))**p_)**_n_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, p_], x), InertTrigQ(F_), Not(IntegerQ(_n_)), Not(IntegerQ(p_)),),
+        replacement=With(List(Set(Symbol('v'), ActivateTrig(WFApply(F_, (_c_ + (_d_ * x)))))), ((_a_)**(IntPart(_n_)) * ((_a_ * ((_b_ * Symbol('v')))**(p_)))**(FracPart(_n_)) * (((_b_ * Symbol('v')))**((p_ * FracPart(_n_))))**(Integer(-1)) * Int((ActivateTrig(_u_) * ((_b_ * Symbol('v')))**((_n_ * p_))), x))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=53,
+    ),
     # Rule 54
     RubiRulePattern(
         pattern=Int(u_*(_c_*sin(v_))**m_, x),
@@ -352,9 +543,30 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=56,
     ),
-    # Rule 57: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 58: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 59: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 57
+    RubiRulePattern(
+        pattern=Int(u_*(a_*WildHeadApp(F_, x*_d_ + _c_)**_p_ + _b_*WildHeadApp(F_, x*_d_ + _c_)**_q_)**_n_, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _p_, _q_], x), InertTrigQ(F_), IntegerQ(_n_), PosQ(-_p_ + _q_),),
+        replacement=Int(ActivateTrig(u_*(a_ + _b_*WFApply(F_, x*_d_ + _c_)**(-_p_ + _q_))**_n_*WFApply(F_, x*_d_ + _c_)**(_n_*_p_)), x),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=57,
+    ),
+    # Rule 58
+    RubiRulePattern(
+        pattern=Int(u_*(a_*WildHeadApp(F_, x*_e_ + _d_)**_p_ + _b_*WildHeadApp(F_, x*_e_ + _d_)**_q_ + _c_*WildHeadApp(F_, x*_e_ + _d_)**_r_)**_n_, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _p_, _q_, _r_], x), InertTrigQ(F_), IntegerQ(_n_), PosQ(-_p_ + _q_), PosQ(-_p_ + _r_),),
+        replacement=Int(ActivateTrig(u_*(a_ + _b_*WFApply(F_, x*_e_ + _d_)**(-_p_ + _q_) + _c_*WFApply(F_, x*_e_ + _d_)**(-_p_ + _r_))**_n_*WFApply(F_, x*_e_ + _d_)**(_n_*_p_)), x),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=58,
+    ),
+    # Rule 59
+    RubiRulePattern(
+        pattern=Int(u_*(a_ + _b_*WildHeadApp(F_, x*_e_ + _d_)**_p_ + _c_*WildHeadApp(F_, x*_e_ + _d_)**_q_)**_n_, x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _p_, _q_], x), InertTrigQ(F_), IntegerQ(_n_), NegQ(_p_),),
+        replacement=Int(ActivateTrig(u_*(a_/WFApply(F_, x*_e_ + _d_)**_p_ + _b_ + _c_*WFApply(F_, x*_e_ + _d_)**(-_p_ + _q_))**_n_*WFApply(F_, x*_e_ + _d_)**(_n_*_p_)), x),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=59,
+    ),
     # Rule 60
     RubiRulePattern(
         pattern=Int(_u_*(_a_*cos(x*_d_ + _c_) + _b_*sin(x*_d_ + _c_))**_n_, x),
@@ -414,4 +626,4 @@ RULES = [
 
 ]
 
-# Summary: 37 rules translated, 29 skipped
+# Summary: 66 rules translated, 0 skipped

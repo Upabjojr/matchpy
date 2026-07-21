@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,6 +62,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+F_ = WildSymbol('F')
 Pq_ = WildSymbol('Pq')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -382,7 +383,14 @@ RULES = [
         module_name='3.4 u (a+b log(c (d+e x^m)^n))^p',
         rule_number=36,
     ),
-    # Rule 37: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 37
+    RubiRulePattern(
+        pattern=Int((_a_ + _b_*log(_c_*(x**n_*_e_ + d_)**_p_))*WildHeadApp(F_, x*_f_)**_m_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _p_], x), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcSinh'), Symbol('ArcCosh')], F_), IGtQ(_m_, 0), IGtQ(n_, 1),),
+        replacement=With(List(Set(Symbol('u'), IntHide((WFApply(F_, (_f_ * x)))**(_m_), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * ((d_ + (_e_ * (x)**(n_))))**(_p_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _e_ * n_ * _p_ * Int(SimplifyIntegrand((Symbol('u') * (x)**((n_ + Integer(-1))) * ((d_ + (_e_ * (x)**(n_))))**(Integer(-1))), x), x))))),
+        module_name='3.4 u (a+b log(c (d+e x^m)^n))^p',
+        rule_number=37,
+    ),
     # Rule 38
     RubiRulePattern(
         pattern=Int((_a_ + _b_*log(_c_*(d_ + _e_*(x*_g_ + _f_)**n_)**_p_))**_q_, x),
@@ -402,4 +410,4 @@ RULES = [
 
 ]
 
-# Summary: 38 rules translated, 1 skipped
+# Summary: 39 rules translated, 0 skipped

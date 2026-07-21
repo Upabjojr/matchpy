@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -65,6 +65,8 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
+F_ = WildSymbol('F')
+G_ = WildSymbol('G')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -253,8 +255,22 @@ RULES = [
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=20,
     ),
-    # Rule 21: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 22: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 21
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sinh(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_], x), HyperbolicQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sinh(x*_d_ + _c_)), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=21,
+    ),
+    # Rule 22
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*cosh(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_], x), HyperbolicQ(F_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_/(a_ + _b_*cosh(x*_d_ + _c_)), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=22,
+    ),
     # Rule 23
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*sinh(x*_d_ + _c_)**_n_*cosh(x*_d_ + _c_)**_p_/(a_ + _b_*sinh(x*_d_ + _c_)), x),
@@ -351,12 +367,54 @@ RULES = [
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=34,
     ),
-    # Rule 35: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 36: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 37: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 38: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 39: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 40: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 35
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*sinh(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_, _p_], x), HyperbolicQ(F_), HyperbolicQ(G_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_/(a_ + _b_*sinh(x*_d_ + _c_)), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=35,
+    ),
+    # Rule 36
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*cosh(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_, _p_], x), HyperbolicQ(F_), HyperbolicQ(G_),),
+        replacement=Unintegrable((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_/(a_ + _b_*cosh(x*_d_ + _c_)), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=36,
+    ),
+    # Rule 37
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*sech(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), HyperbolicQ(F_), IntegersQ(_m_, _n_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*cosh(x*_d_ + _c_)/(a_*cosh(x*_d_ + _c_) + _b_), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=37,
+    ),
+    # Rule 38
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_/(a_ + _b_*csch(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), HyperbolicQ(F_), IntegersQ(_m_, _n_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*sinh(x*_d_ + _c_)/(a_*sinh(x*_d_ + _c_) + _b_), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=38,
+    ),
+    # Rule 39
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*sech(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), HyperbolicQ(F_), HyperbolicQ(G_), IntegersQ(_m_, _n_, _p_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_*cosh(x*_d_ + _c_)/(a_*cosh(x*_d_ + _c_) + _b_), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=39,
+    ),
+    # Rule 40
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_d_ + _c_)**_n_*WildHeadApp(G_, x*_d_ + _c_)**_p_/(a_ + _b_*csch(x*_d_ + _c_)), x),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), HyperbolicQ(F_), HyperbolicQ(G_), IntegersQ(_m_, _n_, _p_),),
+        replacement=Int((x*_f_ + _e_)**_m_*WFApply(F_, x*_d_ + _c_)**_n_*WFApply(G_, x*_d_ + _c_)**_p_*sinh(x*_d_ + _c_)/(a_*sinh(x*_d_ + _c_) + _b_), x),
+        module_name='6.7.9 Active hyperbolic functions',
+        rule_number=40,
+    ),
     # Rule 41
     RubiRulePattern(
         pattern=Int(sinh(x*_b_ + _a_)**_p_*sinh(x*_d_ + _c_)**_q_, x),
@@ -808,4 +866,4 @@ RULES = [
 
 ]
 
-# Summary: 88 rules translated, 8 skipped
+# Summary: 96 rules translated, 0 skipped

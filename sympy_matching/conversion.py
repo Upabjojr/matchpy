@@ -39,10 +39,11 @@ from sympy import (
 from sympy.core.basic import Basic as SympyBasic
 
 from matchpy.expressions.expressions import (
-    Expression, Operation, Symbol, SymbolWrapper, Wildcard, to_expression, from_expression,
+    Expression, Operation, OperationHead, Symbol, SymbolWrapper, Wildcard,
+    WildcardOperationHead, to_expression, from_expression,
     LIST_HEAD, TUPLE_HEAD,
 )
-from .wild import WildSymbol, IDENTITY_ELEMENT
+from .wild import WildSymbol, IDENTITY_ELEMENT, HeadRef, WildHeadApp
 from .operations import (
     ADD, MUL, POW, EQUALITY,
     SYMPY_FUNC_TO_HEAD, HEAD_TO_SYMPY_FUNC,
@@ -110,6 +111,19 @@ def _wild_symbol_to_expression(obj: WildSymbol) -> Expression:
             val = sympy.Float(val)
         return Wildcard.optional(obj.wildcard_name, to_expression(val))
     return Wildcard.dot(obj.wildcard_name)
+
+
+@to_expression.register(WildHeadApp)
+def _wild_head_app_to_expression(obj: 'WildHeadApp') -> Expression:
+    """Convert ``F_[args]`` into a MatchPy Operation with a WILDCARD head.
+
+    The resulting operation matches an application of ANY function: MatchPy binds
+    the subject's head to the head wildcard's name and matches the operands
+    against the converted arguments in the usual way.
+    """
+    head = WildcardOperationHead(name='__any__',
+                                 variable_name=obj.head_wild.wildcard_name)
+    return Operation(head, *[to_expression(a) for a in obj.applied_args])
 
 
 @to_expression.register(SympySymbol)
@@ -189,8 +203,19 @@ def _sympy_basic_to_expression(obj: SympyBasic) -> Expression:
 
 @from_expression.register(SymbolWrapper)
 def _symbol_wrapper_from_expression(expr: SymbolWrapper):
-    """Lossless conversion: unwrap the original SymPy object directly."""
-    return expr.value
+    """Lossless conversion: unwrap the original SymPy object directly.
+
+    A wildcard operation head binds to a MatchPy ``OperationHead`` (metadata, not
+    an expression), wrapped in a SymbolWrapper. Map it back to the corresponding
+    SymPy function and wrap it in a ``HeadRef`` so it can be substituted into a
+    replacement and re-applied.
+    """
+    value = expr.value
+    if isinstance(value, OperationHead):
+        func = HEAD_TO_SYMPY_FUNC.get(value)
+        if func is not None:
+            return HeadRef(func)
+    return value
 
 
 def _unwrap_tuplearg(v):

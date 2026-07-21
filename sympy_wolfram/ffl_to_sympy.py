@@ -22,7 +22,7 @@ import sympy
 from sympy import Integer, Rational, Symbol
 from sympy.printing.str import StrPrinter
 
-from sympy_matching.wild import IDENTITY_ELEMENT, WildSymbol
+from sympy_matching.wild import IDENTITY_ELEMENT, WildHeadApp, WildSymbol
 
 
 # =============================================================================
@@ -87,6 +87,8 @@ class FFLConverter:
 
     # Mathematica head -> SymPy callable code
     SYMPY_FUNC_MAP: Dict[str, str] = {
+        # Wildcard function head applied to args (F_[v_]) -- see WildHeadApp
+        'WildHeadApp': 'WildHeadApp',
         # Trigonometric
         'Sin': 'sympy.sin', 'Cos': 'sympy.cos', 'Tan': 'sympy.tan',
         'Sec': 'sympy.sec', 'Csc': 'sympy.csc', 'Cot': 'sympy.cot',
@@ -165,6 +167,7 @@ class FFLConverter:
         self._eval_ns: Dict[str, Any] = {
             'sympy': sympy, 'Integer': Integer, 'Rational': Rational,
             'Symbol': Symbol, 'WildSymbol': WildSymbol,
+            'WildHeadApp': WildHeadApp,
             'IDENTITY_ELEMENT': IDENTITY_ELEMENT,
             'x': Symbol('x'),
             'log': sympy.log, 'sqrt': sympy.sqrt,

@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -67,6 +67,7 @@ A_ = WildSymbol('A')
 AFx_ = WildSymbol('AFx')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
+F_ = WildSymbol('F')
 Polyx_ = WildSymbol('Polyx')
 _Px_ = WildSymbol('Px', optional_value=IDENTITY_ELEMENT)
 Px_ = WildSymbol('Px')
@@ -562,9 +563,23 @@ RULES = [
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=57,
     ),
-    # Rule 58: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 59: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 58
+    RubiRulePattern(
+        pattern=Int(_Px_*(_a_ + _b_*log(x**_n_*_c_))*WildHeadApp(F_, _d_*(x*_f_ + _e_))**_m_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), IGtQ(_m_, 0), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcSinh'), Symbol('ArcCosh')], F_),),
+        replacement=With(List(Set(Symbol('u'), IntHide((_Px_ * (WFApply(F_, (_d_ * (_e_ + (_f_ * x)))))**(_m_)), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _n_ * Int(Dist((x)**(Integer(-1)), Symbol('u'), x), x))))),
+        module_name='3.1.5 u (a+b log(c x^n))^p',
+        rule_number=58,
+    ),
+    # Rule 59
+    RubiRulePattern(
+        pattern=Int(_Px_*(_a_ + _b_*log(x**_n_*_c_))*WildHeadApp(F_, _d_*(x*_f_ + _e_)), x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), MemberQ([Symbol('ArcTan'), Symbol('ArcCot'), Symbol('ArcTanh'), Symbol('ArcCoth')], F_),),
+        replacement=With(List(Set(Symbol('u'), IntHide((_Px_ * WFApply(F_, (_d_ * (_e_ + (_f_ * x))))), x))), (Dist((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))), Symbol('u'), x) + (Integer(-1) * (_b_ * _n_ * Int(Dist((x)**(Integer(-1)), Symbol('u'), x), x))))),
+        module_name='3.1.5 u (a+b log(c x^n))^p',
+        rule_number=59,
+    ),
 
 ]
 
-# Summary: 57 rules translated, 2 skipped
+# Summary: 59 rules translated, 0 skipped

@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -62,6 +62,8 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+F_ = WildSymbol('F')
+G_ = WildSymbol('G')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -83,6 +85,8 @@ p_ = WildSymbol('p')
 _q_ = WildSymbol('q', optional_value=IDENTITY_ELEMENT)
 q_ = WildSymbol('q')
 u_ = WildSymbol('u')
+v_ = WildSymbol('v')
+w_ = WildSymbol('w')
 
 RULES = [
     # Rule 1
@@ -221,7 +225,14 @@ RULES = [
         module_name='4.7.6 (c+d x)^m trig(a+b x)^n trig(a+b x)^p',
         rule_number=17,
     ),
-    # Rule 18: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int(u_**_m_*WildHeadApp(F_, v_)**_n_*WildHeadApp(G_, w_)**_p_, x),
+        constraints=(FreeQ([_m_, _n_, _p_], x), TrigQ(F_), TrigQ(G_), EqQ(v_, w_), LinearQ([u_, v_, w_], x), Not(LinearMatchQ([u_, v_, w_], x)),),
+        replacement=Int(ExpandToSum(u_, x)**_m_*WFApply(F_, ExpandToSum(v_, x))**_n_*WFApply(G_, ExpandToSum(v_, x))**_p_, x),
+        module_name='4.7.6 (c+d x)^m trig(a+b x)^n trig(a+b x)^p',
+        rule_number=18,
+    ),
     # Rule 19
     RubiRulePattern(
         pattern=Int((a_ + _b_*sin(x*_d_ + _c_))**_n_*(x*_f_ + _e_)**_m_*cos(x*_d_ + _c_), x),
@@ -294,8 +305,15 @@ RULES = [
         module_name='4.7.6 (c+d x)^m trig(a+b x)^n trig(a+b x)^p',
         rule_number=27,
     ),
-    # Rule 28: SKIPPED - ValueError: Non-string function head ['Pattern', 'F', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 28
+    RubiRulePattern(
+        pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_, x),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_], x), MemberQ([Symbol('Sin'), Symbol('Cos')], F_), MemberQ([Symbol('Sec'), Symbol('Csc')], G_), IGtQ(_p_, 0), IGtQ(_q_, 0), EqQ(-_a_*_d_ + _b_*_c_, 0), IGtQ(_b_/_d_, 1),),
+        replacement=Int(sympy.Function('ExpandTrigExpand')((((_e_ + (_f_ * x)))**(_m_) * (WFApply(G_, (_c_ + (_d_ * x))))**(_q_)), F_, (_c_ + (_d_ * x)), _p_, (_b_ * (_d_)**(Integer(-1))), x), x),
+        module_name='4.7.6 (c+d x)^m trig(a+b x)^n trig(a+b x)^p',
+        rule_number=28,
+    ),
 
 ]
 
-# Summary: 26 rules translated, 2 skipped
+# Summary: 28 rules translated, 0 skipped

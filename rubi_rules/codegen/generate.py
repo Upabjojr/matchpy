@@ -16,6 +16,7 @@ Defaults:
 """
 import argparse
 import copy
+import itertools
 import json
 import re
 import sys
@@ -61,8 +62,12 @@ def _collect_wildcards_from_rules(converter, rules):
             continue
         converter.reset()
         converter.fixed_var = _extract_fixed_var_from_lhs(lhs)
+        # Rewrite function-head wildcards F_[..] into WildHeadApp[F_, ..] first, so
+        # converting the pattern discovers F and the argument wildcards normally
+        # (the raw form has a non-string head and would abort the scan early).
+        _lhs_pattern, _ = _extract_fhw_from_pattern(lhs[1])
         try:
-            converter.convert(lhs[1], is_pattern=True)
+            converter.convert(_lhs_pattern, is_pattern=True)
         except Exception:
             pass
         try:
@@ -99,6 +104,60 @@ def _ffl_substitute_symbols(expr, substitutions: Dict[str, object]):
     if isinstance(expr, list):
         return [_ffl_substitute_symbols(part, substitutions) for part in expr]
     return expr
+
+
+def _ffl_is_fhw_head(node) -> bool:
+    """True if `node` is a function-head-wildcard application ``F_[args...]``:
+    a list whose head is itself a ``Pattern[F, Blank[]]`` (a wildcard as head)."""
+    return (isinstance(node, list) and node
+            and isinstance(node[0], list) and node[0]
+            and node[0][0] == 'Pattern')
+
+
+def _collect_pattern_names(node, out):
+    """Collect the names of all ``Pattern[name, ...]`` wildcards in `node`."""
+    if isinstance(node, list) and node:
+        if node[0] == 'Pattern' and len(node) >= 2 and isinstance(node[1], str):
+            out.add(node[1])
+        for c in node:
+            _collect_pattern_names(c, out)
+
+
+def _extract_fhw_from_pattern(pattern_ffl):
+    """Rewrite every function-head wildcard ``F_[args...]`` in a pattern FFL into
+    ``WildHeadApp[F_, args...]``.
+
+    MatchPy supports a WILDCARD OPERATION HEAD (see
+    ``matchpy.expressions.expressions.WildcardOperationHead``), so such a pattern
+    matches an application of ANY function, binding the head to ``F`` and matching
+    the arguments normally -- argument wildcards and their constraints therefore
+    behave exactly as in an ordinary pattern.
+
+    Returns (new_pattern_ffl, head_names).
+    """
+    head_names = set()
+
+    def rec(node):
+        if not isinstance(node, list) or not node:
+            return node
+        if _ffl_is_fhw_head(node):
+            head_pat = node[0]           # Pattern[F, Blank]
+            head_names.add(head_pat[1])  # 'F'
+            return ['WildHeadApp', head_pat] + [rec(a) for a in node[1:]]
+        return [rec(c) for c in node]
+
+    return rec(pattern_ffl), head_names
+
+
+def _rewrite_fhw_in_replacement(node, head_map):
+    """In a replacement FFL, rewrite each ``F[args...]`` (F a head-wildcard from the
+    pattern, so the head is the bare string name) into ``WFApply[fresh, args...]``."""
+    if not isinstance(node, list) or not node:
+        return node
+    if isinstance(node[0], str) and node[0] in head_map:
+        fresh = head_map[node[0]]
+        return ['WFApply', fresh] + [_rewrite_fhw_in_replacement(a, head_map) for a in node[1:]]
+    return [_rewrite_fhw_in_replacement(c, head_map) for c in node]
 
 
 def _summarize_ffl_guard(ffl) -> str:
@@ -322,6 +381,7 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',
     'Star': 'Star',  # Rubi \[Star]: display-friendly product (see _reconstruct_star)
+    'WFApply': 'WFApply',  # re-apply a function-head-wildcard's captured head
     'SimplifyIntegrand': 'SimplifyIntegrand',
     'FreeFactors': 'FreeFactors',
     'NonfreeFactors': 'NonfreeFactors',
@@ -695,7 +755,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -787,6 +847,16 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         # Star appears only in replacements, so this is applied to the result FFL.
         result_ffl = _apply_star_reconstruction(result_ffl)
 
+        # Function-head wildcards (F_[args...]) -> WildHeadApp[F_, args...], which
+        # converts to a MatchPy operation with a WILDCARD head (matches any
+        # function, binds the head to F, matches the arguments normally). In the
+        # replacement, F[...] becomes WFApply(F_, ...) which re-applies the bound
+        # head on doit.
+        integrand_ffl, fhw_head_names = _extract_fhw_from_pattern(integrand_ffl)
+        if fhw_head_names:
+            result_ffl = _rewrite_fhw_in_replacement(
+                result_ffl, {h: h for h in fhw_head_names})
+
         # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---
         pattern_code, _ns, wild_defs, _symbols = ffl_to_sympy_short_code(
             integrand_ffl,
@@ -861,6 +931,7 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
                 code = _translate_conjunct(condition_ffl)
                 if code is not None:
                     constraint_parts.append(code)
+
         constraint_str = ', '.join(constraint_parts)
 
         constraints_frag = f"({constraint_str},)" if constraint_str else "()"

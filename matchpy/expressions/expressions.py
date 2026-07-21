@@ -239,6 +239,46 @@ class OperationHead(TypedModel):
         return f"OperationHead({', '.join(parts)})"
 
 
+class WildcardOperationHead(OperationHead):
+    """An operation head that matches ANY operation head, binding the matched one.
+
+    MatchPy normally indexes an operation by its concrete head, so a pattern whose
+    *head itself* is a wildcard could not be expressed. Some rule sets need exactly
+    that -- e.g. Rubi's ``F_[v_]``, "any function ``F`` applied to ``v``".
+
+    An ``Operation`` whose head is a ``WildcardOperationHead`` matches an operation
+    with ANY head (its operands are matched normally against the pattern's
+    operands, so ordinary argument wildcards bind as usual). The subject's head is
+    bound to ``variable_name`` in the substitution, wrapped so it is a regular
+    MatchPy expression.
+
+    Matching support lives in :mod:`matchpy.matching.many_to_one`: such a pattern
+    is keyed under the ``_HEAD_ANY_OP`` transition key (rather than under its own
+    head), and every operation subject also offers that key.
+    """
+
+    variable_name: Optional[str] = None
+
+    def __hash__(self):
+        return hash(('WildcardOperationHead', self.name, self.arity,
+                     self.commutative, self.associative, self.one_identity,
+                     self.variable_name))
+
+    def __eq__(self, other):
+        # Deliberately NOT equal to a plain OperationHead with the same name:
+        # a wildcard head is a different kind of thing.
+        if type(other) is not WildcardOperationHead:
+            return NotImplemented if isinstance(other, OperationHead) else False
+        return (self.name == other.name and self.arity == other.arity and
+                self.commutative == other.commutative and
+                self.associative == other.associative and
+                self.one_identity == other.one_identity and
+                self.variable_name == other.variable_name)
+
+    def __repr__(self):
+        return f"WildcardOperationHead(variable_name={self.variable_name!r})"
+
+
 # ─── Helper functions for Operation construction ──────────────────────────────
 
 def _check_one_identity(head, operands):

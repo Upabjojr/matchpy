@@ -741,6 +741,32 @@ class Star(MathematicaExpr):
         return _Star(*self.args)
 
 
+class WFApply(MathematicaExpr):
+    """Apply a wildcard-bound function head to arguments — Rubi's ``F[args]``.
+
+    A Rubi pattern ``F_[v_]`` binds ``F`` to a function HEAD (any function); the
+    replacement then re-applies that head, e.g. ``F[a+b*x]``. A function class such
+    as ``sin`` is not a substitutable SymPy object, so the matched head arrives as
+    a :class:`~sympy_matching.wild.HeadRef` wrapper; this node applies it on
+    ``doit``: ``HeadRef(sin)`` + ``(y,)`` -> ``sin(y)``.
+
+    For robustness it also accepts a whole matched application in the first slot
+    (using its ``.func``), so ``WFApply(sin(x), y)`` -> ``sin(y)`` as well.
+    """
+    def __new__(cls, head, *args):
+        safe = [sympy.sympify(head)] + [sympy.sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+
+    def _evaluate(self, **kwargs):
+        head, *args = self.args
+        func = getattr(head, 'func_class', None)          # HeadRef -> the function
+        if func is None and getattr(head, 'args', None):  # a matched application
+            func = getattr(head, 'func', None)
+        if func is None:
+            return None  # head not resolved yet -> stay unevaluated (see base doit)
+        return func(*args)
+
+
 class SimplifyIntegrand(MathematicaExpr):
     """Rubi SimplifyIntegrand[u, x] — simplify integrand."""
     def __new__(cls, *args):
