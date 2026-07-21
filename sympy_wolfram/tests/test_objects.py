@@ -458,6 +458,20 @@ class TestNestedConstructs:
 # Round-trip tests: Mathematica string → mathematica_to_sympy → expression
 # ---------------------------------------------------------------------------
 
+
+def assert_same_scope(result, expected):
+    """Compare two scoping nodes without relying on binder identity.
+
+    ``With``/``Module``/``Block`` bind their locals to fresh ``Dummy`` symbols, so
+    two independently-constructed but alpha-equivalent nodes are deliberately NOT
+    ``==`` (that is what stops an outside substitution capturing a local). Compare
+    the construct and the value it evaluates to instead.
+    """
+    assert type(result) is type(expected), (type(result), type(expected))
+    assert len(result.args[0].args) == len(expected.args[0].args)
+    assert result.doit() == expected.doit()
+
+
 class TestMathematicaToSympyRoundTrip:
     """Verify mathematica_to_sympy() builds the same unevaluated SymPy objects
     as direct Python constructors when given _MATH_EXPR_FUNCS as the remapping.
@@ -519,7 +533,7 @@ class TestMathematicaToSympyRoundTrip:
             "With[List[Set[x, 5]], Plus[x, 1]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == With(List(Set(x, Integer(5))), x + Integer(1))
+        assert_same_scope(result, With(List(Set(x, Integer(5))), x + Integer(1)))
 
     def test_with_multiple_bindings_from_string(self):
         """With[List[Set[x, 2], Set[y, 3]], Times[x, y]] parses correctly."""
@@ -528,7 +542,7 @@ class TestMathematicaToSympyRoundTrip:
             "With[List[Set[x, 2], Set[y, 3]], Times[x, y]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == With(List(Set(x, Integer(2)), Set(y, Integer(3))), x * y)
+        assert_same_scope(result, With(List(Set(x, Integer(2)), Set(y, Integer(3))), x * y))
 
     def test_with_nested_expr_from_string(self):
         """With[List[Set[a, 2]], Times[a, Plus[a, 1]]] parses correctly."""
@@ -537,7 +551,7 @@ class TestMathematicaToSympyRoundTrip:
             "With[List[Set[a, 2]], Times[a, Plus[a, 1]]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == With(List(Set(a, Integer(2))), a * (a + Integer(1)))
+        assert_same_scope(result, With(List(Set(a, Integer(2))), a * (a + Integer(1))))
 
     def test_with_return_from_string(self):
         """With[List[Set[x, 10]], Return[Times[x, 2]]] parses correctly."""
@@ -546,7 +560,7 @@ class TestMathematicaToSympyRoundTrip:
             "With[List[Set[x, 10]], Return[Times[x, 2]]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == With(List(Set(x, Integer(10))), Return(x * Integer(2)))
+        assert_same_scope(result, With(List(Set(x, Integer(10))), Return(x * Integer(2))))
 
     # -- Module ---------------------------------------------------------------
 
@@ -557,16 +571,25 @@ class TestMathematicaToSympyRoundTrip:
             "Module[List[Set[x, 5]], Plus[x, 1]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == Module(List(Set(x, Integer(5))), x + Integer(1))
+        assert_same_scope(result, Module(List(Set(x, Integer(5))), x + Integer(1)))
 
     def test_module_bare_local_from_string(self):
-        """Module[List[x], x] parses correctly (uninitialized local)."""
+        """Module[List[x], x] parses correctly (uninitialized local).
+
+        Not compared with `assert_same_scope`: an UNINITIALISED Module local
+        evaluates to its fresh symbol, so two such Modules never evaluate equal --
+        which is exactly Mathematica's behaviour (``Module[{x}, x]`` yields a new
+        ``x$nnn`` each time).
+        """
         x = Symbol('x')
         result = mathematica_to_sympy(
             "Module[List[x], x]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == Module(List(x), x)
+        assert isinstance(result, Module)
+        assert len(result.args[0].args) == 1
+        evaluated = result.doit()
+        assert isinstance(evaluated, Dummy) and evaluated != x
 
     def test_module_multiple_locals_from_string(self):
         """Module[List[Set[a, 2], Set[b, 3]], Plus[a, b]] parses correctly."""
@@ -575,7 +598,7 @@ class TestMathematicaToSympyRoundTrip:
             "Module[List[Set[a, 2], Set[b, 3]], Plus[a, b]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == Module(List(Set(a, Integer(2)), Set(b, Integer(3))), a + b)
+        assert_same_scope(result, Module(List(Set(a, Integer(2)), Set(b, Integer(3))), a + b))
 
     # -- Block ----------------------------------------------------------------
 
@@ -586,7 +609,7 @@ class TestMathematicaToSympyRoundTrip:
             "Block[List[Set[x, 10]], Plus[x, 5]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == Block(List(Set(x, Integer(10))), x + Integer(5))
+        assert_same_scope(result, Block(List(Set(x, Integer(10))), x + Integer(5)))
 
     def test_block_multiple_bindings_from_string(self):
         """Block[List[Set[a, 3], Set[b, 7]], Times[a, b]] parses correctly."""
@@ -595,7 +618,7 @@ class TestMathematicaToSympyRoundTrip:
             "Block[List[Set[a, 3], Set[b, 7]], Times[a, b]]",
             custom_functions=_MATH_EXPR_FUNCS,
         )
-        assert result == Block(List(Set(a, Integer(3)), Set(b, Integer(7))), a * b)
+        assert_same_scope(result, Block(List(Set(a, Integer(3)), Set(b, Integer(7))), a * b))
 
     # -- CompoundExpression ---------------------------------------------------
 
@@ -792,7 +815,7 @@ class TestMathematicaToSympyRoundTrip:
         )
         inner = With(List(Set(y, Integer(3))), x + y)
         outer = With(List(Set(x, Integer(2))), inner)
-        assert result == outer
+        assert_same_scope(result, outer)
 
     def test_if_in_with_from_string(self):
         """With[List[Set[x, 5]], If[Greater[x, 3], 100, 0]] parses correctly."""
@@ -802,7 +825,7 @@ class TestMathematicaToSympyRoundTrip:
             custom_functions=_MATH_EXPR_FUNCS,
         )
         body = If(sympy.Gt(x, Integer(3)), Integer(100), Integer(0))
-        assert result == With(List(Set(x, Integer(5))), body)
+        assert_same_scope(result, With(List(Set(x, Integer(5))), body))
 
 
 # ── _condition_holds lazy / short-circuit evaluation ─────────────────────────
@@ -893,29 +916,113 @@ def test_condition_set_in_test_binds_body():
     assert cond.doit() == 8
 
 
-# ── rename_scoped_locals (lexical scoping for With/Module/Block) ──────────────
+# ── Scoping: With / Module / Block close over their own locals ────────────────
+#
+# Each construct alpha-renames its locals to Dummy symbols in __new__, so the
+# scope is well defined the moment the node exists. Nothing outside has to know
+# about it -- there is no "rename the locals first" pass to remember to call.
 
-def test_rename_scoped_locals_basic():
-    from sympy_wolfram.objects import With, List, Set, rename_scoped_locals
+from sympy import Dummy
+
+from sympy_wolfram.objects import Block, List, Module, Set, With
+
+_SCOPING_CONSTRUCTS = [With, Module, Block]
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_a_local_is_bound_to_a_dummy(construct):
     a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
-    renamed = rename_scoped_locals(With(List(Set(a, Integer(1))), a + b * x))
-    local = renamed.args[0].args[0].args[0]      # the (renamed) local symbol
-    assert local != a and local.name.startswith('a$')
-    assert renamed.doit() == 1 + b * x           # value unchanged
+    node = construct(List(Set(a, Integer(1))), a + b * x)
+    local = node.args[0].args[0].args[0]
+    assert isinstance(local, Dummy)
+    assert local != a
+    assert node.doit() == 1 + b * x
 
 
-def test_rename_scoped_locals_prevents_capture():
-    # The core bug: a local named `a` must not clobber an `a` that is substituted
-    # into the body later (as a rewrite system fills a pattern variable).
-    from sympy_wolfram.objects import With, List, Set, rename_scoped_locals
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_the_body_no_longer_mentions_the_original_symbol(construct):
+    a, b = Symbol('a'), Symbol('b')
+    node = construct(List(Set(a, Integer(1))), a + b)
+    assert a not in node.args[1].free_symbols
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_an_outside_substitution_cannot_capture_a_local(construct):
+    """The bug this design removes: substituting a value that happens to contain a
+    symbol named like a local must not be captured by that local."""
     a, b, u = Symbol('a'), Symbol('b'), Symbol('u')
-    tmpl = With(List(Set(a, u)), a * u)                  # local a = u; body a*u
-    substituted = rename_scoped_locals(tmpl).subs(u, a + b)   # u carries a symbol named 'a'
-    assert substituted.doit() == (a + b)**2             # local=(a+b); NOT (a+b)*(a+2b)
+    template = construct(List(Set(a, u)), a * u)       # local a = u; body a*u
+    substituted = template.subs(u, a + b)              # the value carries an 'a'
+    assert substituted.doit() == (a + b)**2            # not (a+b)*(a+2*b)
 
 
-def test_rename_scoped_locals_noop_without_scopes():
-    from sympy_wolfram.objects import rename_scoped_locals
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_a_binding_value_is_evaluated_in_the_enclosing_scope(construct):
+    """``With[{a = f(a)}, ...]`` binds the local to the OUTER ``a``."""
+    a, b = Symbol('a'), Symbol('b')
+    node = construct(List(Set(a, a + b)), a)
+    assert node.doit() == a + b                        # outer a survives in the value
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_rebuilding_the_node_does_not_rebind(construct):
+    """SymPy rebuilds expressions constantly; re-binding each time would mint new
+    dummies and detach the binder from its body."""
+    a, b = Symbol('a'), Symbol('b')
+    node = construct(List(Set(a, Integer(2))), a * b)
+    rebuilt = node.func(*node.args)
+    assert rebuilt == node
+    assert rebuilt.doit() == node.doit() == 2 * b
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_two_nodes_with_the_same_local_name_are_independent(construct):
+    a = Symbol('a')
+    first = construct(List(Set(a, Integer(1))), a)
+    second = construct(List(Set(a, Integer(2))), a)
+    assert first.args[0] != second.args[0]
+    assert first.doit() == 1 and second.doit() == 2
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_an_inner_scope_shadows_an_outer_one(construct):
+    a, b = Symbol('a'), Symbol('b')
+    inner = construct(List(Set(a, Integer(3))), a * b)
+    outer = construct(List(Set(a, Integer(5))), a + inner)
+    assert outer.doit() == 5 + 3 * b          # inner a=3 wins inside, outer a=5 outside
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_the_inner_local_is_a_distinct_dummy(construct):
+    a, b = Symbol('a'), Symbol('b')
+    inner = construct(List(Set(a, Integer(3))), a * b)
+    outer = construct(List(Set(a, Integer(5))), a + inner)
+    outer_local = outer.args[0].args[0].args[0]
+    inner_local = inner.args[0].args[0].args[0]
+    assert outer_local != inner_local
+
+
+@pytest.mark.parametrize('construct', _SCOPING_CONSTRUCTS)
+def test_several_locals_at_once(construct):
+    a, b = Symbol('a'), Symbol('b')
+    node = construct(List(Set(a, Integer(3)), Set(b, Integer(4))), a**2 + b**2)
+    assert node.doit() == 25
+    assert not ({a, b} & node.args[1].free_symbols)
+
+
+def test_module_uninitialised_local_stays_a_dummy():
+    a = Symbol('a')
+    result = Module(List(a), a).doit()
+    assert isinstance(result, Dummy)
+    assert result != a
+
+
+def test_module_uninitialised_locals_are_independent_across_nodes():
+    a = Symbol('a')
+    assert Module(List(a), a).doit() != Module(List(a), a).doit()
+
+
+def test_expressions_without_a_scope_are_untouched():
     a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
     expr = a * x + b
-    assert rename_scoped_locals(expr) == expr
+    assert expr.subs(a, Integer(2)) == 2 * x + b

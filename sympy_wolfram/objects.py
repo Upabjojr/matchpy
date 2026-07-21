@@ -48,11 +48,10 @@ All examples below run with ``pytest --doctest-modules``.
 from __future__ import annotations
 from __future__ import annotations
 
-from itertools import count
 from typing import Any, Iterable, Iterator
 
 import sympy
-from sympy import Add, Expr, Integer, Mul, Pow, Rational, S, Symbol
+from sympy import Add, Basic, Dummy, Expr, Integer, Mul, Pow, Rational, S, Symbol
 from sympy.core.sympify import sympify
 from sympy.logic.boolalg import BooleanFalse, BooleanTrue
 
@@ -71,7 +70,6 @@ True
 True
 """
 
-_MODULE_COUNTER = count(1)
 _SOW_STACK: list[list[tuple[Any, Any]]] = []
 
 
@@ -402,7 +400,8 @@ class With(MathematicaExpr):
             bindings = List(*bindings)
         if isinstance(bindings, dict):
             bindings = List(*[Set(k, v) for k, v in bindings.items()])
-        return Expr.__new__(cls, sympify(bindings), sympify(body))
+        bindings, body = _bind_scope_locals(sympify(bindings), sympify(body))
+        return Expr.__new__(cls, bindings, body)
 
     def doit(self, **kwargs):
         bindings, body = self.args
@@ -481,21 +480,16 @@ class Module(MathematicaExpr):
             locals_list = List(*locals_list)
         elif isinstance(locals_list, dict):
             locals_list = List(*[Set(k, v) for k, v in locals_list.items()])
-        return Expr.__new__(cls, sympify(locals_list), sympify(body))
+        locals_list, body = _bind_scope_locals(sympify(locals_list), sympify(body))
+        return Expr.__new__(cls, locals_list, body)
 
     def doit(self, **kwargs):
+        # The locals were already renamed to fresh Dummy symbols at construction
+        # (see _bind_scope_locals), so this only has to bind the initialised ones;
+        # an uninitialised local simply stays its Dummy in the result.
         locals_list, body = self.args
-        renamed = {}
-        initialized = {}
-        for item in _list_items(locals_list):
-            if isinstance(item, Set):
-                symbol, value = item.args
-                fresh = _fresh_symbol(symbol)
-                renamed[symbol] = fresh
-                initialized[fresh] = _eval(value, **kwargs)
-            elif isinstance(item, Symbol):
-                renamed[item] = _fresh_symbol(item)
-        result = _substitute_body(body.xreplace(renamed), initialized)
+        subs = _binding_substitutions(locals_list, evaluate_values=True, **kwargs)
+        result = _substitute_body(body, subs)
         try:
             return _eval(result, **kwargs)
         except _ReturnSignal as signal:
@@ -547,7 +541,8 @@ class Block(MathematicaExpr):
     """
 
     def __new__(cls, locals_list, body):
-        return Expr.__new__(cls, sympify(locals_list), sympify(body))
+        locals_list, body = _bind_scope_locals(sympify(locals_list), sympify(body))
+        return Expr.__new__(cls, locals_list, body)
 
     def doit(self, **kwargs):
         locals_list, body = self.args
@@ -1142,6 +1137,52 @@ def _list_items(expr) -> Iterable[Any]:
     return (expr,)
 
 
+def _bind_scope_locals(bindings, body):
+    """Close a scoping construct over its own locals, by alpha-renaming them to
+    ``Dummy`` symbols.
+
+    Called from ``With``/``Module``/``Block`` ``__new__``, so a scoping node is
+    ALREADY closed over its locals the moment it exists. That is what makes the
+    scope well-defined: a ``Dummy`` is unique by identity, so a later
+    ``expr.subs(Symbol('a'), ...)`` from outside cannot reach a local named ``a``,
+    and no external "rename the locals first" pass is needed.
+
+    Two details matter:
+
+    * a binding's VALUE is evaluated in the ENCLOSING scope, so it is deliberately
+      NOT renamed -- ``With[{a = f[a]}, ...]`` binds the local ``a`` to the *outer*
+      ``a``, exactly as Mathematica does;
+    * locals that are already ``Dummy`` are left alone, which makes this idempotent.
+      SymPy rebuilds expressions constantly (``expr.func(*expr.args)``), and
+      re-binding on every rebuild would mint fresh dummies each time and detach the
+      binder from its body.
+
+    Nesting falls out for free: an inner scope is constructed before the outer one,
+    so its body already refers to its own dummies and the outer rename cannot touch
+    them -- inner bindings shadow outer ones correctly.
+    """
+    renaming = {}
+    new_items = []
+    for item in _list_items(bindings):
+        if isinstance(item, Set) and isinstance(item.args[0], Symbol):
+            local, value = item.args
+            if isinstance(local, Dummy):
+                new_items.append(item)          # already bound
+            else:
+                fresh = Dummy(local.name)
+                renaming[local] = fresh
+                new_items.append(Set(fresh, value))   # value keeps the outer scope
+        elif isinstance(item, Symbol) and not isinstance(item, Dummy):
+            fresh = Dummy(item.name)
+            renaming[item] = fresh
+            new_items.append(fresh)
+        else:
+            new_items.append(item)
+    if renaming and isinstance(body, Basic):
+        body = body.xreplace(renaming)
+    return List(*new_items), body
+
+
 def _binding_substitutions(bindings, evaluate_values: bool, **kwargs):
     subs = {}
     for item in _list_items(bindings):
@@ -1195,10 +1236,6 @@ def _condition_holds(test, **kwargs) -> bool:
     return False
 
 
-def _fresh_symbol(symbol: Symbol) -> Symbol:
-    return Symbol(f'{symbol.name}${next(_MODULE_COUNTER)}')
-
-
 class Condition(MathematicaExpr):
     """Mathematica ``Condition[expr, test]`` (``expr /; test``).
 
@@ -1239,50 +1276,6 @@ class Condition(MathematicaExpr):
             body = expr.subs(bindings) if bindings else expr
             return body.doit(**kwargs) if hasattr(body, 'doit') else body
         raise StopIteration
-
-
-def rename_scoped_locals(expr):
-    """Alpha-rename ``With``/``Module``/``Block`` local variables to unique symbols.
-
-    Mathematica scopes ``With``/``Module``/``Block`` locals lexically, but here they
-    are bound by ``subs`` at evaluation time. If a local shares a name with a symbol
-    that later appears in the body (e.g. a caller substitutes symbolic values in, or
-    a pattern replacement fills a wildcard with an expression containing that name),
-    the local binding would clobber it -- ``With[{a=D[u,x]}, … a+b*x …]`` with the
-    body's ``a`` coming from elsewhere becomes ``… D[u,x]+b*x …``, silently corrupting
-    the result. Renaming the locals to fresh unique symbols (``a$N``) restores proper
-    lexical scoping. A no-op when there are no scoping nodes.
-
-    Apply this to an expression *before* any further symbol substitution into it
-    (e.g. a rewrite system should rename a rule's template locals before binding its
-    pattern variables).
-    """
-    if not isinstance(expr, sympy.Basic):
-        return expr
-    if isinstance(expr, (With, Module, Block)):
-        bindings, body = expr.args
-        locals_map = {}
-        new_items = []
-        for item in _list_items(bindings):
-            if isinstance(item, Set) and isinstance(item.args[0], Symbol):
-                sym, val = item.args
-                fresh = _fresh_symbol(sym)
-                locals_map[sym] = fresh
-                new_items.append(Set(fresh, rename_scoped_locals(val)))  # value uses OUTER scope
-            elif isinstance(item, Symbol):
-                fresh = _fresh_symbol(item)
-                locals_map[item] = fresh
-                new_items.append(fresh)
-            else:
-                new_items.append(rename_scoped_locals(item))
-        new_body = rename_scoped_locals(body).xreplace(locals_map)
-        return type(expr)(List(*new_items), new_body)
-    if expr.args:
-        try:
-            return expr.func(*[rename_scoped_locals(a) for a in expr.args])
-        except (TypeError, ValueError):
-            return expr
-    return expr
 
 
 def _apply_function(function, *items):

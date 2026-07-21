@@ -19,7 +19,6 @@ from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
 from sympy_matching.constraints import RubiConstraint
-from sympy_wolfram.objects import rename_scoped_locals
 
 
 class Int(sympy.Function):
@@ -53,8 +52,9 @@ def _collect_wild_symbols(expr) -> dict:
 
 
 def _make_replacement_fn(replacement_expr, wild_names, rule):
-    replacement_expr = rename_scoped_locals(replacement_expr)
-
+    # No scoping pass is needed here: With/Module/Block bind their locals to Dummy
+    # symbols at construction, so substituting a wildcard value below can never be
+    # captured by a local that happens to share its name.
     def _replacement(**match_dict):
         sympy_subs = {}
         for name, matchpy_val in match_dict.items():
