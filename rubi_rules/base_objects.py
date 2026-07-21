@@ -162,7 +162,15 @@ def _make_matchpy_constraint(constraint_obj, wild_names, pattern_wilds):
 
     Handles RubiConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
     """
-    variables = _extract_wild_names(constraint_obj)
+    # A constraint may mention variables the PATTERN does not bind. MatchQ is the
+    # case that matters: Mathematica scopes the variables of its inner pattern to
+    # the MatchQ itself, so they are NOT part of the outer match. MatchPy can only
+    # supply what it matched, and `CustomConstraint.__call__` silently returns True
+    # when a declared variable is missing -- so declaring them made the whole guard
+    # a no-op. Declare only what the pattern binds; the rest stay free variables
+    # inside the constraint, which is exactly what they are.
+    declared = _extract_wild_names(constraint_obj)
+    variables = [v for v in declared if v in pattern_wilds]
     if not variables:
         return CustomConstraint(lambda: True)
 

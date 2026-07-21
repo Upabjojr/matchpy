@@ -75,7 +75,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] Use MatchPy codegen to generate a static decision tree for all rules. Is it correct?
       Can we reduce it to a reasonable size?
 - [ ] do we even need to be able to serialize ManyToOneMatcher to JSON?
-- [ ] clean up `ffl_to_sympy_code_short`: it should accept
+- [X] clean up `ffl_to_sympy_code_short`: it should accept
       the namespace of defined variables instead of returning it (what's the point of returning it btw?),
       furthermore, it should have an optional parameter of type StrPrinter (the class defined in SymPy).
       By default, simplify the expression if eval(str_printer.print(obj), ...namespace...) == obj,
@@ -93,11 +93,11 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in MatchPy-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
 - [ ] rename `to_expression` (and also get rid of `from_expression`)
 - [ ] should not depend on SymPy (maybe with some exceptions)
-- [ ] remove "fixed_var" from sympy_wolfram/
+- [X] remove "fixed_var" from sympy_wolfram/
 - [X] SymPy parser has been updated to correctly handle "Derivative" nodes.
-- [ ] rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
+- [ ] (solved?) rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
 - [ ] create sympy_to_matchpy and matchpy_to_sympy function, and _sympy_to_matchpy / _matchpy_to_sympy that are single dispatched.
-- [ ] rename_scoped_locals: shouldn't this act entirely inside the With, Module, Block inside sympy_wolfram/? Why is it imported in rubi_rules/? Maybe these constructs should instead replace their binding symbols with Dummy variables.
+- [X] rename_scoped_locals: shouldn't this act entirely inside the With, Module, Block inside sympy_wolfram/? Why is it imported in rubi_rules/? Maybe these constructs should instead replace their binding symbols with Dummy variables.
 Strange warning:
 
 In [8]: rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)

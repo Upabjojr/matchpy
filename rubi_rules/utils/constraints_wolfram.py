@@ -252,14 +252,99 @@ class UnsameQ(RubiConstraint):
         return f"UnsameQ({self._a}, {self._b})"
 
 class MatchQ(RubiConstraint):
-    """Constraint: matched value matches a given pattern."""
+    """Mathematica ``MatchQ[expr, pattern]`` -- does *expr* match *pattern*?
+
+    The pattern may carry its own guard, ``pattern /; test``, which arrives here as
+    a ``Condition(pattern, test)`` node; the match counts only if the test holds
+    under that match's bindings.
+
+    Variable scoping is the subtle part. A ``MatchQ`` pattern mixes two kinds of
+    name:
+
+    * names the ENCLOSING rule already bound (``a``, ``b`` in
+      ``MatchQ[u, (a+b*x)^m_]``) -- these arrive in *kwargs* and are substituted in,
+      so they match only their actual values;
+    * names LOCAL to the MatchQ (``m_`` above) -- these are not part of the outer
+      match, stay free here, and are what the matching actually solves for.
+
+    The distinction is simply whether the name was bound by the outer pattern, which
+    is what `_make_matchpy_constraint` uses to decide which variables to declare.
+    """
+
     def __init__(self, u, pattern):
         self._u = self.args[0]
         self._pattern = self.args[1]
+
     def check(self, **kwargs):
-        return True  # pattern matching is complex; stub
+        resolved = self._resolve_all(kwargs)
+        subject = self._resolve(self._u, resolved)
+        pattern = self._resolve(self._pattern, resolved)
+        return _pattern_matches(subject, pattern)
+
     def __repr__(self):
         return f"MatchQ({self._u}, {self._pattern})"
+
+
+def _pattern_matches(subject, pattern) -> bool:
+    """True iff *subject* matches *pattern*, honouring a ``pattern /; test`` guard.
+
+    Any wildcard still free in *pattern* is a MatchQ-local pattern variable (see
+    :class:`MatchQ`); MatchPy solves for those. A guard is evaluated once per
+    candidate match, with that match's bindings substituted in, so
+    ``MatchQ[u, (c+d*x)^m /; FreeQ[{c,d,m},x]]`` accepts only matches whose c, d, m
+    are actually free of x.
+    """
+    from matchpy import match as _match
+    from matchpy.expressions.expressions import Pattern
+    from sympy_matching.conversion import to_expression, matchpy_to_sympy
+
+    test = None
+    if type(pattern).__name__ == 'Condition' and len(getattr(pattern, 'args', ())) == 2:
+        pattern, test = pattern.args
+
+    try:
+        subject_expr = to_expression(subject)
+        pattern_expr = Pattern(to_expression(pattern))
+    except Exception:
+        return False
+
+    try:
+        for substitution in _match(subject_expr, pattern_expr):
+            if test is None:
+                return True
+            bindings = {name: matchpy_to_sympy(value)
+                        for name, value in substitution.items()}
+            if _guard_holds(test, bindings):
+                return True
+    except Exception:
+        # An un-convertible subject or an unmatchable pattern is simply "no match";
+        # it must never abort the surrounding rule search.
+        return False
+    return False
+
+
+def _guard_holds(test, bindings) -> bool:
+    """Evaluate a MatchQ pattern's ``/;`` guard under one match's bindings."""
+    from sympy_matching.constraints import RubiConstraint as _RC
+
+    if isinstance(test, sympy.logic.boolalg.Not):
+        return not _guard_holds(test.args[0], bindings)
+    if isinstance(test, sympy.logic.boolalg.And):
+        return all(_guard_holds(a, bindings) for a in test.args)
+    if isinstance(test, sympy.logic.boolalg.Or):
+        return any(_guard_holds(a, bindings) for a in test.args)
+    if isinstance(test, _RC):
+        try:
+            return bool(test.check(**bindings))
+        except Exception:
+            return False
+    try:
+        value = test.xreplace({sympy.Symbol(k): v for k, v in bindings.items()})
+        if hasattr(value, 'doit'):
+            value = value.doit()
+        return value is True or value == sympy.true
+    except Exception:
+        return False
 
 
 # =============================================================================

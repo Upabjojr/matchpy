@@ -88,6 +88,7 @@ _n_ = WildSymbol('n', optional_value=IDENTITY_ELEMENT)
 n_ = WildSymbol('n')
 _p_ = WildSymbol('p', optional_value=IDENTITY_ELEMENT)
 p_ = WildSymbol('p')
+trig_ = WildSymbol('trig')
 _u_ = WildSymbol('u', optional_value=IDENTITY_ELEMENT)
 u_ = WildSymbol('u')
 
@@ -132,8 +133,22 @@ RULES = [
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=5,
     ),
-    # Rule 6: SKIPPED - ValueError: Non-string function head ['Pattern', 'trig', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 7: SKIPPED - ValueError: Non-string function head ['Pattern', 'trig', ['Blank']] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 6
+    RubiRulePattern(
+        pattern=Int(_u_*(_b_*sec(x*_f_ + _e_)**n_)**p_, x),
+        constraints=(FreeQ([_b_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), IntegerQ(n_), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([Symbol('sin'), Symbol('cos'), Symbol('tan'), Symbol('cot'), Symbol('sec'), Symbol('csc')], trig_))))),),
+        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sec((_e_ + (_f_ * x))), x))), (((_b_ * (Symbol('ff'))**(n_)))**(IntPart(p_)) * ((_b_ * (sympy.sec((_e_ + (_f_ * x))))**(n_)))**(FracPart(p_)) * (((sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1))))**((n_ * FracPart(p_))))**(Integer(-1)) * Int((ActivateTrig(_u_) * ((sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1))))**((n_ * p_))), x))),
+        module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
+        rule_number=6,
+    ),
+    # Rule 7
+    RubiRulePattern(
+        pattern=Int(_u_*(_b_*(_c_*sec(x*_f_ + _e_))**n_)**p_, x),
+        constraints=(FreeQ([_b_, _c_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), Not(IntegerQ(n_)), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([Symbol('sin'), Symbol('cos'), Symbol('tan'), Symbol('cot'), Symbol('sec'), Symbol('csc')], trig_))))),),
+        replacement=_b_**IntPart(p_)*(_b_*(_c_*sec(x*_f_ + _e_))**n_)**FracPart(p_)*Int((_c_*sec(x*_f_ + _e_))**(n_*p_)*ActivateTrig(_u_), x)/(_c_*sec(x*_f_ + _e_))**(n_*FracPart(p_)),
+        module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
+        rule_number=7,
+    ),
     # Rule 8
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*sec(x*_f_ + _e_)**2), x),
@@ -337,4 +352,4 @@ RULES = [
 
 ]
 
-# Summary: 30 rules translated, 2 skipped
+# Summary: 32 rules translated, 0 skipped

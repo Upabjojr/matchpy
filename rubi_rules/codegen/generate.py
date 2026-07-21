@@ -89,7 +89,10 @@ def _collect_wildcards_from_rules(converter, rules):
         except Exception:
             pass
         try:
-            converter.convert(rhs, is_pattern=True)
+            # Same MatchQ rewrite as in translation, so a head wildcard local to a
+            # guard (e.g. `trig`) is discovered here and gets declared in the
+            # module -- otherwise the emitted constraint references an undefined name.
+            converter.convert(_rewrite_fhw_in_matchq(rhs), is_pattern=True)
         except Exception:
             pass
         all_non_optional.update(converter.wildcards_non_optional)
@@ -199,6 +202,34 @@ def _rewrite_fhw_in_replacement(node, head_map):
         fresh = head_map[node[0]]
         return ['WFApply', fresh] + [_rewrite_fhw_in_replacement(a, head_map) for a in node[1:]]
     return [_rewrite_fhw_in_replacement(c, head_map) for c in node]
+
+
+def _rewrite_fhw_in_matchq(node):
+    """Rewrite function-head wildcards inside a ``MatchQ`` guard's INNER pattern.
+
+    ``MatchQ[u, (d_.*trig_[e+f*x])^m_. /; ... MemberQ[{sin,cos,...}, trig]]`` uses a
+    wildcard as a function HEAD, but inside the guard rather than in the rule's own
+    integrand -- so `_extract_fhw_from_pattern`, which only sees the integrand,
+    never reached it and the whole rule was skipped.
+
+    The inner pattern is a pattern in its own right, so it gets the same treatment:
+    ``trig_[args]`` becomes ``WildHeadApp[trig_, args]``, which MatchQ then matches
+    with a wildcard operation head. Only argument 2 of MatchQ is rewritten (argument
+    1 is the subject, an ordinary expression), and a ``Condition[pattern, test]``
+    wrapper is unwrapped so the pattern inside it is the part rewritten.
+    """
+    if not isinstance(node, list) or not node:
+        return node
+    if node[0] == 'MatchQ' and len(node) >= 3:
+        subject, pattern = node[1], node[2]
+        if isinstance(pattern, list) and pattern and pattern[0] == 'Condition':
+            inner, test = pattern[1], pattern[2]
+            inner, _heads = _extract_fhw_from_pattern(inner)
+            pattern = ['Condition', inner, test]
+        else:
+            pattern, _heads = _extract_fhw_from_pattern(pattern)
+        return ['MatchQ', _rewrite_fhw_in_matchq(subject), pattern] + list(node[3:])
+    return [_rewrite_fhw_in_matchq(c) for c in node]
 
 
 def _summarize_ffl_guard(ffl) -> str:
@@ -879,6 +910,7 @@ Max = Symbol('Max')
         dropped: List[str] = []
 
         def translate(guard):
+            guard = _rewrite_fhw_in_matchq(guard)
             try:
                 code, _, _ = ffl_to_sympy_short_code(
                     guard,

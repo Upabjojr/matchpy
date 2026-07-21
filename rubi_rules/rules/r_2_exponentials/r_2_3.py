@@ -885,10 +885,9 @@ RULES = [
         rule_number=95,
     ),
     # Rule 96
-    # NOTE: dropped guard (function-head wildcard, not yet translatable): Not[MatchQ[u, Condition[Times[...], And[...]]]]
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))),),
+        constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))), Not(MatchQ(u_, Condition(((sympy.E)**((_c_ * (_a_ + (_b_ * x)))) * WildHeadApp(F_, v_)), And(FreeQ([_a_, _b_, _c_], x), InverseFunctionQ(sympy.Function('F')(x)))))),),
         replacement=With(List(Set(Symbol('v'), FunctionOfExponential(u_, x))), (Symbol('v') * (D(Symbol('v'), x))**(Integer(-1)) * Subst(Int((FunctionOfExponentialFunction(u_, x) * (x)**(Integer(-1))), x), x, Symbol('v')))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=96,
