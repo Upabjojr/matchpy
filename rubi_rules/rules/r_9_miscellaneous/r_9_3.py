@@ -521,7 +521,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2, 1),),
-        replacement=(Integer(2) * ((a_ * n_))**(Integer(-1)) * Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1)))))),
+        replacement=Star((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1)))))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=51,
     ),
@@ -529,7 +529,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2 + sympy.S(-1)/2, 0),),
-        replacement=(((a_ * n_))**(Integer(-1)) * Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_))),
+        replacement=Star(((a_ * n_))**(Integer(-1)), Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=52,
     ),

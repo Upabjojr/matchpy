@@ -276,32 +276,48 @@ class TestMFileParser:
 
 
 # ---------------------------------------------------------------------------
-# \[Star] handling: a Rubi `factor \[Star] Int[...]` must keep its Int factor;
-# a rule whose Int was dropped by the parser must be skipped, not emitted as a
-# non-integral replacement (which would silently give a wrong answer).
+# \[Star] handling. SymPy now parses Rubi's `factor \[Star] Int[...]` natively into
+# a proper ['Star', u, v] node, so the generator no longer reconstructs anything --
+# it just translates the head. These tests pin that end-to-end behaviour: the Int
+# factor must survive into the replacement, because a Star whose Int was lost would
+# emit a non-integral replacement (a silent wrong answer).
 # ---------------------------------------------------------------------------
-from rubi_rules.codegen.generate import _ffl_has_int_head, _ffl_has_star
+from sympy.parsing.mathematica import parse_mathematica_to_fullformlist
 
 
-class TestStarIntHandling:
+class TestStarIsParsedNatively:
 
-    def test_ffl_has_int_head(self):
-        assert _ffl_has_int_head(['Int', ['Times', 'u'], 'x']) is True
-        assert _ffl_has_int_head(['Times', ['Subst', 'a'], 'b']) is True
-        assert _ffl_has_int_head(['Simp', ['Times', 'a', 'b']]) is False
-        # a non-string head (list) must not crash the search
-        assert _ffl_has_int_head([['Simp', 'x'], 'Star']) is False
+    def test_star_parses_to_a_binary_node(self):
+        assert parse_mathematica_to_fullformlist(r"Simp[a] \[Star] Int[b,x]") == \
+            ['Star', ['Simp', 'a'], ['Int', 'b', 'x']]
 
-    def test_dropped_int_after_star_is_detectable(self):
-        # `Simp[...] \[Star] Int[...]` where the parser lost the Int leaves a bare
-        # star marker: has a Star but NO Int-like head. The translator skips such a
-        # rule instead of emitting a non-integral replacement (a silent wrong
-        # answer). Guards the 50 algebraic rules whose Int was dropped at parse time.
-        dropped = [['Simp', ['Times', 'a', 'b']], 'Star']
-        assert _ffl_has_star(dropped) is True
-        assert _ffl_has_int_head(dropped) is False
-        # a well-parsed factor*Int keeps its Int-like head
-        assert _ffl_has_int_head(['Times', ['Simp', 'f'], ['Int', 'u', 'x']]) is True
+    def test_star_survives_a_line_break(self):
+        r"""The operand used to be silently DROPPED when \[Star] ended a line."""
+        assert parse_mathematica_to_fullformlist("Simp[a] \\[Star]\n  Int[b,x]") == \
+            ['Star', ['Simp', 'a'], ['Int', 'b', 'x']]
+
+    def test_no_postfix_star_marker_is_produced(self):
+        """The old mis-parse buried a bare 'Star' marker inside a Times."""
+        ffl = parse_mathematica_to_fullformlist(r"c/(a*b) \[Star] Int[u,x]")
+        def has_marker(n):
+            if isinstance(n, list):
+                if len(n) == 2 and n[1] == 'Star':
+                    return True
+                return any(has_marker(c) for c in n)
+            return False
+        assert not has_marker(ffl)
+        assert ffl[0] == 'Star'
+
+    def test_a_star_rule_keeps_its_Int_in_the_replacement(self):
+        rule = ['SetDelayed',
+                ['Int', ['Power', 'x', ['Pattern', 'm', ['Blank']]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Star', ['Simp', ['Pattern', 'm', ['Blank']]],
+                 ['Int', 'x', 'x']]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'SKIPPED' not in code
+        assert 'Star(' in code
+        assert 'Int(' in code
 
 
 class TestStableRuleNumbering:

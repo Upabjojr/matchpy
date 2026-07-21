@@ -3,7 +3,7 @@
 parse_rubi_to_ffl.py
 --------------------
 Parse every Wolfram Mathematica .m rule file in the Rubi repository
-recursively using SymPy's MathematicaParser.  For each file it extracts
+recursively using SymPy's Mathematica parser.  For each file it extracts
 individual expressions, converts them to the **fullformlist** intermediate
 representation, and collects all parsing failures with full error details.
 
@@ -27,7 +27,6 @@ Dependencies
 
 import argparse
 import json
-import re
 import sys
 import traceback
 from collections import defaultdict
@@ -35,7 +34,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import sympy
-from sympy.parsing.mathematica import MathematicaParser
+from sympy.parsing.mathematica import parse_mathematica_to_fullformlist
 
 
 _DEFAULT_RUBI_ROOT = Path(
@@ -70,9 +69,6 @@ def _remove_comments(text: str) -> str:
 # File parser
 # ---------------------------------------------------------------------------
 
-_GLOBAL_PARSER = MathematicaParser()
-
-
 def parse_m_file(path: Path) -> Tuple[Optional[List], Optional[str]]:
     """
     Read *path*, strip comments, and parse the entire content as one
@@ -92,31 +88,16 @@ def parse_m_file(path: Path) -> Tuple[Optional[List], Optional[str]]:
         clean = _remove_comments(raw).strip()
         if not clean:
             return [], None
-        # Rubi co-opts Wolfram's ``\[Star]`` infix operator as a display-friendly
-        # product. SymPy's parser has no rule for ``\[Star]`` and parses it as a
-        # POSTFIX operator; when ``\[Star]`` and its right operand are on the SAME
-        # line the operand survives (as a flat ``Times[.., [tail,'Star'], .., v]``
-        # that codegen's _reconstruct_star rebuilds into ``Star[u, v]``), but when
-        # the ``\[Star]`` ends a source LINE before the next factor
-        # (``Simp[...] \[Star]\n Int[...]``) the right operand is silently DROPPED --
-        # turning an integral into a non-integral (a wrong answer). Join that
-        # line-continuation (collapse the whitespace after ``\[Star]`` to a single
-        # space) so every ``\[Star]`` is inline and its operand is preserved; the
-        # ``Star`` marker itself is kept and rebuilt downstream into a Star[u, v]
-        # node (whose runtime behaviour is defined in rubi_utils).
-        clean = re.sub(r"\\\[Star\]\s+", r"\\[Star] ", clean)
-        # Wolfram's POSTFIX derivative shorthand ``f_'[x_]``. SymPy's parser has no
-        # rule for the ``'`` operator either, and mis-associates it: the whole
-        # surrounding Plus/Times collapses into a bogus application whose head is
-        # ``Derivative[f_]``, which then fails translation. Rubi writes the SAME
-        # thing canonically as ``Derivative[1][f_][x_]`` elsewhere in these very
-        # files, and Mathematica confirms the two forms are *identical*:
-        #   FullForm[Hold[f_'[x_]]] === FullForm[Hold[Derivative[1][f_][x_]]]
-        # so rewriting to the canonical spelling is exact, not an approximation.
-        # It also routes these rules through the normal Derivative[n_][f_][x_] path.
-        clean = re.sub(r"\b([A-Za-z][A-Za-z0-9]*_)'", r"Derivative[1][\1]", clean)
-        tokens = _GLOBAL_PARSER._from_mathematica_to_tokens(clean)
-        ffl = _GLOBAL_PARSER._from_tokens_to_fullformlist(tokens)
+        # Both of Rubi's awkward notations are now parsed NATIVELY by SymPy, so no
+        # pre-processing is needed here:
+        #   * ``\[Star]`` (Rubi's display-friendly product) -> ``['Star', u, v]``,
+        #     including across a line break. It used to arrive as a mis-parsed
+        #     POSTFIX marker that codegen had to regroup, and an operand ending a
+        #     line was silently DROPPED -- a wrong answer.
+        #   * the postfix derivative ``f_'[x_]`` -> ``[[['Derivative','1'], f_], x_]``,
+        #     including in an infix context (``f_'[x_]*g_[x_]``), which is how all
+        #     6 of Rubi's prime-notation rules are written.
+        ffl = parse_mathematica_to_fullformlist(clean)
         # Multiple top-level expressions arrive as CompoundExpression[e1, e2, ...]
         if isinstance(ffl, list) and ffl and ffl[0] == "CompoundExpression":
             return ffl[1:], None
