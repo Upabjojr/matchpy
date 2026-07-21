@@ -29,10 +29,14 @@ import sympy
 from sympy.parsing.mathematica import MathematicaParser
 
 from sympy_wolfram import ffl_to_sympy_short_code
-from sympy_wolfram.ffl_to_sympy import FFLConverter
+from sympy_wolfram.interpreter import FFLConverter
 
 
 _NUMERIC_PREFIX = __import__('re').compile(r"^([\d]+(?:\.[\d]+)*)\s*(.*)")
+
+# The emitted tests are written against a single canonical variable ``x``,
+# which is therefore externally bound rather than a pattern wildcard.
+_RESERVED = {'x': 'x'}
 
 
 def _sanitize(name: str, is_file: bool) -> str:
@@ -117,9 +121,9 @@ def _extract_cases(exprs: List, converter: FFLConverter) -> Tuple[List[Tuple], i
             integral_ffl_p = converter.preprocess_test_ffl(integral_ffl)
             # Convert to short code strings in one pass; simplify_code validates
             # via its internal eval round-trip and falls back to verbose code.
-            i_code, _, __, i_symbols = ffl_to_sympy_short_code(integrand_ffl_p)
-            v_code, _, __, v_symbols = ffl_to_sympy_short_code(variable_ffl_p)
-            r_code, _, __, r_symbols = ffl_to_sympy_short_code(integral_ffl_p)
+            i_code, _, __, i_symbols = ffl_to_sympy_short_code(integrand_ffl_p, _RESERVED)
+            v_code, _, __, v_symbols = ffl_to_sympy_short_code(variable_ffl_p, _RESERVED)
+            r_code, _, __, r_symbols = ffl_to_sympy_short_code(integral_ffl_p, _RESERVED)
             all_symbols.update(i_symbols)
             all_symbols.update(v_symbols)
             all_symbols.update(r_symbols)
@@ -221,7 +225,9 @@ def generate_test_suite(source_root: Path, output_root: Path) -> List[Tuple]:
     for src in sorted(source_root.rglob('*.m')):
         ffl_exprs, parse_error = _parse_to_ffl(src)
         # Fresh converter per file so symbol scope stays file-local.
-        converter = FFLConverter()
+        # 'x' is the canonical variable of the emitted tests, so it is bound
+        # externally rather than being a pattern wildcard.
+        converter = FFLConverter(reserved_symbols=_RESERVED)
         if parse_error:
             cases, skipped, symbol_set = [], 0, set()
         else:

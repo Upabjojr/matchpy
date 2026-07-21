@@ -1,26 +1,42 @@
 # -*- coding: utf-8 -*-
-"""sympy_wolfram: Convert Wolfram Mathematica Full-Form List (FFL) to SymPy.
+"""sympy_wolfram: read Wolfram Mathematica, write SymPy.
 
-This package provides converters from Mathematica FFL AST
-(as JSON-serialized nested lists) to SymPy expression code strings.
+Generic Wolfram support. It knows nothing about integration, about Rubi, or about
+any other domain -- callers supply that context (see ``reserved_symbols`` and
+``custom_functions``).
 
-No dependency on rubi_rules or any other domain-specific package.
+The package is split by ROLE, in pipeline order:
+
+``parser``
+    Mathematica source text -> Full-Form List (FFL). Pure syntax: every node is a
+    plain string head with plain arguments, and no meaning is assigned.
+
+``interpreter``
+    FFL -> SymPy code strings and objects. This is where meaning is assigned:
+    which Wolfram head maps to which SymPy function, which names are pattern
+    wildcards, and what the evaluation namespace contains.
+
+``objects``
+    The Mathematica objects the interpreter can emit -- ``MathematicaExpr`` and
+    its subclasses (``With``, ``Module``, ``Set``, ``Condition``, ...): the
+    Wolfram constructs that have no direct SymPy equivalent and are modelled here.
 """
 
-from .ffl_to_sympy import FFLConverter
-from .mathematica_parser import (
-    mathematica_to_ffl,
-    mathematica_to_sympy_code,
-    mathematica_to_sympy_short_code,
-    mathematica_to_sympy,
+from .parser import mathematica_to_ffl
+from .interpreter import (
+    FFLConverter,
     ffl_to_sympy_code,
     ffl_to_sympy_short_code,
+    mathematica_to_sympy,
+    mathematica_to_sympy_code,
+    mathematica_to_sympy_short_code,
 )
-from .mathematica_expressions import (
+from .objects import (
     Block,
     Catch,
     CompoundExpression,
     Do,
+    Gamma,
     Head,
     If,
     List,
@@ -35,3 +51,17 @@ from .mathematica_expressions import (
     Throw,
     With,
 )
+
+__all__ = [
+    # parser: text -> FFL
+    'mathematica_to_ffl',
+    # interpreter: FFL -> SymPy
+    'FFLConverter',
+    'ffl_to_sympy_code', 'ffl_to_sympy_short_code',
+    'mathematica_to_sympy', 'mathematica_to_sympy_code',
+    'mathematica_to_sympy_short_code',
+    # objects: the modelled Mathematica constructs
+    'Block', 'Catch', 'CompoundExpression', 'Do', 'Gamma', 'Head', 'If', 'List',
+    'MathematicaExpr', 'Module', 'Null', 'Reap', 'Return', 'Scan', 'Set', 'Sow',
+    'Throw', 'With',
+]

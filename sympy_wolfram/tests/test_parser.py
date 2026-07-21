@@ -16,7 +16,7 @@ from sympy import (
     simplify, pi, oo, S, atan, asin, acos, Function,
 )
 
-from sympy_wolfram.mathematica_parser import (
+from sympy_wolfram.interpreter import (
     mathematica_to_ffl,
     mathematica_to_sympy_code,
     mathematica_to_sympy_short_code,
@@ -26,6 +26,11 @@ from sympy_wolfram.mathematica_parser import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
+
+# These tests exercise the generic converter, which has no notion of a
+# distinguished variable -- the CALLER decides which names are externally
+# bound. The cases below are written around ``x``, so they declare it.
+_X = {'x': 'x'}
 
 
 # ---------------------------------------------------------------------------
@@ -103,7 +108,7 @@ def _expected_defs_from_wildcards(expected_wildcards):
 # expected_short_code: the output of mathematica_to_sympy_short_code — i.e.
 #   str(eval(code)) when eval(str(eval(code))) round-trips successfully,
 #   otherwise the same as expected_code.
-# extra_symbols=None means no extra symbols needed for eval.
+# namespace=None means no extra symbols needed for eval.
 # expected_wildcards=None means no WildSymbol checking; when set to a list
 #   of (name, is_optional) tuples, the eval result is checked for matching
 #   WildSymbol instances instead of using assert_sympy_equal.
@@ -543,7 +548,7 @@ class TestMathematicaToSympyCode:
                          expected_short_code, expected_sympy, extra_symbols,
                          expected_wildcards):
         """The generated code string matches the expected output."""
-        code, _, _defs, _symbols = mathematica_to_sympy_code(mma_expr)
+        code, _defs, _symbols = mathematica_to_sympy_code(mma_expr, reserved_symbols=_X)
         assert code == expected_code
 
     @pytest.mark.parametrize(
@@ -555,7 +560,8 @@ class TestMathematicaToSympyCode:
                        expected_short_code, expected_sympy, extra_symbols,
                        expected_wildcards):
         """eval(code, ns) produces the expected SymPy expression."""
-        code, ns, wild_defs, _symbols = mathematica_to_sympy_code(mma_expr)
+        ns = {}
+        code, wild_defs, _symbols = mathematica_to_sympy_code(mma_expr, namespace=ns, reserved_symbols=_X)
         if extra_symbols:
             ns.update(extra_symbols)
         result = eval(code, ns)
@@ -579,7 +585,7 @@ class TestMathematicaToSympyCode:
                        expected_short_code, expected_sympy, extra_symbols,
                        expected_wildcards):
         """wild_defs contains the correct variable definitions."""
-        _code, _ns, wild_defs, _symbols = mathematica_to_sympy_code(mma_expr)
+        _code, wild_defs, _symbols = mathematica_to_sympy_code(mma_expr, reserved_symbols=_X)
         if expected_wildcards:
             expected_defs = _expected_defs_from_wildcards(expected_wildcards)
             assert sorted(wild_defs) == sorted(expected_defs)
@@ -589,29 +595,31 @@ class TestMathematicaToSympyCode:
     # --- structural checks ---
 
     def test_returns_triple(self):
-        result = mathematica_to_sympy_code("x")
-        assert isinstance(result, tuple) and len(result) == 4
+        result = mathematica_to_sympy_code("x", reserved_symbols=_X)
+        assert isinstance(result, tuple) and len(result) == 3
 
     def test_code_is_string(self):
-        code, _, _defs, _symbols = mathematica_to_sympy_code("x^2")
+        code, _defs, _symbols = mathematica_to_sympy_code("x^2", reserved_symbols=_X)
         assert isinstance(code, str)
 
     def test_ns_contains_sympy(self):
-        _, ns, _defs, _symbols = mathematica_to_sympy_code("x^2")
+        ns = {}
+        _, _defs, _symbols = mathematica_to_sympy_code("x^2", namespace=ns, reserved_symbols=_X)
         assert isinstance(ns, dict)
         assert 'sympy' in ns
 
     def test_code_contains_no_ffl_heads(self):
-        code, _, _defs, _symbols = mathematica_to_sympy_code("Sin[x] + Cos[x]^2")
+        code, _defs, _symbols = mathematica_to_sympy_code("Sin[x] + Cos[x]^2", reserved_symbols=_X)
         assert 'Plus' not in code
         assert 'Power' not in code
 
     def test_code_uses_sympy_namespace(self):
-        code, _, _defs, _symbols = mathematica_to_sympy_code("Sin[x]")
+        code, _defs, _symbols = mathematica_to_sympy_code("Sin[x]", reserved_symbols=_X)
         assert 'sympy.sin' in code
 
-    def test_fixed_var_custom(self):
-        code, ns, _defs, _symbols = mathematica_to_sympy_code("t^2", fixed_var="t")
+    def test_a_reserved_name_other_than_x(self):
+        ns = {}
+        code, _defs, _symbols = mathematica_to_sympy_code("t^2", reserved_symbols={'t': 'x'}, namespace=ns)
         assert 'x' in code
         result = eval(code, ns)
         assert result == Symbol('t')**2
@@ -633,9 +641,9 @@ class TestMathematicaToSympyShortCode:
                                expected_short_code, expected_sympy,
                                extra_symbols, expected_wildcards):
         """The simplified code string matches the expected output."""
-        short, _, _defs, _symbols = mathematica_to_sympy_short_code(
-            mma_expr, extra_symbols=extra_symbols
-        )
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = mathematica_to_sympy_short_code(
+            mma_expr, namespace=ns, reserved_symbols=_X)
         assert short == expected_short_code
 
     @pytest.mark.parametrize(
@@ -647,9 +655,9 @@ class TestMathematicaToSympyShortCode:
                              expected_short_code, expected_sympy,
                              extra_symbols, expected_wildcards):
         """eval(short_code, ns) produces the expected SymPy expression."""
-        short, ns, _defs, _symbols = mathematica_to_sympy_short_code(
-            mma_expr, extra_symbols=extra_symbols
-        )
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = mathematica_to_sympy_short_code(
+            mma_expr, namespace=ns, reserved_symbols=_X)
         result = eval(short, ns)
         if expected_wildcards is not None:
             wilds = _collect_wildsymbols(result)
@@ -668,9 +676,9 @@ class TestMathematicaToSympyShortCode:
                                   expected_short_code, expected_sympy,
                                   extra_symbols, expected_wildcards):
         """wild_defs from short_code matches the expected variable definitions."""
-        _short, _ns, wild_defs, _symbols = mathematica_to_sympy_short_code(
-            mma_expr, extra_symbols=extra_symbols
-        )
+        ns = dict(extra_symbols or {})
+        _short, wild_defs, _symbols = mathematica_to_sympy_short_code(
+            mma_expr, namespace=ns, reserved_symbols=_X)
         if expected_wildcards:
             expected_defs = _expected_defs_from_wildcards(expected_wildcards)
             assert sorted(wild_defs) == sorted(expected_defs)
@@ -693,7 +701,8 @@ class TestMathematicaToSympy:
     def test_expression(self, mma_expr, expected_ffl, expected_code,
                         expected_short_code, expected_sympy, extra_symbols,
                         expected_wildcards):
-        result = mathematica_to_sympy(mma_expr, extra_symbols=extra_symbols)
+        ns = dict(extra_symbols or {})
+        result = mathematica_to_sympy(mma_expr, namespace=ns, reserved_symbols=_X)
         if expected_wildcards is not None:
             wilds = _collect_wildsymbols(result)
             assert len(wilds) == len(expected_wildcards)
@@ -705,34 +714,34 @@ class TestMathematicaToSympy:
     # --- additional cases ---
 
     def test_division_by_two(self):
-        assert_sympy_equal(mathematica_to_sympy("x/2"), x/2)
+        assert_sympy_equal(mathematica_to_sympy("x/2", reserved_symbols=_X), x/2)
 
     def test_x_cubed(self):
-        assert mathematica_to_sympy("x^3") == x**3
+        assert mathematica_to_sympy("x^3", reserved_symbols=_X) == x**3
 
     def test_sqrt_linear(self):
         """2*(a + b*x)^(3/2)/(3*b)"""
-        result = mathematica_to_sympy("2*(a + b*x)^(3/2)/(3*b)", extra_symbols=SYMS)
+        result = mathematica_to_sympy("2*(a + b*x)^(3/2)/(3*b)", namespace=SYMS, reserved_symbols=_X)
         expected = Rational(2, 3) * (a + b*x)**Rational(3, 2) / b
         assert_sympy_equal(result, expected)
 
     def test_pattern_is_wildsymbol(self):
         """m_ parses to a WildSymbol instance."""
-        result = mathematica_to_sympy("m_")
+        result = mathematica_to_sympy("m_", reserved_symbols=_X)
         assert isinstance(result, WildSymbol)
         assert result.wildcard_name == 'm'
         assert result.optional_value is None
 
     def test_optional_pattern_has_identity(self):
         """m_. parses to a WildSymbol with IDENTITY_ELEMENT."""
-        result = mathematica_to_sympy("m_.")
+        result = mathematica_to_sympy("m_.", reserved_symbols=_X)
         assert isinstance(result, WildSymbol)
         assert result.wildcard_name == 'm'
         assert result.optional_value is IDENTITY_ELEMENT
 
-    def test_fixed_var_pattern_is_symbol(self):
+    def test_reserved_name_pattern_is_the_plain_symbol(self):
         """x_ resolves to Symbol('x'), not a WildSymbol."""
-        result = mathematica_to_sympy("x_")
+        result = mathematica_to_sympy("x_", reserved_symbols=_X)
         assert result == Symbol('x')
         assert not isinstance(result, WildSymbol)
 
@@ -753,7 +762,7 @@ class TestFFLToSympyCode:
                          expected_short_code, expected_sympy, extra_symbols,
                          expected_wildcards):
         """ffl_to_sympy_code produces the same code as mathematica_to_sympy_code."""
-        code, _, _defs, _symbols = ffl_to_sympy_code(expected_ffl)
+        code, _defs, _symbols = ffl_to_sympy_code(expected_ffl, reserved_symbols=_X)
         assert code == expected_code
 
     @pytest.mark.parametrize(
@@ -765,7 +774,8 @@ class TestFFLToSympyCode:
                        expected_short_code, expected_sympy, extra_symbols,
                        expected_wildcards):
         """eval(code, ns) from ffl_to_sympy_code produces correct SymPy expr."""
-        code, ns, wild_defs, _symbols = ffl_to_sympy_code(expected_ffl)
+        ns = {}
+        code, wild_defs, _symbols = ffl_to_sympy_code(expected_ffl, namespace=ns, reserved_symbols=_X)
         if extra_symbols:
             ns.update(extra_symbols)
         result = eval(code, ns)
@@ -786,7 +796,7 @@ class TestFFLToSympyCode:
                        expected_short_code, expected_sympy, extra_symbols,
                        expected_wildcards):
         """wild_defs from ffl_to_sympy_code matches expected."""
-        _code, _ns, wild_defs, _symbols = ffl_to_sympy_code(expected_ffl)
+        _code, wild_defs, _symbols = ffl_to_sympy_code(expected_ffl, reserved_symbols=_X)
         if expected_wildcards:
             expected_defs = _expected_defs_from_wildcards(expected_wildcards)
             assert sorted(wild_defs) == sorted(expected_defs)
@@ -810,9 +820,9 @@ class TestFFLToSympyShortCode:
                                expected_short_code, expected_sympy,
                                extra_symbols, expected_wildcards):
         """ffl_to_sympy_short_code produces the same short code."""
-        short, _, _defs, _symbols = ffl_to_sympy_short_code(
-            expected_ffl, extra_symbols=extra_symbols
-        )
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = ffl_to_sympy_short_code(
+            expected_ffl, namespace=ns, reserved_symbols=_X)
         assert short == expected_short_code
 
     @pytest.mark.parametrize(
@@ -824,9 +834,9 @@ class TestFFLToSympyShortCode:
                              expected_short_code, expected_sympy,
                              extra_symbols, expected_wildcards):
         """eval(short_code, ns) from ffl_to_sympy_short_code is correct."""
-        short, ns, _defs, _symbols = ffl_to_sympy_short_code(
-            expected_ffl, extra_symbols=extra_symbols
-        )
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = ffl_to_sympy_short_code(
+            expected_ffl, namespace=ns, reserved_symbols=_X)
         result = eval(short, ns)
         if expected_wildcards is not None:
             wilds = _collect_wildsymbols(result)
@@ -968,9 +978,8 @@ class TestCustomFunctionsCode:
     def test_code_string(self, mma_expr, expected_ffl, expected_code,
                          expected_short_code, expected_sympy,
                          extra_symbols, custom_functions):
-        code, _, _defs, _symbols = mathematica_to_sympy_code(
-            mma_expr, custom_functions=custom_functions
-        )
+        code, _defs, _symbols = mathematica_to_sympy_code(
+            mma_expr, custom_functions=custom_functions, reserved_symbols=_X)
         assert code == expected_code
 
     @pytest.mark.parametrize(
@@ -981,9 +990,10 @@ class TestCustomFunctionsCode:
     def test_code_eval(self, mma_expr, expected_ffl, expected_code,
                        expected_short_code, expected_sympy,
                        extra_symbols, custom_functions):
-        code, ns, _defs, _symbols = mathematica_to_sympy_code(
+        ns = {}
+        code, _defs, _symbols = mathematica_to_sympy_code(
             mma_expr, custom_functions=custom_functions
-        )
+        , namespace=ns, reserved_symbols=_X)
         if extra_symbols:
             ns.update(extra_symbols)
         result = eval(code, ns)
@@ -999,9 +1009,10 @@ class TestCustomFunctionsShortCode:
     def test_short_code_string(self, mma_expr, expected_ffl, expected_code,
                                expected_short_code, expected_sympy,
                                extra_symbols, custom_functions):
-        short, _, _defs, _symbols = mathematica_to_sympy_short_code(
-            mma_expr, extra_symbols=extra_symbols,
-            custom_functions=custom_functions,
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = mathematica_to_sympy_short_code(
+            mma_expr, namespace=ns,
+            custom_functions=custom_functions, reserved_symbols=_X,
         )
         assert short == expected_short_code
 
@@ -1013,9 +1024,10 @@ class TestCustomFunctionsShortCode:
     def test_short_code_eval(self, mma_expr, expected_ffl, expected_code,
                              expected_short_code, expected_sympy,
                              extra_symbols, custom_functions):
-        short, ns, _defs, _symbols = mathematica_to_sympy_short_code(
-            mma_expr, extra_symbols=extra_symbols,
-            custom_functions=custom_functions,
+        ns = dict(extra_symbols or {})
+        short, _defs, _symbols = mathematica_to_sympy_short_code(
+            mma_expr, namespace=ns,
+            custom_functions=custom_functions, reserved_symbols=_X,
         )
         result = eval(short, ns)
         assert_sympy_equal(result, expected_sympy)
@@ -1030,8 +1042,9 @@ class TestCustomFunctionsSympy:
     def test_expression(self, mma_expr, expected_ffl, expected_code,
                         expected_short_code, expected_sympy,
                         extra_symbols, custom_functions):
+        ns = dict(extra_symbols or {})
         result = mathematica_to_sympy(
-            mma_expr, extra_symbols=extra_symbols,
-            custom_functions=custom_functions,
+            mma_expr, namespace=ns,
+            custom_functions=custom_functions, reserved_symbols=_X,
         )
         assert_sympy_equal(result, expected_sympy)

@@ -37,7 +37,7 @@ class TestTranslatorExpressions:
     def setup_method(self):
         self.t = RubiRuleTranslator()
         self.c = self.t._converter  # shortcut to FFLConverter
-        self.c._fixed_var = 'x'
+        self.c.reserved_symbols = {'x': 'x'}
         self.c._wildcards_non_optional = set()
         self.c._wildcards_optional = set()
 
@@ -47,7 +47,7 @@ class TestTranslatorExpressions:
     def test_negative_integer(self):
         assert self.c.convert('-1') == 'Integer(-1)'
 
-    def test_fixed_var(self):
+    def test_a_reserved_name_converts_to_its_identifier(self):
         assert self.c.convert('x') == 'x'
 
     def test_symbol(self):
@@ -94,7 +94,7 @@ class TestTranslatorExpressions:
         assert 'a' in self.c._wildcards_non_optional
         assert 'a' in self.c._wildcards_optional
 
-    def test_fixed_var_pattern_not_wildcard(self):
+    def test_reserved_name_pattern_is_not_a_wildcard(self):
         """Pattern['x', Blank[Symbol]] should NOT become a wildcard."""
         ffl = ['Pattern', 'x', ['Blank', 'Symbol']]
         result = self.c.convert(ffl, is_pattern=True)

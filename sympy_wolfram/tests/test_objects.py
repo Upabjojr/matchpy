@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for sympy_wolfram.mathematica_expressions.
+"""Tests for sympy_wolfram.objects.
 
 Test cases derived from Wolfram Mathematica documentation examples.
 """
@@ -7,7 +7,7 @@ import pytest
 import sympy
 from sympy import Integer, Rational, S, Symbol, sqrt
 
-from sympy_wolfram.mathematica_expressions import (
+from sympy_wolfram.objects import (
     Block,
     Catch,
     CompoundExpression,
@@ -25,8 +25,8 @@ from sympy_wolfram.mathematica_expressions import (
     Throw,
     With,
 )
-import sympy_wolfram.mathematica_expressions as _me
-from sympy_wolfram.mathematica_parser import mathematica_to_sympy
+import sympy_wolfram.objects as _me
+from sympy_wolfram.interpreter import mathematica_to_sympy
 
 # ---------------------------------------------------------------------------
 # Custom-functions mapping for round-trip tests
@@ -813,7 +813,7 @@ class TestMathematicaToSympyRoundTrip:
 # lazily, operand-by-operand, matching Mathematica's short-circuiting.
 
 def test_condition_holds_short_circuits_and_or():
-    from sympy_wolfram.mathematica_expressions import _condition_holds, MathematicaExpr
+    from sympy_wolfram.objects import _condition_holds, MathematicaExpr
     from sympy.logic.boolalg import And, Or
 
     class _Boom(MathematicaExpr):
@@ -829,7 +829,7 @@ def test_condition_holds_short_circuits_and_or():
 
 
 def test_doit_stays_unevaluated_when_evaluate_returns_none():
-    from sympy_wolfram.mathematica_expressions import MathematicaExpr
+    from sympy_wolfram.objects import MathematicaExpr
 
     class _NoneNode(MathematicaExpr):
         def __new__(cls, arg):
@@ -848,7 +848,7 @@ def test_doit_stays_unevaluated_when_evaluate_returns_none():
 
 
 def test_condition_holds_basic_connectives():
-    from sympy_wolfram.mathematica_expressions import _condition_holds
+    from sympy_wolfram.objects import _condition_holds
     from sympy.logic.boolalg import And, Or, Not
     assert _condition_holds(And(S.true, S.true, evaluate=False)) is True
     assert _condition_holds(And(S.true, S.false, evaluate=False)) is False
@@ -860,12 +860,12 @@ def test_condition_holds_basic_connectives():
 # ── Condition (expr /; test) ─────────────────────────────────────────────────
 
 def test_condition_holds_returns_body():
-    from sympy_wolfram.mathematica_expressions import Condition
+    from sympy_wolfram.objects import Condition
     assert Condition(Integer(5), S.true).doit() == 5
 
 
 def test_condition_fails_raises_stopiteration():
-    from sympy_wolfram.mathematica_expressions import Condition
+    from sympy_wolfram.objects import Condition
     with pytest.raises(StopIteration):
         Condition(Integer(5), S.false).doit()
 
@@ -873,7 +873,7 @@ def test_condition_fails_raises_stopiteration():
 def test_condition_body_not_evaluated_when_test_fails():
     # The body must not be evaluated when the test fails (Mathematica semantics;
     # the default deep doit would have reduced the body first).
-    from sympy_wolfram.mathematica_expressions import Condition, MathematicaExpr
+    from sympy_wolfram.objects import Condition, MathematicaExpr
 
     class _Boom(MathematicaExpr):
         def __new__(cls):
@@ -887,7 +887,7 @@ def test_condition_body_not_evaluated_when_test_fails():
 
 def test_condition_set_in_test_binds_body():
     # Set[q, 7] inside the test binds q for the body (Mathematica side effect).
-    from sympy_wolfram.mathematica_expressions import Condition, Set
+    from sympy_wolfram.objects import Condition, Set
     q = Symbol('q')
     cond = Condition(q + 1, Set(q, Integer(7)) > 0)
     assert cond.doit() == 8
@@ -896,7 +896,7 @@ def test_condition_set_in_test_binds_body():
 # ── rename_scoped_locals (lexical scoping for With/Module/Block) ──────────────
 
 def test_rename_scoped_locals_basic():
-    from sympy_wolfram.mathematica_expressions import With, List, Set, rename_scoped_locals
+    from sympy_wolfram.objects import With, List, Set, rename_scoped_locals
     a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
     renamed = rename_scoped_locals(With(List(Set(a, Integer(1))), a + b * x))
     local = renamed.args[0].args[0].args[0]      # the (renamed) local symbol
@@ -907,7 +907,7 @@ def test_rename_scoped_locals_basic():
 def test_rename_scoped_locals_prevents_capture():
     # The core bug: a local named `a` must not clobber an `a` that is substituted
     # into the body later (as a rewrite system fills a pattern variable).
-    from sympy_wolfram.mathematica_expressions import With, List, Set, rename_scoped_locals
+    from sympy_wolfram.objects import With, List, Set, rename_scoped_locals
     a, b, u = Symbol('a'), Symbol('b'), Symbol('u')
     tmpl = With(List(Set(a, u)), a * u)                  # local a = u; body a*u
     substituted = rename_scoped_locals(tmpl).subs(u, a + b)   # u carries a symbol named 'a'
@@ -915,7 +915,7 @@ def test_rename_scoped_locals_prevents_capture():
 
 
 def test_rename_scoped_locals_noop_without_scopes():
-    from sympy_wolfram.mathematica_expressions import rename_scoped_locals
+    from sympy_wolfram.objects import rename_scoped_locals
     a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
     expr = a * x + b
     assert rename_scoped_locals(expr) == expr

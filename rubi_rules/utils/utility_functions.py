@@ -138,7 +138,7 @@ def Simplify(expr):
     # as Coeff(v,x,0)*Coeff(v,x,4) drives sympy's nc_simplify into unbounded
     # recursion (RecursionError). Doing this only when such nodes are present leaves
     # ordinary expressions untouched.
-    from sympy_wolfram.mathematica_expressions import MathematicaExpr
+    from sympy_wolfram.objects import MathematicaExpr
     if isinstance(expr, Basic) and expr.has(MathematicaExpr):
         try:
             expr = expr.doit()

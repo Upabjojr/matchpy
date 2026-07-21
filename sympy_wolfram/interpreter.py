@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Convert Wolfram Mathematica Full-Form List (FFL) AST to SymPy code strings.
+"""Interpreter: Full-Form List (FFL) -> SymPy code and objects.
 
-This module provides a generic, self-contained converter from Mathematica FFL
-(JSON-serialized nested lists) into Python/SymPy expression code strings.
+This is where MEANING is assigned. The parser produces a purely syntactic FFL;
+this module decides what each Wolfram head becomes in SymPy, which names are
+pattern wildcards, and what the evaluation namespace contains.
+
+    parser.py       text     -> FFL
+    interpreter.py  FFL      -> SymPy    (this module)
+    objects.py      the Mathematica objects this interpreter can emit
 
 No dependency on rubi_rules or any other domain-specific package.
 
@@ -16,7 +21,7 @@ objects and the appropriate wildcard symbols.
 from __future__ import annotations
 
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 import sympy
 from sympy import Integer, Rational, Symbol
@@ -24,6 +29,12 @@ from sympy.printing.str import StrPrinter
 
 from sympy_matching.wild import (IDENTITY_ELEMENT, WildHeadApp, WildHeadDeriv,
                                  WildSymbol)
+
+from .parser import mathematica_to_ffl
+
+# Type alias for the custom_functions dict expected by the public APIs.
+# Maps Wolfram head name -> (qualified_code_str, python_object)
+CustomFunctionsDict = Dict[str, Tuple[str, Any]]
 
 
 # =============================================================================
@@ -65,8 +76,11 @@ class FFLConverter:
 
     Parameters
     ----------
-    fixed_var : str
-        Name of the fixed (non-wildcard) variable (default ``'x'``).
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names that are BOUND
+        externally by the caller and must therefore never be turned into pattern
+        wildcards. ``Pattern[name, ...]`` and ``Optional[Pattern[name, ...]]``
+        for such a name both collapse to the plain identifier.
     custom_functions : dict, optional
         Mapping from Wolfram/Mathematica head names to custom callables.
         Each value is a 2-tuple ``(qualified_code_str, obj)`` where:
@@ -143,12 +157,12 @@ class FFLConverter:
 
     def __init__(
         self,
-        fixed_var: str = 'x',
+        reserved_symbols: Optional[Mapping[str, str]] = None,
         custom_functions: Optional[Dict[str, "FFLConverter.CustomFuncEntry"]] = None,
         extra_sympy_funcs: Optional[Dict[str, str]] = None,
         extra_constants: Optional[Dict[str, str]] = None,
     ) -> None:
-        self._fixed_var = fixed_var
+        self._reserved_symbols: Dict[str, str] = dict(reserved_symbols or {})
         # Per-rule wildcard tracking (reset per rule via reset())
         self._wildcards_non_optional: Set[str] = set()
         self._wildcards_optional: Set[str] = set()
@@ -165,7 +179,9 @@ class FFLConverter:
         if extra_constants:
             self.CONSTANT_MAP = {**self.CONSTANT_MAP, **extra_constants}
 
-        # Eval namespace for simplify_code round-trip
+        # Namespace the emitted code is evaluated against (see `namespace`).
+        # Built here so every converter starts from the same base names; the
+        # caller's own entries are layered on top by `use_namespace`.
         self._eval_ns: Dict[str, Any] = {
             'sympy': sympy, 'Integer': Integer, 'Rational': Rational,
             'Symbol': Symbol, 'WildSymbol': WildSymbol,
@@ -205,8 +221,9 @@ class FFLConverter:
             if obj is None:
                 continue
             if '.' in code_str:
-                # Only register the namespace prefix (e.g. 'rubi_utils') so that
-                # eval('rubi_utils.Subst(...)') works.  Do NOT register the short
+                # Only register the module prefix (e.g. 'my_module' for a code_str
+                # of 'my_module.Foo') so that eval('my_module.Foo(...)') works.
+                # Do NOT register the short
                 # name ('Subst') — the generated code uses the qualified form and
                 # simplify_code must preserve it.
                 ns_key = code_str.split('.')[0]
@@ -219,12 +236,14 @@ class FFLConverter:
     # -------------------------------------------------------------------------
 
     @property
-    def fixed_var(self) -> str:
-        return self._fixed_var
+    def reserved_symbols(self) -> Dict[str, str]:
+        """Wolfram symbol name -> Python identifier, for names that are BOUND
+        externally and must therefore never become pattern wildcards."""
+        return self._reserved_symbols
 
-    @fixed_var.setter
-    def fixed_var(self, val: str) -> None:
-        self._fixed_var = val
+    @reserved_symbols.setter
+    def reserved_symbols(self, val: Optional[Mapping[str, str]]) -> None:
+        self._reserved_symbols = dict(val or {})
 
     @property
     def wildcards_non_optional(self) -> Set[str]:
@@ -237,6 +256,21 @@ class FFLConverter:
     @property
     def eval_ns(self) -> Dict[str, Any]:
         return self._eval_ns
+
+    def use_namespace(self, namespace: Dict[str, Any]) -> Dict[str, Any]:
+        """Adopt *namespace* as this converter's evaluation namespace, in place.
+
+        The dict is seeded with the converter's base names, then the caller's own
+        entries are restored on top (so a caller can override any base name), and
+        finally every wildcard discovered during conversion is written into it.
+        The SAME dict object is returned, so after converting it can `eval` the
+        emitted code.
+        """
+        caller_entries = dict(namespace)
+        namespace.update(self._eval_ns)
+        namespace.update(caller_entries)
+        self._eval_ns = namespace
+        return namespace
 
     @property
     def wild_defs(self) -> List[str]:
@@ -446,9 +480,9 @@ class FFLConverter:
             return f"Rational('{atom}')"
         except ValueError:
             pass
-        # Fixed variable (non-wildcard)
-        if atom == self._fixed_var:
-            return 'x'
+        # Externally-bound symbol: emit its Python identifier, not a wildcard.
+        if atom in self._reserved_symbols:
+            return self._reserved_symbols[atom]
         # Known wildcard references
         if atom in self._wildcards_optional:
             var_name = f'_{atom}_'
@@ -471,8 +505,8 @@ class FFLConverter:
     def _pattern_to_code(self, ffl) -> str:
         """['Pattern', name, ['Blank', ...]] -> wildcard reference."""
         name = ffl[1]
-        if name == self._fixed_var:
-            return 'x'
+        if name in self._reserved_symbols:
+            return self._reserved_symbols[name]
         self._wildcards_non_optional.add(name)
         var_name = f'{name}_'
         def_str = f"{var_name} = WildSymbol('{name}')"
@@ -486,14 +520,14 @@ class FFLConverter:
         inner = ffl[1]
         if isinstance(inner, list) and inner[0] == 'Pattern':
             name = inner[1]
-            if name == self._fixed_var:
-                # ``x_.`` where ``x`` is ALSO bound as the fixed variable (``x_Symbol``).
+            if name in self._reserved_symbols:
+                # ``x_.`` where ``x`` is ALSO bound externally (e.g. by ``x_Symbol``).
                 # Both bind the same name, so the "absent" branch would have to give
                 # ``x`` the Times identity 1 -- which then fails ``x_Symbol``. The
                 # optional branch is therefore unreachable and the factor is in fact
                 # mandatory. Verified in Mathematica: ``g[x_.*h[x_], x_Symbol]``
                 # matches ``g[z h[z], z]`` but NOT ``g[h[z], z]``.
-                return 'x'
+                return self._reserved_symbols[name]
             self._wildcards_non_optional.add(name)
             self._wildcards_optional.add(name)
             var_name = f'_{name}_'
@@ -576,3 +610,357 @@ class FFLConverter:
                 for child in ffl[1:]:
                     result.update(FFLConverter._collect_slots(child))
         return result
+
+
+# ---------------------------------------------------------------------------
+# FFL-level API (skip Mathematica parsing)
+# ---------------------------------------------------------------------------
+
+
+def ffl_to_sympy_code(
+    ffl: Any,
+    reserved_symbols: Optional[Mapping[str, str]] = None,
+    namespace: Optional[Dict[str, Any]] = None,
+    custom_functions: Optional[CustomFunctionsDict] = None,
+    wildcards: Optional[Set[str]] = None,
+    optional_wildcards: Optional[Set[str]] = None,
+) -> Tuple[str, List[str], list[str]]:
+    """Convert a Full-Form List to an eval-able Python code string.
+
+    This is the lower-level entry point that operates directly on an FFL
+    structure, skipping the Mathematica string-parsing step.
+
+    Parameters
+    ----------
+    ffl : list or str
+        A Full-Form List (nested list), e.g. ``['Power', 'x', '2']``.
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names bound externally by
+        the caller (never turned into pattern wildcards).
+    custom_functions : dict, optional
+        Mapping from Wolfram head names to custom callables.  Each value is
+        a 2-tuple ``(qualified_code_str, obj)``—see
+        :class:`~.ffl_to_sympy.FFLConverter` for details.
+    wildcards : set of str, optional
+        Pre-known non-optional wildcard names.  Bare atoms matching these
+        names will be emitted as ``name_`` references (useful when processing
+        replacement/constraint FFL where wildcards appear as plain atoms
+        rather than ``['Pattern', ...]`` nodes).
+    optional_wildcards : set of str, optional
+        Pre-known optional wildcard names.  Bare atoms matching these names
+        will be emitted as ``_name_`` references.
+
+    namespace : dict, optional
+        The namespace the emitted code can be evaluated in. UPDATED IN PLACE with
+        the base SymPy names, the reserved symbols and every wildcard discovered
+        during conversion. Pass your own dict to add names of your own; they take
+        precedence over the base names.
+
+    Returns
+    -------
+    code : str
+        A Python expression string that evaluates to a SymPy ``Basic`` object.
+    wild_defs : list of str
+        Variable definition statements for WildSymbol declarations.
+    symbols : list of str
+        Names of the plain symbols encountered.
+
+    Examples
+    --------
+    >>> ns = {}
+    >>> code, defs, symbols = ffl_to_sympy_code(['Power', 'x', '2'], {'x': 'x'}, ns)
+    >>> code
+    '(x)**(Integer(2))'
+    >>> eval(code, ns)
+    x**2
+    """
+    converter = FFLConverter(reserved_symbols=reserved_symbols,
+                             custom_functions=custom_functions)
+    if wildcards:
+        converter._wildcards_non_optional.update(wildcards)
+    if optional_wildcards:
+        converter._wildcards_optional.update(optional_wildcards)
+        converter._wildcards_non_optional.update(optional_wildcards)
+
+    # The caller's namespace is filled in place, in order of increasing priority:
+    #   base SymPy names  <  reserved symbols  <  the caller's own entries
+    # and then, during convert(), every wildcard the conversion discovers.
+    # A reserved symbol MUST beat the base names: the base binds ``x`` to
+    # Symbol('x'), but a rule written over ``t`` maps 't' -> identifier 'x' and
+    # needs that identifier to evaluate to Symbol('t').
+    if namespace is None:
+        namespace = {}
+    caller_entries = dict(namespace)
+    converter.use_namespace(namespace)
+    for wolfram_name, identifier in (reserved_symbols or {}).items():
+        namespace[identifier] = Symbol(wolfram_name)
+    namespace.update(caller_entries)
+
+    code = converter.convert(ffl)
+    return code, converter.wild_defs, sorted(converter._symbols)
+
+
+def _simplify_code(code: str, ns: Dict[str, Any],
+                   str_printer: Optional[StrPrinter] = None) -> str:
+    """Shorten *code* by round-tripping it through a printer, when that is safe.
+
+    ``eval`` the code, print the resulting object with *str_printer*, and keep the
+    printed form only if evaluating it back in *ns* reproduces the same object --
+    so the shortening can never change meaning. Otherwise return *code* unchanged.
+
+    *str_printer* defaults to :data:`_wild_printer`, which prints WildSymbol with
+    the ``m_`` / ``_m_`` variable-name convention rather than the bare SymPy name.
+    Pass any other :class:`~sympy.printing.str.StrPrinter` subclass to control the
+    emitted style.
+
+    The equality test also accepts a symbolic match (``(recovered - obj).simplify()
+    == 0``), not just structural equality, which shortens a few forms that are
+    equal but not identical.
+    """
+    printer = str_printer if str_printer is not None else _wild_printer
+    try:
+        obj = eval(code, ns)
+        short = printer.doprint(obj)
+        recovered = eval(short, ns)
+        if isinstance(recovered, sympy.Basic):
+            if recovered == obj:
+                return short
+            if (recovered - obj).simplify() == 0:
+                return short
+    except Exception:
+        pass
+    return code
+
+
+def ffl_to_sympy_short_code(
+    ffl: Any,
+    reserved_symbols: Optional[Mapping[str, str]] = None,
+    namespace: Optional[Dict[str, Any]] = None,
+    custom_functions: Optional[CustomFunctionsDict] = None,
+    wildcards: Optional[Set[str]] = None,
+    optional_wildcards: Optional[Set[str]] = None,
+    str_printer: Optional[StrPrinter] = None,
+) -> Tuple[str, List[str], list[str]]:
+    """Like :func:`ffl_to_sympy_code` but with a simplification pass.
+
+    Operates directly on an FFL structure, skipping Mathematica parsing.
+
+    Parameters
+    ----------
+    ffl : list or str
+        A Full-Form List (nested list).
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names bound externally by
+        the caller (never turned into pattern wildcards).
+    namespace : dict, optional
+        The namespace the emitted code is verified against. UPDATED IN PLACE with
+        the base SymPy names, the reserved symbols and every wildcard discovered
+        during conversion, so afterwards it can ``eval`` the returned code. Pass
+        your own dict to make additional names visible to the round-trip.
+    custom_functions : dict, optional
+        Mapping from Wolfram head names to custom callables.
+    wildcards : set of str, optional
+        Pre-known non-optional wildcard names (see :func:`ffl_to_sympy_code`).
+    optional_wildcards : set of str, optional
+        Pre-known optional wildcard names (see :func:`ffl_to_sympy_code`).
+    str_printer : StrPrinter, optional
+        Printer used for the shortening round-trip. Defaults to a printer that
+        renders WildSymbol as ``m_`` / ``_m_``; pass any StrPrinter subclass to
+        control the emitted style. See :func:`_simplify_code`.
+
+    Returns
+    -------
+    short_code : str
+        A (possibly simplified) Python expression string.
+    wild_defs : list of str
+        WildSymbol variable definitions.
+    symbols : list of str
+        Names of the plain symbols encountered.
+
+    Examples
+    --------
+    >>> ns = {}
+    >>> short, defs, symbols = ffl_to_sympy_short_code(['Power', 'x', '2'], {'x': 'x'}, ns)
+    >>> short
+    'x**2'
+    >>> eval(short, ns)
+    x**2
+    """
+    if namespace is None:
+        namespace = {}
+    code, wild_defs, symbols = ffl_to_sympy_code(
+        ffl, reserved_symbols, namespace, custom_functions=custom_functions,
+        wildcards=wildcards, optional_wildcards=optional_wildcards,
+    )
+    return _simplify_code(code, namespace, str_printer), wild_defs, symbols
+
+
+# ---------------------------------------------------------------------------
+# Mathematica-string-level API (parse + delegate to FFL API)
+# ---------------------------------------------------------------------------
+
+
+def mathematica_to_sympy_code(
+    expr_str: str,
+    reserved_symbols: Optional[Mapping[str, str]] = None,
+    namespace: Optional[Dict[str, Any]] = None,
+    custom_functions: Optional[CustomFunctionsDict] = None,
+) -> Tuple[str, List[str], list[str]]:
+    """Convert a Mathematica expression string to an eval-able Python code string.
+
+    Pipeline: Mathematica notation → FFL → SymPy code string.
+    Equivalent to ``ffl_to_sympy_code(mathematica_to_ffl(expr_str), ...)``.
+
+    Parameters
+    ----------
+    expr_str : str
+        Mathematica expression in standard notation.
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names bound externally by
+        the caller (never turned into pattern wildcards).
+    custom_functions : dict, optional
+        Mapping from Wolfram head names to custom callables.  Each value is
+        a 2-tuple ``(qualified_code_str, obj)``—see
+        :class:`~.ffl_to_sympy.FFLConverter` for details.
+
+    Returns
+    -------
+    code : str
+        A Python expression string that evaluates to a SymPy ``Basic`` object.
+        Uses ``sympy.*`` qualified names, ``Integer(...)``, ``Rational(...)``,
+        ``Symbol(...)`` etc.  Pattern variables are referenced by name
+        (e.g. ``m_`` or ``_m_``) and defined in *wild_defs*.
+    eval_ns : dict
+        A namespace dictionary suitable for passing to ``eval(code, eval_ns)``.
+        Contains ``sympy``, common functions, a ``Symbol`` for each reserved
+        name, and any WildSymbol variables.
+    wild_defs : list of str
+        Variable definition statements for WildSymbol declarations.  Each
+        entry is a Python assignment string (e.g.
+        ``"m_ = WildSymbol('m')"``) that should be exec'd before eval'ing
+        *code* if building a standalone script.  The eval_ns already contains
+        these bindings, so they are informational for code-generation use.
+
+    Examples
+    --------
+    >>> code, ns, defs, _symbols = mathematica_to_sympy_code("Sin[x] + x^2")
+    >>> code
+    '(sympy.sin(x) + (x)**(Integer(2)))'
+    >>> eval(code, ns)
+    x**2 + sin(x)
+
+    >>> code, ns, defs, _symbols = mathematica_to_sympy_code("m_")
+    >>> code
+    'm_'
+    >>> defs
+    ["m_ = WildSymbol('m')"]
+    """
+    ffl = mathematica_to_ffl(expr_str)
+    return ffl_to_sympy_code(ffl, reserved_symbols, namespace,
+                             custom_functions=custom_functions)
+
+
+def mathematica_to_sympy_short_code(
+    expr_str: str,
+    reserved_symbols: Optional[Mapping[str, str]] = None,
+    namespace: Optional[Dict[str, Any]] = None,
+    custom_functions: Optional[CustomFunctionsDict] = None,
+    str_printer: Optional[StrPrinter] = None,
+) -> Tuple[str, List[str], list[str]]:
+    """Like :func:`mathematica_to_sympy_code` but with a simplification pass.
+
+    Pipeline: Mathematica notation → FFL → simplified code string.
+    Equivalent to ``ffl_to_sympy_short_code(mathematica_to_ffl(expr_str), ...)``.
+
+    Parameters
+    ----------
+    expr_str : str
+        Mathematica expression in standard notation.
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names bound externally by
+        the caller (never turned into pattern wildcards).
+    namespace : dict, optional
+        Namespace the code is verified against; updated in place (see
+        :func:`ffl_to_sympy_short_code`). Pre-populate it with any free
+        parameters the expression mentions.
+    custom_functions : dict, optional
+        Mapping from Wolfram head names to custom callables.  See
+        :class:`~.ffl_to_sympy.FFLConverter` for details.
+
+    Returns
+    -------
+    short_code : str
+        A (possibly simplified) Python expression string.
+    wild_defs : list of str
+        WildSymbol variable definitions (same as from
+        :func:`mathematica_to_sympy_code`).
+    symbols : list of str
+        Names of the plain symbols encountered.
+
+    Examples
+    --------
+    >>> ns = {}
+    >>> short, defs, symbols = mathematica_to_sympy_short_code(
+    ...     "Sin[x] + x^2", {'x': 'x'}, ns)
+    >>> short
+    'x**2 + sin(x)'
+    >>> eval(short, ns)
+    x**2 + sin(x)
+
+    >>> ns = {'a': Symbol('a'), 'b': Symbol('b'), 'm': Symbol('m')}
+    >>> short, defs, symbols = mathematica_to_sympy_short_code(
+    ...     "(a + b*x)^m", {'x': 'x'}, ns)
+    >>> short
+    '(a + b*x)**m'
+    """
+    ffl = mathematica_to_ffl(expr_str)
+    return ffl_to_sympy_short_code(
+        ffl, reserved_symbols, namespace,
+        custom_functions=custom_functions, str_printer=str_printer,
+    )
+
+
+def mathematica_to_sympy(
+    expr_str: str,
+    reserved_symbols: Optional[Mapping[str, str]] = None,
+    namespace: Optional[Dict[str, Any]] = None,
+    custom_functions: Optional[CustomFunctionsDict] = None,
+) -> sympy.Basic:
+    """Convert a Mathematica expression string directly to a SymPy object.
+
+    Pipeline: Mathematica notation → FFL → SymPy code string → eval.
+
+    Parameters
+    ----------
+    expr_str : str
+        Mathematica expression in standard notation.
+    reserved_symbols : mapping of str to str, optional
+        Wolfram symbol name -> Python identifier, for names bound externally by
+        the caller (never turned into pattern wildcards).
+    namespace : dict, optional
+        Namespace the code is evaluated in; updated in place. Pre-populate it so
+        free parameters evaluate to the SymPy symbols you intend.
+    custom_functions : dict, optional
+        Mapping from Wolfram head names to custom callables.  See
+        :class:`~.ffl_to_sympy.FFLConverter` for details.
+
+    Returns
+    -------
+    sympy.Basic
+        The resulting SymPy expression.
+
+    Examples
+    --------
+    >>> from sympy import Symbol, sin
+    >>> mathematica_to_sympy("Sin[x]") == sin(Symbol('x'))
+    True
+    >>> a, b, x = Symbol('a'), Symbol('b'), Symbol('x')
+    >>> mathematica_to_sympy("(a + b*x)^2", namespace={'a': a, 'b': b})
+    (a + b*x)**2
+    """
+    if namespace is None:
+        namespace = {}
+    code, _wild_defs, _symbols = mathematica_to_sympy_code(
+        expr_str, reserved_symbols, namespace, custom_functions=custom_functions
+    )
+    return eval(code, namespace)

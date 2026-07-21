@@ -26,7 +26,7 @@ than re-implement the logic (e.g. ``ExpandToSum._evaluate`` must delegate — pl
 produce the canonical ``a+b*x+c*x**2`` the rule patterns match).
 
 Common Wolfram Mathematica expression classes shared with other packages are
-re-exported from ``sympy_wolfram.mathematica_expressions``. Only RUBI-specific
+re-exported from ``sympy_wolfram.objects``. Only RUBI-specific
 expressions and wrappers around RUBI utility functions are defined locally.
 
 Mathematica originals are documented in:
@@ -38,7 +38,7 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
                    Poly, frac, floor, Expr)
 
 from sympy_matching import RubiConstraint
-from sympy_wolfram.mathematica_expressions import (
+from sympy_wolfram.objects import (
     CompoundExpression,
     Condition,   # standard Wolfram node; defined in sympy_wolfram, re-exported here
     Head,
@@ -51,7 +51,7 @@ from sympy_wolfram.mathematica_expressions import (
     D,
     _condition_holds,
 )
-from sympy_wolfram.mathematica_functions import (
+from sympy_wolfram.objects import (
     Gamma,
 )
 

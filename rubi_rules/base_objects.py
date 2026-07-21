@@ -19,7 +19,7 @@ from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
 from sympy_matching.constraints import RubiConstraint
-from sympy_wolfram.mathematica_expressions import rename_scoped_locals
+from sympy_wolfram.objects import rename_scoped_locals
 
 
 class Int(sympy.Function):

@@ -26,21 +26,39 @@ from typing import Dict, List, Optional, Set, Tuple
 from collections import defaultdict
 
 from rubi_rules.utils import rubi_utils
-from sympy_wolfram import FFLConverter, mathematica_expressions
-from sympy_wolfram.mathematica_parser import ffl_to_sympy_short_code
+from sympy_wolfram import FFLConverter
+from sympy_wolfram import objects as wolfram_objects
+from sympy_wolfram.interpreter import ffl_to_sympy_short_code
 
 
 # =============================================================================
 # Rubi-specific FFL helpers (operate on Int[integrand, x_Symbol] structure)
 # =============================================================================
 
-def _extract_fixed_var_from_lhs(lhs) -> str:
-    """Extract fixed variable name from Int[..., x_Symbol] LHS."""
+def _integration_variable(lhs) -> str:
+    """Name of the integration variable in an ``Int[integrand, x_Symbol]`` LHS.
+
+    Rubi writes most rules over ``x`` but a few use another letter. Whatever it is
+    called in the source, it is BOUND by the rule (it is the variable being
+    integrated over), so it must never be translated into a pattern wildcard --
+    it is passed to the converter as a reserved symbol mapped to the identifier
+    ``x``, which is the canonical variable the emitted modules declare.
+    """
     if isinstance(lhs, list) and lhs[0] == 'Int' and len(lhs) >= 3:
         var_pat = lhs[2]
         if isinstance(var_pat, list) and var_pat[0] == 'Pattern':
             return var_pat[1]
     return 'x'
+
+
+# The canonical identifier every generated module declares for the integration
+# variable (`x = Symbol('x')` in the header).
+CANONICAL_VAR = 'x'
+
+
+def _reserved_symbols(lhs) -> Dict[str, str]:
+    """Reserved-symbol map for a rule: its integration variable -> ``x``."""
+    return {_integration_variable(lhs): CANONICAL_VAR}
 
 
 def _collect_wildcards_from_rules(converter, rules):
@@ -61,7 +79,7 @@ def _collect_wildcards_from_rules(converter, rules):
         if not isinstance(lhs, list) or lhs[0] != 'Int':
             continue
         converter.reset()
-        converter.fixed_var = _extract_fixed_var_from_lhs(lhs)
+        converter.reserved_symbols = _reserved_symbols(lhs)
         # Rewrite function-head wildcards F_[..] into WildHeadApp[F_, ..] first, so
         # converting the pattern discovers F and the argument wildcards normally
         # (the raw form has a non-string head and would abort the scan early).
@@ -489,7 +507,7 @@ def _build_replacement_custom_functions() -> dict:
         custom[head] = (code_str, obj)
     # Use sympy.Function so simplify_code round-trip works (eval→print→eval)
     custom['Int'] = ('Int', _sympy.Function('Int'))
-    custom['List'] = ('List', mathematica_expressions.List)
+    custom['List'] = ('List', wolfram_objects.List)
     return custom
 
 
@@ -623,23 +641,13 @@ class RubiRuleTranslator:
         # Generate wildcard declarations
         wc_lines = []
         for name in sorted(all_non_optional | all_optional):
-            if name == self._converter.fixed_var:
-                continue
+            if name in self._converter.reserved_symbols:
+                continue  # the integration variable is declared separately, as `x`
             if name in all_optional:
                 wc_lines.append(f"_{name}_ = WildSymbol('{name}', optional_value=IDENTITY_ELEMENT)")
             if name in all_non_optional:
                 wc_lines.append(f"{name}_ = WildSymbol('{name}')")
         wc_section = '\n'.join(wc_lines) + '\n\n' if wc_lines else ''
-
-        # Build eval namespace with wildcard symbols for simplification
-        import sympy
-        eval_ns = dict(self._converter.eval_ns)
-        eval_ns['x'] = sympy.Symbol('x')
-        eval_ns['SympyTuple'] = sympy.Tuple
-        for name in all_non_optional:
-            eval_ns[f'{name}_'] = sympy.Symbol(f'{name}_')
-        for name in all_optional:
-            eval_ns[f'_{name}_'] = sympy.Symbol(f'_{name}_')
 
         # Namespace mirroring the generated module, used to validate that each
         # rule's emitted code actually loads (references only defined names).
@@ -670,7 +678,7 @@ class RubiRuleTranslator:
                 continue  # orphan / non-rule expression: don't number or emit it
             rule_number += 1
             try:
-                code = self._translate_rule(rule, rule_number, module_name, eval_ns, load_ns)
+                code = self._translate_rule(rule, rule_number, module_name, load_ns)
                 if code:
                     rule_lines.append(code)
                 else:
@@ -785,168 +793,211 @@ Max = Symbol('Max')
     # Rule translation
     # =========================================================================
 
-    def _translate_rule(self, ffl, rule_number: int, module_name: str,
-                        eval_ns: dict = None, load_ns: dict = None) -> Optional[str]:
-        """Translate a single SetDelayed FFL rule into a RubiRulePattern string."""
-        if not isinstance(ffl, list) or not ffl or ffl[0] != 'SetDelayed':
-            return None
-        if len(ffl) < 3:
-            return None
+    # -- rule translation, step by step ---------------------------------------
+    #
+    # _translate_rule() below is the whole pipeline for ONE rule and reads top to
+    # bottom; each step is a helper so the flow stays visible:
+    #
+    #   split        SetDelayed[Int[integrand, x_Symbol], rhs]  ->  parts
+    #   lift guards  the /; conditions, including ones nested in a With[...]
+    #   head wilds   F_[..] -> WildHeadApp[..] so a wildcard can BE a function head
+    #   translate    integrand / replacement / constraints -> Python code strings
+    #   validate     the emitted rule actually loads
+    #   emit         the RubiRulePattern(...) text
 
-        lhs = ffl[1]
-        rhs = ffl[2]
+    @staticmethod
+    def _split_conditions(rhs):
+        """Separate the replacement from its guards.
 
-        if not isinstance(lhs, list) or lhs[0] != 'Int':
-            return None
-
-        # Determine integration variable
-        fixed_var = _extract_fixed_var_from_lhs(lhs)
-
-        integrand_ffl = lhs[1]
-
-        # Extract top-level and nested replacement conditions.
-        condition_ffls: List[object] = []
+        A rule body is ``replacement /; condition``, and a ``With[{...}, body /; c]``
+        hides a further condition inside the body. Returns (result_ffl, conditions).
+        """
+        conditions: List[object] = []
         result_ffl = rhs
         if isinstance(rhs, list) and rhs[0] == 'Condition':
-            result_ffl = rhs[1]
-            condition_ffls.append(rhs[2])
-        result_ffl, nested_condition_ffls = _extract_nested_with_condition(result_ffl)
-        condition_ffls.extend(nested_condition_ffls)
+            result_ffl, guard = rhs[1], rhs[2]
+            conditions.append(guard)
+        result_ffl, nested = _extract_nested_with_condition(result_ffl)
+        conditions.extend(nested)
+        return result_ffl, conditions
 
-        # Function-head wildcards (F_[args...]) -> WildHeadApp[F_, args...], which
-        # converts to a MatchPy operation with a WILDCARD head (matches any
-        # function, binds the head to F, matches the arguments normally). In the
-        # replacement, F[...] becomes WFApply(F_, ...) which re-applies the bound
-        # head on doit.
-        integrand_ffl, fhw_head_names = _extract_fhw_from_pattern(integrand_ffl)
-        if fhw_head_names:
-            _head_map = {h: h for h in fhw_head_names}
-            result_ffl = _rewrite_fhw_in_replacement(result_ffl, _head_map)
-            # Conditions can mention the bound head too (e.g.
-            # ``FunctionOfQ[Derivative[n-1][f][x], u, x]``), so they need the same
-            # rewrite -- otherwise the raw non-string head aborts the whole rule.
-            condition_ffls = [_rewrite_fhw_in_replacement(c, _head_map)
-                              for c in condition_ffls]
+    @staticmethod
+    def _apply_head_wildcards(integrand_ffl, result_ffl, conditions):
+        """Rewrite function-head wildcards everywhere they occur in the rule.
 
-        # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---
-        pattern_code, _ns, wild_defs, _symbols = ffl_to_sympy_short_code(
-            integrand_ffl,
-            fixed_var=fixed_var,
-        )
+        ``F_[args]`` in the PATTERN becomes ``WildHeadApp[F_, args]``, which MatchPy
+        matches with a wildcard operation head (any function matches, and F binds to
+        the head). In the REPLACEMENT and the CONSTRAINTS the same head appears as a
+        bare name, and becomes ``WFApply[F, args]``, which re-applies the bound head
+        on doit(). Conditions need the rewrite too -- e.g.
+        ``FunctionOfQ[Derivative[n-1][f][x], u, x]`` -- otherwise the raw non-string
+        head aborts the whole rule.
+        """
+        integrand_ffl, head_names = _extract_fhw_from_pattern(integrand_ffl)
+        if head_names:
+            head_map = {h: h for h in head_names}
+            result_ffl = _rewrite_fhw_in_replacement(result_ffl, head_map)
+            conditions = [_rewrite_fhw_in_replacement(c, head_map) for c in conditions]
+        return integrand_ffl, result_ffl, conditions
 
-        # Extract wildcard names from wild_defs for propagation
-        non_opt_wildcards: set = set()
-        opt_wildcards: set = set()
-        for d in wild_defs:
-            var_name = d.split('=')[0].strip()
+    @staticmethod
+    def _wildcard_names(wild_defs):
+        """Split the emitted ``m_ = WildSymbol(...)`` lines into (plain, optional).
+
+        The pattern translation is what DISCOVERS a rule's wildcards; the
+        replacement and constraints must be told about them, because there they
+        appear as bare atoms rather than ``Pattern[...]`` nodes.
+        """
+        plain, optional = set(), set()
+        for definition in wild_defs:
+            var_name = definition.split('=')[0].strip()
             if var_name.startswith('_') and var_name.endswith('_'):
-                opt_wildcards.add(var_name[1:-1])
+                optional.add(var_name[1:-1])
             elif var_name.endswith('_'):
-                non_opt_wildcards.add(var_name[:-1])
+                plain.add(var_name[:-1])
+        return plain, optional
 
-        # --- Replacement: use ffl_to_sympy_short_code with custom_functions ---
-        replacement_code, _, _, _symbols = ffl_to_sympy_short_code(
-            result_ffl,
-            fixed_var=fixed_var,
-            custom_functions=_REPLACEMENT_CUSTOM,
-            wildcards=non_opt_wildcards,
-            optional_wildcards=opt_wildcards,
-        )
+    def _translate_constraints(self, conditions, reserved, plain_wilds, opt_wilds):
+        """Translate the guards into constraint code, dropping only what is safe.
 
-        # --- Constraints: use ffl_to_sympy_short_code with custom_functions ---
-        # If condition is And[...], flatten into separate constraint items
-        # (the constraints tuple already implies conjunction).
-        #
-        # Constraints that reference a function-head wildcard (``F_[v_]``) cannot
-        # be translated yet (see ffl_to_sympy). Rather than drop the WHOLE rule,
-        # we drop *only* an EXCLUSIONARY ``Not[... MatchQ ...]`` conjunct and keep
-        # the rest. Removing an exclusion merely broadens which integrands the
-        # rule is *offered*; for these substitution meta-rules the result is still
-        # correct (verified for rule 2692 -> the FunctionOfExponential family) and
-        # the matcher's natural rule ordering keeps it from stealing forms a
-        # specific rule handles. We must NOT drop a *positive* requirement (a bare
-        # ``MatchQ`` or an ``Or[..., MatchQ]`` disjunction): removing it broadens
-        # the rule unsafely and can yield wrong answers -- such a rule stays fully
-        # skipped, exactly as before. Dropped guards are recorded in a comment.
-        constraint_parts: List[str] = []
-        dropped_guards: List[str] = []
+        A top-level ``And[...]`` is flattened, since the constraints tuple already
+        means conjunction.
 
-        def _translate_conjunct(child):
+        A guard mentioning a function-head wildcard cannot be translated. Rather
+        than lose the whole rule we drop ONLY an exclusionary ``Not[...]`` guard:
+        removing an exclusion merely broadens which integrands the rule is offered,
+        and for these substitution meta-rules the result is still correct (verified
+        for rule 2692 -> the FunctionOfExponential family), with the matcher's rule
+        ordering keeping it from stealing forms a specific rule handles. A POSITIVE
+        requirement (a bare ``MatchQ``, or ``Or[..., MatchQ]``) is never dropped --
+        that would broaden the rule unsafely and can yield wrong answers, so such a
+        rule stays fully skipped. Whatever is dropped is recorded in a comment.
+
+        Returns (constraints_fragment, dropped_guard_summaries).
+        """
+        parts: List[str] = []
+        dropped: List[str] = []
+
+        def translate(guard):
             try:
-                code, _, _, _ = ffl_to_sympy_short_code(
-                    child,
-                    fixed_var=fixed_var,
+                code, _, _ = ffl_to_sympy_short_code(
+                    guard,
+                    reserved,
+                    namespace={},
                     custom_functions=_CONSTRAINT_CUSTOM,
-                    wildcards=non_opt_wildcards,
-                    optional_wildcards=opt_wildcards,
+                    wildcards=plain_wilds,
+                    optional_wildcards=opt_wilds,
                 )
                 return code
             except ValueError as exc:
-                is_fhw = ('function-head wildcard' in str(exc)
-                          or 'Non-string function head' in str(exc))
-                # Only tolerate the FHW error for an exclusionary Not[...] guard.
-                is_exclusion = isinstance(child, list) and child and child[0] == 'Not'
-                if is_fhw and is_exclusion:
-                    dropped_guards.append(_summarize_ffl_guard(child))
+                mentions_head_wildcard = ('function-head wildcard' in str(exc)
+                                          or 'Non-string function head' in str(exc))
+                is_exclusion = isinstance(guard, list) and guard and guard[0] == 'Not'
+                if mentions_head_wildcard and is_exclusion:
+                    dropped.append(_summarize_ffl_guard(guard))
                     return None
                 raise
 
-        for condition_ffl in condition_ffls:
-            if isinstance(condition_ffl, list) and condition_ffl[0] == 'And':
-                # Flatten top-level And into separate constraints.
-                for child in condition_ffl[1:]:
-                    code = _translate_conjunct(child)
-                    if code is not None:
-                        constraint_parts.append(code)
-            else:
-                code = _translate_conjunct(condition_ffl)
+        for condition in conditions:
+            conjuncts = (condition[1:]
+                         if isinstance(condition, list) and condition[0] == 'And'
+                         else [condition])
+            for conjunct in conjuncts:
+                code = translate(conjunct)
                 if code is not None:
-                    constraint_parts.append(code)
+                    parts.append(code)
 
-        constraint_str = ', '.join(constraint_parts)
+        fragment = f"({', '.join(parts)},)" if parts else "()"
+        return fragment, dropped
 
-        constraints_frag = f"({constraint_str},)" if constraint_str else "()"
+    @staticmethod
+    def _check_rule_loads(load_ns, probe, module_name, rule_number):
+        """Fail translation if the emitted rule would not import.
 
-        # Validate that the emitted rule actually loads (see load_ns in
-        # translate_module). A NameError/etc. here means the rule references an
-        # unsupported name; skip it rather than let it break the whole module.
-        if load_ns is not None:
-            probe = (
-                f"RubiRulePattern(pattern=Int({pattern_code}, x), "
-                f"constraints={constraints_frag}, replacement={replacement_code}, "
-                f"module_name={module_name!r}, rule_number={rule_number})"
-            )
-            try:
-                eval(compile(probe, f'<{module_name} rule {rule_number}>', 'eval'), load_ns)
-            except TypeError as e:
-                # A Rubi predicate called with the wrong number of arguments is an
-                # upstream typo in the .m source (e.g. `NeQ[e^2-4*d*f]`, missing the
-                # `,0`). Mathematica does NOT silently accept it either: Rubi guards
-                # every predicate with `CheckArguments`, so the call stays
-                # unevaluated, the `&&` guard is not True, and the rule never fires.
-                # Skipping it here is therefore faithful to Rubi, not a limitation.
-                if 'positional argument' in str(e):
-                    raise ValueError(
-                        f"upstream Rubi arity typo (rule is inert in Mathematica too): "
-                        f"{type(e).__name__}: {e}")
-                raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
-            except Exception as e:
-                raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
+        A rule can translate cleanly and still reference a name the generator does
+        not provide; left in place it would raise at import time and take the whole
+        module's RULES list down with it.
+        """
+        if load_ns is None:
+            return
+        try:
+            eval(compile(probe, f'<{module_name} rule {rule_number}>', 'eval'), load_ns)
+        except TypeError as e:
+            # A Rubi predicate called with the wrong number of arguments is an
+            # upstream typo in the .m source (e.g. `NeQ[e^2-4*d*f]`, missing the
+            # `,0`). Mathematica does NOT silently accept it either: Rubi guards
+            # every predicate with `CheckArguments`, so the call stays unevaluated,
+            # the `&&` guard is not True, and the rule never fires. Skipping it here
+            # is therefore faithful to Rubi, not a limitation of this port.
+            if 'positional argument' in str(e):
+                raise ValueError(
+                    f"upstream Rubi arity typo (rule is inert in Mathematica too): "
+                    f"{type(e).__name__}: {e}")
+            raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
+        except Exception as e:
+            raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
 
-        # Build the RubiRulePattern entry
-        lines_out = []
-        lines_out.append(f"    # Rule {rule_number}")
-        for g in dropped_guards:
-            lines_out.append(
-                f"    # NOTE: dropped guard (function-head wildcard, not yet translatable): {g}"
-            )
-        lines_out.append(f"    RubiRulePattern(")
-        lines_out.append(f"        pattern=Int({pattern_code}, x),")
-        lines_out.append(f"        constraints={constraints_frag},")
-        lines_out.append(f"        replacement={replacement_code},")
-        lines_out.append(f"        module_name={module_name!r},")
-        lines_out.append(f"        rule_number={rule_number},")
-        lines_out.append(f"    ),")
+    def _translate_rule(self, ffl, rule_number: int, module_name: str,
+                        load_ns: dict = None) -> Optional[str]:
+        """Translate one ``SetDelayed`` FFL rule into RubiRulePattern source text.
+
+        Returns None when `ffl` is not an integration rule at all (see the
+        `non_rules` counter in translate_module); raises ValueError when it is one
+        but cannot be translated.
+        """
+        if not (isinstance(ffl, list) and len(ffl) >= 3 and ffl[0] == 'SetDelayed'):
+            return None
+        lhs, rhs = ffl[1], ffl[2]
+        if not isinstance(lhs, list) or lhs[0] != 'Int':
+            return None  # a utility predicate defined in a rule file, not a rule
+
+        # The integration variable is bound by the rule, so it is reserved rather
+        # than a pattern wildcard, and is emitted as the canonical identifier `x`.
+        reserved = _reserved_symbols(lhs)
+        integrand_ffl = lhs[1]
+
+        result_ffl, conditions = self._split_conditions(rhs)
+        integrand_ffl, result_ffl, conditions = self._apply_head_wildcards(
+            integrand_ffl, result_ffl, conditions)
+
+        # Each translation below verifies its code by evaluating it, in the dict
+        # passed as `namespace`. That dict is filled in place -- base SymPy names,
+        # the reserved variable, then every wildcard discovered -- so passing a
+        # FRESH dict per call keeps one rule's wildcards out of the next one.
+        pattern_code, wild_defs, _symbols = ffl_to_sympy_short_code(
+            integrand_ffl, reserved, namespace={})
+
+        plain_wilds, opt_wilds = self._wildcard_names(wild_defs)
+
+        replacement_code, _, _symbols = ffl_to_sympy_short_code(
+            result_ffl, reserved, namespace={},
+            custom_functions=_REPLACEMENT_CUSTOM,
+            wildcards=plain_wilds, optional_wildcards=opt_wilds)
+
+        constraints_frag, dropped_guards = self._translate_constraints(
+            conditions, reserved, plain_wilds, opt_wilds)
+
+        probe = (
+            f"RubiRulePattern(pattern=Int({pattern_code}, x), "
+            f"constraints={constraints_frag}, replacement={replacement_code}, "
+            f"module_name={module_name!r}, rule_number={rule_number})"
+        )
+        self._check_rule_loads(load_ns, probe, module_name, rule_number)
+
+        lines_out = [f"    # Rule {rule_number}"]
+        lines_out += [
+            f"    # NOTE: dropped guard (function-head wildcard, not yet translatable): {g}"
+            for g in dropped_guards
+        ]
+        lines_out += [
+            f"    RubiRulePattern(",
+            f"        pattern=Int({pattern_code}, x),",
+            f"        constraints={constraints_frag},",
+            f"        replacement={replacement_code},",
+            f"        module_name={module_name!r},",
+            f"        rule_number={rule_number},",
+            f"    ),",
+        ]
         return '\n'.join(lines_out)
 
 
