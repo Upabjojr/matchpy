@@ -338,6 +338,16 @@ def load_rule_patterns(
     return integrator.load_rule_patterns(pattern)
 
 
+def _has_cannot_integrate(expr) -> bool:
+    """True if `expr` carries a `CannotIntegrate` marker.
+
+    Matched by head *name* for the same reason as in `_dfs_is_clean`: round-tripping
+    a replacement through MatchPy can turn the `rubi_utils.CannotIntegrate` node into
+    a plain undefined `Function('CannotIntegrate')`, which an isinstance check misses.
+    """
+    return any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
+
+
 def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
     mp_expr = to_expression(Int(expr, x))
     if seen is not None:
@@ -366,6 +376,15 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
     if x not in expr.free_symbols:
         return expr * x, []
     if expr.is_Add:
+        # A few Rubi rules have a SUM as their pattern -- the product rule
+        # (Int[f'g + f g'] -> f g), the quotient rule, and friends. Splitting the
+        # sum here unconditionally, as we used to, made those rules unreachable:
+        # by the time the matcher ran, the sum was already two separate integrals.
+        # So offer the whole sum to the matcher first and only fall back to
+        # splitting if that does not actually get us anywhere.
+        whole, whole_rules = _matchpy_integrate(expr, x, replacer, seen)
+        if whole_rules and not _has_cannot_integrate(whole):
+            return whole, whole_rules
         addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer, seen) for t in expr.args])
         return sympy.Add(*addends), matched_rules
     if expr.is_Mul:
@@ -471,6 +490,16 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
     if x not in f.free_symbols:
         return f * x, False
     if f.is_Add:
+        # Some Rubi rules have a SUM as their pattern -- the product rule
+        # (Int[f'g + f g'] -> f g), the quotient rule, and friends. Splitting the
+        # sum unconditionally made those unreachable: by the time the matcher ran,
+        # the sum was already several separate integrals. Offer the whole sum to
+        # the matcher first; `_dfs_match_int` only returns a CLEAN result eagerly,
+        # so this wins only when a genuine sum rule fires, and we fall back to
+        # term-by-term splitting in every other case.
+        whole, whole_blocked = _dfs_match_int(f, x, path, replacer, applied, budget, trace)
+        if not whole_blocked and _dfs_is_clean(whole):
+            return whole, False
         parts, blocked = [], False
         for t in f.args:
             r, b = _dfs_reduce_int(t, x, path, replacer, applied, budget, trace)

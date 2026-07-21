@@ -43,11 +43,11 @@ for module_path, class_name, arity_code in SYMPY_NODES:
         if name == 'atan2':
             _MULTI_ARG_CASES.append((func, (x, y)))
         elif name == 'hyper':
-            _MULTI_ARG_CASES.append(pytest.param(func, ((S(1), S(2)), (S(3),), x),
-                                                  marks=pytest.mark.xfail(reason="hyper TupleArg roundtrip")))
+            # TupleArg parameter lists are unwrapped by the conversion, so these
+            # roundtrip exactly.
+            _MULTI_ARG_CASES.append((func, ((S(1), S(2)), (S(3),), x)))
         elif name == 'meijerg':
-            _MULTI_ARG_CASES.append(pytest.param(func, ((S(1),), (S(2),), (S(3),), (S(4),), x),
-                                                  marks=pytest.mark.xfail(reason="meijerg TupleArg roundtrip")))
+            _MULTI_ARG_CASES.append((func, ((S(1),), (S(2),), (S(3),), (S(4),), x)))
         elif name == 'appellf1':
             _MULTI_ARG_CASES.append((func, (S(1), S(2), S(3), S(4), x, y)))
         elif name == 'polylog':

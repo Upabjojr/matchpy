@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -57,6 +57,15 @@ x = Symbol('x')
 # --- Rubi global option stubs (default False/placeholder) ---
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
+
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
 
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
@@ -222,7 +231,14 @@ RULES = [
         module_name='1.3.3 P(x)^p',
         rule_number=16,
     ),
-    # Rule 17: SKIPPED - ValueError: generated rule not loadable: NameError: name 'Min' is not defined
+    # Rule 17
+    RubiRulePattern(
+        pattern=Int(_Fx_*Px_**p_, x),
+        constraints=(FreeQ(p_, x), PolyQ(Px_, x), Not(IntegerQ(p_)), Not(MonomialQ(Px_, x)), Not(PolyQ(_Fx_, x)), IGtQ(Expon(Px_, x, Min), 0),),
+        replacement=With(List(Set(Symbol('r'), Expon(Px_, x, Symbol('Min')))), Star(((Px_)**(FracPart(p_)) * (((x)**((Symbol('r') * FracPart(p_))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(FracPart(p_))))**(Integer(-1))), Int(((x)**((p_ * Symbol('r'))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(p_) * _Fx_), x))),
+        module_name='1.3.3 P(x)^p',
+        rule_number=17,
+    ),
     # Rule 18
     RubiRulePattern(
         pattern=Int(_Fx_*(x**_r_*_a_ + x**_s_*_b_)**p_, x),
@@ -250,4 +266,4 @@ RULES = [
 
 ]
 
-# Summary: 19 rules translated, 1 skipped
+# Summary: 20 rules translated, 0 skipped

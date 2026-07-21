@@ -105,6 +105,16 @@ def parse_m_file(path: Path) -> Tuple[Optional[List], Optional[str]]:
         # ``Star`` marker itself is kept and rebuilt downstream into a Star[u, v]
         # node (whose runtime behaviour is defined in rubi_utils).
         clean = re.sub(r"\\\[Star\]\s+", r"\\[Star] ", clean)
+        # Wolfram's POSTFIX derivative shorthand ``f_'[x_]``. SymPy's parser has no
+        # rule for the ``'`` operator either, and mis-associates it: the whole
+        # surrounding Plus/Times collapses into a bogus application whose head is
+        # ``Derivative[f_]``, which then fails translation. Rubi writes the SAME
+        # thing canonically as ``Derivative[1][f_][x_]`` elsewhere in these very
+        # files, and Mathematica confirms the two forms are *identical*:
+        #   FullForm[Hold[f_'[x_]]] === FullForm[Hold[Derivative[1][f_][x_]]]
+        # so rewriting to the canonical spelling is exact, not an approximation.
+        # It also routes these rules through the normal Derivative[n_][f_][x_] path.
+        clean = re.sub(r"\b([A-Za-z][A-Za-z0-9]*_)'", r"Derivative[1][\1]", clean)
         tokens = _GLOBAL_PARSER._from_mathematica_to_tokens(clean)
         ffl = _GLOBAL_PARSER._from_tokens_to_fullformlist(tokens)
         # Multiple top-level expressions arrive as CompoundExpression[e1, e2, ...]

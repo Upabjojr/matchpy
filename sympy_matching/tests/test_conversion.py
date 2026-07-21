@@ -203,14 +203,14 @@ class TestConversions:
             f"{type(expr).__name__} falls through to the generic handler"
         )
 
-    # ── Known-broken roundtrips (TupleArg / ExprCondPair) ─────────────────────
+    # ── Roundtrips of heads with an internal container arg ────────────────────
+    # hyper/meijerg hold their parameter lists as TupleArg; the conversion
+    # unwraps them, so these roundtrip exactly. Piecewise (ExprCondPair) does not.
 
-    @pytest.mark.xfail(reason="hyper uses TupleArg internally")
     def test_hyper_roundtrip(self):
         expr = hyper((S(1), S(2)), (S(3),), x)
         assert matchpy_to_sympy(to_expression(expr)) == expr
 
-    @pytest.mark.xfail(reason="meijerg uses TupleArg internally")
     def test_meijerg_roundtrip(self):
         expr = meijerg((S(1),), (S(2),), (S(3),), (S(4),), x)
         assert matchpy_to_sympy(to_expression(expr)) == expr

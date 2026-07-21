@@ -22,7 +22,8 @@ import sympy
 from sympy import Integer, Rational, Symbol
 from sympy.printing.str import StrPrinter
 
-from sympy_matching.wild import IDENTITY_ELEMENT, WildHeadApp, WildSymbol
+from sympy_matching.wild import (IDENTITY_ELEMENT, WildHeadApp, WildHeadDeriv,
+                                 WildSymbol)
 
 
 # =============================================================================
@@ -89,6 +90,7 @@ class FFLConverter:
     SYMPY_FUNC_MAP: Dict[str, str] = {
         # Wildcard function head applied to args (F_[v_]) -- see WildHeadApp
         'WildHeadApp': 'WildHeadApp',
+        'WildHeadDeriv': 'WildHeadDeriv',
         # Trigonometric
         'Sin': 'sympy.sin', 'Cos': 'sympy.cos', 'Tan': 'sympy.tan',
         'Sec': 'sympy.sec', 'Csc': 'sympy.csc', 'Cot': 'sympy.cot',
@@ -167,7 +169,7 @@ class FFLConverter:
         self._eval_ns: Dict[str, Any] = {
             'sympy': sympy, 'Integer': Integer, 'Rational': Rational,
             'Symbol': Symbol, 'WildSymbol': WildSymbol,
-            'WildHeadApp': WildHeadApp,
+            'WildHeadApp': WildHeadApp, 'WildHeadDeriv': WildHeadDeriv,
             'IDENTITY_ELEMENT': IDENTITY_ELEMENT,
             'x': Symbol('x'),
             'log': sympy.log, 'sqrt': sympy.sqrt,
@@ -484,6 +486,14 @@ class FFLConverter:
         inner = ffl[1]
         if isinstance(inner, list) and inner[0] == 'Pattern':
             name = inner[1]
+            if name == self._fixed_var:
+                # ``x_.`` where ``x`` is ALSO bound as the fixed variable (``x_Symbol``).
+                # Both bind the same name, so the "absent" branch would have to give
+                # ``x`` the Times identity 1 -- which then fails ``x_Symbol``. The
+                # optional branch is therefore unreachable and the factor is in fact
+                # mandatory. Verified in Mathematica: ``g[x_.*h[x_], x_Symbol]``
+                # matches ``g[z h[z], z]`` but NOT ``g[h[z], z]``.
+                return 'x'
             self._wildcards_non_optional.add(name)
             self._wildcards_optional.add(name)
             var_name = f'_{name}_'

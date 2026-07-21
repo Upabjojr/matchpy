@@ -256,3 +256,56 @@ class TestBooleanAtoms:
         # Despite being in wildcards, CONSTANT_MAP should take priority
         result = c.convert('True')
         assert result == 'sympy.true'
+
+
+class TestOptionalOnTheFixedVariable:
+    """``x_.`` where ``x`` is ALSO the fixed variable (bound by ``x_Symbol``).
+
+    Both bind the same name, so the "absent" branch would have to give ``x`` the
+    Times identity 1, which then fails ``x_Symbol``. The optional branch is thus
+    unreachable and the factor is really mandatory -- it must convert to the plain
+    fixed variable, exactly as a non-optional ``x_`` does.
+
+    Verified in Mathematica: ``g[x_.*h[x_], x_Symbol]`` matches ``g[z h[z], z]``
+    but NOT ``g[h[z], z]``; with a differently-named ``u_.`` the absent branch does
+    match, binding ``u -> 1``.
+    """
+
+    def test_optional_fixed_var_becomes_the_plain_variable(self):
+        c = FFLConverter(fixed_var='x')
+        assert c.convert(['Optional', ['Pattern', 'x', ['Blank']]],
+                         is_pattern=True) == 'x'
+
+    def test_it_does_not_declare_an_optional_wildcard(self):
+        c = FFLConverter(fixed_var='x')
+        c.convert(['Optional', ['Pattern', 'x', ['Blank']]], is_pattern=True)
+        assert 'x' not in c._wildcards_optional
+        assert not any('_x_' in d for d in c._wild_defs)
+
+    def test_it_agrees_with_the_non_optional_form(self):
+        """Pattern[x, Blank] already collapses to the fixed var; Optional must match."""
+        c = FFLConverter(fixed_var='x')
+        plain = c.convert(['Pattern', 'x', ['Blank']], is_pattern=True)
+        opt = c.convert(['Optional', ['Pattern', 'x', ['Blank']]], is_pattern=True)
+        assert plain == opt == 'x'
+
+    def test_a_differently_named_optional_is_still_optional(self):
+        """The control case: only the fixed variable's own name is affected."""
+        c = FFLConverter(fixed_var='x')
+        assert c.convert(['Optional', ['Pattern', 'u', ['Blank']]],
+                         is_pattern=True) == '_u_'
+        assert 'u' in c._wildcards_optional
+
+    def test_inside_a_product(self):
+        c = FFLConverter(fixed_var='x')
+        code = c.convert(['Times', ['Optional', ['Pattern', 'x', ['Blank']]],
+                          ['Power', ['Pattern', 'c', ['Blank']], '-1']],
+                         is_pattern=True)
+        assert '_x_' not in code
+        assert 'x' in code
+
+    def test_a_different_fixed_var_name_is_honoured(self):
+        c = FFLConverter(fixed_var='t')
+        assert c.convert(['Optional', ['Pattern', 't', ['Blank']]],
+                         is_pattern=True) == 'x'
+        assert 't' not in c._wildcards_optional

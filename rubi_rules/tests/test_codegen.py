@@ -326,6 +326,44 @@ class TestStableRuleNumbering:
         nums = [int(n) for n in _re.findall(r'rule_number=(\d+)', code)]
         assert nums == [1, 2], f"expected [1, 2], got {nums}"
 
+    def test_a_predicate_definition_consumes_a_number_but_is_not_a_skip(self):
+        """Rule files also carry utility PREDICATE definitions (IntLinearQ,
+        IntBinomialQ, IntQuadraticQ) as SetDelayed entries whose LHS is not
+        ``Int[...]``. Those are hand-implemented in rubi_rules/utils/, so they are
+        not translated -- but they are NOT failures either, and reporting them as
+        "skipped" overstates how much of Rubi is missing. They must still consume a
+        rule_number so numbering stays aligned with the source JSON.
+        """
+        import re as _re
+        tr = RubiRuleTranslator()
+        predicate = ['SetDelayed',
+                     ['IntBinomialQ', ['Pattern', 'a', ['Blank']]],
+                     'True']
+        rules = [self._rule('2'), predicate, self._rule('3')]
+        code = tr.translate_module(rules, module_name='test')
+        nums = [int(n) for n in _re.findall(r'rule_number=(\d+)', code)]
+        # the predicate took number 2, so the following rule is 3 -- not renumbered
+        assert nums == [1, 3], f"expected [1, 3], got {nums}"
+        # ...and it is reported as a non-rule, not as a skip
+        assert 'SKIPPED' not in code
+        assert '2 rules translated, 0 skipped' in code
+        assert '1 non-rule predicate definition not counted' in code
+
+    def test_a_genuinely_untranslatable_rule_is_still_reported_as_skipped(self):
+        """A head wildcard appearing ONLY in the replacement has nothing to bind it
+        (the pattern never matched it), so it cannot be translated -- this is the
+        largest remaining skip category and must stay visible as a real skip.
+        """
+        tr = RubiRuleTranslator()
+        bad = ['SetDelayed',
+               ['Int', ['Power', 'x', ['Pattern', 'm', ['Blank']]],
+                ['Pattern', 'x', ['Blank', 'Symbol']]],
+               [['Pattern', 'trig', ['Blank']], 'x']]
+        code = tr.translate_module([self._rule('2'), bad], module_name='test')
+        assert 'SKIPPED' in code
+        assert '1 skipped' in code
+        assert 'non-rule predicate' not in code
+
 
 # ---------------------------------------------------------------------------
 # Function-head wildcards: F_[args] -> WildHeadApp[F_, args] (pattern) and
@@ -420,3 +458,164 @@ class TestRewriteFhwInReplacement:
     def test_multi_argument_application(self):
         out = _rewrite_fhw_in_replacement(['F', 'u', 'v'], {'F': 'F'})
         assert out == ['WFApply', 'F', 'u', 'v']
+
+
+# ---------------------------------------------------------------------------
+# Derivative-of-a-wildcard-function: Rubi's ``Derivative[n_][f_][x_]``.
+# In FFL this is a doubly-nested application, [[['Derivative', n], f], x], which
+# becomes WildHeadDeriv[f_, x_, n_] in a pattern and WFDeriv[f, x, n] in a
+# replacement.
+# ---------------------------------------------------------------------------
+from rubi_rules.codegen.generate import _ffl_is_deriv_head
+
+_DERIV = lambda n, f, v: [[['Derivative', n], f], v]      # noqa: E731
+
+
+class TestDerivativeHeadDetection:
+
+    def test_detects_a_derivative_of_a_wildcard_function(self):
+        assert _ffl_is_deriv_head(_DERIV(_PAT('n'), _PAT('f'), 'x')) is True
+
+    def test_detects_a_derivative_of_a_concrete_function(self):
+        assert _ffl_is_deriv_head([[['Derivative', '1'], 'f'], 'x']) is True
+
+    def test_rejects_a_plain_application(self):
+        assert _ffl_is_deriv_head(['Sin', 'x']) is False
+
+    def test_rejects_a_plain_wildcard_head_application(self):
+        assert _ffl_is_deriv_head([_PAT('F'), _PAT('v')]) is False
+
+    def test_rejects_atoms_and_empties(self):
+        assert _ffl_is_deriv_head('x') is False
+        assert _ffl_is_deriv_head([]) is False
+        assert _ffl_is_deriv_head(['Derivative', 'n']) is False
+
+    def test_rejects_a_wrong_arity_inner_head(self):
+        # [['Derivative'], f] -- Derivative without its order
+        assert _ffl_is_deriv_head([[['Derivative'], 'f'], 'x']) is False
+
+
+class TestDerivativeExtractionFromPattern:
+
+    def test_rewrites_to_wild_head_deriv_reordering_to_f_var_order(self):
+        new, heads = _extract_fhw_from_pattern(_DERIV(_PAT('n'), _PAT('f'), 'x'))
+        assert new == ['WildHeadDeriv', _PAT('f'), 'x', _PAT('n')]
+        assert heads == {'f'}
+
+    def test_rewrites_when_nested_inside_a_product(self):
+        ffl = ['Times', 'c', _DERIV(_PAT('n'), _PAT('f'), 'x')]
+        new, heads = _extract_fhw_from_pattern(ffl)
+        assert new == ['Times', 'c', ['WildHeadDeriv', _PAT('f'), 'x', _PAT('n')]]
+        assert heads == {'f'}
+
+    def test_a_concrete_order_is_preserved(self):
+        new, heads = _extract_fhw_from_pattern([[['Derivative', '2'], _PAT('f')], 'x'])
+        assert new == ['WildHeadDeriv', _PAT('f'), 'x', '2']
+        assert heads == {'f'}
+
+    def test_a_concrete_function_contributes_no_head_name(self):
+        _new, heads = _extract_fhw_from_pattern([[['Derivative', _PAT('n')], 'f'], 'x'])
+        assert heads == set()
+
+    def test_coexists_with_a_plain_wildcard_head_application(self):
+        ffl = ['Times', [_PAT('F'), 'x'], _DERIV(_PAT('n'), _PAT('f'), 'x')]
+        new, heads = _extract_fhw_from_pattern(ffl)
+        assert heads == {'F', 'f'}
+        assert new == ['Times', ['WildHeadApp', _PAT('F'), 'x'],
+                       ['WildHeadDeriv', _PAT('f'), 'x', _PAT('n')]]
+
+
+class TestDerivativeRewriteInReplacement:
+
+    def test_rewrites_to_wf_deriv_reordering_to_f_var_order(self):
+        out = _rewrite_fhw_in_replacement([[['Derivative', 'n'], 'f'], 'x'], {'f': 'f'})
+        assert out == ['WFDeriv', 'f', 'x', 'n']
+
+    def test_rewrites_a_computed_order(self):
+        ffl = [[['Derivative', ['Plus', 'n', '-1']], 'f'], 'x']
+        out = _rewrite_fhw_in_replacement(ffl, {'f': 'f'})
+        assert out == ['WFDeriv', 'f', 'x', ['Plus', 'n', '-1']]
+
+    def test_rewrites_when_nested(self):
+        ffl = ['Times', 'c', [[['Derivative', 'n'], 'f'], 'x']]
+        out = _rewrite_fhw_in_replacement(ffl, {'f': 'f'})
+        assert out == ['Times', 'c', ['WFDeriv', 'f', 'x', 'n']]
+
+    def test_only_rewrites_heads_bound_by_the_pattern(self):
+        # 'g' is not a pattern head wildcard, so it stays a literal Derivative
+        ffl = [[['Derivative', 'n'], 'g'], 'x']
+        assert _rewrite_fhw_in_replacement(ffl, {'f': 'f'}) == ffl
+
+    def test_coexists_with_a_plain_wf_apply(self):
+        ffl = ['Times', ['F', 'x'], [[['Derivative', 'n'], 'f'], 'x']]
+        out = _rewrite_fhw_in_replacement(ffl, {'F': 'F', 'f': 'f'})
+        assert out == ['Times', ['WFApply', 'F', 'x'], ['WFDeriv', 'f', 'x', 'n']]
+
+
+class TestSelectorSymbolsAreDeclared:
+    """Rubi's ``Expon[Px, x, Min]`` passes Min as a bare SYMBOL. The emitter
+    round-trips code through SymPy's printer, which renders ``Symbol('Min')`` as
+    the bare name ``Min``, so the generated module must bind that name or the
+    rule dies with NameError at import time (it previously did, in 2 rules).
+    """
+
+    def _module(self):
+        return RubiRuleTranslator().translate_module([], module_name='test')
+
+    def test_header_binds_min_and_max(self):
+        code = self._module()
+        assert "Min = Symbol('Min')" in code
+        assert "Max = Symbol('Max')" in code
+
+    def test_the_binding_is_a_symbol_not_sympys_min_function(self):
+        # Expon dispatches on str(selector) == 'Min', so it must be a Symbol.
+        import sympy as _sympy
+        ns = {}
+        exec(self._module().split('RULES = [')[0], ns)
+        assert isinstance(ns['Min'], _sympy.Symbol)
+        assert str(ns['Min']) == 'Min'
+
+    def test_an_expon_min_rule_now_survives_load_validation(self):
+        rule = ['SetDelayed',
+                ['Int', ['Times', ['Power', ['Pattern', 'Px', ['Blank']],
+                                   ['Pattern', 'p', ['Blank']]]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Condition', ['Expon', 'Px', 'x', 'Min'],
+                 ['PolyQ', 'Px', 'x']]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'SKIPPED' not in code
+        assert 'Min' in code
+
+
+class TestUpstreamArityTypoIsLabelledAsFaithful:
+    """Rubi's 1.2.1.4 source contains `NeQ[e^2-4*d*f]` -- one argument, where every
+    sibling line writes `NeQ[...,0]`. Mathematica does not silently accept it:
+    Rubi guards each predicate with `CheckArguments`, so the call stays unevaluated,
+    the `&&` guard is not True, and the rule never fires there either. Skipping it
+    is faithful, so the emitted comment must say so rather than read like a gap.
+
+    Verified against real Rubi in Mathematica:
+        NeQ[1-4, 0] -> True
+        NeQ[1-4]    -> NeQ::argr ... ; TrueQ -> False
+    """
+
+    def test_arity_error_is_reported_as_an_upstream_typo(self):
+        rule = ['SetDelayed',
+                ['Int', ['Power', 'x', ['Pattern', 'm', ['Blank']]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Condition', ['Power', 'x', '2'],
+                 ['NeQ', ['Plus', ['Pattern', 'm', ['Blank']], '-1']]]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'SKIPPED' in code
+        assert 'upstream Rubi arity typo' in code
+        assert 'inert in Mathematica too' in code
+
+    def test_a_correct_two_arg_predicate_is_not_flagged(self):
+        rule = ['SetDelayed',
+                ['Int', ['Power', 'x', ['Pattern', 'm', ['Blank']]],
+                 ['Pattern', 'x', ['Blank', 'Symbol']]],
+                ['Condition', ['Power', 'x', '2'],
+                 ['NeQ', ['Pattern', 'm', ['Blank']], '-1']]]
+        code = RubiRuleTranslator().translate_module([rule], module_name='test')
+        assert 'SKIPPED' not in code
+        assert 'upstream Rubi arity typo' not in code

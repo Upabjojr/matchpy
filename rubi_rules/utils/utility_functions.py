@@ -2117,9 +2117,13 @@ def RationalFunctionExponents(u, x):
     if PolynomialQ(u, x):
         return [Exponent(u, x), 0]
     elif IntegerPowerQ(u):
+        # Rubi: u[[2]]*RationalFunctionExponents[u[[1]],x]. In Mathematica a
+        # scalar times a list SCALES it element-wise; in Python `n * [a, b]`
+        # REPEATS the list, so this silently returned e.g. [0,1,0,1] for
+        # (x+1)^-2 instead of [0,2] (and 6 entries for ^-3). Scale explicitly.
         if PositiveQ(u.exp):
-            return u.exp*RationalFunctionExponents(u.base, x)
-        return  (-u.exp)*Reverse(RationalFunctionExponents(u.base, x))
+            return [u.exp*i for i in RationalFunctionExponents(u.base, x)]
+        return [(-u.exp)*i for i in Reverse(RationalFunctionExponents(u.base, x))]
     elif ProductQ(u):
         lst1 = RationalFunctionExponents(First(u), x)
         lst2 = RationalFunctionExponents(Rest(u), x)

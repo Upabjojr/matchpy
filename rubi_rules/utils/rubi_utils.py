@@ -767,6 +767,32 @@ class WFApply(MathematicaExpr):
         return func(*args)
 
 
+class WFDeriv(MathematicaExpr):
+    """The n-th derivative of a wildcard-bound function — Rubi's ``Derivative[n][f][x]``.
+
+    The companion of :class:`WFApply` for the derivative rules: a pattern
+    ``Derivative[n_][f_][x_]`` binds ``f`` to a function HEAD (arriving as a
+    :class:`~sympy_matching.wild.HeadRef`) and ``n`` to the order, and the
+    replacement rebuilds e.g. ``Derivative[n-1][f][x]``. On ``doit`` this becomes
+    ``Derivative(f(x), (x, order))`` -- or just ``f(x)`` when the order is 0.
+    """
+    def __new__(cls, head, var, order):
+        return Expr.__new__(cls, sympy.sympify(head), sympy.sympify(var),
+                            sympy.sympify(order))
+
+    def _evaluate(self, **kwargs):
+        head, var, order = self.args
+        func = getattr(head, 'func_class', None)
+        if func is None and getattr(head, 'args', None):
+            func = getattr(head, 'func', None)
+        if func is None:
+            return None  # head not resolved yet -> stay unevaluated (see base doit)
+        applied = func(var)
+        if order == 0:
+            return applied
+        return sympy.Derivative(applied, (var, order))
+
+
 class SimplifyIntegrand(MathematicaExpr):
     """Rubi SimplifyIntegrand[u, x] — simplify integrand."""
     def __new__(cls, *args):

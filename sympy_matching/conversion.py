@@ -43,7 +43,8 @@ from matchpy.expressions.expressions import (
     WildcardOperationHead, to_expression, from_expression,
     LIST_HEAD, TUPLE_HEAD,
 )
-from .wild import WildSymbol, IDENTITY_ELEMENT, HeadRef, WildHeadApp
+from .wild import (WildSymbol, IDENTITY_ELEMENT, HeadRef, WildHeadApp,
+                   WildHeadDeriv)
 from .operations import (
     ADD, MUL, POW, EQUALITY,
     SYMPY_FUNC_TO_HEAD, HEAD_TO_SYMPY_FUNC,
@@ -124,6 +125,29 @@ def _wild_head_app_to_expression(obj: 'WildHeadApp') -> Expression:
     head = WildcardOperationHead(name='__any__',
                                  variable_name=obj.head_wild.wildcard_name)
     return Operation(head, *[to_expression(a) for a in obj.applied_args])
+
+
+# `Derivative`/`Tuple` have no dedicated head registration, so a real
+# ``Derivative(f(x), (x, n))`` converts through the generic fallback into
+# ``Operation(OperationHead('Derivative'), <f(x)>, Operation(OperationHead('Tuple'), x, n))``.
+# A WildHeadDeriv PATTERN must produce exactly that shape, so it is built from the
+# same heads (OperationHead equality is by name/arity/flags).
+# ``test_wildcard_head_bridge`` asserts these stay in sync with a real conversion.
+_DERIVATIVE_HEAD = OperationHead(name='Derivative')
+_TUPLE_OP_HEAD = OperationHead(name='Tuple')
+
+
+@to_expression.register(WildHeadDeriv)
+def _wild_head_deriv_to_expression(obj: 'WildHeadDeriv') -> Expression:
+    """Convert ``Derivative[n_][f_][x_]`` into the MatchPy shape of a SymPy
+    ``Derivative`` whose differentiated function has a WILDCARD head."""
+    var = to_expression(obj.var)
+    inner = Operation(
+        WildcardOperationHead(name='__any__',
+                              variable_name=obj.head_wild.wildcard_name),
+        var)
+    return Operation(_DERIVATIVE_HEAD, inner,
+                     Operation(_TUPLE_OP_HEAD, var, to_expression(obj.order)))
 
 
 @to_expression.register(SympySymbol)
@@ -277,6 +301,25 @@ def matchpy_to_sympy(expr):
         if head == TUPLE_HEAD:
             return tuple(matchpy_to_sympy(op) for op in expr.operands)
         args = [matchpy_to_sympy(op) for op in expr.operands]
+        if head.name == 'Derivative':
+            # Derivative has no head registration, so the generic fallback below
+            # would rebuild it as an UNDEFINED function named "Derivative",
+            # losing all derivative semantics. Rebuild the real node. Its
+            # ``(var, order)`` specs come back either as a SymPy Tuple or (also
+            # unregistered) as an undefined function named "Tuple"; Derivative
+            # requires plain tuples, so normalise both.
+            def _plain(t):
+                if isinstance(t, sympy.Tuple):
+                    return tuple(t)
+                if getattr(getattr(t, 'func', None), '__name__', '') == 'Tuple':
+                    return tuple(t.args)
+                return t
+            try:
+                return sympy.Derivative(*[_plain(t) for t in args])
+            except (ValueError, TypeError, sympy.SympifyError):
+                # e.g. converting a PATTERN back, where the operands are still
+                # wildcards -- fall through to the inert function as before.
+                pass
         return sympy.Function(head.name)(*args)
 
     if isinstance(expr, SymbolWrapper):

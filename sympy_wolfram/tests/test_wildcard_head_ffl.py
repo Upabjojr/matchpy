@@ -9,7 +9,7 @@ and that the code evaluates back to the expected SymPy object.
 import pytest
 import sympy
 
-from sympy_matching.wild import WildHeadApp, WildSymbol
+from sympy_matching.wild import WildHeadApp, WildHeadDeriv, WildSymbol
 from sympy_wolfram.ffl_to_sympy import FFLConverter
 from sympy_wolfram.mathematica_parser import ffl_to_sympy_short_code
 
@@ -94,3 +94,43 @@ class TestOrdinaryConversionUnaffected:
     def test_unknown_head_still_becomes_an_undefined_function(self):
         code = convert(['SomeUnknownHead', 'x'])
         assert "Function('SomeUnknownHead')" in code
+
+
+class TestWildHeadDerivCodeGeneration:
+    """``Derivative[n_][f_][x_]`` is rewritten by the code generator into the FFL
+    node ``WildHeadDeriv[f_, x_, n_]``; the converter must emit that node."""
+
+    def test_simple_wildcard_order(self):
+        code = convert(['WildHeadDeriv', PAT('f'), 'x', PAT('n')])
+        assert code.startswith('WildHeadDeriv(')
+        assert 'f_' in code and 'n_' in code
+
+    def test_evaluates_to_a_wild_head_deriv(self):
+        code, ns, _defs, _syms = ffl_to_sympy_short_code(
+            ['WildHeadDeriv', PAT('f'), 'x', PAT('n')], fixed_var='x')
+        obj = eval(code, {**ns})
+        assert isinstance(obj, WildHeadDeriv)
+        assert obj.head_wild.wildcard_name == 'f'
+        assert obj.order.wildcard_name == 'n'
+        assert obj.var == sympy.Symbol('x')
+
+    def test_a_concrete_order_survives(self):
+        code, ns, _defs, _syms = ffl_to_sympy_short_code(
+            ['WildHeadDeriv', PAT('f'), 'x', '2'], fixed_var='x')
+        obj = eval(code, {**ns})
+        assert isinstance(obj, WildHeadDeriv)
+        assert obj.order == 2
+
+    def test_nested_inside_a_product(self):
+        code, ns, _defs, _syms = ffl_to_sympy_short_code(
+            ['Times', 'c', ['WildHeadDeriv', PAT('f'), 'x', PAT('n')]], fixed_var='x')
+        obj = eval(code, {**ns})
+        assert any(isinstance(a, WildHeadDeriv) for a in obj.args)
+
+    def test_coexists_with_a_wild_head_app(self):
+        code, ns, _defs, _syms = ffl_to_sympy_short_code(
+            ['Times', ['WildHeadApp', PAT('F'), 'x'],
+             ['WildHeadDeriv', PAT('f'), 'x', PAT('n')]], fixed_var='x')
+        obj = eval(code, {**ns})
+        kinds = {type(a) for a in obj.args}
+        assert WildHeadApp in kinds and WildHeadDeriv in kinds

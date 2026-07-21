@@ -93,6 +93,10 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in MatchPy-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
 - [ ] rename `to_expression` (and also get rid of `from_expression`)
 - [ ] should not depend on SymPy (maybe with some exceptions)
+- [ ] remove "fixed_var" from sympy_wolfram/
+- [ ] SymPy parser has been updated to correctly handle "Derivative" nodes.
+- [ ] rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
+- [ ] create sympy_to_matchpy and matchpy_to_sympy function, and _sympy_to_matchpy / _matchpy_to_sympy that are single dispatched.
 
 Strange warning:
 

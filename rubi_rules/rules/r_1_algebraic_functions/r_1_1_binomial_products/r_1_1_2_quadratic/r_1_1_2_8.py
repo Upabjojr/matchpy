@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -57,6 +57,15 @@ x = Symbol('x')
 # --- Rubi global option stubs (default False/placeholder) ---
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
+
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
 
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
@@ -650,8 +659,22 @@ RULES = [
         module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=71,
     ),
-    # Rule 72: SKIPPED - ValueError: generated rule not loadable: NameError: name '_x_' is not defined
-    # Rule 73: SKIPPED - ValueError: generated rule not loadable: NameError: name '_x_' is not defined
+    # Rule 72
+    RubiRulePattern(
+        pattern=Int(x/((x*_d_ + c_)*(x**2*_b_ + a_)), x),
+        constraints=(FreeQ([a_, _b_, c_, _d_], x), NeQ(a_*_d_**2 + _b_*c_**2, 0),),
+        replacement=Star(-c_*_d_/(a_*_d_**2 + _b_*c_**2), Int(1/(x*_d_ + c_), x)) + Star(1/(a_*_d_**2 + _b_*c_**2), Int((x*_b_*c_ + a_*_d_)/(x**2*_b_ + a_), x)),
+        module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
+        rule_number=72,
+    ),
+    # Rule 73
+    RubiRulePattern(
+        pattern=Int(x*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, n_, p_], x), EqQ(Simplify(n_ + 2*p_ + 3), 0), NeQ(a_*_d_**2 + _b_*c_**2, 0),),
+        replacement=c_*(x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**(p_ + 1)/((2*p_ + 2)*(a_*_d_**2 + _b_*c_**2)) + Star(a_*_d_/(a_*_d_**2 + _b_*c_**2), Int((x*_d_ + c_)**(n_ + 1)*(x**2*_b_ + a_)**p_, x)),
+        module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
+        rule_number=73,
+    ),
     # Rule 74
     RubiRulePattern(
         pattern=Int(x*(x*_d_ + c_)**n_*(x**2*_b_ + a_)**p_, x),
@@ -1055,4 +1078,4 @@ RULES = [
 
 ]
 
-# Summary: 121 rules translated, 2 skipped
+# Summary: 123 rules translated, 0 skipped

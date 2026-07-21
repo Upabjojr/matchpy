@@ -59,6 +59,14 @@ EQUALITY = OperationHead(
     arity=Arity.binary,
 )
 
+# sympy.Tuple -- a container, but one that appears inside real expressions
+# (Derivative's ``(var, order)`` spec). Named 'Tuple' to stay distinct from
+# TUPLE_HEAD ('tuple'), which represents a plain PYTHON tuple.
+TUPLE = OperationHead(
+    name='Tuple',
+    arity=Arity.variadic,
+)
+
 # ─── Convenience aliases for commonly-used heads ─────────────────────────────
 # These are created here so they can be imported before register_all_heads()
 # is called.  register_all_heads() will reuse these exact objects.
@@ -236,6 +244,13 @@ def register_all_heads():
     register_sympy_head(sympy.Mul, MUL)
     register_sympy_head(sympy.Pow, POW)
     register_sympy_head(sympy.Eq, EQUALITY)
+    # sympy.Tuple is a CONTAINER, not a function, so it is easy to overlook --
+    # but Derivative stores its ``(var, order)`` spec as one. Unregistered it fell
+    # through to the generic path and came back as an UNDEFINED function named
+    # "Tuple", so `Derivative(f(x), spec)` silently stopped being a derivative.
+    # Note this must not capture hyper/meijerg's TupleArg: lookup is by exact
+    # type, and TupleArg (a Tuple subclass) keeps its own separate handling.
+    register_sympy_head(sympy.Tuple, TUPLE)
 
     # Register all table-driven heads
     for module_path, class_name, arity_code in SYMPY_NODES:

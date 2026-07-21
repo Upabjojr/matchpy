@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -58,6 +58,15 @@ x = Symbol('x')
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
 
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
+
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
@@ -84,8 +93,10 @@ _j_ = WildSymbol('j', optional_value=IDENTITY_ELEMENT)
 j_ = WildSymbol('j')
 _m_ = WildSymbol('m', optional_value=IDENTITY_ELEMENT)
 m_ = WildSymbol('m')
+m1_ = WildSymbol('m1')
 _n_ = WildSymbol('n', optional_value=IDENTITY_ELEMENT)
 n_ = WildSymbol('n')
+n1_ = WildSymbol('n1')
 _n2_ = WildSymbol('n2', optional_value=IDENTITY_ELEMENT)
 n2_ = WildSymbol('n2')
 _p_ = WildSymbol('p', optional_value=IDENTITY_ELEMENT)
@@ -99,27 +110,174 @@ _w_ = WildSymbol('w', optional_value=IDENTITY_ELEMENT)
 w_ = WildSymbol('w')
 
 RULES = [
-    # Rule 1: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 2: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 3: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 4: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 5: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 6: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 7: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 8: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'n', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 9: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 10: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 11: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 12: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 13: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 14: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 15: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 16: SKIPPED - ValueError: Non-string function head [['Derivative', '1'], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 17: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 18: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'm1', ['Blank']]], ['Pattern', 'f', ['Blank']]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 19: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 20: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
-    # Rule 21: SKIPPED - ValueError: Non-string function head [['Derivative', ['Pattern', 'f', ['Blank']]], 'Plus', ['Times', ['WildHeadApp', ['Pattern', 'x', ['Blank']]], ['WildHeadApp', ['Pattern', 'g', ['Blank']], ['Pattern', 'x', ['Blank']]]], ['Times', '-1', ['Times', ['WildHeadApp', ['Pattern', 'f', ['Blank']], ['Pattern', 'x', ['Blank']]], ['Derivative', ['Pattern', 'g', ['Blank']]]]]] -- function-head wildcard patterns (e.g., F_[x_]) are not yet supported.
+    # Rule 1
+    RubiRulePattern(
+        pattern=Int(WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([f_, n_], x),),
+        replacement=WFDeriv(f_, x, n_ - 1),
+        module_name='9.1 Derivative integration rules',
+        rule_number=1,
+    ),
+    # Rule 2
+    RubiRulePattern(
+        pattern=Int((F_**(x*_b_ + _a_)*_c_)**_p_*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, f_, F_, _p_], x), IGtQ(n_, 0),),
+        replacement=(F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ - 1) - Star(_b_*_p_*log(F_), Int((F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ - 1), x)),
+        module_name='9.1 Derivative integration rules',
+        rule_number=2,
+    ),
+    # Rule 3
+    RubiRulePattern(
+        pattern=Int((F_**(x*_b_ + _a_)*_c_)**_p_*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, _c_, f_, F_, _p_], x), ILtQ(n_, 0),),
+        replacement=-Star(1/(_b_*_p_*log(F_)), Int((F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ + 1), x)) + (F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_)/(_b_*_p_*log(F_)),
+        module_name='9.1 Derivative integration rules',
+        rule_number=3,
+    ),
+    # Rule 4
+    RubiRulePattern(
+        pattern=Int(sin(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, f_], x), IGtQ(n_, 0),),
+        replacement=-Star(_b_, Int(WFDeriv(f_, x, n_ - 1)*cos(x*_b_ + _a_), x)) + WFDeriv(f_, x, n_ - 1)*sin(x*_b_ + _a_),
+        module_name='9.1 Derivative integration rules',
+        rule_number=4,
+    ),
+    # Rule 5
+    RubiRulePattern(
+        pattern=Int(cos(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, f_], x), IGtQ(n_, 0),),
+        replacement=Star(_b_, Int(WFDeriv(f_, x, n_ - 1)*sin(x*_b_ + _a_), x)) + WFDeriv(f_, x, n_ - 1)*cos(x*_b_ + _a_),
+        module_name='9.1 Derivative integration rules',
+        rule_number=5,
+    ),
+    # Rule 6
+    RubiRulePattern(
+        pattern=Int(sin(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, f_], x), ILtQ(n_, 0),),
+        replacement=Star(1/_b_, Int(WFDeriv(f_, x, n_ + 1)*cos(x*_b_ + _a_), x)) - WFDeriv(f_, x, n_)*cos(x*_b_ + _a_)/_b_,
+        module_name='9.1 Derivative integration rules',
+        rule_number=6,
+    ),
+    # Rule 7
+    RubiRulePattern(
+        pattern=Int(cos(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([_a_, _b_, f_], x), ILtQ(n_, 0),),
+        replacement=-Star(1/_b_, Int(WFDeriv(f_, x, n_ + 1)*sin(x*_b_ + _a_), x)) + WFDeriv(f_, x, n_)*sin(x*_b_ + _a_)/_b_,
+        module_name='9.1 Derivative integration rules',
+        rule_number=7,
+    ),
+    # Rule 8
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadDeriv(f_, x, n_), x),
+        constraints=(FreeQ([f_, n_], x), FunctionOfQ(WFDeriv(f_, x, n_ - 1), u_, x),),
+        replacement=Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, n_ - 1)),
+        module_name='9.1 Derivative integration rules',
+        rule_number=8,
+    ),
+    # Rule 9
+    RubiRulePattern(
+        pattern=Int(u_*(_a_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + _a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x)), x),
+        constraints=(FreeQ([_a_, f_, g_], x), FunctionOfQ(WFApply(f_, x)*WFApply(g_, x), u_, x),),
+        replacement=Star(_a_, Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)*WFApply(g_, x), u_, x), x), x), x, WFApply(f_, x)*WFApply(g_, x))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=9,
+    ),
+    # Rule 10
+    RubiRulePattern(
+        pattern=Int(u_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _a_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, f_, g_, m_], x), EqQ(m1_, m_ - 1), FunctionOfQ(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1), u_, x),),
+        replacement=Star(_a_, Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1), u_, x), x), x), x, WFApply(g_, x)*WFDeriv(f_, x, m_ - 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=10,
+    ),
+    # Rule 11
+    RubiRulePattern(
+        pattern=Int(u_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _a_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
+        constraints=(FreeQ([_a_, f_, g_, m_, n_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), FunctionOfQ(WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1), u_, x),),
+        replacement=Star(_a_, Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=11,
+    ),
+    # Rule 12
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(f_, x)**_p_*(_a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x) + _b_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, _p_], x), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x), u_, x),),
+        replacement=Star(_b_, Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x), u_, x), x), x), x, WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=12,
+    ),
+    # Rule 13
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, m_, _p_], x), EqQ(m1_, m_ - 1), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x),),
+        replacement=Star(_b_, Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x), x), x), x, WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=13,
+    ),
+    # Rule 14
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, m_, _q_], x), EqQ(m1_, m_ - 1), EqQ(_a_*(_q_ + 1), _b_), FunctionOfQ(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1), u_, x),),
+        replacement=Star(_a_, Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1), u_, x), x), x), x, WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=14,
+    ),
+    # Rule 15
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, m_, n_, _p_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1), u_, x),),
+        replacement=Star(_b_, Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=15,
+    ),
+    # Rule 16
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadApp(f_, x)**_p_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x) + _b_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, _p_, _q_], x), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1), u_, x),),
+        replacement=Star(_a_/(_p_ + 1), Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1), u_, x), x), x), x, WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=16,
+    ),
+    # Rule 17
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, m_, _p_, _q_], x), EqQ(m1_, m_ - 1), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x),),
+        replacement=Star(_a_/(_p_ + 1), Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x), x), x), x, WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=17,
+    ),
+    # Rule 18
+    RubiRulePattern(
+        pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*WildHeadDeriv(g_, x, n1_)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
+        constraints=(FreeQ([_a_, _b_, f_, g_, m_, n_, _p_, _q_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1), u_, x),),
+        replacement=Star(_a_/(_p_ + 1), Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1))),
+        module_name='9.1 Derivative integration rules',
+        rule_number=18,
+    ),
+    # Rule 19
+    RubiRulePattern(
+        pattern=Int(WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x), x),
+        constraints=(FreeQ([f_, g_], x),),
+        replacement=WFApply(f_, x)*WFApply(g_, x),
+        module_name='9.1 Derivative integration rules',
+        rule_number=19,
+    ),
+    # Rule 20
+    RubiRulePattern(
+        pattern=Int((-WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x))*WildHeadApp(g_, x)**(-2), x),
+        constraints=(FreeQ([f_, g_], x),),
+        replacement=WFApply(f_, x)/WFApply(g_, x),
+        module_name='9.1 Derivative integration rules',
+        rule_number=20,
+    ),
+    # Rule 21
+    RubiRulePattern(
+        pattern=Int((-WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x))*(WildHeadApp(f_, x)*WildHeadApp(g_, x))**(-1), x),
+        constraints=(FreeQ([f_, g_], x),),
+        replacement=log(WFApply(f_, x)/WFApply(g_, x)),
+        module_name='9.1 Derivative integration rules',
+        rule_number=21,
+    ),
     # Rule 22
     RubiRulePattern(
         pattern=Int(_u_*(x**_n_*_b_ + a_)**_p_, x),
@@ -339,4 +497,4 @@ RULES = [
 
 ]
 
-# Summary: 27 rules translated, 21 skipped
+# Summary: 48 rules translated, 0 skipped

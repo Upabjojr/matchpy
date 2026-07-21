@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -57,6 +57,15 @@ x = Symbol('x')
 # --- Rubi global option stubs (default False/placeholder) ---
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
+
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
 
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
@@ -302,7 +311,14 @@ RULES = [
         module_name='1.4.1 Algebraic function simplification',
         rule_number=22,
     ),
-    # Rule 23: SKIPPED - ValueError: generated rule not loadable: NameError: name 'Min' is not defined
+    # Rule 23
+    RubiRulePattern(
+        pattern=Int(_Fx_*Px_**_p_, x),
+        constraints=(PolyQ(Px_, x), IntegerQ(_p_), Not(MonomialQ(Px_, x)), Or(ILtQ(_p_, 0), Not(PolyQ(u, x))), IGtQ(Expon(Px_, x, Min), 0),),
+        replacement=With(List(Set(Symbol('r'), Expon(Px_, x, Symbol('Min')))), Int(((x)**((_p_ * Symbol('r'))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(_p_) * _Fx_), x)),
+        module_name='1.4.1 Algebraic function simplification',
+        rule_number=23,
+    ),
     # Rule 24
     RubiRulePattern(
         pattern=Int(_Fx_*(x**_r_*_a_ + x**_s_*_b_)**_p_, x),
@@ -666,4 +682,4 @@ RULES = [
 
 ]
 
-# Summary: 67 rules translated, 1 skipped
+# Summary: 68 rules translated, 0 skipped

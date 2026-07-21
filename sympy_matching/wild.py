@@ -156,3 +156,36 @@ class WildHeadApp(SympyExpr):
     def applied_args(self):
         """The arguments the wildcard head is applied to."""
         return self.args[1:]
+
+
+class WildHeadDeriv(SympyExpr):
+    """Pattern node: the n-th derivative of a WILDCARD function — ``Derivative[n_][f_][x_]``.
+
+    Rubi's derivative rules are written over an unknown function: ``f^(n)(x)``.
+    In SymPy that subject is ``Derivative(f(x), (x, n))``; this node is the
+    corresponding PATTERN, with the function ``f`` and the order ``n`` both
+    wildcards. It converts to the same MatchPy shape a real ``Derivative``
+    converts to, except that the inner application carries a
+    ``WildcardOperationHead`` so ANY function matches (see :class:`WildHeadApp`).
+
+    A plain ``sympy.Derivative(...)`` cannot be used for this: its constructor
+    validates and differentiates its arguments, which a wildcard function is not.
+    """
+
+    def __new__(cls, head_wild, var, order):
+        return SympyExpr.__new__(cls, head_wild, var, order)
+
+    @property
+    def head_wild(self):
+        """The wildcard standing for the differentiated function."""
+        return self.args[0]
+
+    @property
+    def var(self):
+        """The differentiation variable."""
+        return self.args[1]
+
+    @property
+    def order(self):
+        """The derivative order (typically a wildcard)."""
+        return self.args[2]

@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -57,6 +57,15 @@ x = Symbol('x')
 # --- Rubi global option stubs (default False/placeholder) ---
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
+
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
 
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
@@ -1178,4 +1187,4 @@ RULES = [
 
 ]
 
-# Summary: 137 rules translated, 1 skipped
+# Summary: 137 rules translated, 0 skipped (1 non-rule predicate definition not counted)

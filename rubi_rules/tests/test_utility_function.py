@@ -2450,3 +2450,120 @@ def test_WFApply_multiple_arguments():
     g = Function('g')
     xx, yy = Symbol('x'), Symbol('y')
     assert WFApply(HeadRef(g), xx, yy).doit() == g(xx, yy)
+
+
+def test_WFDeriv_differentiates_a_bound_wildcard_head():
+    # WFDeriv[f, x, n] is the replacement-side counterpart of the
+    # Derivative[n_][f_][x_] pattern: once f is bound to a real function head it
+    # must rebuild a genuine SymPy Derivative.
+    from rubi_rules.utils.rubi_utils import WFDeriv
+    from sympy_matching.wild import HeadRef
+    from sympy import Function, Derivative
+    f = Function('f')
+    xx = Symbol('x')
+    assert WFDeriv(HeadRef(f), xx, 2).doit() == Derivative(f(xx), (xx, 2))
+    assert WFDeriv(HeadRef(f), xx, 1).doit() == Derivative(f(xx), xx)
+
+
+def test_WFDeriv_order_zero_is_the_plain_application():
+    from rubi_rules.utils.rubi_utils import WFDeriv
+    from sympy_matching.wild import HeadRef
+    from sympy import Function
+    f = Function('f')
+    xx = Symbol('x')
+    assert WFDeriv(HeadRef(f), xx, 0).doit() == f(xx)
+
+
+def test_WFDeriv_accepts_an_applied_head_like_WFApply():
+    # A head slot may arrive already applied (sin(x)); the func is taken from it.
+    from rubi_rules.utils.rubi_utils import WFDeriv
+    from sympy import sin, Derivative
+    xx = Symbol('x')
+    assert WFDeriv(sin(xx), xx, 1).doit() == Derivative(sin(xx), xx)
+
+
+def test_WFDeriv_stays_unevaluated_until_the_head_is_known():
+    # Before substitution the head slot still holds a wildcard: there is nothing
+    # to differentiate, so the node must survive doit() intact.
+    from rubi_rules.utils.rubi_utils import WFDeriv
+    from sympy_matching.wild import WildSymbol
+    F = WildSymbol('F')
+    xx = Symbol('x')
+    node = WFDeriv(F, xx, 2)
+    assert isinstance(node.doit(), WFDeriv)
+
+
+def test_WFDeriv_of_a_known_function_evaluates_through():
+    # sin is differentiable, so SymPy's Derivative collapses it.
+    from rubi_rules.utils.rubi_utils import WFDeriv
+    from sympy_matching.wild import HeadRef
+    from sympy import sin, cos
+    xx = Symbol('x')
+    assert WFDeriv(HeadRef(sin), xx, 1).doit().doit() == cos(xx)
+
+
+# ---------------------------------------------------------------------------
+# Expon[u, x, Min/Max] -- Rubi passes the selector as a bare SYMBOL, not a call.
+# ---------------------------------------------------------------------------
+
+def test_Expon_two_arg_gives_the_maximum_degree():
+    from rubi_rules.utils.rubi_utils import Expon
+    xx = Symbol('x')
+    assert Expon(2*xx**5 + 3*xx**3, xx).doit() == 5
+
+
+def test_Expon_Min_selector_gives_the_minimum_degree():
+    from rubi_rules.utils.rubi_utils import Expon
+    xx = Symbol('x')
+    assert Expon(2*xx**5 + 3*xx**3, xx, Symbol('Min')).doit() == 3
+
+
+def test_Expon_Max_selector_matches_the_two_arg_form():
+    from rubi_rules.utils.rubi_utils import Expon
+    xx = Symbol('x')
+    p = 2*xx**5 + 3*xx**3
+    assert Expon(p, xx, Symbol('Max')).doit() == Expon(p, xx).doit() == 5
+
+
+def test_Expon_Min_on_a_polynomial_with_a_constant_term_is_zero():
+    from rubi_rules.utils.rubi_utils import Expon
+    xx = Symbol('x')
+    assert Expon(xx**4 + 7, xx, Symbol('Min')).doit() == 0
+
+
+def test_Expon_Min_on_a_monomial_is_its_degree():
+    from rubi_rules.utils.rubi_utils import Expon
+    xx = Symbol('x')
+    assert Expon(5*xx**3, xx, Symbol('Min')).doit() == 3
+
+
+# ---------------------------------------------------------------------------
+# RationalFunctionExponents -- Mathematica scales a list by a scalar
+# element-wise (n*{a,b} == {n a, n b}); Python REPEATS it (n*[a,b]), so this
+# used to return e.g. [0,1,0,1] for (x+1)^-2. Expected values below were read
+# off real Rubi in Mathematica.
+# ---------------------------------------------------------------------------
+
+_RFE_CASES = [
+    (lambda x: (x + 1)**-2,      [0, 2]),
+    (lambda x: (x + 1)**-3,      [0, 3]),
+    (lambda x: (x + 1)**2,       [2, 0]),
+    (lambda x: 1/(x**2 + 1),     [0, 2]),
+    (lambda x: x/(x**2 + 1),     [1, 2]),
+    (lambda x: (x**2 + 1)**-2,   [0, 4]),
+    (lambda x: x**3/(x + 1)**2,  [3, 2]),
+]
+
+
+def test_RationalFunctionExponents_matches_mathematica():
+    xx = Symbol('x')
+    for expr_fn, expected in _RFE_CASES:
+        e = expr_fn(xx)
+        assert list(RationalFunctionExponents(e, xx)) == expected, e
+
+
+def test_RationalFunctionExponents_always_returns_a_pair():
+    """The list-repetition bug showed up as a 4- or 6-element result."""
+    xx = Symbol('x')
+    for expr_fn, _ in _RFE_CASES:
+        assert len(RationalFunctionExponents(expr_fn(xx), xx)) == 2

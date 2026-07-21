@@ -114,6 +114,19 @@ def _ffl_is_fhw_head(node) -> bool:
                 and node[0][0] == 'Pattern')
 
 
+def _ffl_is_deriv_head(node) -> bool:
+    """True for Rubi's ``Derivative[n][f][x]``.
+
+    Its FFL head is itself an application, ``[['Derivative', n], f]`` -- i.e. the
+    operator ``Derivative[n]`` applied to the function ``f``, the whole thing then
+    applied to ``x``. Both ``n`` and ``f`` are usually wildcards.
+    """
+    return bool(isinstance(node, list) and len(node) >= 2
+                and isinstance(node[0], list) and len(node[0]) == 2
+                and isinstance(node[0][0], list) and len(node[0][0]) == 2
+                and node[0][0][0] == 'Derivative')
+
+
 def _collect_pattern_names(node, out):
     """Collect the names of all ``Pattern[name, ...]`` wildcards in `node`."""
     if isinstance(node, list) and node:
@@ -140,6 +153,11 @@ def _extract_fhw_from_pattern(pattern_ffl):
     def rec(node):
         if not isinstance(node, list) or not node:
             return node
+        if _ffl_is_deriv_head(node):
+            order, fpat, var = node[0][0][1], node[0][1], node[1]
+            if isinstance(fpat, list) and fpat and fpat[0] == 'Pattern':
+                head_names.add(fpat[1])
+            return ['WildHeadDeriv', fpat, rec(var), rec(order)]
         if _ffl_is_fhw_head(node):
             head_pat = node[0]           # Pattern[F, Blank]
             head_names.add(head_pat[1])  # 'F'
@@ -154,6 +172,11 @@ def _rewrite_fhw_in_replacement(node, head_map):
     pattern, so the head is the bare string name) into ``WFApply[fresh, args...]``."""
     if not isinstance(node, list) or not node:
         return node
+    if _ffl_is_deriv_head(node) and isinstance(node[0][1], str) and node[0][1] in head_map:
+        order, fname, var = node[0][0][1], node[0][1], node[1]
+        return ['WFDeriv', fname,
+                _rewrite_fhw_in_replacement(var, head_map),
+                _rewrite_fhw_in_replacement(order, head_map)]
     if isinstance(node[0], str) and node[0] in head_map:
         fresh = head_map[node[0]]
         return ['WFApply', fresh] + [_rewrite_fhw_in_replacement(a, head_map) for a in node[1:]]
@@ -382,6 +405,7 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'Dist': 'Dist',
     'Star': 'Star',  # Rubi \[Star]: display-friendly product (see _reconstruct_star)
     'WFApply': 'WFApply',  # re-apply a function-head-wildcard's captured head
+    'WFDeriv': 'WFDeriv',  # n-th derivative of a wildcard-bound function
     'SimplifyIntegrand': 'SimplifyIntegrand',
     'FreeFactors': 'FreeFactors',
     'NonfreeFactors': 'NonfreeFactors',
@@ -709,6 +733,7 @@ class RubiRuleTranslator:
         # the source/JSON, stable across such parser fixes.
         rule_lines = []
         skipped = 0
+        non_rules = 0
         rule_number = 0
         for rule in rules:
             if not (isinstance(rule, list) and rule and rule[0] == 'SetDelayed'):
@@ -719,14 +744,21 @@ class RubiRuleTranslator:
                 if code:
                     rule_lines.append(code)
                 else:
-                    skipped += 1
+                    # A SetDelayed whose LHS is not ``Int[...]``: a utility PREDICATE
+                    # defined inside a rule file (IntLinearQ / IntBinomialQ /
+                    # IntQuadraticQ). Not an integration rule, so not a skip -- it is
+                    # hand-implemented in rubi_rules/utils/. It still consumes a
+                    # rule_number, because numbering must stay aligned with the
+                    # source/JSON ordering.
+                    non_rules += 1
             except Exception as e:
                 skipped += 1
                 rule_lines.append(f"    # Rule {rule_number}: SKIPPED - {type(e).__name__}: {e}")
 
-        # rule_number is the count of actual rules (SetDelayed); of those, `skipped`
-        # could not be translated. (Orphan/non-rule expressions are excluded above.)
-        footer = self._generate_footer(rule_number - skipped, skipped)
+        # rule_number is the count of SetDelayed entries; of those, `non_rules` are
+        # predicate definitions rather than integration rules and `skipped` are real
+        # rules that could not be translated. (Orphans are excluded above.)
+        footer = self._generate_footer(rule_number - skipped - non_rules, skipped, non_rules)
         rules_body = '\n'.join(rule_lines)
         return header + wc_section + 'RULES = [\n' + rules_body + '\n' + footer
 
@@ -755,7 +787,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 from rubi_rules.utils import (
     # Wolfram standard constraints
@@ -795,17 +827,28 @@ x = Symbol('x')
 UseGamma = sympy.Symbol('UseGamma')  # Rubi global option; treated as False in Python
 u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint calls
 
+# --- Rubi selector symbols ---
+# Rubi passes Min/Max as bare SYMBOLS, not calls: Expon[Px, x, Min] selects the
+# minimum exponent. The code emitter round-trips through SymPy's printer, which
+# renders Symbol('Min') as the bare name `Min`, so the name must exist here.
+# (A genuine Min[a, b] call is emitted qualified, as sympy.Min(...), so these
+# bindings cannot shadow it.)
+Min = Symbol('Min')
+Max = Symbol('Max')
+
 # --- Wildcard symbols ---
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
 """
 
-    def _generate_footer(self, n_rules: int, n_skipped: int) -> str:
+    def _generate_footer(self, n_rules: int, n_skipped: int, n_non_rules: int = 0) -> str:
+        extra = (f" ({n_non_rules} non-rule predicate definition"
+                 f"{'s' if n_non_rules != 1 else ''} not counted)") if n_non_rules else ""
         return f"""
 ]
 
-# Summary: {n_rules} rules translated, {n_skipped} skipped
+# Summary: {n_rules} rules translated, {n_skipped} skipped{extra}
 """
 
     # =========================================================================
@@ -854,8 +897,13 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
         # head on doit.
         integrand_ffl, fhw_head_names = _extract_fhw_from_pattern(integrand_ffl)
         if fhw_head_names:
-            result_ffl = _rewrite_fhw_in_replacement(
-                result_ffl, {h: h for h in fhw_head_names})
+            _head_map = {h: h for h in fhw_head_names}
+            result_ffl = _rewrite_fhw_in_replacement(result_ffl, _head_map)
+            # Conditions can mention the bound head too (e.g.
+            # ``FunctionOfQ[Derivative[n-1][f][x], u, x]``), so they need the same
+            # rewrite -- otherwise the raw non-string head aborts the whole rule.
+            condition_ffls = [_rewrite_fhw_in_replacement(c, _head_map)
+                              for c in condition_ffls]
 
         # --- Pattern: use ffl_to_sympy_short_code (discovers wildcards) ---
         pattern_code, _ns, wild_defs, _symbols = ffl_to_sympy_short_code(
@@ -947,6 +995,18 @@ u = Symbol('u')  # Generic integrand placeholder used in some Rubi constraint ca
             )
             try:
                 eval(compile(probe, f'<{module_name} rule {rule_number}>', 'eval'), load_ns)
+            except TypeError as e:
+                # A Rubi predicate called with the wrong number of arguments is an
+                # upstream typo in the .m source (e.g. `NeQ[e^2-4*d*f]`, missing the
+                # `,0`). Mathematica does NOT silently accept it either: Rubi guards
+                # every predicate with `CheckArguments`, so the call stays
+                # unevaluated, the `&&` guard is not True, and the rule never fires.
+                # Skipping it here is therefore faithful to Rubi, not a limitation.
+                if 'positional argument' in str(e):
+                    raise ValueError(
+                        f"upstream Rubi arity typo (rule is inert in Mathematica too): "
+                        f"{type(e).__name__}: {e}")
+                raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
             except Exception as e:
                 raise ValueError(f"generated rule not loadable: {type(e).__name__}: {e}")
 
