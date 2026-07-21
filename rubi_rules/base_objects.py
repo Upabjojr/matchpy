@@ -469,6 +469,30 @@ def _collapse_resolved_substs(result):
     return result.replace(_resolved, lambda e: e.args[0].subs(e.args[1], e.args[2]))
 
 
+def _try_whole_sum_rule(f, x, replacer, trace=None, depth=0):
+    """Try to integrate the SUM `f` outright with a rule whose pattern is a sum.
+
+    Returns ``(result, rule)`` or None. Only a rule that yields a FINISHED
+    antiderivative in a single step is accepted -- no recursion is performed, so
+    the cost is one matcher enumeration per Add node. That is deliberate: the
+    rules this exists for (Rubi's product and quotient rules) integrate a sum in
+    one step, while anything that merely rewrites the sum into further integrals
+    is better served by the term-by-term splitting the caller falls back to.
+    """
+    for replacement, subst in replacer.matcher.match(to_expression(Int(f, x))):
+        try:
+            result_mp, rule = replacement(**subst)
+        except StopIteration:
+            continue  # Condition failed -> no match
+        result = matchpy_to_sympy(result_mp)
+        if _dfs_is_clean(result):
+            if trace is not None:
+                trace.append({'depth': depth, 'integrand': Int(f, x),
+                              'rule': rule, 'status': 'accepted (whole sum)'})
+            return result, rule
+    return None
+
+
 def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
     """Reduce `Int(f, x)` via DFS. Returns (result_expr, blocked).
 
@@ -493,13 +517,16 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
         # Some Rubi rules have a SUM as their pattern -- the product rule
         # (Int[f'g + f g'] -> f g), the quotient rule, and friends. Splitting the
         # sum unconditionally made those unreachable: by the time the matcher ran,
-        # the sum was already several separate integrals. Offer the whole sum to
-        # the matcher first; `_dfs_match_int` only returns a CLEAN result eagerly,
-        # so this wins only when a genuine sum rule fires, and we fall back to
-        # term-by-term splitting in every other case.
-        whole, whole_blocked = _dfs_match_int(f, x, path, replacer, applied, budget, trace)
-        if not whole_blocked and _dfs_is_clean(whole):
-            return whole, False
+        # the sum was already several separate integrals. So give the whole sum a
+        # chance first -- but only a cheap ONE-STEP one (see _try_whole_sum_rule);
+        # routing it through the full `_dfs_match_int` recursion instead made the
+        # test suite ~5x slower, since that explores the entire subtree for every
+        # rule that matches the sum.
+        hit = _try_whole_sum_rule(f, x, replacer, trace, len(path))
+        if hit is not None:
+            result, rule = hit
+            applied.append(rule)
+            return result, False
         parts, blocked = [], False
         for t in f.args:
             r, b = _dfs_reduce_int(t, x, path, replacer, applied, budget, trace)
