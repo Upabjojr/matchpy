@@ -2412,3 +2412,41 @@ def test_MinimumMonomialExponent_skips_non_monomial_terms():
     # ordinary monomial sums still give the smallest exponent
     assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 3*xx**5, xx) == 2
     assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 1, xx) == 0
+
+
+def test_WFApply_applies_a_bound_wildcard_head():
+    # A Rubi rule `F_[v_]` binds F to a function HEAD; the replacement re-applies
+    # it as `F[newarg]`. The matched head arrives as a HeadRef (a function class is
+    # not a substitutable SymPy object), and WFApply applies it on doit.
+    from rubi_rules.utils.rubi_utils import WFApply
+    from sympy_matching.wild import HeadRef
+    from sympy import sin, asin, Function
+    xx, yy = Symbol('x'), Symbol('y')
+    assert WFApply(HeadRef(sin), yy).doit() == sin(yy)
+    assert WFApply(HeadRef(asin), 2*yy).doit() == asin(2*yy)
+    f = Function('f')
+    assert WFApply(HeadRef(f), yy + 1).doit() == f(yy + 1)
+    # a whole matched application is also accepted (its .func is used)
+    assert WFApply(sin(xx), yy).doit() == sin(yy)
+
+
+def test_WFApply_stays_unevaluated_until_the_head_is_known():
+    # Before substitution the head slot still holds a wildcard, so WFApply must
+    # remain unevaluated rather than return None (which would break the enclosing
+    # Add/Mul via sympify(None)).
+    from rubi_rules.utils.rubi_utils import WFApply
+    from sympy_matching.wild import WildSymbol
+    F, xx = WildSymbol('F'), Symbol('x')
+    node = WFApply(F, xx)
+    assert node.doit() is not None
+    assert isinstance(node.doit(), WFApply)
+    assert (Symbol('y') * node).doit() is not None
+
+
+def test_WFApply_multiple_arguments():
+    from rubi_rules.utils.rubi_utils import WFApply
+    from sympy_matching.wild import HeadRef
+    from sympy import Function
+    g = Function('g')
+    xx, yy = Symbol('x'), Symbol('y')
+    assert WFApply(HeadRef(g), xx, yy).doit() == g(xx, yy)

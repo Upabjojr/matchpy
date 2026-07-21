@@ -92,6 +92,24 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] restructure sympy_wolfram/ to clearly separate the parser, the interpreter and the implemented mathematica objects.
 - [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in MatchPy-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
 - [ ] rename `to_expression` (and also get rid of `from_expression`)
+- [ ] should not depend on SymPy (maybe with some exceptions)
+
+Strange warning:
+
+In [8]: rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
+~/venv_global/lib/python3.12/site-packages/sympy/core/operations.py:481: SymPyDeprecationWarning: 
+
+Using non-Expr arguments in Mul is deprecated (in this case, one of
+the arguments has type 'BooleanFalse').
+
+If you really did intend to use a multiplication or addition operation with
+this object, use the * or + operator instead.
+
+See https://docs.sympy.org/latest/explanation/active-deprecations.html#non-expr-args-deprecated
+for details.
+
+This has been deprecated since SymPy version 1.7. It
+will be removed in a future version of SymPy.
 
 ### Already fixed on the way to this (for context)
 

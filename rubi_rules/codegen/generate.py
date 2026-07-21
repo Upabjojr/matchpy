@@ -109,9 +109,9 @@ def _ffl_substitute_symbols(expr, substitutions: Dict[str, object]):
 def _ffl_is_fhw_head(node) -> bool:
     """True if `node` is a function-head-wildcard application ``F_[args...]``:
     a list whose head is itself a ``Pattern[F, Blank[]]`` (a wildcard as head)."""
-    return (isinstance(node, list) and node
-            and isinstance(node[0], list) and node[0]
-            and node[0][0] == 'Pattern')
+    return bool(isinstance(node, list) and node
+                and isinstance(node[0], list) and node[0]
+                and node[0][0] == 'Pattern')
 
 
 def _collect_pattern_names(node, out):

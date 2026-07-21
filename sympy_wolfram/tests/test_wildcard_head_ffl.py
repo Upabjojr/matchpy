@@ -1,0 +1,96 @@
+# -*- coding: utf-8 -*-
+"""FFL -> SymPy conversion of WILDCARD FUNCTION HEADS.
+
+A Rubi pattern ``F_[args]`` (a wildcard used as a function head) is rewritten by
+the code generator into the FFL node ``WildHeadApp[F_, args...]``. This module
+tests that the FFL converter turns that node into real ``WildHeadApp(...)`` code
+and that the code evaluates back to the expected SymPy object.
+"""
+import pytest
+import sympy
+
+from sympy_matching.wild import WildHeadApp, WildSymbol
+from sympy_wolfram.ffl_to_sympy import FFLConverter
+from sympy_wolfram.mathematica_parser import ffl_to_sympy_short_code
+
+# FFL shorthands
+PAT = lambda n: ['Pattern', n, ['Blank']]          # noqa: E731  -- n_
+OPT = lambda n: ['Optional', PAT(n)]               # noqa: E731  -- n_.
+
+
+def convert(ffl, **kw):
+    c = FFLConverter(**kw)
+    c._fixed_var = 'x'
+    return c.convert(ffl, is_pattern=True)
+
+
+class TestWildHeadAppCodeGeneration:
+
+    def test_simple_single_argument(self):
+        code = convert(['WildHeadApp', PAT('F'), PAT('v')])
+        assert code == 'WildHeadApp(F_, v_)'
+
+    def test_compound_plus_argument(self):
+        code = convert(['WildHeadApp', PAT('F'),
+                        ['Plus', OPT('a'), ['Times', OPT('b'), 'x']]])
+        assert code.startswith('WildHeadApp(F_,')
+        assert '_a_' in code and '_b_' in code and 'x' in code
+
+    def test_compound_times_argument(self):
+        code = convert(['WildHeadApp', PAT('F'), ['Times', OPT('d'), 'x']])
+        assert code.startswith('WildHeadApp(F_,')
+        assert '_d_' in code
+
+    def test_multiple_arguments(self):
+        code = convert(['WildHeadApp', PAT('F'), PAT('u'), PAT('v')])
+        assert code == 'WildHeadApp(F_, u_, v_)'
+
+    def test_head_wildcard_name_is_preserved(self):
+        for name in ('F', 'G', 'trig'):
+            code = convert(['WildHeadApp', PAT(name), PAT('v')])
+            assert code == f'WildHeadApp({name}_, v_)'
+
+    def test_nested_wild_head_apps(self):
+        code = convert(['WildHeadApp', PAT('F'),
+                        ['WildHeadApp', PAT('G'), PAT('v')]])
+        assert code == 'WildHeadApp(F_, WildHeadApp(G_, v_))'
+
+
+class TestWildHeadAppEvaluates:
+    """The emitted code must evaluate to a genuine WildHeadApp."""
+
+    def test_eval_namespace_exposes_wild_head_app(self):
+        assert FFLConverter().eval_ns['WildHeadApp'] is WildHeadApp
+
+    def test_generated_code_evaluates_to_wild_head_app(self):
+        c = FFLConverter()
+        c._fixed_var = 'x'
+        code = c.convert(['WildHeadApp', PAT('F'), PAT('v')], is_pattern=True)
+        ns = dict(c.eval_ns)
+        ns.update({'F_': WildSymbol('F'), 'v_': WildSymbol('v')})
+        obj = eval(code, ns)
+        assert isinstance(obj, WildHeadApp)
+        assert obj.head_wild.wildcard_name == 'F'
+        assert obj.applied_args[0].wildcard_name == 'v'
+
+    def test_short_code_api_roundtrip(self):
+        """The high-level API used by the code generator emits the same node."""
+        code, ns, _defs, _syms = ffl_to_sympy_short_code(
+            ['WildHeadApp', PAT('F'), ['Plus', OPT('a'), ['Times', OPT('b'), 'x']]],
+            fixed_var='x')
+        assert code.startswith('WildHeadApp(F_,')
+        obj = eval(code, {**ns})
+        assert isinstance(obj, WildHeadApp)
+        # the compound argument survived as a SymPy expression
+        assert isinstance(obj.applied_args[0], sympy.Basic)
+
+
+class TestOrdinaryConversionUnaffected:
+    """A head that merely *looks* similar must not be treated specially."""
+
+    def test_normal_function_head_still_converts_normally(self):
+        assert convert(['Sin', 'x']) == 'sympy.sin(x)'
+
+    def test_unknown_head_still_becomes_an_undefined_function(self):
+        code = convert(['SomeUnknownHead', 'x'])
+        assert "Function('SomeUnknownHead')" in code

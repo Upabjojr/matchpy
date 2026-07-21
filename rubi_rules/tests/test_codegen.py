@@ -325,3 +325,98 @@ class TestStableRuleNumbering:
         code = tr.translate_module(rules, module_name='test')
         nums = [int(n) for n in _re.findall(r'rule_number=(\d+)', code)]
         assert nums == [1, 2], f"expected [1, 2], got {nums}"
+
+
+# ---------------------------------------------------------------------------
+# Function-head wildcards: F_[args] -> WildHeadApp[F_, args] (pattern) and
+# F[args] -> WFApply[F, args] (replacement). MatchPy matches the wildcard head
+# natively, so no constraint or post-hoc decomposition is involved.
+# ---------------------------------------------------------------------------
+from rubi_rules.codegen.generate import (
+    _extract_fhw_from_pattern, _rewrite_fhw_in_replacement, _ffl_is_fhw_head,
+)
+
+_PAT = lambda n: ['Pattern', n, ['Blank']]          # noqa: E731
+_OPT = lambda n: ['Optional', _PAT(n)]              # noqa: E731
+
+
+class TestFunctionHeadWildcardDetection:
+
+    def test_detects_a_wildcard_head_application(self):
+        assert _ffl_is_fhw_head([_PAT('F'), _PAT('v')]) is True
+
+    def test_ordinary_head_is_not_a_wildcard_head(self):
+        assert _ffl_is_fhw_head(['Sin', 'x']) is False
+        assert _ffl_is_fhw_head(['Times', 'a', 'b']) is False
+
+    def test_non_list_and_empty_are_safe(self):
+        assert _ffl_is_fhw_head('x') is False
+        assert _ffl_is_fhw_head([]) is False
+
+    def test_derivative_operator_head_is_not_treated_as_a_plain_head_wildcard(self):
+        """Derivative[n_][f_] nests differently and is handled separately."""
+        node = [[['Derivative', _PAT('n')], _PAT('f')], _PAT('x')]
+        assert _ffl_is_fhw_head(node) is False
+
+
+class TestExtractFhwFromPattern:
+
+    def test_rewrites_into_wild_head_app(self):
+        new, heads = _extract_fhw_from_pattern([_PAT('F'), _PAT('v')])
+        assert new == ['WildHeadApp', _PAT('F'), _PAT('v')]
+        assert heads == {'F'}
+
+    def test_rewrites_nested_occurrence(self):
+        ffl = ['Times', 'u', ['Power', [_PAT('F'), _PAT('v')], _PAT('m')]]
+        new, heads = _extract_fhw_from_pattern(ffl)
+        assert heads == {'F'}
+        assert new == ['Times', 'u',
+                       ['Power', ['WildHeadApp', _PAT('F'), _PAT('v')], _PAT('m')]]
+
+    def test_collects_several_distinct_heads(self):
+        ffl = ['Times', [_PAT('F'), _PAT('u')], [_PAT('G'), _PAT('v')]]
+        _new, heads = _extract_fhw_from_pattern(ffl)
+        assert heads == {'F', 'G'}
+
+    def test_rewrites_doubly_nested_heads(self):
+        ffl = [_PAT('F'), [_PAT('G'), _PAT('v')]]
+        new, heads = _extract_fhw_from_pattern(ffl)
+        assert heads == {'F', 'G'}
+        assert new == ['WildHeadApp', _PAT('F'),
+                       ['WildHeadApp', _PAT('G'), _PAT('v')]]
+
+    def test_compound_argument_is_preserved(self):
+        arg = ['Plus', _OPT('a'), ['Times', _OPT('b'), 'x']]
+        new, _heads = _extract_fhw_from_pattern([_PAT('F'), arg])
+        assert new == ['WildHeadApp', _PAT('F'), arg]
+
+    def test_pattern_without_wildcard_head_is_unchanged(self):
+        ffl = ['Times', 'a', ['Sin', 'x']]
+        new, heads = _extract_fhw_from_pattern(ffl)
+        assert new == ffl and heads == set()
+
+
+class TestRewriteFhwInReplacement:
+
+    def test_rewrites_applied_head_into_wfapply(self):
+        out = _rewrite_fhw_in_replacement(['F', 'y'], {'F': 'F'})
+        assert out == ['WFApply', 'F', 'y']
+
+    def test_rewrites_nested_occurrences(self):
+        ffl = ['Times', 'c', ['Power', ['F', ['Plus', 'a', 'x']], 'm']]
+        out = _rewrite_fhw_in_replacement(ffl, {'F': 'F'})
+        assert out == ['Times', 'c',
+                       ['Power', ['WFApply', 'F', ['Plus', 'a', 'x']], 'm']]
+
+    def test_only_rewrites_known_head_names(self):
+        ffl = ['Times', ['F', 'y'], ['Sin', 'y']]
+        out = _rewrite_fhw_in_replacement(ffl, {'F': 'F'})
+        assert out == ['Times', ['WFApply', 'F', 'y'], ['Sin', 'y']]
+
+    def test_no_head_map_leaves_everything_alone(self):
+        ffl = ['Times', ['F', 'y'], ['Sin', 'y']]
+        assert _rewrite_fhw_in_replacement(ffl, {}) == ffl
+
+    def test_multi_argument_application(self):
+        out = _rewrite_fhw_in_replacement(['F', 'u', 'v'], {'F': 'F'})
+        assert out == ['WFApply', 'F', 'u', 'v']

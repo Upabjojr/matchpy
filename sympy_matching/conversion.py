@@ -201,20 +201,31 @@ def _sympy_basic_to_expression(obj: SympyBasic) -> Expression:
 
 # ─── from_expression: MatchPy → SymPy / Python ───────────────────────────────
 
+def _head_to_sympy(head: OperationHead) -> HeadRef:
+    """Map a matched MatchPy ``OperationHead`` to a substitutable SymPy ``HeadRef``.
+
+    A wildcard operation head binds to an ``OperationHead`` (matcher metadata, not
+    an expression). It must NEVER reach SymPy as-is -- arithmetic on it raises
+    ``TypeError: unsupported operand type(s) for -: 'OperationHead' and 'Symbol'``.
+    An unregistered head degrades to an undefined SymPy function of the same name
+    rather than leaking the raw object.
+    """
+    func = HEAD_TO_SYMPY_FUNC.get(head)
+    if func is None:
+        func = sympy.Function(head.name)
+    return HeadRef(func)
+
+
 @from_expression.register(SymbolWrapper)
 def _symbol_wrapper_from_expression(expr: SymbolWrapper):
     """Lossless conversion: unwrap the original SymPy object directly.
 
-    A wildcard operation head binds to a MatchPy ``OperationHead`` (metadata, not
-    an expression), wrapped in a SymbolWrapper. Map it back to the corresponding
-    SymPy function and wrap it in a ``HeadRef`` so it can be substituted into a
-    replacement and re-applied.
+    A wildcard operation head arrives wrapped in a SymbolWrapper; convert it to a
+    ``HeadRef`` so it can be substituted into a replacement and re-applied.
     """
     value = expr.value
     if isinstance(value, OperationHead):
-        func = HEAD_TO_SYMPY_FUNC.get(value)
-        if func is not None:
-            return HeadRef(func)
+        return _head_to_sympy(value)
     return value
 
 
@@ -269,6 +280,10 @@ def matchpy_to_sympy(expr):
         return sympy.Function(head.name)(*args)
 
     if isinstance(expr, SymbolWrapper):
+        # A wildcard operation head binds to an OperationHead; it must never reach
+        # SymPy raw (arithmetic on it raises TypeError) -- see _head_to_sympy.
+        if isinstance(expr.value, OperationHead):
+            return _head_to_sympy(expr.value)
         return expr.value
 
     if isinstance(expr, Symbol):
