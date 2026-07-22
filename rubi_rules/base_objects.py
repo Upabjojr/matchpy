@@ -1,5 +1,28 @@
 # -*- coding: utf-8 -*-
-"""Core objects for Rubi integration rules."""
+"""Core objects for Rubi integration rules.
+
+Trig / hyperbolic dispatch (faithful to Rubi)
+---------------------------------------------
+Rubi does NOT carry separate rules for every trig function. Its trig rules are
+written over INERT lowercase functions (``sin``/``sec``/... -> our ``InertSin``/
+``InertSec`` markers, which are opaque heads, NOT subclasses of ``sympy.sin``), and
+active integrands reach them through a single general fallback rule:
+
+    Int[u_, x_Symbol] := Int[DeactivateTrig[u, x], x] /; FunctionOfTrigOfLinearQ[u, x]
+
+Because ``Int[u_]`` is the most general pattern, Mathematica tries it LAST -- after
+every specific rule. We reproduce that in ``_dfs_match_int``/``_try_deactivate_trig``:
+only when no specific rule yields a clean result and the integrand is a function of
+trig/hyperbolic of a linear argument do we ``DeactivateTrig`` it and integrate the
+inert form, then ``ActivateTrig`` the answer. ``DeactivateTrig`` (in
+``utils.utility_functions``) canonicalizes EVERYTHING to inert CIRCULAR trig: the
+primary family is sin / tan / csc, co-functions fold in via a +pi/2 argument shift
+(cos->sin, sec->csc, cot->tan) and hyperbolics via an imaginary argument
+(sinh->-I sin[I x], ...). So one set of inert circular rules integrates the whole
+trig+hyperbolic corpus. It is idempotent: ``FunctionOfTrigOfLinearQ`` is False on
+already-inert forms, so the fallback never re-fires. See the project memory note
+``rubi-trig-deactivation-dispatch``.
+"""
 import os
 from pathlib import Path
 import sympy
@@ -110,11 +133,51 @@ def _extract_wild_names(constraint_obj):
     return []
 
 
+
+# Mathematica's MatchQ inspects the UNEVALUATED expression. By the time an
+# expression reaches us SymPy has normalised it -- (2*x)**3 is already 8*x**3 and no
+# longer matches `(c*x)^m` -- so structural matching here is NOT faithful to Rubi in
+# either direction: it misses matches Rubi would make, and (because the emitted code
+# no longer distinguishes an outer-bound name from a MatchQ-local one) it can also
+# match more loosely than Rubi would.
+#
+# Enforcing it therefore REFUSES rules Rubi would offer. Measured on a 120-integrand
+# corpus sample (solved counts):
+#
+#     stub, never enforced ............ 81 / 120     <- current default
+#     exclusions Not[MatchQ] only ..... 75 / 120     (-6)
+#     fully enforced .................. 69 / 120    (-11)
+#
+# Both polarities lose antiderivatives, so enforcement is OFF by default: a guard
+# that wrongly refuses a rule is worse than one that is merely permissive, which is
+# the behaviour this port has always had.
+#
+# `MatchQ.check()` itself is fully implemented and unit-tested; only its USE as a
+# rule guard is gated here. Turning this on needs matching that tolerates SymPy's
+# normalisation and restores the outer-bound/local distinction the generator drops --
+# not a stricter guard. Re-measure with the corpus A/B before flipping it.
+ENFORCE_MATCHQ = False
+
+
+def _mentions_matchq(constraint_obj) -> bool:
+    """True if this constraint is (or wraps) a MatchQ. See :data:`ENFORCE_MATCHQ`."""
+    if type(constraint_obj).__name__ == 'MatchQ':
+        return True
+    return any(_mentions_matchq(a) for a in getattr(constraint_obj, 'args', ()))
+
+
 def _make_constraint_checker(constraint_obj, variables):
     """Build a checker function for a single constraint (possibly compound).
 
     Returns a callable(**kwargs) -> bool.
     """
+    # MatchQ is not faithful enough to be used as a guard (see ENFORCE_MATCHQ).
+    # This MUST come before the Not/Or/And handling below: if the gate applied to a
+    # MatchQ nested inside a Not, the negation would turn the permissive True into
+    # False and REFUSE the rule -- the exact harm the gate exists to avoid.
+    if not ENFORCE_MATCHQ and _mentions_matchq(constraint_obj):
+        return lambda **kwargs: True
+
     # Not(inner): negate inner check
     if isinstance(constraint_obj, sympy.logic.boolalg.Not):
         inner = constraint_obj.args[0]
@@ -552,6 +615,46 @@ def _dfs_reduce_int(f, x, path, replacer, applied, budget, trace=None):
     return _dfs_match_int(f, x, path, replacer, applied, budget, trace)
 
 
+# Active trig/hyperbolic heads whose presence makes an integrand a candidate for
+# Rubi's DeactivateTrig dispatch. Cheap pre-check before the costlier predicate.
+_ACTIVE_TRIG_HEADS = (
+    sympy.sin, sympy.cos, sympy.tan, sympy.cot, sympy.sec, sympy.csc,
+    sympy.sinh, sympy.cosh, sympy.tanh, sympy.coth, sympy.sech, sympy.csch,
+)
+
+
+def _try_deactivate_trig(f, x, path, replacer, budget, trace):
+    """Rubi's general last-resort trig rule, as a DFS fallback.
+
+    Rubi (`4.1 Sine/4.1.0.1`) carries the most-general rule
+        Int[u_, x_Symbol] := Int[DeactivateTrig[u, x], x] /; FunctionOfTrigOfLinearQ[u, x]
+    which Mathematica's specificity ordering tries LAST -- after every specific
+    rule. It deactivates an active trig/hyperbolic-of-linear integrand into INERT
+    CIRCULAR trig (hyperbolic becomes circular with an imaginary argument), lets
+    the inert rules integrate it, then `ActivateTrig` rebuilds the active answer.
+
+    Returns (activated_result, applied_list) on success, else None. Idempotent:
+    `FunctionOfTrigOfLinearQ` is False on already-inert forms, so it never re-fires.
+    """
+    if not f.has(*_ACTIVE_TRIG_HEADS):
+        return None
+    from rubi_rules.utils.utility_functions import (
+        FunctionOfTrigOfLinearQ, DeactivateTrig, ActivateTrig)
+    try:
+        if not FunctionOfTrigOfLinearQ(f, x):
+            return None
+        inert = DeactivateTrig(f, x)
+    except Exception:
+        return None
+    if inert == f:  # nothing deactivated -> no progress, don't recurse
+        return None
+    local: list = []
+    reduced, blocked = _dfs_reduce_int(inert, x, path, replacer, local, budget, trace)
+    if blocked or not _dfs_is_clean(reduced):
+        return None
+    return ActivateTrig(reduced), local
+
+
 def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
     """Try the matching rules for `Int(f, x)`, preferring a fully-integrated result.
 
@@ -610,6 +713,18 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         _record(rule, 'candidate (non-clean)')
         if fallback is None and not reduced.has(sympy.zoo, sympy.nan):
             fallback = (reduced, rule, local)
+
+    # Rubi's general last-resort rule: no specific rule gave a clean result, so if
+    # the integrand is a function of trig/hyperbolic of a linear argument,
+    # deactivate it to inert circular trig and integrate that. A clean deactivated
+    # result is preferred over a non-clean fallback (it is a full antiderivative).
+    deact = _try_deactivate_trig(f, x, new_path, replacer, budget, trace)
+    if deact is not None:
+        reduced, local = deact
+        _record('Int[u]:=Int[DeactivateTrig[u,x],x]/;FunctionOfTrigOfLinearQ', 'accepted (deactivation)')
+        applied.append('DeactivateTrig/FunctionOfTrigOfLinearQ')
+        applied.extend(local)
+        return reduced, False
 
     if fallback is not None:
         reduced, rule, local = fallback

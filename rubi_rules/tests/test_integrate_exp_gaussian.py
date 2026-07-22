@@ -169,6 +169,12 @@ _SYMBOLIC_COEFF_INTEGRANDS = [
     log(_a + _b*x),             # SubstFor fix
     log(_a + _b*x)/x,           # PolynomialRemainder transcendental fix (-> polylog)
     x**2/(_a + _b*x)**sympy.Rational(3, 2),   # SubstFor fix
+    # deferred-ExpandIntegrand fix: these fed an infinite descent (coeffs squaring
+    # each level) -- x/(a+b*x)^2 TIMED OUT, x^2/(a+b*x)^2 "solved" to a junk form
+    # carrying 1073741824*b**30. See _check_no_giant_coefficients below.
+    x/(_a + _b*x)**2,
+    x**2/(_a + _b*x)**2,
+    x**3/(_a + _b*x)**2,
 ]
 
 
@@ -372,6 +378,101 @@ def _check_plain_sums_still_split():
     return failures
 
 
+def _check_matchq_gate_is_a_noop():
+    """With `ENFORCE_MATCHQ` off, MatchQ must never be consulted while integrating.
+
+    That is the whole safety argument for the gate: if `check()` is never called,
+    the gated path is logically IDENTICAL to the always-permissive behaviour this
+    port has always had, so enabling the implementation cannot have changed any
+    result. Asserted directly, because the obvious alternative -- comparing
+    solvability counts on a corpus sample -- is dominated by per-integral timeout
+    noise on a loaded machine and cannot distinguish a real change from jitter.
+    """
+    import rubi_rules.base_objects as bo
+    from rubi_rules.utils import constraints_wolfram as cw
+
+    if bo.ENFORCE_MATCHQ:
+        return []          # enforcement deliberately switched on; nothing to assert
+
+    calls = []
+    original = cw.MatchQ.check
+    cw.MatchQ.check = lambda self, **kw: (calls.append(1), original(self, **kw))[1]
+    try:
+        for integrand in (x*sympy.sqrt(1 + x), 1/(1 + x)**2, log(1 + x)/x,
+                          sin(x)*cos(x), x**3*log(x)):
+            try:
+                rubi_integrate(integrand, x)
+            except Exception:  # noqa: BLE001 - a failure here is another test's problem
+                pass
+    finally:
+        cw.MatchQ.check = original
+
+    if calls:
+        return [f"[matchq-gate] MatchQ.check() called {len(calls)}x despite "
+                f"ENFORCE_MATCHQ=False; the gate is not a no-op"]
+    return []
+
+
+def _check_hyperbolic_secant_via_deactivation():
+    """sech^m(a+b sech^n)^p has no dedicated rules; Rubi (and now our port) solves
+    it by deactivating sech(z)->inert sec(I z) and using the circular sec rules.
+    Verified against real Rubi on the Pi. Answers checked by differentiation."""
+    a, b = sympy.Symbol('a'), sympy.Symbol('b')
+    c, d = sympy.Symbol('c'), sympy.Symbol('d')
+    cases = [
+        sympy.sech(c + d*x)**2/(a + b*sympy.sech(c + d*x)**2),
+        1/(a + b*sympy.sech(c + d*x)**2),
+        (a + b*sympy.sech(c + d*x)**2)*sympy.sinh(c + d*x),
+    ]
+    subs0 = {a: 2, b: 3, c: sympy.Rational(1, 2), d: sympy.Rational(7, 10)}
+    failures = []
+    for u in cases:
+        try:
+            r = rubi_integrate(u, x)
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"[sech] {u}: {type(exc).__name__}: {exc}")
+            continue
+        if 'CannotIntegrate' in str(r) or 'Int(' in str(r):
+            failures.append(f"[sech] {u}: unsolved -> {r}")
+            continue
+        dr = sympy.diff(r, x) - u
+        ok = sum(1 for pt in (0.3, 0.6, 0.9, 1.2)
+                 if abs(complex(dr.subs(subs0).subs(x, pt).evalf())) < 1e-7)
+        if ok < 2:
+            failures.append(f"[sech] {u}: d/dx(result) != integrand -> {r}")
+    return failures
+
+
+def _check_no_giant_coefficients():
+    """The x^n/(a+b*x)^2 family must integrate to a SMALL-coefficient closed form.
+
+    The deferred-ExpandIntegrand bug did not always time out: x^2/(a+b*x)^2 still
+    "solved", but to a mathematically-correct junk form carrying 1073741824*b**30
+    from the geometric coefficient blow-up. Verifying the derivative alone would
+    pass that, so this guards the coefficient magnitude directly -- a correct
+    antiderivative of these has single-digit integer coefficients.
+    """
+    a, b = sympy.Symbol('a'), sympy.Symbol('b')
+    failures = []
+    for integrand in (x/(a + b*x)**2, x**2/(a + b*x)**2, x**3/(a + b*x)**2):
+        try:
+            result = rubi_integrate(integrand, x)
+        except Exception as exc:  # noqa: BLE001
+            failures.append(f"[giant-coeff] {integrand}: {type(exc).__name__}: {exc}")
+            continue
+        if 'CannotIntegrate' in str(result) or 'Int(' in str(result):
+            failures.append(f"[giant-coeff] {integrand}: unsolved -> {result}")
+            continue
+        biggest = max((abs(int(n)) for n in result.atoms(sympy.Integer)), default=0)
+        if biggest > 1000:
+            failures.append(
+                f"[giant-coeff] {integrand}: coefficient blow-up (max |int| = {biggest}), "
+                f"the deferred-ExpandIntegrand loop is back")
+        if sympy.simplify(sympy.diff(result, x) - integrand) != 0:
+            failures.append(f"[giant-coeff] {integrand}: d/dx != integrand -> {result}")
+    return failures
+
+
 @pytest.mark.slow
 def test_full_ruleset_integrals():
     """The one test that loads the entire Rubi rule set (~50s, then cached).
@@ -393,5 +494,8 @@ def test_full_ruleset_integrals():
     failures += _check_no_crash()                 # nested-exp preprocessing crash
     failures += _check_derivative_of_unknown_function()  # Derivative[n_][f_][x_] + sum rules
     failures += _check_plain_sums_still_split()         # whole-sum attempt is non-invasive
+    failures += _check_matchq_gate_is_a_noop()          # ENFORCE_MATCHQ off == old behaviour
+    failures += _check_no_giant_coefficients()          # deferred-ExpandIntegrand loop
+    failures += _check_hyperbolic_secant_via_deactivation()  # sech via inert-sec deactivation
     assert not failures, (
         f"{len(failures)} integral(s) failed:\n" + "\n".join(failures))

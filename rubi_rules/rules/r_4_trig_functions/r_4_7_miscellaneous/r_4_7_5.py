@@ -20,6 +20,10 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
+# Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
+# NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
+from rubi_rules.utils.inert_functions import (
+    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
     FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
@@ -194,7 +198,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int(u_/cos(_c_*(x*_b_ + _a_))**2, x),
+        pattern=Int(u_/InertCos(_c_*(x*_b_ + _a_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.tan((_c_ * (_a_ + (_b_ * x)))), x))), (Symbol('d') * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.tan((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
         module_name='4.7.5 Inert trig functions',
@@ -210,7 +214,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int(u_/sin(_c_*(x*_b_ + _a_))**2, x),
+        pattern=Int(u_/InertSin(_c_*(x*_b_ + _a_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With(List(Set(Symbol('d'), FreeFactors(sympy.cot((_c_ * (_a_ + (_b_ * x)))), x))), ((Integer(-1) * Symbol('d')) * ((_b_ * _c_))**(Integer(-1)) * Subst(Int(SubstFor(Integer(1), (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1))), u_, x), x), x, (sympy.cot((_c_ * (_a_ + (_b_ * x)))) * (Symbol('d'))**(Integer(-1)))))),
         module_name='4.7.5 Inert trig functions',
@@ -458,7 +462,7 @@ RULES = [
     ),
     # Rule 45
     RubiRulePattern(
-        pattern=Int(_u_*(_a_ + _b_*cos(x*_e_ + _d_)**2 + _c_*sin(x*_e_ + _d_)**2)**_p_, x),
+        pattern=Int(_u_*(_a_ + _b_*InertCos(x*_e_ + _d_)**2 + _c_*InertSin(x*_e_ + _d_)**2)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _p_], x), EqQ(_b_ - _c_, 0),),
         replacement=(_a_ + _c_)**_p_*Int(ActivateTrig(_u_), x),
         module_name='4.7.5 Inert trig functions',
@@ -466,7 +470,7 @@ RULES = [
     ),
     # Rule 46
     RubiRulePattern(
-        pattern=Int(_u_*(_a_ + _b_*tan(x*_e_ + _d_)**2 + _c_*sec(x*_e_ + _d_)**2)**_p_, x),
+        pattern=Int(_u_*(_a_ + _b_*InertTan(x*_e_ + _d_)**2 + _c_*InertSec(x*_e_ + _d_)**2)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _p_], x), EqQ(_b_ + _c_, 0),),
         replacement=(_a_ + _c_)**_p_*Int(ActivateTrig(_u_), x),
         module_name='4.7.5 Inert trig functions',
@@ -474,7 +478,7 @@ RULES = [
     ),
     # Rule 47
     RubiRulePattern(
-        pattern=Int(_u_*(_a_ + _b_*cot(x*_e_ + _d_)**2 + _c_*csc(x*_e_ + _d_)**2)**_p_, x),
+        pattern=Int(_u_*(_a_ + _b_*InertCot(x*_e_ + _d_)**2 + _c_*InertCsc(x*_e_ + _d_)**2)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _p_], x), EqQ(_b_ + _c_, 0),),
         replacement=(_a_ + _c_)**_p_*Int(ActivateTrig(_u_), x),
         module_name='4.7.5 Inert trig functions',
@@ -530,7 +534,7 @@ RULES = [
     ),
     # Rule 54
     RubiRulePattern(
-        pattern=Int(u_*(_c_*sin(v_))**m_, x),
+        pattern=Int(u_*(_c_*InertSin(v_))**m_, x),
         constraints=(FreeQ(_c_, x), LinearQ(v_, x), IntegerQ(m_ + sympy.S.Half), Not(SumQ(u_)), InverseFunctionFreeQ(u_, x), Not(FalseQ(FunctionOfTrig(u_*sin(v_/2)**(2*m_)/(_c_*tan(v_/2))**m_, x))), FunctionOfQ(NonfreeFactors(tan(FunctionOfTrig(u_*sin(v_/2)**(2*m_)/(_c_*tan(v_/2))**m_, x)), x), u_*sin(v_/2)**(2*m_)/(_c_*tan(v_/2))**m_, x),),
         replacement=With(List(Set(Symbol('w'), FunctionOfTrig((u_ * (sympy.sin((v_ * (Integer(2))**(Integer(-1)))))**((Integer(2) * m_)) * (((_c_ * sympy.tan((v_ * (Integer(2))**(Integer(-1))))))**(m_))**(Integer(-1))), x))), (((_c_ * sympy.sin(v_)))**(m_) * ((_c_ * sympy.tan((v_ * (Integer(2))**(Integer(-1))))))**(m_) * ((sympy.sin((v_ * (Integer(2))**(Integer(-1)))))**((Integer(2) * m_)))**(Integer(-1)) * Int((u_ * (sympy.sin((v_ * (Integer(2))**(Integer(-1)))))**((Integer(2) * m_)) * (((_c_ * sympy.tan((v_ * (Integer(2))**(Integer(-1))))))**(m_))**(Integer(-1))), x))),
         module_name='4.7.5 Inert trig functions',
@@ -538,7 +542,7 @@ RULES = [
     ),
     # Rule 55
     RubiRulePattern(
-        pattern=Int(_u_*(_a_*tan(x*_d_ + _c_)**_n_ + _b_*sec(x*_d_ + _c_)**_n_)**p_, x),
+        pattern=Int(_u_*(_a_*InertTan(x*_d_ + _c_)**_n_ + _b_*InertSec(x*_d_ + _c_)**_n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IntegersQ(_n_, p_),),
         replacement=Int((_a_*sin(x*_d_ + _c_)**_n_ + _b_)**p_*ActivateTrig(_u_)*sec(x*_d_ + _c_)**(_n_*p_), x),
         module_name='4.7.5 Inert trig functions',
@@ -546,7 +550,7 @@ RULES = [
     ),
     # Rule 56
     RubiRulePattern(
-        pattern=Int(_u_*(_a_*cot(x*_d_ + _c_)**_n_ + _b_*csc(x*_d_ + _c_)**_n_)**p_, x),
+        pattern=Int(_u_*(_a_*InertCot(x*_d_ + _c_)**_n_ + _b_*InertCsc(x*_d_ + _c_)**_n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IntegersQ(_n_, p_),),
         replacement=Int((_a_*cos(x*_d_ + _c_)**_n_ + _b_)**p_*ActivateTrig(_u_)*csc(x*_d_ + _c_)**(_n_*p_), x),
         module_name='4.7.5 Inert trig functions',
@@ -578,7 +582,7 @@ RULES = [
     ),
     # Rule 60
     RubiRulePattern(
-        pattern=Int(_u_*(_a_*cos(x*_d_ + _c_) + _b_*sin(x*_d_ + _c_))**_n_, x),
+        pattern=Int(_u_*(_a_*InertCos(x*_d_ + _c_) + _b_*InertSin(x*_d_ + _c_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), EqQ(_a_**2 + _b_**2, 0),),
         replacement=Int((_a_*exp(-_a_*(x*_d_ + _c_)/_b_))**_n_*ActivateTrig(_u_), x),
         module_name='4.7.5 Inert trig functions',

@@ -98,6 +98,11 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] (solved?) rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
 - [ ] create sympy_to_matchpy and matchpy_to_sympy function, and _sympy_to_matchpy / _matchpy_to_sympy that are single dispatched.
 - [X] rename_scoped_locals: shouldn't this act entirely inside the With, Module, Block inside sympy_wolfram/? Why is it imported in rubi_rules/? Maybe these constructs should instead replace their binding symbols with Dummy variables.
+
+- [ ] are there memory leaks?
+- [ ] generated rules contain stuff like: With(List(Set(Symbol('g'), ... ) ==> could you please avoid defining Symbol('g') in the rule? All symbols should be defined at the beginning of the file.
+- [ ] remember to document IDENTITY_ELEMENT as optional matching character.
+
 Strange warning:
 
 In [8]: rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)

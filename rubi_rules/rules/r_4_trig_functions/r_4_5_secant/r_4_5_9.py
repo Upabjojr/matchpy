@@ -20,6 +20,10 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
+# Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
+# NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
+from rubi_rules.utils.inert_functions import (
+    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
     FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
@@ -96,7 +100,7 @@ p_ = WildSymbol('p')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**_p_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(_p_),),
         replacement=Int((_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*_p_), x)/(4**_p_*_c_**_p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -104,7 +108,7 @@ RULES = [
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_)**_p_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(_p_),),
         replacement=Int((_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*_p_), x)/(4**_p_*_c_**_p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -112,7 +116,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**p_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_, p_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=(_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**(2*_n_))**p_*Int(u*(_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*p_), x)/(_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -120,7 +124,7 @@ RULES = [
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_)**p_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_, p_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=(_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**(2*_n_))**p_*Int(u*(_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*p_), x)/(_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -128,7 +132,7 @@ RULES = [
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int(1/(_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_), x),
+        pattern=Int(1/(_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), NeQ(-4*_a_*_c_ + _b_**2, 0),),
         replacement=Module(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), ((Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int(((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * (sympy.sec((_d_ + (_e_ * x))))**(_n_))))**(Integer(-1)), x)) + (Integer(-1) * (Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int(((_b_ + Symbol('q') + (Integer(2) * _c_ * (sympy.sec((_d_ + (_e_ * x))))**(_n_))))**(Integer(-1)), x))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -136,7 +140,7 @@ RULES = [
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int(1/(_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_), x),
+        pattern=Int(1/(_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), NeQ(-4*_a_*_c_ + _b_**2, 0),),
         replacement=Module(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), ((Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int(((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * (sympy.csc((_d_ + (_e_ * x))))**(_n_))))**(Integer(-1)), x)) + (Integer(-1) * (Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int(((_b_ + Symbol('q') + (Integer(2) * _c_ * (sympy.csc((_d_ + (_e_ * x))))**(_n_))))**(Integer(-1)), x))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -144,7 +148,7 @@ RULES = [
     ),
     # Rule 7
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**n2_)**_p_*sin(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**n2_)**_p_*InertSin(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), EqQ(n2_, 2*_n_), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegersQ(_n_, _p_),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cos((_d_ + (_e_ * x))), x))), ((Integer(-1) * Symbol('f')) * (_e_)**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_b_ + (_a_ * ((Symbol('f') * x))**(_n_))))**(_p_) * (((Symbol('f') * x))**((_n_ * _p_)))**(Integer(-1))), x), x, (sympy.cos((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -152,7 +156,7 @@ RULES = [
     ),
     # Rule 8
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**n2_)**_p_*cos(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**n2_)**_p_*InertCos(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), EqQ(n2_, 2*_n_), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegersQ(_n_, _p_),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.sin((_d_ + (_e_ * x))), x))), (Symbol('f') * (_e_)**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_b_ + (_a_ * ((Symbol('f') * x))**(_n_))))**(_p_) * (((Symbol('f') * x))**((_n_ * _p_)))**(Integer(-1))), x), x, (sympy.sin((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -160,7 +164,7 @@ RULES = [
     ),
     # Rule 9
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**n_ + _c_*sec(x*_e_ + _d_)**n2_)**_p_*sin(x*_e_ + _d_)**m_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**n_ + _c_*InertSec(x*_e_ + _d_)**n2_)**_p_*InertSin(x*_e_ + _d_)**m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _p_], x), EqQ(n2_, 2*n_), IntegerQ(m_/2), IntegerQ(n_/2),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.tan((_d_ + (_e_ * x))), x))), ((Symbol('f'))**((m_ + Integer(1))) * (_e_)**(Integer(-1)) * Subst(Int(((x)**(m_) * (ExpandToSum((_a_ + (_b_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(n_))), x))**(_p_) * (((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(((m_ * (Integer(2))**(Integer(-1))) + Integer(1))))**(Integer(-1))), x), x, (sympy.tan((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -168,7 +172,7 @@ RULES = [
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**n_ + _c_*csc(x*_e_ + _d_)**n2_)**_p_*cos(x*_e_ + _d_)**m_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**n_ + _c_*InertCsc(x*_e_ + _d_)**n2_)**_p_*InertCos(x*_e_ + _d_)**m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _p_], x), EqQ(n2_, 2*n_), IntegerQ(m_/2), IntegerQ(n_/2),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cot((_d_ + (_e_ * x))), x))), ((Integer(-1) * (Symbol('f'))**((m_ + Integer(1)))) * (_e_)**(Integer(-1)) * Subst(Int(((x)**(m_) * (ExpandToSum((_a_ + (_b_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(n_))), x))**(_p_) * (((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(((m_ * (Integer(2))**(Integer(-1))) + Integer(1))))**(Integer(-1))), x), x, (sympy.cot((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -176,7 +180,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**p_*sec(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**p_*InertSec(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(p_),),
         replacement=Int((_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*p_)*sec(x*_e_ + _d_)**_m_, x)/(4**p_*_c_**p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -184,7 +188,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_)**p_*csc(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_)**p_*InertCsc(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(p_),),
         replacement=Int((_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*p_)*csc(x*_e_ + _d_)**_m_, x)/(4**p_*_c_**p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -192,7 +196,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**p_*sec(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**p_*InertSec(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_, p_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=(_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**(2*_n_))**p_*Int((_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*p_)*sec(x*_e_ + _d_)**_m_, x)/(_b_ + 2*_c_*sec(x*_e_ + _d_)**_n_)**(2*p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -200,7 +204,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_)**p_*csc(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_)**p_*InertCsc(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_, p_], x), EqQ(_n2_, 2*_n_), EqQ(-4*_a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=(_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**(2*_n_))**p_*Int((_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*p_)*csc(x*_e_ + _d_)**_m_, x)/(_b_ + 2*_c_*csc(x*_e_ + _d_)**_n_)**(2*p_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -208,23 +212,23 @@ RULES = [
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**p_*sec(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**p_*InertSec(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), EqQ(_n2_, 2*_n_), IntegersQ(_m_, _n_, p_),),
-        replacement=Int(ExpandTrig((_a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**(2*_n_))**p_*sec(x*_e_ + _d_)**_m_, x), x),
+        replacement=Int(ExpandTrig((_a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**(2*_n_))**p_*InertSec(x*_e_ + _d_)**_m_, x), x),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
         rule_number=15,
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**_n2_)**p_*csc(x*_e_ + _d_)**_m_, x),
+        pattern=Int((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**_n2_)**p_*InertCsc(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), EqQ(_n2_, 2*_n_), IntegersQ(_m_, _n_, p_),),
-        replacement=Int(ExpandTrig((_a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*csc(x*_e_ + _d_)**(2*_n_))**p_*csc(x*_e_ + _d_)**_m_, x), x),
+        replacement=Int(ExpandTrig((_a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertCsc(x*_e_ + _d_)**(2*_n_))**p_*InertCsc(x*_e_ + _d_)**_m_, x), x),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
         rule_number=16,
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int((a_ + _b_*sec(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**_p_*tan(x*_e_ + _d_)**_m_, x),
+        pattern=Int((a_ + _b_*InertSec(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**_p_*InertTan(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(_n_), IntegerQ(_p_),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cos((_d_ + (_e_ * x))), x))), (Integer(-1) * ((_e_ * (Symbol('f'))**((_m_ + (_n_ * _p_) + Integer(-1)))))**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_c_ + (_b_ * ((Symbol('f') * x))**(_n_)) + (_c_ * ((Symbol('f') * x))**((Integer(2) * _n_)))))**(_p_) * ((x)**((_m_ + (Integer(2) * _n_ * _p_))))**(Integer(-1))), x), x, (sympy.cos((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -232,7 +236,7 @@ RULES = [
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int((a_ + _b_*csc(x*_e_ + _d_)**_n_ + _c_*sec(x*_e_ + _d_)**_n2_)**_p_*cot(x*_e_ + _d_)**_m_, x),
+        pattern=Int((a_ + _b_*InertCsc(x*_e_ + _d_)**_n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**_p_*InertCot(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(_n_), IntegerQ(_p_),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.sin((_d_ + (_e_ * x))), x))), (((_e_ * (Symbol('f'))**((_m_ + (_n_ * _p_) + Integer(-1)))))**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_c_ + (_b_ * ((Symbol('f') * x))**(_n_)) + (_c_ * ((Symbol('f') * x))**((Integer(2) * _n_)))))**(_p_) * ((x)**((_m_ + (Integer(2) * _n_ * _p_))))**(Integer(-1))), x), x, (sympy.sin((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -240,7 +244,7 @@ RULES = [
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int((a_ + _b_*sec(x*_e_ + _d_)**n_ + _c_*sec(x*_e_ + _d_)**_n2_)**_p_*tan(x*_e_ + _d_)**_m_, x),
+        pattern=Int((a_ + _b_*InertSec(x*_e_ + _d_)**n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**_p_*InertTan(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), EqQ(_n2_, 2*n_), IntegerQ(_m_/2), IntegerQ(n_/2),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.tan((_d_ + (_e_ * x))), x))), ((Symbol('f'))**((_m_ + Integer(1))) * (_e_)**(Integer(-1)) * Subst(Int(((x)**(_m_) * (ExpandToSum((a_ + (_b_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(n_))), x))**(_p_) * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -248,7 +252,7 @@ RULES = [
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int((a_ + _b_*csc(x*_e_ + _d_)**n_ + _c_*sec(x*_e_ + _d_)**_n2_)**_p_*cot(x*_e_ + _d_)**_m_, x),
+        pattern=Int((a_ + _b_*InertCsc(x*_e_ + _d_)**n_ + _c_*InertSec(x*_e_ + _d_)**_n2_)**_p_*InertCot(x*_e_ + _d_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), EqQ(_n2_, 2*n_), IntegerQ(_m_/2), IntegerQ(n_/2),),
         replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cot((_d_ + (_e_ * x))), x))), ((Integer(-1) * (Symbol('f'))**((_m_ + Integer(1)))) * (_e_)**(Integer(-1)) * Subst(Int(((x)**(_m_) * (ExpandToSum((a_ + (_b_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1))))) + (_c_ * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(n_))), x))**(_p_) * ((Integer(1) + ((Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.cot((_d_ + (_e_ * x))) * (Symbol('f'))**(Integer(-1)))))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -256,7 +260,7 @@ RULES = [
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int((A_ + _B_*sec(x*_e_ + _d_))*(a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertSec(x*_e_ + _d_))*(a_ + _b_*InertSec(x*_e_ + _d_) + _c_*InertSec(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, A_, _B_], x), EqQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(n_),),
         replacement=Int((A_ + _B_*sec(x*_e_ + _d_))*(_b_ + 2*_c_*sec(x*_e_ + _d_))**(2*n_), x)/(4**n_*_c_**n_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -264,7 +268,7 @@ RULES = [
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int((A_ + _B_*csc(x*_e_ + _d_))*(a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertCsc(x*_e_ + _d_))*(a_ + _b_*InertCsc(x*_e_ + _d_) + _c_*InertCsc(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, A_, _B_], x), EqQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(n_),),
         replacement=Int((A_ + _B_*csc(x*_e_ + _d_))*(_b_ + 2*_c_*csc(x*_e_ + _d_))**(2*n_), x)/(4**n_*_c_**n_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -272,7 +276,7 @@ RULES = [
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int((A_ + _B_*sec(x*_e_ + _d_))*(a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertSec(x*_e_ + _d_))*(a_ + _b_*InertSec(x*_e_ + _d_) + _c_*InertSec(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, A_, _B_], x), EqQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(n_)),),
         replacement=(a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2)**n_*Int((A_ + _B_*sec(x*_e_ + _d_))*(_b_ + 2*_c_*sec(x*_e_ + _d_))**(2*n_), x)/(_b_ + 2*_c_*sec(x*_e_ + _d_))**(2*n_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -280,7 +284,7 @@ RULES = [
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((A_ + _B_*csc(x*_e_ + _d_))*(a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertCsc(x*_e_ + _d_))*(a_ + _b_*InertCsc(x*_e_ + _d_) + _c_*InertCsc(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, A_, _B_], x), EqQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(n_)),),
         replacement=(a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2)**n_*Int((A_ + _B_*csc(x*_e_ + _d_))*(_b_ + 2*_c_*csc(x*_e_ + _d_))**(2*n_), x)/(_b_ + 2*_c_*csc(x*_e_ + _d_))**(2*n_),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -288,7 +292,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int((A_ + _B_*sec(x*_e_ + _d_))/(_a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2), x),
+        pattern=Int((A_ + _B_*InertSec(x*_e_ + _d_))/(_a_ + _b_*InertSec(x*_e_ + _d_) + _c_*InertSec(x*_e_ + _d_)**2), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0),),
         replacement=Module(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), (((_B_ + (((_b_ * _B_) + (Integer(-1) * (Integer(2) * A_ * _c_))) * (Symbol('q'))**(Integer(-1)))) * Int(((_b_ + Symbol('q') + (Integer(2) * _c_ * sympy.sec((_d_ + (_e_ * x))))))**(Integer(-1)), x)) + ((_B_ + (Integer(-1) * (((_b_ * _B_) + (Integer(-1) * (Integer(2) * A_ * _c_))) * (Symbol('q'))**(Integer(-1))))) * Int(((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * sympy.sec((_d_ + (_e_ * x))))))**(Integer(-1)), x)))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -296,7 +300,7 @@ RULES = [
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int((A_ + _B_*csc(x*_e_ + _d_))/(_a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2), x),
+        pattern=Int((A_ + _B_*InertCsc(x*_e_ + _d_))/(_a_ + _b_*InertCsc(x*_e_ + _d_) + _c_*InertCsc(x*_e_ + _d_)**2), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0),),
         replacement=Module(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), (((_B_ + (((_b_ * _B_) + (Integer(-1) * (Integer(2) * A_ * _c_))) * (Symbol('q'))**(Integer(-1)))) * Int(((_b_ + Symbol('q') + (Integer(2) * _c_ * sympy.csc((_d_ + (_e_ * x))))))**(Integer(-1)), x)) + ((_B_ + (Integer(-1) * (((_b_ * _B_) + (Integer(-1) * (Integer(2) * A_ * _c_))) * (Symbol('q'))**(Integer(-1))))) * Int(((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * sympy.csc((_d_ + (_e_ * x))))))**(Integer(-1)), x)))),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
@@ -304,17 +308,17 @@ RULES = [
     ),
     # Rule 27
     RubiRulePattern(
-        pattern=Int((A_ + _B_*sec(x*_e_ + _d_))*(_a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertSec(x*_e_ + _d_))*(_a_ + _b_*InertSec(x*_e_ + _d_) + _c_*InertSec(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(n_),),
-        replacement=Int(ExpandTrig((A_ + _B_*sec(x*_e_ + _d_))*(_a_ + _b_*sec(x*_e_ + _d_) + _c_*sec(x*_e_ + _d_)**2)**n_, x), x),
+        replacement=Int(ExpandTrig((A_ + _B_*InertSec(x*_e_ + _d_))*(_a_ + _b_*InertSec(x*_e_ + _d_) + _c_*InertSec(x*_e_ + _d_)**2)**n_, x), x),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
         rule_number=27,
     ),
     # Rule 28
     RubiRulePattern(
-        pattern=Int((A_ + _B_*csc(x*_e_ + _d_))*(_a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2)**n_, x),
+        pattern=Int((A_ + _B_*InertCsc(x*_e_ + _d_))*(_a_ + _b_*InertCsc(x*_e_ + _d_) + _c_*InertCsc(x*_e_ + _d_)**2)**n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), IntegerQ(n_),),
-        replacement=Int(ExpandTrig((A_ + _B_*csc(x*_e_ + _d_))*(_a_ + _b_*csc(x*_e_ + _d_) + _c_*csc(x*_e_ + _d_)**2)**n_, x), x),
+        replacement=Int(ExpandTrig((A_ + _B_*InertCsc(x*_e_ + _d_))*(_a_ + _b_*InertCsc(x*_e_ + _d_) + _c_*InertCsc(x*_e_ + _d_)**2)**n_, x), x),
         module_name='4.5.9 trig^m (a+b sec^n+c sec^(2 n))^p',
         rule_number=28,
     ),

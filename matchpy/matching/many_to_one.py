@@ -60,7 +60,7 @@ from ..expressions.functions import (
 )
 from ..utils import (VariableWithCount, commutative_sequence_variable_partition_iter)
 from .. import functions
-from .bipartite import BipartiteGraph, enum_maximum_matchings_iter, LEFT
+from .bipartite import BipartiteGraph, enum_maximum_matchings_iter, LEFT, RIGHT
 from .syntactic import OPERATION_END, is_operation
 from ._common import check_one_identity
 
@@ -543,25 +543,45 @@ class _MatchIter:
         matcher.add_subject(None)
         for operand in op_iter(subject):
             matcher.add_subject(operand)
+        # `self.patterns` is the set of still-viable pattern ids -- one entry per
+        # rule, so ~8500 for the Rubi rule set. Every set operation on it is O(n),
+        # and the body below runs once PER MATCH, which made this the hottest
+        # function once _build_bipartite was fixed. Three things are done about it:
+        #
+        #  * the entry value is captured ONCE, so restoring at the end of each
+        #    iteration is a plain rebind instead of an O(n) union;
+        #  * the narrowing is a single intersection instead of an intersection plus
+        #    a difference (the difference existed only to rebuild the entry value);
+        #  * the transition lookup, which builds a type-checked TransitionKey, is
+        #    done once per match instead of twice.
+        #
+        # `restore_patterns` is still passed to _check_constraints because that
+        # accumulates into it, but its contents are no longer needed here: rebinding
+        # `saved_patterns` restores exactly the same set it would have rebuilt.
+        saved_patterns = self.patterns
+        transitions = state.transitions
         for matched_pattern, new_substitution in matcher.match(subject, substitution):
             restore_constraints = set()
-            diff = set(new_substitution.keys()) - set(substitution.keys())
+            # dict key views support set algebra directly, with no intermediate sets
+            diff = new_substitution.keys() - substitution.keys()
             self.substitution = new_substitution
-            transition_set = state.transitions[TransitionKeyPatternId(value=matched_pattern)]
-            t_iter = iter(t.patterns for t in transition_set)
-            potential_patterns = next(t_iter).union(*t_iter)
-            restore_patterns = self.patterns - potential_patterns
-            self.patterns &= potential_patterns
+            transition_set = transitions[TransitionKeyPatternId(value=matched_pattern)]
+            if len(transition_set) == 1:
+                potential_patterns = transition_set[0].patterns
+            else:
+                t_iter = iter(t.patterns for t in transition_set)
+                potential_patterns = next(t_iter).union(*t_iter)
+            restore_patterns = set()
+            self.patterns = saved_patterns & potential_patterns
             for variable in diff:
                 self._check_constraints(variable, restore_constraints, restore_patterns)
                 if not self.patterns:
                     break
             if self.patterns:
-                transition_set = state.transitions[TransitionKeyPatternId(value=matched_pattern)]
                 for next_transition in transition_set:
                     yield from self._check_transition(next_transition, subject, False)
             self.constraints |= restore_constraints
-            self.patterns |= restore_patterns
+            self.patterns = saved_patterns
         self.substitution = substitution
         self.subjects.appendleft(subject)
 
@@ -1381,24 +1401,39 @@ class CommutativeMatcher(TypedModel):
         n = 0
         m = 0
         p_states = {}
+        # This is the hottest loop in commutative matching. It used to scan EVERY
+        # edge of the subject and test `pattern in patterns` -- a Python-level
+        # Multiset.__contains__ -- which on one Rubi integration meant ~51 MILLION
+        # tests for ~27000 edges actually created: about 4100 candidates examined per
+        # call to keep 2.
+        #
+        # The loop is therefore inverted. `patterns` (the patterns admissible at this
+        # transition) is small, while a subject's edge set is large, so we iterate the
+        # SMALL side and probe the large one: O(len(patterns)) C-level set lookups
+        # instead of O(len(edges)) interpreted iterations. `_graph` stores the
+        # neighbours as (RIGHT, pattern) tuples, hence the tagged probe.
+        edges_of = self.bipartite._graph.get
+        edge_values = self.bipartite._edges
         for subject, s_count in subjects.items():
-            if (LEFT, subject) in self.bipartite._graph:
-                any_patterns = False
-                for _, pattern in self.bipartite._graph[LEFT, subject]:
-                    if pattern in patterns:
-                        any_patterns = True
-                        subst = self.bipartite[subject, pattern]
-                        p_count = patterns[pattern]
-                        if pattern in p_states:
-                            p_start = p_states[pattern]
-                        else:
-                            p_start = p_states[pattern] = m
-                            m += p_count
-                        for i in range(n, n + s_count):
-                            for j in range(p_start, p_start + p_count):
-                                bipartite[(subject, i), (pattern, j)] = subst
-                if any_patterns:
-                    n += s_count
+            edges = edges_of((LEFT, subject))
+            if edges is None:
+                continue
+            any_patterns = False
+            for pattern, p_count in patterns.items():
+                if (RIGHT, pattern) not in edges:
+                    continue
+                any_patterns = True
+                subst = edge_values[subject, pattern]
+                if pattern in p_states:
+                    p_start = p_states[pattern]
+                else:
+                    p_start = p_states[pattern] = m
+                    m += p_count
+                for i in range(n, n + s_count):
+                    for j in range(p_start, p_start + p_count):
+                        bipartite[(subject, i), (pattern, j)] = subst
+            if any_patterns:
+                n += s_count
 
         return bipartite
 

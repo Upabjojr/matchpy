@@ -566,8 +566,35 @@ def _build_constraint_custom_functions() -> dict:
     return custom
 
 
-_REPLACEMENT_CUSTOM = _build_replacement_custom_functions()
-_CONSTRAINT_CUSTOM = _build_constraint_custom_functions()
+def _build_inert_trig_custom_functions() -> dict:
+    """Map Rubi's INERT (lowercase) trig heads to the InertSin/... markers.
+
+    Rubi writes its main trig rule PATTERNS over inert lowercase ``sin``/``cos``/...
+    -- deliberately distinct from the active Wolfram ``Sin``/``Cos`` -- and routes
+    active integrands to them through a general ``DeactivateTrig`` fallback rule
+    (see ``rubi_rules.base_objects`` and the project memory note
+    ``rubi-trig-deactivation-dispatch``). The inert markers therefore must NOT be
+    (and are not) subclasses of the active ``sympy.sin`` etc.; they are opaque
+    ``Function('InertSin')`` heads that only the inert rules match.
+
+    Without this override the FFL converter's default ``func_map`` collapses both
+    ``sin`` and ``Sin`` onto ``sympy.sin``, losing the inert/active distinction.
+    ``custom_functions`` takes precedence over ``func_map`` in the converter, so
+    these entries restore the faithful translation. Used in the pattern, the
+    replacement AND the constraint conversion so every occurrence is consistent.
+    """
+    from rubi_rules.utils.inert_functions import (
+        InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
+    return {
+        'sin': ('InertSin', InertSin), 'cos': ('InertCos', InertCos),
+        'tan': ('InertTan', InertTan), 'cot': ('InertCot', InertCot),
+        'sec': ('InertSec', InertSec), 'csc': ('InertCsc', InertCsc),
+    }
+
+
+_INERT_TRIG_CUSTOM = _build_inert_trig_custom_functions()
+_REPLACEMENT_CUSTOM = {**_build_replacement_custom_functions(), **_INERT_TRIG_CUSTOM}
+_CONSTRAINT_CUSTOM = {**_build_constraint_custom_functions(), **_INERT_TRIG_CUSTOM}
 
 
 # =============================================================================
@@ -758,6 +785,10 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
+# Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
+# NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
+from rubi_rules.utils.inert_functions import (
+    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
     FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
@@ -997,7 +1028,8 @@ Max = Symbol('Max')
         # the reserved variable, then every wildcard discovered -- so passing a
         # FRESH dict per call keeps one rule's wildcards out of the next one.
         pattern_code, wild_defs, _symbols = ffl_to_sympy_short_code(
-            integrand_ffl, reserved, namespace={})
+            integrand_ffl, reserved, namespace={},
+            custom_functions=_INERT_TRIG_CUSTOM)
 
         plain_wilds, opt_wilds = self._wildcard_names(wild_defs)
 

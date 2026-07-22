@@ -216,13 +216,16 @@ class ExpandIntegrand(MathematicaExpr):
         return Expr.__new__(cls, *args)
 
     def _evaluate(self, **kwargs):
-        args = self.args
-        if len(args) == 2:
-            u, x = args
-            return expand(u)
-        else:
-            u, v, x = args
-            return expand(u * v)
+        # Delegate to the EAGER ExpandIntegrand, never re-implement it. A plain
+        # sympy.expand here is wrong: for x/(a+b*x)^2 it multiplies the denominator
+        # out to x/(a^2+2*a*b*x+b^2*x^2) instead of the partial-fraction expansion
+        # 1/(b*(a+b*x)) - a/(b*(a+b*x)^2). The mis-expansion made rule 1.1.1.2#12
+        # feed a re-expandable form back into itself (via 9.1#47), an infinite
+        # descent with geometrically growing coefficients that the exact-match cycle
+        # detector cannot see -- so x/(a+b*x)^2 timed out and x^2/(a+b*x)^2 "solved"
+        # to a junk form carrying 1073741824*b**30.
+        from .utility_functions import ExpandIntegrand as _ExpandIntegrand
+        return _ExpandIntegrand(*self.args)
 
 
 # =============================================================================

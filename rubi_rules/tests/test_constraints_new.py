@@ -743,25 +743,65 @@ class TestConstraintVariablesAreRestrictedToThePattern:
         cc = _make_matchpy_constraint(MatchQ(u_, local_ * Symbol('x')), ['u'], {'u'})
         assert set(cc._variables) == {'u'}          # 'localvar' must NOT be declared
 
-    def test_the_constraint_is_actually_evaluated(self):
-        """Previously the unbound local caused a KeyError -> silent True."""
-        from matchpy.expressions.substitution import Substitution
-        from rubi_rules.base_objects import _make_matchpy_constraint
-        from rubi_rules.utils.constraints_wolfram import MatchQ
-        from sympy_matching.wild import WildSymbol
-        xx = Symbol('x')
-        u_, m_ = WildSymbol('u'), WildSymbol('m')
-        cc = _make_matchpy_constraint(MatchQ(u_, xx ** m_), ['u'], {'u'})
-        assert cc(Substitution({'u': xx ** 2})) is True
-        assert cc(Substitution({'u': sympy.cos(xx)})) is False   # was True before
 
-    def test_negation_now_discriminates(self):
-        from matchpy.expressions.substitution import Substitution
-        from rubi_rules.base_objects import _make_matchpy_constraint
+class TestMatchQEnforcementIsGated:
+    """`MatchQ` is implemented and unit-tested above, but is NOT used as a rule guard
+    by default: SymPy normalises expressions before we see them, so the match is not
+    faithful to Mathematica and enforcing it REFUSES rules Rubi would offer (measured
+    on a 120-integrand corpus sample: 81 solved unenforced vs 69 fully enforced).
+
+    These pin both halves -- that the default really is permissive, and that the
+    enforcement path really does discriminate when switched on -- so neither the
+    default nor the machinery can rot.
+    """
+
+    def _cc(self, constraint, enforce):
+        import rubi_rules.base_objects as bo
+        saved = bo.ENFORCE_MATCHQ
+        bo.ENFORCE_MATCHQ = enforce
+        try:
+            return bo._make_matchpy_constraint(constraint, ['u'], {'u'})
+        finally:
+            bo.ENFORCE_MATCHQ = saved
+
+    def _mq(self):
         from rubi_rules.utils.constraints_wolfram import MatchQ
         from sympy_matching.wild import WildSymbol
+        return MatchQ(WildSymbol('u'), Symbol('x') ** WildSymbol('m'))
+
+    def test_default_is_permissive_for_a_requirement(self):
+        from matchpy.expressions.substitution import Substitution
         xx = Symbol('x')
-        u_, m_ = WildSymbol('u'), WildSymbol('m')
-        cc = _make_matchpy_constraint(sympy.Not(MatchQ(u_, xx ** m_)), ['u'], {'u'})
+        cc = self._cc(self._mq(), enforce=False)
+        assert cc(Substitution({'u': sympy.cos(xx)})) is True    # not refused
+
+    def test_default_is_permissive_for_an_exclusion(self):
+        """A false positive here would REFUSE a rule, which is the harmful direction."""
+        from matchpy.expressions.substitution import Substitution
+        xx = Symbol('x')
+        cc = self._cc(sympy.Not(self._mq()), enforce=False)
+        assert cc(Substitution({'u': xx ** 2})) is True
+
+    def test_when_enforced_a_requirement_discriminates(self):
+        from matchpy.expressions.substitution import Substitution
+        xx = Symbol('x')
+        cc = self._cc(self._mq(), enforce=True)
+        assert cc(Substitution({'u': xx ** 2})) is True
+        assert cc(Substitution({'u': sympy.cos(xx)})) is False
+
+    def test_when_enforced_an_exclusion_discriminates(self):
+        from matchpy.expressions.substitution import Substitution
+        xx = Symbol('x')
+        cc = self._cc(sympy.Not(self._mq()), enforce=True)
         assert cc(Substitution({'u': xx ** 2})) is False
         assert cc(Substitution({'u': sympy.cos(xx)})) is True
+
+    def test_a_non_matchq_constraint_is_unaffected_by_the_gate(self):
+        """The gate must catch MatchQ only, never a neighbouring guard."""
+        from matchpy.expressions.substitution import Substitution
+        from rubi_rules.utils.constraints_wolfram import FreeQ
+        from sympy_matching.wild import WildSymbol
+        xx = Symbol('x')
+        cc = self._cc(FreeQ(WildSymbol('u'), xx), enforce=False)
+        assert cc(Substitution({'u': Symbol('a')})) is True
+        assert cc(Substitution({'u': xx})) is False

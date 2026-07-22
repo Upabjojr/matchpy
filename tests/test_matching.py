@@ -920,3 +920,120 @@ for name, obj in TestMatch.__dict__.items():
                     continue
                 PARAM_PATTERNS.setdefault(expression, set()).add(pattern)
                 PARAM_MATCHES[expression, pattern] = [{}] if is_match else []
+
+
+class TestBipartiteMembershipHoisting:
+    """`_build_bipartite` is the hottest loop in commutative matching -- a single
+    Rubi integration was measured making ~51 million `pattern in patterns` tests,
+    13% of its total runtime. Those go through Multiset's PYTHON-level
+    ``__contains__``, so the keys are hoisted into a plain set once per call and the
+    test becomes a C-level lookup (measured 12-26% faster end to end).
+
+    That rewrite is only valid because multiset membership means "count > 0", which
+    is exactly membership in the distinct elements. These pin that equivalence so a
+    future change cannot silently break the hot path's correctness.
+    """
+
+    def test_membership_equals_distinct_element_membership(self):
+        from multiset import Multiset
+        m = Multiset([1, 1, 2, 3, 3, 3])
+        keys = set(m.distinct_elements())
+        for candidate in (0, 1, 2, 3, 4, 99):
+            assert (candidate in m) == (candidate in keys), candidate
+
+    def test_holds_for_an_empty_multiset(self):
+        from multiset import Multiset
+        m = Multiset()
+        assert set(m.distinct_elements()) == set()
+        assert (1 in m) is False
+
+    def test_counts_are_still_read_from_the_multiset(self):
+        """The hoisted set answers membership only; multiplicity must still come
+        from the multiset, since the bipartite graph replicates edges per count."""
+        from multiset import Multiset
+        m = Multiset([5, 5, 5, 7])
+        assert m[5] == 3 and m[7] == 1
+        assert set(m.distinct_elements()) == {5, 7}
+
+    def test_commutative_matching_still_matches(self):
+        """End-to-end guard on the rewritten loop."""
+        from matchpy.expressions.expressions import Operation, OperationHead, Arity, Wildcard
+        from matchpy.matching.many_to_one import ManyToOneMatcher
+        from matchpy.expressions.expressions import Pattern, SymbolWrapper
+        head = OperationHead(name='f', arity=Arity.variadic, commutative=True)
+        x_, y_ = Wildcard.dot('x'), Wildcard.dot('y')
+        matcher = ManyToOneMatcher()
+        matcher.add(Pattern(Operation(head, x_, y_)), label='p')
+        subject = Operation(head, SymbolWrapper(1), SymbolWrapper(2))
+        got = [dict(s) for _l, s in matcher.match(subject)]
+        assert got, 'commutative pattern should still match'
+        assert all({'x', 'y'} <= set(s) for s in got)
+
+
+class TestCommutativeMatchLoopInvariants:
+    """`_match_commutative_operation` narrows `self.patterns` (one entry per rule --
+    ~8500 for Rubi) once per MATCH, so its set algebra dominated the matcher once
+    `_build_bipartite` was fixed. Three rewrites are pinned here.
+    """
+
+    def test_rebinding_restores_what_the_union_rebuilt(self):
+        """The loop used to restore via `patterns |= restore_patterns`, where
+        restore_patterns was `patterns - potential`. Capturing the entry set and
+        rebinding is O(1) and must give exactly the same set."""
+        entry = set(range(200))
+        potential = {3, 17, 42, 199, 500}
+        # old way
+        restore = entry - potential
+        narrowed = entry & potential
+        old_result = narrowed | restore
+        # new way
+        new_result = entry
+        assert old_result == new_result
+
+    def test_rebinding_matches_the_union_after_constraints_shrink_further(self):
+        """_check_constraints shrinks patterns further and accumulates the removed
+        ids; rebinding must still reproduce the original set."""
+        entry = set(range(50))
+        potential = set(range(10, 40))
+        restore = entry - potential
+        patterns = entry & potential
+        removed_by_constraint = {12, 13, 14}
+        restore |= patterns & removed_by_constraint
+        patterns -= removed_by_constraint
+        assert (patterns | restore) == entry
+
+    def test_dict_key_view_difference_equals_set_difference(self):
+        """`diff` is computed from dict key views instead of building two sets."""
+        from matchpy.expressions.substitution import Substitution
+        old = Substitution({'a': 1, 'b': 2})
+        new = Substitution({'a': 1, 'b': 2, 'c': 3, 'd': 4})
+        assert (new.keys() - old.keys()) == (set(new.keys()) - set(old.keys()))
+        assert (new.keys() - old.keys()) == {'c', 'd'}
+
+    def test_single_transition_fast_path_equals_the_union(self):
+        """With one transition the union collapses to that transition's patterns."""
+        only = {1, 2, 3}
+        transition_sets = [[only], [only, {4}], [only, {4}, {5, 1}]]
+        for ts in transition_sets:
+            t_iter = iter(p for p in ts)
+            expected = next(t_iter).union(*t_iter)
+            got = ts[0] if len(ts) == 1 else set().union(*ts)
+            assert got == expected, ts
+
+    def test_commutative_backtracking_still_yields_every_match(self):
+        """End-to-end: state must be fully restored between matches, or later
+        alternatives silently disappear."""
+        from matchpy.expressions.expressions import (
+            Operation, OperationHead, Arity, Wildcard, Pattern, SymbolWrapper)
+        from matchpy.matching.many_to_one import ManyToOneMatcher
+        head = OperationHead(name='g', arity=Arity.variadic, commutative=True)
+        matcher = ManyToOneMatcher()
+        matcher.add(Pattern(Operation(head, Wildcard.dot('u'), Wildcard.dot('v'))), label='p')
+        # two dot wildcards cover exactly two operands, and a commutative subject
+        # admits BOTH assignments -- so the loop must restore state between them.
+        subject = Operation(head, SymbolWrapper(1), SymbolWrapper(2))
+        results = [dict(s) for _l, s in matcher.match(subject)]
+        assert results, 'expected at least one match'
+        assert all({'u', 'v'} <= set(r) for r in results)
+        pairs = {(r['u'].value, r['v'].value) for r in results}
+        assert pairs == {(1, 2), (2, 1)}, pairs

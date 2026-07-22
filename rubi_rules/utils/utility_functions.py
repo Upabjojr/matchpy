@@ -132,7 +132,20 @@ def exception_means_false(f):
     return newf
 
 
+# NOTE (measured 2026-07-21, do not re-attempt naively): during matching the SAME
+# expression is simplified repeatedly as the DFS backtracks -- on `x/(a+b*x)^2`,
+# 12679 Simplify calls over only 129 distinct arguments (99% repeats), with
+# sympy.simplify accounting for ~62% of the runtime. Memoising this looks like an
+# obvious win and IS NOT: a cold-process A/B (one process per arm, so SymPy's global
+# caches cannot warm one arm for the other) showed the memo turning
+# `x^3/(a+b*x)^2` and `x^4/(a+b*x)^2` from 14.5s/3.0s solves into >90s TIMEOUTS.
+# The guard cost dominates -- every call pays an `expr.has(MathematicaExpr)` tree walk
+# plus hashing a large expression, which exceeds what the hit saves. A worthwhile fix
+# has to avoid re-deriving the same simplification in the first place (a cheaper
+# equivalence test before falling back to full simplify, or hoisting the call out of
+# the backtracking loop), not cache after the fact.
 def Simplify(expr):
+
     # Resolve any unevaluated deferred MathematicaExpr nodes (e.g. Coeff, D) before
     # handing the expression to sympy.simplify: a product of unevaluated nodes such
     # as Coeff(v,x,0)*Coeff(v,x,4) drives sympy's nc_simplify into unbounded
@@ -981,6 +994,11 @@ def PowerOfLinearQ(expr, x):
     m = Wild('m')
     n = Wild('n')
     Match = expr.match(u**m)
+    # `.match` can succeed while binding only SOME wildcards: a constant such as 1
+    # matches u**m as m=0 with u unbound, and indexing Match[u] then raises KeyError
+    # mid-integration. Nothing that fails to bind the base is a power of a linear.
+    if not Match or u not in Match or m not in Match:
+        return False
     if PolynomialQ(Match[u], x) and FreeQ(Match[m], x):
         if IntegerQ(Match[m]):
             e = FactorSquareFree(Match[u]).match(w**n)
@@ -2425,12 +2443,15 @@ def GeneralizedBinomialDegree(u, x):
 def GeneralizedBinomialParts(expr, x):
     expr = Expand(expr)
     if GeneralizedBinomialMatchQ(expr, x):
-        a = Wild('a', exclude=[x])
-        b = Wild('b', exclude=[x])
-        n = Wild('n', exclude=[x])
-        q = Wild('q', exclude=[x])
+        # The exclusions MUST match GeneralizedBinomialMatchQ's above. With the
+        # looser `exclude=[x]` this re-match could return a DEGENERATE solution the
+        # gate had rejected (b=0, leaving n unbound) and then raise KeyError.
+        a = Wild('a', exclude=[x, 0])
+        b = Wild('b', exclude=[x, 0])
+        n = Wild('n', exclude=[x, 0])
+        q = Wild('q', exclude=[x, 0])
         Match = expr.match(a*x**q + b*x**n)
-        if Match:
+        if Match and len(Match) == 4:
             if PosQ(Match[q] - Match[n]):
                 return [Match[b], Match[a], Match[q], Match[n]]
             elif PosQ(Match[n] - Match[q]):
@@ -2452,7 +2473,7 @@ def GeneralizedTrinomialParts(expr, x):
         n = Wild('n', exclude=[x, 0])
         q = Wild('q', exclude=[x])
         Match = expr.match(a*x**q + b*x**n+c*x**(2*n-q))
-        if Match and expr.is_Add:
+        if Match and len(Match) == 5 and expr.is_Add:
             return [Match[c], Match[b], Match[a], Match[n], 2*Match[n]-Match[q]]
     else:
         return False
@@ -2589,7 +2610,13 @@ def GeneralizedBinomialMatchQ(u, x):
         n = Wild('n', exclude=[x, 0])
         q = Wild('q', exclude=[x, 0])
         Match = u.match(a*x**q + b*x**n)
-        if Match and len(Match) == 4 and Match[q] != 0 and Match[n] != 0:
+        # Rubi's first clause is guarded by PosQ[n-q], i.e. the two exponents must
+        # DIFFER; everything else falls through to `GeneralizedBinomialParts := False`.
+        # Without that check a single monomial slips through on a spurious split
+        # (-3*x/2 matching as -x/2 + -x, q == n == 1) and GeneralizedBinomialParts is
+        # then called on something that is not a generalized binomial at all.
+        if (Match and len(Match) == 4 and Match[q] != 0 and Match[n] != 0
+                and Match[q] != Match[n]):
             return True
         else:
             return False
@@ -3941,24 +3968,13 @@ def SmartDenominator(expr):
 # =============================================================================
 # Inert (deactivated) trigonometric / hyperbolic functions
 # =============================================================================
-# Rubi distinguishes *active* trig functions (SymPy's sin, cos, ...) from
-# *inert* ones.  While integrating it deactivates the active functions into inert
-# markers so their operands are never auto-simplified, applies the inert-trig
-# rules, then reactivates.  We model an inert trig function as a plain
-# ``Function('sin')`` — an *undefined* function that prints like ``sin`` but is a
-# distinct head SymPy never evaluates or rewrites (e.g. ``Function('sin')(0)``
-# stays unevaluated, whereas ``sin(0)`` collapses to ``0``).  ``ActivateTrig``
-# turns them back into the real SymPy trig functions.
-InertSin = Function('sin')
-InertCos = Function('cos')
-InertTan = Function('tan')
-InertCot = Function('cot')
-InertSec = Function('sec')
-InertCsc = Function('csc')
-
-_INERT_TO_ACTIVE = {InertSin: sin, InertCos: cos, InertTan: tan,
-                    InertCot: cot, InertSec: sec, InertCsc: csc}
-_INERT_TRIG_HEADS = tuple(_INERT_TO_ACTIVE)
+# Inert trig-function markers live in their own module (rubi_rules.utils.
+# inert_functions); they are re-exported here so existing callers that do
+# ``from rubi_rules.utils.utility_functions import InertSin`` keep working.
+# ActivateTrig / DeactivateTrig and the inert-trig predicates below use them.
+from rubi_rules.utils.inert_functions import (  # noqa: E402
+    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc,
+    _INERT_TO_ACTIVE, _INERT_TRIG_HEADS)
 
 
 def ActivateTrig(u):
@@ -4132,12 +4148,516 @@ def InertReciprocalQ(f, g):
             (f.func is InertCos and g.func is InertSec) or
             (f.func is InertTan and g.func is InertCot))
 
+_ACTIVE_TRIG_HEADS = [sin, cos, tan, cot, sec, csc,
+                      sinh, cosh, tanh, coth, sech, csch]
+
+
 def DeactivateTrig(u, x):
     # (* u is a function of trig functions of a linear function of x. *)
     # (* DeactivateTrig[u,x] returns u with the trig functions replaced with inert trig functions. *)
-    return FixInertTrigFunction(DeactivateTrigAux(u, x), x)
+    # DeactivateTrig[(c+d x)^m (a+b trig[e+f x])^n, x] := (c+d x)^m (a+b DeactivateTrig[trig[e+f x],x])^n
+    if u.is_Mul:
+        c_ = Wild('c', exclude=[x]); d_ = Wild('d', exclude=[x])
+        a_ = Wild('a', exclude=[x]); b_ = Wild('b', exclude=[x])
+        e_ = Wild('e', exclude=[x]); f_ = Wild('f', exclude=[x])
+        m_ = Wild('m', exclude=[x]); n_ = Wild('n', exclude=[x])
+        for TR in _ACTIVE_TRIG_HEADS:
+            M = u.match((c_ + d_*x)**m_ * (a_ + b_*TR(e_ + f_*x))**n_)
+            if M is not None and M.get(d_) is not None and not EqQ(M[d_], 0):
+                inner = DeactivateTrig(TR(M[e_] + M[f_]*x), x)
+                return (M[c_] + M[d_]*x)**M[m_] * (M[a_] + M[b_]*inner)**M[n_]
+    return UnifyInertTrigFunction(FixInertTrigFunction(DeactivateTrigAux(u, x), x), x)
+
 
 def FixInertTrigFunction(u, x):
+    # Port of Rubi's FixInertTrigFunction (61 clauses).  Operates on INERT trig
+    # expressions produced by DeactivateTrigAux -- every lowercase trig head in
+    # the source maps to the Inert* markers.  Clauses are in Rubi source order
+    # (most-specific first); the ``return u`` catch-all is last.
+    sin_, cos_, tan_ = InertSin, InertCos, InertTan
+    cot_, sec_, csc_ = InertCot, InertSec, InertCsc
+    a_ = Wild('a', exclude=[x]); b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x]); n_ = Wild('n', exclude=[x])
+    m_ = Wild('m', exclude=[x]); p_ = Wild('p', exclude=[x])
+    A_ = Wild('A', exclude=[x]); B_ = Wild('B', exclude=[x])
+    C_ = Wild('C', exclude=[x])
+    v_ = Wild('v'); w_ = Wild('w'); u_ = Wild('u')
+    has = u.has
+
+    # a*u /; FreeQ[a,x]  -- pull out x-free multiplicative factors
+    if u.is_Mul:
+        coeff, rest = u.as_independent(x, as_Add=False)
+        if coeff != 1:
+            return coeff*FixInertTrigFunction(rest, x)
+
+    # u*(a*(b+v))^n /; FreeQ[{a,b,n},x] && Not[FreeQ[v,x]]  -- distribute
+    M = _umatch(u, u_*(a_*(b_ + v_))**n_)
+    if M is not None and not FreeQ(M[v_], x) and M[a_] != 1:
+        return FixInertTrigFunction(M[u_]*(M[a_]*M[b_] + M[a_]*M[v_])**M[n_], x)
+
+    # ---- (co)function of one power times power of another: TRIGa[v]^m*(c TRIGb[w])^n ----
+    # (fa, fb, fa_result)  with  fa[v]^m*(c*fb[w])^n -> fa_result[v]^(-m)*(c*fb[w])^n
+    _pairs = [
+        (csc_, sin_, sin_), (sec_, cos_, cos_), (cot_, tan_, tan_),
+        (tan_, cot_, cot_), (cos_, sec_, sec_), (sin_, csc_, csc_),
+        (sec_, sin_, cos_), (csc_, cos_, sin_), (cos_, tan_, sec_),
+        (sin_, cot_, csc_), (sin_, sec_, csc_), (cos_, csc_, sec_),
+        (cot_, sin_, tan_), (tan_, cos_, cot_), (csc_, tan_, sin_),
+        (sec_, cot_, cos_), (cot_, sec_, tan_), (tan_, csc_, cot_),
+    ]
+    for fa, fb, fr in _pairs:
+        if has(fa) and has(fb):
+            M = _umatch(u, fa(v_)**m_ * (c_*fb(w_))**n_)
+            if M is not None and IntegerQ(M[m_]):
+                return fr(M[v_])**(-M[m_]) * (M[c_]*fb(M[w_]))**M[n_]
+
+    # sec[v]^m*sec[w]^n -> cos[v]^-m cos[w]^-n ;  csc[v]^m*csc[w]^n -> sin[v]^-m sin[w]^-n
+    for fa, fr in [(sec_, cos_), (csc_, sin_)]:
+        if has(fa):
+            M = _umatch(u, fa(v_)**m_ * fa(w_)**n_)
+            if M is not None and M[v_] != M[w_] and IntegersQ(M[m_], M[n_]):
+                return fr(M[v_])**(-M[m_]) * fr(M[w_])**(-M[n_])
+
+    # u*TRIG[v]^m*(a+b*TRIG2[w])^n -> (ratio)^m * Fix(u*(a+b*TRIG2[w])^n)
+    for fa, fnum, fden, ftrig in [(tan_, sin_, cos_, sin_), (cot_, cos_, sin_, sin_),
+                                  (tan_, sin_, cos_, cos_), (cot_, cos_, sin_, cos_)]:
+        if has(fa) and has(ftrig):
+            M = _umatch(u, u_*fa(v_)**m_*(a_ + b_*ftrig(w_))**n_)
+            if M is not None and IntegerQ(M[m_]):
+                return (fnum(M[v_])**M[m_]/fden(M[v_])**M[m_]) * \
+                    FixInertTrigFunction(M[u_]*(M[a_] + M[b_]*ftrig(M[w_]))**M[n_], x)
+
+    # cot[v]^m*(a+b*(c*sin[w])^p)^n -> tan[v]^-m*(...)  ;  tan[v]^m*(a+b*(c*cos[w])^p)^n -> cot[v]^-m*(...)
+    for fa, fr, ftrig in [(cot_, tan_, sin_), (tan_, cot_, cos_)]:
+        if has(fa) and has(ftrig):
+            M = _umatch(u, fa(v_)**m_*(a_ + b_*(c_*ftrig(w_))**p_)**n_)
+            if M is not None and IntegerQ(M[m_]):
+                return fr(M[v_])**(-M[m_])*(M[a_] + M[b_]*(M[c_]*ftrig(M[w_]))**M[p_])**M[n_]
+
+    # u*(c*TRIG[v]^n)^p*w /; FreeQ[{c,p},x] && PowerOfInertTrigSumQ[w,TRIG,x]
+    for ftrig in [sin_, cos_, tan_, cot_, sec_, csc_]:
+        if has(ftrig) and u.is_Mul:
+            facs = list(u.args)
+            for i, fac in enumerate(facs):
+                Mf = fac.match((c_*ftrig(v_)**n_)**p_)
+                if Mf is None:
+                    continue
+                rest = Mul(*[facs[j] for j in range(len(facs)) if j != i])
+                if any(PowerOfInertTrigSumQ(w, ftrig, x) for w in _fix_factors(rest)):
+                    return (Mf[c_]*ftrig(Mf[v_])**Mf[n_])**Mf[p_]*FixInertTrigFunction(rest, x)
+
+    # u*TRIGa[v]^n*w /; PowerOfInertTrigSumQ[w,TRIGc,x] && IntegerQ[n] -> TRIGb[v]^-n*Fix(u*w)
+    _single = [
+        (sec_, cos_, cos_), (csc_, sin_, sin_), (sec_, cos_, sin_), (csc_, sin_, cos_),
+        (cot_, tan_, tan_), (cos_, sec_, tan_), (csc_, sin_, tan_),
+        (tan_, cot_, cot_), (sin_, csc_, cot_), (sec_, cos_, cot_),
+        (cos_, sec_, sec_), (cot_, tan_, sec_), (csc_, sin_, sec_),
+        (sin_, csc_, csc_), (tan_, cot_, csc_), (sec_, cos_, csc_),
+    ]
+    for fa, fr, fw in _single:
+        if has(fa) and u.is_Mul:
+            facs = list(u.args)
+            for i, fac in enumerate(facs):
+                Mf = fac.match(fa(v_)**n_)
+                if Mf is None or not IntegerQ(Mf[n_]):
+                    continue
+                rest = Mul(*[facs[j] for j in range(len(facs)) if j != i])
+                if any(PowerOfInertTrigSumQ(w, fw, x) for w in _fix_factors(rest)):
+                    return fr(Mf[v_])**(-Mf[n_])*FixInertTrigFunction(rest, x)
+
+    # u*TRIG[v]^m*(a*sin[v]+b*cos[v])^n -> (ratio)^m * Fix(u*(a sin[v]+b cos[v])^n)
+    for fa, fnum, fden in [(tan_, sin_, cos_), (cot_, cos_, sin_),
+                           (sec_, S(1), cos_), (csc_, S(1), sin_)]:
+        if has(fa) and has(sin_) and has(cos_):
+            M = _umatch(u, u_*fa(v_)**m_*(a_*sin_(v_) + b_*cos_(v_))**n_)
+            if M is not None and IntegerQ(M[m_]):
+                num = (fnum(M[v_])**M[m_] if fnum is not S(1) else S(1))
+                return num*fden(M[v_])**(-M[m_]) * \
+                    FixInertTrigFunction(M[u_]*(M[a_]*sin_(M[v_]) + M[b_]*cos_(M[v_]))**M[n_], x)
+
+    # f[v]^m*(A+B*g[v]+C*g[v]^2)   and   f[v]^m*(A+C*g[v]^2)   with InertReciprocal(f,g)
+    for f1 in _INERT_TRIG_HEADS:
+        for f2 in _INERT_TRIG_HEADS:
+            if not (InertReciprocalQ(f1(x), f2(x)) or InertReciprocalQ(f2(x), f1(x))):
+                continue
+            if not (has(f1) and has(f2)):
+                continue
+            M = _umatch(u, f1(v_)**m_*(A_ + B_*f2(v_) + C_*f2(v_)**2)*(a_ + b_*f2(v_))**n_)
+            if M is not None and IntegerQ(M[m_]) and M[C_] != 0 and M[B_] != 0:
+                return f2(M[v_])**(-M[m_])*(M[A_] + M[B_]*f2(M[v_]) + M[C_]*f2(M[v_])**2)*(M[a_] + M[b_]*f2(M[v_]))**M[n_]
+            M = _umatch(u, f1(v_)**m_*(A_ + C_*f2(v_)**2)*(a_ + b_*f2(v_))**n_)
+            if M is not None and IntegerQ(M[m_]) and M[C_] != 0:
+                return f2(M[v_])**(-M[m_])*(M[A_] + M[C_]*f2(M[v_])**2)*(M[a_] + M[b_]*f2(M[v_]))**M[n_]
+            M = _umatch(u, f1(v_)**m_*(A_ + B_*f2(v_) + C_*f2(v_)**2))
+            if M is not None and IntegerQ(M[m_]) and M[C_] != 0 and M[B_] != 0:
+                return f2(M[v_])**(-M[m_])*(M[A_] + M[B_]*f2(M[v_]) + M[C_]*f2(M[v_])**2)
+            M = _umatch(u, f1(v_)**m_*(A_ + C_*f2(v_)**2))
+            if M is not None and IntegerQ(M[m_]) and M[C_] != 0:
+                return f2(M[v_])**(-M[m_])*(M[A_] + M[C_]*f2(M[v_])**2)
+
+    return u
+
+
+def _fix_factors(expr):
+    return list(expr.args) if expr.is_Mul else [expr]
+
+
+def _umatch(u, pat):
+    # Like u.match(pat) but rejects degenerate collapses: SymPy will match a
+    # multi-factor pattern against a smaller product by dropping factors (and
+    # their wilds).  A genuine match binds EVERY wild in the pattern (an
+    # x-free coefficient of 1 or additive 0 is still bound explicitly), so we
+    # require completeness.  The "rest" wild ``u_`` is optional (default 1).
+    M = u.match(pat)
+    if M is None:
+        return None
+    for w in pat.atoms(Wild):
+        if w not in M:
+            if w.name == 'u':
+                M[w] = S.One
+            else:
+                return None
+    return M
+
+
+def UnifyInertTrigFunction(u, x):
+    # Port of Rubi's UnifyInertTrigFunction (75 clauses).  Canonicalizes the
+    # co-functions in an inert-trig expression (cos->sin, sec->csc, cot->tan)
+    # via a Pi/2 argument shift.  Clauses are in Rubi source order; the
+    # ``return u`` catch-all -- which appears mid-file in the source -- is placed
+    # LAST here so every specific clause is tried first.
+    sin_, cos_, tan_ = InertSin, InertCos, InertTan
+    cot_, sec_, csc_ = InertCot, InertSec, InertCsc
+    a_ = Wild('a', exclude=[x]); b_ = Wild('b', exclude=[x])
+    c_ = Wild('c', exclude=[x]); d_ = Wild('d', exclude=[x])
+    e_ = Wild('e', exclude=[x]); f_ = Wild('f', exclude=[x])
+    g_ = Wild('g', exclude=[x]); m_ = Wild('m', exclude=[x])
+    n_ = Wild('n', exclude=[x]); p_ = Wild('p', exclude=[x])
+    A_ = Wild('A', exclude=[x]); B_ = Wild('B', exclude=[x])
+    C_ = Wild('C', exclude=[x])
+    has = u.has
+
+    # a*u /; FreeQ[a,x]  -- pull out x-free multiplicative factors (head clause)
+    if u.is_Mul:
+        coeff, rest = u.as_independent(x, as_Add=False)
+        if coeff != 1:
+            return coeff*UnifyInertTrigFunction(rest, x)
+
+    def ap(M):
+        return M[e_] + pi/2 + M[f_]*x
+
+    def am(M):
+        return M[e_] - pi/2 + M[f_]*x
+
+    not_mul = not u.is_Mul
+
+    # ================= Cosine to sine =================
+    # 1.0 (a cos)^m (b csc)^n
+    if has(cos_) and has(csc_):
+        M = _umatch(u, (a_*cos_(e_ + f_*x))**m_ * (b_*csc_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*sin_(ap(M)))**M[m_] * (-M[b_]*sec_(ap(M)))**M[n_]
+    # 1.0 (a cos)^m (b sec)^n
+    if has(cos_) and has(sec_):
+        M = _umatch(u, (a_*cos_(e_ + f_*x))**m_ * (b_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*sin_(ap(M)))**M[m_] * (M[b_]*csc_(ap(M)))**M[n_]
+    # 1.1.1 (a+b cos)^n
+    if has(cos_) and not_mul:
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[n_]
+    # 1.1.2 (g sin)^p (a+b cos)^m   [a required]
+    if has(sin_) and has(cos_):
+        M = _umatch(u, (g_*sin_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[g_]*cos_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
+    # 1.1.2 (g csc)^p (a+b cos)^m   [a required]
+    if has(csc_) and has(cos_):
+        M = _umatch(u, (g_*csc_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[g_]*sec_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
+    # 1.1.3 (g cot)^p (a+b cos)^m   [a required]  (If[True] -> first branch)
+    if has(cot_) and has(cos_):
+        M = _umatch(u, (g_*cot_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (-M[g_]*tan_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
+    # 1.1.3 (g tan)^p (a+b cos)^m   [a required]
+    if has(tan_) and has(cos_):
+        M = _umatch(u, (g_*tan_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (-M[g_]*cot_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_]
+    # 1.2.1 (a+b cos)^m (c+d cos)^n
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_]
+    # 1.2.1 (a+b cos)^m (c+d sec)^n
+    if has(cos_) and has(sec_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 1.2.2 (g sin)^p (a+b cos)^m (c+d cos)^n
+    if has(sin_) and has(cos_):
+        M = _umatch(u, (g_*sin_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            if IntegerQ(2*M[p_]) and M[p_].is_negative and IntegerQ(2*M[n_]):
+                return (M[g_]*cos_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_] * (M[c_] - M[d_]*sin_(am(M)))**M[n_]
+            return (-M[g_]*cos_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_]
+    # 1.2.2 (g csc)^p (a+b cos)^m (c+d cos)^n
+    if has(csc_) and has(cos_):
+        M = _umatch(u, (g_*csc_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*sec_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_] * (M[c_] - M[d_]*sin_(am(M)))**M[n_]
+    # 1.2.3 (g cos)^p (a+b cos)^m (c+d cos)^n
+    if has(cos_):
+        M = _umatch(u, (g_*cos_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*sin_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_]
+    # 1.2.3 (g cos)^p (a+b cos)^m (c+d sec)^n
+    if has(cos_) and has(sec_):
+        M = _umatch(u, (g_*cos_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*sin_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 1.2.3 (g sec)^p (a+b cos)^m (c+d cos)^n
+    if has(sec_) and has(cos_):
+        M = _umatch(u, (g_*sec_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*csc_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_]
+    # 1.2.3 (g sec)^p (a+b cos)^m (c+d sec)^n
+    if has(sec_) and has(cos_):
+        M = _umatch(u, (g_*sec_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*csc_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 1.3.1 (a+b cos)^m (c+d cos)^n (A+B cos)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_ * (A_ + B_*cos_(e_ + f_*x)))
+        if M is not None and M[B_] != 0:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_] * (M[A_] + M[B_]*sin_(ap(M)))
+    # 1.4.1 (a+b cos)^m (A+B cos+C cos^2)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (A_ + B_*cos_(e_ + f_*x) + C_*cos_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[A_] + M[B_]*sin_(ap(M)) + M[C_]*sin_(ap(M))**2)
+    # 1.4.1 (a+b cos)^m (A+C cos^2)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (A_ + C_*cos_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[A_] + M[C_]*sin_(ap(M))**2)
+    # 1.4.2 (a+b cos)^m (c+d cos)^n (A+B cos+C cos^2)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_ * (A_ + B_*cos_(e_ + f_*x) + C_*cos_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_] * (M[A_] + M[B_]*sin_(ap(M)) + M[C_]*sin_(ap(M))**2)
+    # 1.4.2 (a+b cos)^m (c+d cos)^n (A+C cos^2)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x))**m_ * (c_ + d_*cos_(e_ + f_*x))**n_ * (A_ + C_*cos_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] + M[b_]*sin_(ap(M)))**M[m_] * (M[c_] + M[d_]*sin_(ap(M)))**M[n_] * (M[A_] + M[C_]*sin_(ap(M))**2)
+    # 1.7 (a+b (c cos)^n)^p   [single]
+    if has(cos_) and not_mul:
+        M = _umatch(u, (a_ + b_*(c_*cos_(e_ + f_*x))**n_)**p_)
+        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+            return (M[a_] + M[b_]*(M[c_]*sin_(ap(M)))**M[n_])**M[p_]
+    # 1.7 (d TRIG)^m (a+b (c cos)^n)^p
+    for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
+                             (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
+        if has(ftrig) and has(cos_):
+            M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*cos_(e_ + f_*x))**n_)**p_)
+            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+                return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(M[c_]*sin_(ap(M)))**M[n_])**M[p_]
+    # 1.7 (a+b cos^n)^m (A+B cos^n)
+    if has(cos_):
+        M = _umatch(u, (a_ + b_*cos_(e_ + f_*x)**n_)**m_ * (A_ + B_*cos_(e_ + f_*x)**n_))
+        if M is not None and M[B_] != 0 and not (EqQ(M[a_], 0) and IntegerQ(M[m_])):
+            return (M[a_] + M[b_]*sin_(ap(M))**M[n_])**M[m_] * (M[A_] + M[B_]*sin_(ap(M))**M[n_])
+
+    # ================= Cotangent to tangent =================
+    # 2.0 (a cos)^m (b cot)^n
+    if has(cos_) and has(cot_):
+        M = _umatch(u, (a_*cos_(e_ + f_*x))**m_ * (b_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*sin_(ap(M)))**M[m_] * (-M[b_]*tan_(ap(M)))**M[n_]
+    # 2.0 (a sin)^m (b cot)^n
+    if has(sin_) and has(cot_):
+        M = _umatch(u, (a_*sin_(e_ + f_*x))**m_ * (b_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*cos_(am(M)))**M[m_] * (-M[b_]*tan_(am(M)))**M[n_]
+    # 2.0 (a csc)^m (b cot)^n
+    if has(csc_) and has(cot_):
+        M = _umatch(u, (a_*csc_(e_ + f_*x))**m_ * (b_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*sec_(am(M)))**M[m_] * (-M[b_]*tan_(am(M)))**M[n_]
+    # 2.0 (a sec)^m (b cot)^n
+    if has(sec_) and has(cot_):
+        M = _umatch(u, (a_*sec_(e_ + f_*x))**m_ * (b_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_]*csc_(ap(M)))**M[m_] * (-M[b_]*tan_(ap(M)))**M[n_]
+    # 2.1.1 (a+b cot)^n
+    if has(cot_) and not_mul:
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[n_]
+    # 2.1.2 (d csc)^m (a+b cot)^n   [a required]
+    if has(csc_) and has(cot_):
+        M = _umatch(u, (d_*csc_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[d_]*sec_(am(M)))**M[m_] * (M[a_] - M[b_]*tan_(am(M)))**M[n_]
+    # 2.1.2 (d sin)^m (a+b cot)^n   [a required]
+    if has(sin_) and has(cot_):
+        M = _umatch(u, (d_*sin_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[d_]*cos_(am(M)))**M[m_] * (M[a_] - M[b_]*tan_(am(M)))**M[n_]
+    # 2.1.3 (d cos)^m (a+b cot)^n   [a required]
+    if has(cos_) and has(cot_):
+        M = _umatch(u, (d_*cos_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[d_]*sin_(ap(M)))**M[m_] * (M[a_] - M[b_]*tan_(ap(M)))**M[n_]
+    # 2.1.3 (d sec)^m (a+b cot)^n   [a required]
+    if has(sec_) and has(cot_):
+        M = _umatch(u, (d_*sec_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[d_]*csc_(ap(M)))**M[m_] * (M[a_] - M[b_]*tan_(ap(M)))**M[n_]
+    # 2.2.1 (a+b cot)^m (c+d cot)^n
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*tan_(ap(M)))**M[n_]
+    # 2.2.3 (g cot)^p (a+b cot)^m (c+d cot)^n
+    if has(cot_):
+        M = _umatch(u, (g_*cot_(e_ + f_*x))**p_ * (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*cot_(e_ + f_*x))**n_)
+        if M is not None:
+            return (-M[g_]*tan_(ap(M)))**M[p_] * (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*tan_(ap(M)))**M[n_]
+    # 2.2.3 (g cot)^p (a+b cot)^m (c+d tan)^n
+    if has(cot_) and has(tan_):
+        M = _umatch(u, (g_*cot_(e_ + f_*x))**p_ * (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*tan_(e_ + f_*x))**n_)
+        if M is not None:
+            return (-M[g_]*tan_(ap(M)))**M[p_] * (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*cot_(ap(M)))**M[n_]
+    # 2.3.1 (a+b cot)^m (c+d cot)^n (A+B cot)
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*cot_(e_ + f_*x))**n_ * (A_ + B_*cot_(e_ + f_*x)))
+        if M is not None and M[B_] != 0:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*tan_(ap(M)))**M[n_] * (M[A_] - M[B_]*tan_(ap(M)))
+    # 2.4.1 (a+b cot)^m (A+B cot+C cot^2)
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (A_ + B_*cot_(e_ + f_*x) + C_*cot_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[A_] - M[B_]*tan_(ap(M)) + M[C_]*tan_(ap(M))**2)
+    # 2.4.1 (a+b cot)^m (A+C cot^2)
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (A_ + C_*cot_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[A_] + M[C_]*tan_(ap(M))**2)
+    # 2.4.2 (a+b cot)^m (c+d cot)^n (A+B cot+C cot^2)
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*cot_(e_ + f_*x))**n_ * (A_ + B_*cot_(e_ + f_*x) + C_*cot_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*tan_(ap(M)))**M[n_] * (M[A_] - M[B_]*tan_(ap(M)) + M[C_]*tan_(ap(M))**2)
+    # 2.4.2 (a+b cot)^m (c+d cot)^n (A+C cot^2)
+    if has(cot_):
+        M = _umatch(u, (a_ + b_*cot_(e_ + f_*x))**m_ * (c_ + d_*cot_(e_ + f_*x))**n_ * (A_ + C_*cot_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] - M[b_]*tan_(ap(M)))**M[m_] * (M[c_] - M[d_]*tan_(ap(M)))**M[n_] * (M[A_] + M[C_]*tan_(ap(M))**2)
+    # 2.7 (a+b (c cot)^n)^p   [single]
+    if has(cot_) and not_mul:
+        M = _umatch(u, (a_ + b_*(c_*cot_(e_ + f_*x))**n_)**p_)
+        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+            return (M[a_] + M[b_]*(-M[c_]*tan_(ap(M)))**M[n_])**M[p_]
+    # 2.7 (d TRIG)^m (a+b (c cot)^n)^p
+    for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
+                             (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
+        if has(ftrig) and has(cot_):
+            M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*cot_(e_ + f_*x))**n_)**p_)
+            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+                return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(-M[c_]*tan_(ap(M)))**M[n_])**M[p_]
+
+    # ================= Cosecant to secant =================
+    # 3.1.1 (a+b sec)^n
+    if has(sec_) and not_mul:
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[n_]
+    # 3.1.2 (g sec)^p (a+b sec)^m   [a required]
+    if has(sec_):
+        M = _umatch(u, (g_*sec_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[g_]*csc_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_]
+    # 3.1.3 (g sin)^p (a+b sec)^m   [a required]
+    if has(sin_) and has(sec_):
+        M = _umatch(u, (g_*sin_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[g_]*cos_(am(M)))**M[p_] * (M[a_] - M[b_]*csc_(am(M)))**M[m_]
+    # 3.1.3 (g csc)^p (a+b sec)^m   [a required]
+    if has(csc_) and has(sec_):
+        M = _umatch(u, (g_*csc_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (M[g_]*sec_(am(M)))**M[p_] * (M[a_] - M[b_]*csc_(am(M)))**M[m_]
+    # 3.1.4 (g tan)^p (a+b sec)^m   [a required]
+    if has(tan_) and has(sec_):
+        M = _umatch(u, (g_*tan_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
+        if M is not None and not EqQ(M[a_], 0):
+            return (-M[g_]*cot_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_]
+    # 3.2.1 (a+b sec)^m (c+d sec)^n
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 3.2.2 (g sec)^p (a+b sec)^m (c+d sec)^n
+    if has(sec_):
+        M = _umatch(u, (g_*sec_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*csc_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 3.2.2 (g cos)^p (a+b sec)^m (c+d sec)^n
+    if has(cos_) and has(sec_):
+        M = _umatch(u, (g_*cos_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_)
+        if M is not None:
+            return (M[g_]*sin_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_]
+    # 3.3.1 (a+b sec)^m (d sec)^n (A+B sec)
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (d_*sec_(e_ + f_*x))**n_ * (A_ + B_*sec_(e_ + f_*x)))
+        if M is not None and M[B_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[d_]*csc_(ap(M)))**M[n_] * (M[A_] + M[B_]*csc_(ap(M)))
+    # 3.3.1 (a+b sec)^m (c+d sec)^n (A+B sec)^p
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (c_ + d_*sec_(e_ + f_*x))**n_ * (A_ + B_*sec_(e_ + f_*x))**p_)
+        if M is not None and M[B_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[c_] + M[d_]*csc_(ap(M)))**M[n_] * (M[A_] + M[B_]*csc_(ap(M)))**M[p_]
+    # 3.4.1 (a+b sec)^m (A+B sec+C sec^2)
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (A_ + B_*sec_(e_ + f_*x) + C_*sec_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[A_] + M[B_]*csc_(ap(M)) + M[C_]*csc_(ap(M))**2)
+    # 3.4.1 (a+b sec)^m (A+C sec^2)
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (A_ + C_*sec_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[A_] + M[C_]*csc_(ap(M))**2)
+    # 3.4.2 (a+b sec)^m (d sec)^n (A+B sec+C sec^2)
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (d_*sec_(e_ + f_*x))**n_ * (A_ + B_*sec_(e_ + f_*x) + C_*sec_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0 and M[B_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[d_]*csc_(ap(M)))**M[n_] * (M[A_] + M[B_]*csc_(ap(M)) + M[C_]*csc_(ap(M))**2)
+    # 3.4.2 (a+b sec)^m (d sec)^n (A+C sec^2)
+    if has(sec_):
+        M = _umatch(u, (a_ + b_*sec_(e_ + f_*x))**m_ * (d_*sec_(e_ + f_*x))**n_ * (A_ + C_*sec_(e_ + f_*x)**2))
+        if M is not None and M[C_] != 0:
+            return (M[a_] + M[b_]*csc_(ap(M)))**M[m_] * (M[d_]*csc_(ap(M)))**M[n_] * (M[A_] + M[C_]*csc_(ap(M))**2)
+    # 3.7 (a+b (c csc)^n)^p   [single]
+    if has(csc_) and not_mul:
+        M = _umatch(u, (a_ + b_*(c_*csc_(e_ + f_*x))**n_)**p_)
+        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+            return (M[a_] + M[b_]*(-M[c_]*sec_(ap(M)))**M[n_])**M[p_]
+    # 3.7 (d TRIG)^m (a+b (c csc)^n)^p
+    for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
+                             (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
+        if has(ftrig) and has(csc_):
+            M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*csc_(e_ + f_*x))**n_)**p_)
+            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+                if ftrig is csc_ and (EqQ(M[n_], 2) and EqQ(M[p_], 1)):
+                    continue
+                return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(-M[c_]*sec_(ap(M)))**M[n_])**M[p_]
+
+    # catch-all
     return u
 
 def DeactivateTrigAux(u, x):
@@ -5921,13 +6441,34 @@ class Gamma(Function):
             if (NumericQ(a) and NumericQ(b)) or a == 1:
                 return uppergamma(a, b)
 
+def _TrigPowerOfLinearMatchQ(u, x):
+    # Rubi's structural shortcut inside FunctionOfTrigOfLinearQ:
+    #   MatchQ[u, (c_.+d_.*x)^m_.*(a_.+b_.*trig_[e_.+f_.*x])^n_. /;
+    #            FreeQ[{a,b,c,d,e,f,m,n},x] && (TrigQ[trig] || HyperbolicQ[trig])]
+    # It catches poly*trig forms (e.g. x*Sin[x]) that FunctionOfTrig alone rejects
+    # because of the free x-power factor. The heads checked are the ACTIVE trig and
+    # hyperbolic functions only, so an already-inert integrand does NOT match here --
+    # that keeps the deactivation dispatch idempotent (no infinite loop).
+    a = Wild('a', exclude=[x]); b = Wild('b', exclude=[x])
+    c = Wild('c', exclude=[x]); d = Wild('d', exclude=[x])
+    e = Wild('e', exclude=[x]); f = Wild('f', exclude=[x])
+    m = Wild('m', exclude=[x]); n = Wild('n', exclude=[x])
+    for trig in (sin, cos, tan, cot, sec, csc, sinh, cosh, tanh, coth, sech, csch):
+        match = u.match((c + d*x)**m * (a + b*trig(e + f*x))**n)
+        if match is not None and match.get(f) not in (None, S(0)) and match.get(n) not in (None, S(0)):
+            return True
+    return False
+
+
 def FunctionOfTrigOfLinearQ(u, x):
     # If u is an algebraic function of trig functions of a linear function of x,
     # FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
-    if FunctionOfTrig(u, None, x) and AlgebraicTrigFunctionQ(u, x) and FunctionOfLinear(FunctionOfTrig(u, None, x), x):
+    # Faithful port of Rubi's two-branch definition (see IntegrationUtilityFunctions.m):
+    #   the structural MatchQ shortcut, OR (FunctionOfTrig non-False AND AlgebraicTrigFunctionQ).
+    if _TrigPowerOfLinearMatchQ(u, x):
         return True
-    else:
-        return False
+    v = FunctionOfTrig(u, None, x)
+    return v is not None and v is not False and bool(AlgebraicTrigFunctionQ(u, x))
 
 def ElementaryFunctionQ(u):
     # ElementaryExpressionQ[u] returns True if u is a sum, product, or power and all the operands

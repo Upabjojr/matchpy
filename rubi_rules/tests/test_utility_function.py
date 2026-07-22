@@ -1585,6 +1585,51 @@ def test_FunctionOfQ():
     assert FunctionOfQ(S(a), x*2, x)
     assert FunctionOfQ(S(3*x), x*2, x)
 
+
+# FunctionOfQ(v, u, x, PureFlag): "is u a function of v?". The values below were
+# CROSS-CHECKED against real Rubi 4.17.3 in Mathematica (ssh pi@192.168.1.119,
+# 2026-07-23); each pair is (our result, Rubi result) and they must agree.
+#
+# The PureFlag distinction matters and is subtle, so it is pinned here:
+#   1/(a+b sech^2) is NOT a PURE function of tanh (PureFlag=True -> False), because
+#   the pure test only accepts Tanh/Coth heads directly; but it IS a function of
+#   tanh (PureFlag=False -> True) since sech^2 = 1 - tanh^2. This exact pair is why
+#   the 4.7.5 inert-trig rule (which uses FunctionOfQ[...,True]) does NOT fire on
+#   sech^2/(a+b sech^2) -- in Rubi either -- a fact confirmed on the Pi, not a bug.
+_FUNCTION_OF_Q_CASES = [
+    # (v, u, PureFlag, expected)   -- expected verified against Rubi on the Pi
+    (lambda A: tanh(A), lambda A: 1/(a + b*sech(A)**2), True,  False),
+    (lambda A: tanh(A), lambda A: 1/(a + b*sech(A)**2), False, True),
+    (lambda A: sin(A),  lambda A: sin(A)**2 + sin(A),   True,  True),
+    (lambda A: sin(A),  lambda A: cos(A),               True,  False),
+    (lambda A: cos(A),  lambda A: sec(A)**2,            True,  True),
+    (lambda A: tanh(A), lambda A: sech(A),              True,  False),
+    (lambda A: tanh(A), lambda A: sech(A),              False, False),  # odd power: needs sqrt
+    (lambda A: cosh(A), lambda A: 1/(a + b*cosh(A)**2), False, True),
+]
+
+
+def test_FunctionOfQ_matches_rubi_pure_flag():
+    A = c + d*x
+    for build_v, build_u, pure, expected in _FUNCTION_OF_Q_CASES:
+        got = bool(FunctionOfQ(build_v(A), build_u(A), x, pure))
+        assert got == expected, (build_v(A), build_u(A), pure, got, expected)
+
+
+def test_FunctionOfQ_atom_and_exp_cases():
+    """Non-trig cases, also Pi-verified."""
+    assert FunctionOfQ(x, x**2 + x, x, True) is True
+    assert FunctionOfQ(exp(x), a + b*exp(x), x, False) is True
+
+
+def test_FunctionOfQ_sech_squared_is_a_function_of_tanh_but_not_purely():
+    """The specific pair behind the sech^2/(a+b sech^2) investigation, pinned so a
+    future change to the pure/non-pure split cannot silently drift from Rubi."""
+    A = c + d*x
+    u = 1/(a + b*sech(A)**2)
+    assert FunctionOfQ(tanh(A), u, x, PureFlag=True) is False
+    assert FunctionOfQ(tanh(A), u, x, PureFlag=False) is True
+
 def test_ExpandTrigExpand():
     assert ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
     assert ExpandTrigExpand(1, cos(x) + sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
@@ -2054,9 +2099,11 @@ def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6
 
 def test_DeactivateTrig():
-    # DeactivateTrig turns active trig into inert markers
-    from rubi_rules.utils.utility_functions import InertSec
-    assert DeactivateTrig(sec(a + b*x), x) == InertSec(a + b*x)
+    # DeactivateTrig turns active trig into inert markers AND canonicalizes the
+    # co-functions into the primary family the way Rubi does (Pi-verified via the
+    # DeactivateTrig battery): sec -> csc with a +pi/2 argument shift.
+    from rubi_rules.utils.utility_functions import InertCsc
+    assert DeactivateTrig(sec(a + b*x), x) == InertCsc(a + b*x + pi/2)
 
 def test_Quotient():
     from rubi_rules.utils.utility_functions import Quotient
@@ -2567,3 +2614,144 @@ def test_RationalFunctionExponents_always_returns_a_pair():
     xx = Symbol('x')
     for expr_fn, _ in _RFE_CASES:
         assert len(RationalFunctionExponents(expr_fn(xx), xx)) == 2
+
+
+# ---------------------------------------------------------------------------
+# A sympy `.match()` can SUCCEED while binding only SOME of its wildcards.
+# Indexing the result unconditionally then raises KeyError mid-integration --
+# found by the corpus runner on x**(m+1)/sqrt(a+b*x), x**m/sqrt(-3*x-2) and
+# (-x)**m/sqrt(3*x-2), which aborted with `KeyError: u_` / `KeyError: n_`.
+# ---------------------------------------------------------------------------
+
+def test_PowerOfLinearQ_on_a_constant_does_not_crash():
+    """1 matches u**m as m=0 with u UNBOUND, so Match[u] used to raise."""
+    xx = Symbol('x')
+    assert PowerOfLinearQ(S(1), xx) is False
+
+
+def test_PowerOfLinearQ_still_recognises_a_power_of_a_linear():
+    xx = Symbol('x')
+    assert PowerOfLinearQ((2 + 3*xx)**4, xx) is True
+
+
+def test_PowerOfLinearQ_rejects_a_non_linear_base():
+    xx = Symbol('x')
+    assert PowerOfLinearQ((1 + xx**2)**3, xx) is False
+
+
+def test_GeneralizedBinomialMatchQ_rejects_a_single_monomial():
+    """Rubi guards its first clause with PosQ[n-q], so the two exponents must
+    DIFFER. Without that, -3*x/2 slipped through on a spurious -x/2 + -x split
+    (q == n == 1) and GeneralizedBinomialParts was then handed a non-binomial."""
+    xx = Symbol('x')
+    assert GeneralizedBinomialMatchQ(Rational(-3, 2)*xx, xx) is False
+    assert GeneralizedBinomialMatchQ(3*xx, xx) is False
+
+
+def test_GeneralizedBinomialParts_on_a_single_monomial_is_False():
+    """Rubi's final clause: GeneralizedBinomialParts[u_, x_] := False."""
+    xx = Symbol('x')
+    assert GeneralizedBinomialParts(Rational(-3, 2)*xx, xx) is False
+    assert GeneralizedBinomialParts(3*xx, xx) is False
+
+
+def test_GeneralizedBinomialParts_still_decomposes_a_genuine_one():
+    xx = Symbol('x')
+    assert GeneralizedBinomialParts(3*xx**5 + 2*xx**2, xx) == [2, 3, 5, 2]
+
+
+def test_GeneralizedBinomialParts_uses_the_same_wildcards_as_its_gate():
+    """The gate and the decomposition must agree on what a generalized binomial is.
+    With looser exclusions the re-match could return a DEGENERATE solution the gate
+    had rejected (b=0, leaving n unbound) and raise KeyError."""
+    xx = Symbol('x')
+    for expr in (Rational(-3, 2)*xx, 3*xx**5 + 2*xx**2, xx**3, S(4)):
+        gated = GeneralizedBinomialMatchQ(expr, xx)
+        parts = GeneralizedBinomialParts(expr, xx)      # must never raise
+        assert gated is True or parts is False, (expr, gated, parts)
+
+
+# ---------------------------------------------------------------------------
+# The DEFERRED ExpandIntegrand must delegate to the eager one, not re-implement
+# it with sympy.expand. Re-implementing gave x/(a+b*x)^2 -> x/(a^2+2abx+b^2x^2)
+# (denominator multiplied out) instead of the partial-fraction expansion, which
+# fed rule 1.1.1.2#12 a re-expandable form and caused an infinite descent with
+# geometrically growing coefficients (x/(a+b*x)^2 timed out; x^2/(a+b*x)^2
+# "solved" to a junk form carrying 1073741824*b**30).
+# ---------------------------------------------------------------------------
+
+def test_deferred_ExpandIntegrand_matches_eager():
+    from rubi_rules.utils.rubi_utils import ExpandIntegrand as Deferred
+    from rubi_rules.utils.utility_functions import ExpandIntegrand as Eager
+    xx, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+    for u in [xx/(a + b*xx)**2, xx**2/(a + b*xx)**2, 1/(xx*(a + b*xx))]:
+        assert Deferred(u, xx).doit() == Eager(u, xx), u
+
+
+def test_deferred_ExpandIntegrand_does_partial_fractions_not_denominator_expansion():
+    from rubi_rules.utils.rubi_utils import ExpandIntegrand as Deferred
+    xx, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+    result = Deferred(xx/(a + b*xx)**2, xx).doit()
+    # partial fractions: 1/(b(a+bx)) - a/(b(a+bx)^2); the WRONG (plain expand)
+    # answer x/(a^2+2abx+b^2x^2) has an expanded denominator, so (a+b*x)**2 must
+    # still appear as a factor in the correct result.
+    assert result.has((a + b*xx)**2) or result.has((a + b*xx)**(-2)), result
+    assert not result.has(a**2 + 2*a*b*xx + b**2*xx**2)
+
+
+def test_deferred_ExpandIntegrand_three_arg_still_expands_product():
+    """The 3-arg form (u, v, x) legitimately expands u*v; delegation preserves it."""
+    from rubi_rules.utils.rubi_utils import ExpandIntegrand as Deferred
+    from rubi_rules.utils.utility_functions import ExpandIntegrand as Eager
+    xx = Symbol('x')
+    u, v = (xx + 1), (xx + 2)
+    assert Deferred(u, v, xx).doit() == Eager(u, v, xx)
+
+
+# ---------------------------------------------------------------------------
+# Hyperbolic secant/cosecant via Rubi's inert-trig unification.
+# Rubi has no sech^m(a+b sech^n)^p rules; it DeactivateTrig's sech(z)->sec(I z)
+# (inert) and lets the CIRCULAR sec rules integrate it (Tan[I z] -> Tanh). Our
+# generated rules match ACTIVE sympy.sec, and sympy.sec(I z) auto-collapses to
+# 1/cosh, so DeactivateTrig builds InertSec=Function('sec'); its matcher head is
+# registered (forward only) to the active sec head so it matches those rules.
+# ---------------------------------------------------------------------------
+
+def test_DeactivateTrig_sech_becomes_inert_sec_of_imaginary_argument():
+    """Pi-verified: DeactivateTrig[Sech^2/(a+b Sech^2)] = sec[I z]^2/(a+b sec[I z]^2)."""
+    from rubi_rules.utils.utility_functions import DeactivateTrig, InertSec
+    xx, a, b, c, d = symbols('x a b c d')
+    u = sech(c + d*xx)**2/(a + b*sech(c + d*xx)**2)
+    dz = DeactivateTrig(u, xx)
+    # the sech factor became InertSec of I*(c+d*x)
+    import sympy as _sp
+    inert = [t for t in dz.atoms(_sp.Function) if t.func is InertSec]
+    assert inert, dz
+    assert _sp.expand(inert[0].args[0] - _sp.I*(c + d*xx)) == 0
+
+
+def test_inert_trig_heads_are_distinct_from_active():
+    """Inert markers must NOT share a MatchPy head with the active SymPy functions.
+    Rubi's trig rules are inert and match only after DeactivateTrig; an inert leaf
+    has to stay a distinct head so it can never masquerade as a solved active
+    result. (Supersedes the old head-registration approach.)"""
+    from rubi_rules.utils.utility_functions import InertSec
+    from sympy_matching.conversion import to_expression
+    import sympy as _sp
+    xx = Symbol('x')
+    assert to_expression(InertSec(xx)).head != to_expression(_sp.sec(xx)).head
+
+
+def test_deactivation_dispatch_solves_cofunction_integrals():
+    """Rubi's DeactivateTrig dispatch (the general FunctionOfTrigOfLinearQ fallback
+    rule) routes active circular AND hyperbolic co-functions through the inert
+    circular rules. Every case below returned CannotIntegrate/timed out before the
+    faithful FixInertTrigFunction + UnifyInertTrigFunction port."""
+    from rubi_rules.base_objects import rubi_integrate, Int as _Int
+    xx, a, b, c, d = symbols('x a b c d')
+    # sec^2 integrates to the clean tan(x)
+    assert simplify(rubi_integrate(sec(xx)**2, xx).diff(xx) - sec(xx)**2) == 0
+    # cos^2 (circular), cosh^2 (hyperbolic) and sech^2/(a+b sech^2) all now solve
+    for u in (cos(xx)**2, cosh(xx)**2, sech(c + d*xx)**2/(a + b*sech(c + d*xx)**2)):
+        r = rubi_integrate(u, xx)
+        assert 'CannotIntegrate' not in str(r) and not r.has(_Int), u
