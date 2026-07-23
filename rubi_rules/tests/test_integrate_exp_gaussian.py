@@ -310,6 +310,32 @@ def _check_no_crash():
     return failures
 
 
+def test_polynomial_remainder_surd_coeffs_do_not_crash():
+    """PolynomialQuotient/Remainder on surd-coefficient polynomials must not raise.
+
+    Integrands like (a+b*x)**4/(c+d*x**3) factor c+d*x**3 into pieces with (c/d)**(1/3)
+    coefficients; a Rubi EqQ constraint then runs PolynomialRemainder over the EX
+    domain, where SymPy cannot detect zero and raises PolynomialDivisionFailed. That
+    is a *sibling* of PolynomialError (not a subclass), so it escaped the original
+    `except sympy.PolynomialError` and crashed the whole integration. The deferred
+    nodes must instead fall back gracefully so the rule simply does not apply.
+    """
+    from sympy import Rational, Symbol
+    from rubi_rules.utils.rubi_utils import PolynomialRemainder, PolynomialQuotient
+    xx, a, b, c, d = (Symbol(s) for s in 'x a b c d'.split())
+    r = (c/d)**Rational(1, 3)
+    p = xx**2 - r*xx + r**2
+    q = (-a**4*d + 4*a**3*b*d*r + 4*a*b**3*c - b**4*c*r)*xx \
+        + (2*a**4*d*r + 4*a**3*b*d*r**2 - 8*a*b**3*c*r - b**4*c*r**2)
+    # Guard: these exact inputs really do defeat SymPy's raw division (else the test
+    # would silently stop covering the bug).
+    with pytest.raises(sympy.polys.polyerrors.PolynomialDivisionFailed):
+        sympy.rem(p, q, xx)
+    # The Rubi deferred nodes must swallow that and return something, not raise.
+    assert PolynomialRemainder(p, q, xx).doit() is not None
+    assert PolynomialQuotient(p, q, xx).doit() is not None
+
+
 def _check_inthide():
     """IntHide[u,x] := Block[{$ShowSteps=False}, Int[u,x]] actually integrates u.
 

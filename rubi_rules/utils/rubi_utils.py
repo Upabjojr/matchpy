@@ -307,10 +307,13 @@ class PolynomialQuotient(MathematicaExpr):
         p, q, x = self.args
         try:
             return sympy.quo(p, q, x)
-        except sympy.PolynomialError:
-            # p is transcendental in x (e.g. contains log(...x...)); Mathematica
-            # treats such a term as degree 0 in x, so the quotient by a
-            # positive-degree q is 0 (remainder is p).
+        except sympy.polys.polyerrors.BasePolynomialError:
+            # Either p is transcendental in x (e.g. contains log(...x...)) --
+            # Mathematica treats such a term as degree 0 in x, so the quotient by a
+            # positive-degree q is 0 (remainder is p) -- OR SymPy could not perform
+            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
+            # coefficients Mathematica would cancel symbolically). Either way fall
+            # back to quotient 0 rather than crashing the whole integration.
             return sympy.Integer(0)
 
 
@@ -328,10 +331,11 @@ class PolynomialRemainder(MathematicaExpr):
         p, q, x = self.args
         try:
             return sympy.rem(p, q, x)
-        except sympy.PolynomialError:
-            # p is transcendental in x (e.g. contains log(...x...)); Mathematica
-            # treats such a term as degree 0 in x, so it is its own remainder mod a
-            # positive-degree q (quotient is 0).
+        except sympy.polys.polyerrors.BasePolynomialError:
+            # p is transcendental in x (Mathematica treats it as degree 0, so it is
+            # its own remainder mod a positive-degree q) OR SymPy could not perform
+            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
+            # coefficients). Either way return p rather than crashing integration.
             return p
 
 
