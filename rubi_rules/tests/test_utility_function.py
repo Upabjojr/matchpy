@@ -132,6 +132,34 @@ def test_ZeroQ():
 def test_NonzeroQ():
     assert NonzeroQ(S(1)) == True
 
+
+def test_ZeroQ_numeric_pretest_is_sound():
+    """ZeroQ has a fast numeric pre-test that returns False (nonzero) when the
+    expression is provably nonzero at a probe point, skipping the expensive
+    sympy.simplify. It must never flip a verdict:
+      * generically-nonzero -> False (may take the fast path);
+      * identically-zero (even when unexpanded) -> True (falls back to Simplify);
+      * nonzero but ZERO at the probe points -> still False (the pre-test declines,
+        Simplify decides) -- guards against a probe root causing a wrong `True`.
+    """
+    from sympy.core.numbers import Rational
+    from rubi_rules.utils.utility_functions import _provably_nonzero, _ZEROQ_PROBE_POINTS
+    # generically nonzero
+    assert ZeroQ(b*c - a*d) is False
+    assert _provably_nonzero(b*c - a*d) is True
+    # identically zero but not auto-expanded -> pre-test declines, Simplify -> True
+    assert ZeroQ((a + b)**2 - a**2 - 2*a*b - b**2) is True
+    assert _provably_nonzero((a + b)**2 - a**2 - 2*a*b - b**2) is False
+    # a nonzero expression whose ROOTS are exactly the probe points for `a`
+    p0 = list(_ZEROQ_PROBE_POINTS[0].values())[0]
+    p1 = list(_ZEROQ_PROBE_POINTS[1].values())[0]
+    tricky = (a - p0) * (a - p1)          # zero at both probe points, nonzero symbolically
+    assert _provably_nonzero(tricky) is False   # pre-test correctly declines
+    assert ZeroQ(tricky) is False               # ...and Simplify gives the right answer
+    # pure numbers are decided exactly, not by the probe
+    assert ZeroQ(S(0)) is True
+    assert ZeroQ(S(5)) is False
+
 def test_FreeQ():
     l = [a*b, x, a + b]
     assert FreeQ(l, x) == False

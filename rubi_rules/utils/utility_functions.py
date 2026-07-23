@@ -210,12 +210,59 @@ def FalseQ(u):
 
     return u == False
 
+_ZEROQ_PROBE_POINTS = (
+    {'i': Rational(7, 3), 'j': Rational(11, 5), 'k': Rational(13, 4), 'l': Rational(17, 6)},
+    {'i': Rational(23, 9), 'j': Rational(5, 2), 'k': Rational(29, 7), 'l': Rational(9, 4)},
+)
+
+
+def _provably_nonzero(expr):
+    """Sound fast pre-test for ZeroQ: True only if ``expr`` is provably NOT
+    identically zero, established by evaluating it at cheap rational probe points.
+
+    A nonzero numeric value at any point proves the symbolic expression is not
+    identically zero, so returning True here can never change a ZeroQ verdict --
+    every uncertain case (numerically zero, non-numeric, deferred node, undefined at
+    the point) returns False and the caller falls back to the exact ``Simplify``.
+    This avoids the (expensive) full ``sympy.simplify`` on the overwhelmingly common
+    "generically nonzero discriminant" constraints (e.g. ``b*c - a*d``).
+    """
+    from sympy_wolfram.objects import MathematicaExpr
+    if not isinstance(expr, Basic) or expr.has(MathematicaExpr):
+        return False
+    syms = sorted(expr.free_symbols, key=lambda s: s.sort_key())
+    if not syms:
+        return False  # a pure constant: let the exact `== 0` decide it
+    cyc = list(_ZEROQ_PROBE_POINTS[0].values())
+    for point in _ZEROQ_PROBE_POINTS:
+        pv = list(point.values())
+        subs = {s: pv[idx] if idx < len(pv) else cyc[idx % len(cyc)]
+                for idx, s in enumerate(syms)}
+        try:
+            val = expr.xreplace(subs).evalf(15)
+        except Exception:  # noqa: BLE001 -- any eval failure -> fall back to exact
+            continue
+        if val is None or not getattr(val, 'is_number', False):
+            continue
+        if val.has(zoo, oo, S.NaN) or val.is_finite is False:
+            continue
+        try:
+            if abs(complex(val)) > 1e-9:
+                return True
+        except (TypeError, ValueError):
+            continue
+    return False
+
+
 def ZeroQ(*expr):
     if len(expr) == 1:
         if isinstance(expr[0], list):
             return list(ZeroQ(i) for i in expr[0])
         else:
-            return Simplify(_ensure_sympy(expr[0])) == 0
+            u = _ensure_sympy(expr[0])
+            if _provably_nonzero(u):
+                return False
+            return Simplify(u) == 0
     else:
         return all(ZeroQ(i) for i in expr)
 
@@ -230,7 +277,9 @@ def NegativeQ(u):
     return False
 
 def NonzeroQ(expr):
-    return Simplify(_ensure_sympy(expr)) != 0
+    # Not[ZeroQ] -- reuses the sound numeric pre-test so a generically-nonzero
+    # constraint avoids the expensive full Simplify (see _provably_nonzero).
+    return not ZeroQ(expr)
 
 
 def FreeQ(nodes, var):
