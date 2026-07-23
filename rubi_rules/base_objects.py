@@ -624,14 +624,15 @@ _ACTIVE_TRIG_HEADS = (
 
 
 def _try_deactivate_trig(f, x, path, replacer, budget, trace):
-    """Rubi's general last-resort trig rule, as a DFS fallback.
+    """Rubi's general trig deactivation rule.
 
-    Rubi (`4.1 Sine/4.1.0.1`) carries the most-general rule
+    Rubi (`4.1 Sine/4.1.0.1`) carries the rule
         Int[u_, x_Symbol] := Int[DeactivateTrig[u, x], x] /; FunctionOfTrigOfLinearQ[u, x]
-    which Mathematica's specificity ordering tries LAST -- after every specific
-    rule. It deactivates an active trig/hyperbolic-of-linear integrand into INERT
-    CIRCULAR trig (hyperbolic becomes circular with an imaginary argument), lets
-    the inert rules integrate it, then `ActivateTrig` rebuilds the active answer.
+    which fires for any function of trig/hyperbolic of a LINEAR argument, ahead of the
+    active-trig fallback rules in the `4.7 Miscellaneous` section (see the caller in
+    `_dfs_match_int`). It deactivates the integrand into INERT CIRCULAR trig
+    (hyperbolic becomes circular with an imaginary argument), lets the inert rules
+    integrate it, then `ActivateTrig` rebuilds the active answer.
 
     Returns (activated_result, applied_list) on success, else None. Idempotent:
     `FunctionOfTrigOfLinearQ` is False on already-inert forms, so it never re-fires.
@@ -684,6 +685,23 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         if trace is not None:
             trace.append({'depth': depth, 'integrand': Int(f, x), 'rule': rule, 'status': status})
 
+    # Rubi's general deactivation rule (Int[u_] := Int[DeactivateTrig[u,x]] /;
+    # FunctionOfTrigOfLinearQ) takes priority over the `4.7 Miscellaneous` /
+    # "Active trig functions" fallback rules: for a function of trig/hyperbolic of a
+    # LINEAR argument, Rubi deactivates to inert circular trig and integrates that
+    # BEFORE the active-trig fallbacks are ever reached. So try it first here --
+    # e.g. Int[Sin[x] Cos[x]] must give Sin[x]^2/2 (inert substitution path), not the
+    # active double-angle rule's -Cos[2x]/4. A non-linear argument makes
+    # FunctionOfTrigOfLinearQ False, so those cases fall through to the rules below
+    # (e.g. Int[Sin[x^2] Cos[x^2]] -> FresnelS via 4.7.9 / ExpandTrigReduce).
+    deact = _try_deactivate_trig(f, x, new_path, replacer, budget, trace)
+    if deact is not None:
+        reduced, local = deact
+        _record('Int[u]:=Int[DeactivateTrig[u,x],x]/;FunctionOfTrigOfLinearQ', 'accepted (deactivation)')
+        applied.append('DeactivateTrig/FunctionOfTrigOfLinearQ')
+        applied.extend(local)
+        return reduced, False
+
     fallback = None
     matched_any = False
     for replacement, subst in replacer.matcher.match(mp_expr):
@@ -713,18 +731,6 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         _record(rule, 'candidate (non-clean)')
         if fallback is None and not reduced.has(sympy.zoo, sympy.nan):
             fallback = (reduced, rule, local)
-
-    # Rubi's general last-resort rule: no specific rule gave a clean result, so if
-    # the integrand is a function of trig/hyperbolic of a linear argument,
-    # deactivate it to inert circular trig and integrate that. A clean deactivated
-    # result is preferred over a non-clean fallback (it is a full antiderivative).
-    deact = _try_deactivate_trig(f, x, new_path, replacer, budget, trace)
-    if deact is not None:
-        reduced, local = deact
-        _record('Int[u]:=Int[DeactivateTrig[u,x],x]/;FunctionOfTrigOfLinearQ', 'accepted (deactivation)')
-        applied.append('DeactivateTrig/FunctionOfTrigOfLinearQ')
-        applied.extend(local)
-        return reduced, False
 
     if fallback is not None:
         reduced, rule, local = fallback
