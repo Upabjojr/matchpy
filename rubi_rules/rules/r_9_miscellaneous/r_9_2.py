@@ -75,6 +75,10 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+a = Symbol('a')
+b = Symbol('b')
+c = Symbol('c')
+
 F_ = WildSymbol('F')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -270,7 +274,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_m_, x),
         constraints=(FreeQ(_m_, x), PiecewiseLinearQ(u_, x),),
-        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), Star((Symbol('c'))**(Integer(-1)), Subst(Int((x)**(_m_), x), x, u_))),
+        replacement=With({c: Simplify(D(u_, x))}, Star(1/c, Subst(Int(x**_m_, x), x, u_))),
         module_name='9.2 Derivative integration rules',
         rule_number=22,
     ),
@@ -278,7 +282,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((Symbol('b') * x * (Symbol('a'))**(Integer(-1))) + (Integer(-1) * Star((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Int((u_)**(Integer(-1)), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star((-a*v_ + b*u_)/a, Int(1/u_, x)) + b*x/a),
         module_name='9.2 Derivative integration rules',
         rule_number=23,
     ),
@@ -286,7 +290,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), GtQ(n_, 0), NeQ(n_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((v_)**(n_) * ((Symbol('a') * n_))**(Integer(-1))) + (Integer(-1) * Star((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Int(((v_)**((n_ + Integer(-1))) * (u_)**(Integer(-1))), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star((-a*v_ + b*u_)/a, Int(v_**(n_ - 1)/u_, x)) + v_**n_/(a*n_)),
         module_name='9.2 Derivative integration rules',
         rule_number=24,
     ),
@@ -294,7 +298,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*v_), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Star((Symbol('b') * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1))), Int((v_)**(Integer(-1)), x)) + (Integer(-1) * Star((Symbol('a') * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1))), Int((u_)**(Integer(-1)), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(a/(-a*v_ + b*u_), Int(1/u_, x)) + Star(b/(-a*v_ + b*u_), Int(1/v_, x))),
         module_name='9.2 Derivative integration rules',
         rule_number=25,
     ),
@@ -302,7 +306,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Integer(2) * sympy.atan((sympy.sqrt(v_) * (sympy.root((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((Symbol('a') * sympy.root((((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * (Symbol('a'))**(Integer(-1))), Integer(2))))**(Integer(-1)))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/sqrt((-a*v_ + b*u_)/a))/(a*sqrt((-a*v_ + b*u_)/a))),
         module_name='9.2 Derivative integration rules',
         rule_number=26,
     ),
@@ -310,7 +314,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Integer(-2) * sympy.atanh((sympy.sqrt(v_) * (sympy.root(((Integer(-1) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))) * (Symbol('a'))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((Symbol('a') * sympy.root(((Integer(-1) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))) * (Symbol('a'))**(Integer(-1))), Integer(2))))**(Integer(-1)))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/sqrt((a*v_ - b*u_)/a))/(a*sqrt((a*v_ - b*u_)/a))),
         module_name='9.2 Derivative integration rules',
         rule_number=27,
     ),
@@ -318,7 +322,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), LtQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((v_)**((n_ + Integer(1))) * (((n_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + (Integer(-1) * Star((Symbol('a') * (n_ + Integer(1)) * (((n_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((v_)**((n_ + Integer(1))) * (u_)**(Integer(-1))), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, v_**(n_ + 1)/((n_ + 1)*(-a*v_ + b*u_)) - Star(a/(-a*v_ + b*u_), Int(v_**(n_ + 1)/u_, x))),
         module_name='9.2 Derivative integration rules',
         rule_number=28,
     ),
@@ -326,7 +330,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(IntegerQ(n_)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((v_)**((n_ + Integer(1))) * (((n_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1)) * sympy.hyper([Integer(1), (n_ + Integer(1))], [(n_ + Integer(2))], ((Integer(-1) * Symbol('a')) * v_ * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1)))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, v_**(n_ + 1)*hyper((1, n_ + 1), (n_ + 2,), -a*v_/(-a*v_ + b*u_))/((n_ + 1)*(-a*v_ + b*u_))),
         module_name='9.2 Derivative integration rules',
         rule_number=29,
     ),
@@ -334,7 +338,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Integer(2) * (sympy.root((Symbol('a') * Symbol('b')), Integer(2)))**(Integer(-1)) * sympy.atanh((sympy.root((Symbol('a') * Symbol('b')), Integer(2)) * sympy.sqrt(u_) * ((Symbol('a') * sympy.sqrt(v_)))**(Integer(-1)))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*sqrt(a*b)/(a*sqrt(v_)))/sqrt(a*b)),
         module_name='9.2 Derivative integration rules',
         rule_number=30,
     ),
@@ -342,7 +346,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (Integer(2) * (sympy.root(((Integer(-1) * Symbol('a')) * Symbol('b')), Integer(2)))**(Integer(-1)) * sympy.atan((sympy.root(((Integer(-1) * Symbol('a')) * Symbol('b')), Integer(2)) * sympy.sqrt(u_) * ((Symbol('a') * sympy.sqrt(v_)))**(Integer(-1)))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*sqrt(-a*b)/(a*sqrt(v_)))/sqrt(-a*b)),
         module_name='9.2 Derivative integration rules',
         rule_number=31,
     ),
@@ -350,7 +354,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(FreeQ([m_, n_], x), PiecewiseLinearQ(u_, v_, x), EqQ(m_ + n_ + 2, 0), NeQ(m_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((Integer(-1) * (u_)**((m_ + Integer(1)))) * (v_)**((n_ + Integer(1))) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1)))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_))),
         module_name='9.2 Derivative integration rules',
         rule_number=32,
     ),
@@ -358,7 +362,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**_n_, x),
         constraints=(FreeQ([m_, _n_], x), PiecewiseLinearQ(u_, v_, x), NeQ(m_, -1), Or(And(LtQ(m_, -1), GtQ(_n_, 0), Not(And(ILtQ(m_ + _n_, -2), Or(FractionQ(m_), GeQ(m_ + 2*_n_ + 1, 0))))), And(IGtQ(_n_, 0), IGtQ(m_, 0), LeQ(_n_, m_)), And(IGtQ(_n_, 0), Not(IntegerQ(m_))), And(ILtQ(m_, 0), Not(IntegerQ(_n_)))), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(_n_) * ((Symbol('a') * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((Symbol('b') * _n_ * ((Symbol('a') * (m_ + Integer(1))))**(Integer(-1))), Int(((u_)**((m_ + Integer(1))) * (v_)**((_n_ + Integer(-1)))), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(b*_n_/(a*(m_ + 1)), Int(u_**(m_ + 1)*v_**(_n_ - 1), x)) + u_**(m_ + 1)*v_**_n_/(a*(m_ + 1))),
         module_name='9.2 Derivative integration rules',
         rule_number=33,
     ),
@@ -366,7 +370,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**_n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + _n_ + 2, 0), GtQ(_n_, 0), NeQ(m_ + _n_ + 1, 0), Not(And(IGtQ(m_, 0), Or(Not(IntegerQ(_n_)), LtQ(0, m_, _n_)))), Not(ILtQ(m_ + _n_, -2)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(_n_) * ((Symbol('a') * (m_ + _n_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((_n_ * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * ((Symbol('a') * (m_ + _n_ + Integer(1))))**(Integer(-1))), Int(((u_)**(m_) * (v_)**((_n_ + Integer(-1)))), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(_n_*(-a*v_ + b*u_)/(a*(m_ + _n_ + 1)), Int(u_**m_*v_**(_n_ - 1), x)) + u_**(m_ + 1)*v_**_n_/(a*(m_ + _n_ + 1))),
         module_name='9.2 Derivative integration rules',
         rule_number=34,
     ),
@@ -374,7 +378,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 1, 0), Not(RationalQ(n_)), SumSimplerQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((u_)**((m_ + Integer(1))) * (v_)**(n_) * ((Symbol('a') * (m_ + n_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star((n_ * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))) * ((Symbol('a') * (m_ + n_ + Integer(1))))**(Integer(-1))), Int(((u_)**(m_) * (v_)**(Simplify((n_ + Integer(-1))))), x))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(n_*(-a*v_ + b*u_)/(a*(m_ + n_ + 1)), Int(u_**m_*v_**Simplify(n_ - 1), x)) + u_**(m_ + 1)*v_**n_/(a*(m_ + n_ + 1))),
         module_name='9.2 Derivative integration rules',
         rule_number=35,
     ),
@@ -382,7 +386,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 2, 0), LtQ(m_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((Integer(-1) * (u_)**((m_ + Integer(1)))) * (v_)**((n_ + Integer(1))) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + Star((Symbol('b') * (m_ + n_ + Integer(2)) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((u_)**((m_ + Integer(1))) * (v_)**(n_)), x)))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_)) + Star(b*(m_ + n_ + 2)/((m_ + 1)*(-a*v_ + b*u_)), Int(u_**(m_ + 1)*v_**n_, x))),
         module_name='9.2 Derivative integration rules',
         rule_number=36,
     ),
@@ -390,7 +394,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(RationalQ(m_)), SumSimplerQ(m_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), (((Integer(-1) * (u_)**((m_ + Integer(1)))) * (v_)**((n_ + Integer(1))) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))) + Star((Symbol('b') * (m_ + n_ + Integer(2)) * (((m_ + Integer(1)) * ((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_)))))**(Integer(-1))), Int(((u_)**(Simplify((m_ + Integer(1)))) * (v_)**(n_)), x)))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_)) + Star(b*(m_ + n_ + 2)/((m_ + 1)*(-a*v_ + b*u_)), Int(u_**Simplify(m_ + 1)*v_**n_, x))),
         module_name='9.2 Derivative integration rules',
         rule_number=37,
     ),
@@ -398,7 +402,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
-        replacement=With(List(Set(Symbol('a'), Simplify(D(u_, x))), Set(Symbol('b'), Simplify(D(v_, x)))), ((u_)**(m_) * (v_)**((n_ + Integer(1))) * ((Symbol('b') * (n_ + Integer(1)) * ((Symbol('b') * u_ * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1))))**(m_)))**(Integer(-1)) * sympy.hyper([(Integer(-1) * m_), (n_ + Integer(1))], [(n_ + Integer(2))], ((Integer(-1) * Symbol('a')) * v_ * (((Symbol('b') * u_) + (Integer(-1) * (Symbol('a') * v_))))**(Integer(-1)))))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, u_**m_*v_**(n_ + 1)*hyper((-m_, n_ + 1), (n_ + 2,), -a*v_/(-a*v_ + b*u_))/(b*(b*u_/(-a*v_ + b*u_))**m_*(n_ + 1))),
         module_name='9.2 Derivative integration rules',
         rule_number=38,
     ),
@@ -406,7 +410,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_n_*log(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0),),
-        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), (((u_)**(_n_) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * Int((u_)**(_n_), x)) + (Integer(-1) * Star((Symbol('c') * _n_ * (_b_)**(Integer(-1))), Int(((u_)**((_n_ + Integer(-1))) * (_a_ + (_b_ * x)) * sympy.log((_a_ + (_b_ * x)))), x))))),
+        replacement=With({c: Simplify(D(u_, x))}, -Int(u_**_n_, x) - Star(c*_n_/_b_, Int(u_**(_n_ - 1)*(x*_b_ + _a_)*log(x*_b_ + _a_), x)) + u_**_n_*(x*_b_ + _a_)*log(x*_b_ + _a_)/_b_),
         module_name='9.2 Derivative integration rules',
         rule_number=39,
     ),
@@ -414,7 +418,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_n_*(x*_b_ + _a_)**_m_*log(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _m_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('c'), Simplify(D(u_, x)))), (((u_)**(_n_) * ((_a_ + (_b_ * x)))**((_m_ + Integer(1))) * sympy.log((_a_ + (_b_ * x))) * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * Star(((_m_ + Integer(1)))**(Integer(-1)), Int(((u_)**(_n_) * ((_a_ + (_b_ * x)))**(_m_)), x))) + (Integer(-1) * Star((Symbol('c') * _n_ * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))), Int(((u_)**((_n_ + Integer(-1))) * ((_a_ + (_b_ * x)))**((_m_ + Integer(1))) * sympy.log((_a_ + (_b_ * x)))), x))))),
+        replacement=With({c: Simplify(D(u_, x))}, -Star(c*_n_/(_b_*(_m_ + 1)), Int(u_**(_n_ - 1)*(x*_b_ + _a_)**(_m_ + 1)*log(x*_b_ + _a_), x)) - Star(1/(_m_ + 1), Int(u_**_n_*(x*_b_ + _a_)**_m_, x)) + u_**_n_*(x*_b_ + _a_)**(_m_ + 1)*log(x*_b_ + _a_)/(_b_*(_m_ + 1))),
         module_name='9.2 Derivative integration rules',
         rule_number=40,
     ),

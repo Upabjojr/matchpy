@@ -219,7 +219,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertTan(x*_f_ + _e_))**n_*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), EqQ(a_**2 + _b_**2, 0), ILtQ(n_, -1), GtQ(_m_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((a_ + (_b_ * sympy.tan((_e_ + (_f_ * x))))))**(n_), x))), (Dist(((_c_ + (_d_ * x)))**(_m_), Symbol('u'), x) + (Integer(-1) * (_d_ * _m_ * Int(Dist(((_c_ + (_d_ * x)))**((_m_ + Integer(-1))), Symbol('u'), x), x))))),
+        replacement=With({u: IntHide((a_ + _b_*tan(x*_f_ + _e_))**n_, x)}, -_d_*_m_*Int(Dist((x*_d_ + _c_)**(_m_ - 1), u, x), x) + Dist((x*_d_ + _c_)**_m_, u, x)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=15,
     ),

@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -181,7 +183,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_*InertSin(x*_f_ + _e_))**m_*(_b_*InertCos(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), EqQ(m_ + n_, 0), GtQ(m_, 0), LtQ(m_, 1),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (Symbol('k') * _a_ * _b_ * (_f_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * (((_a_)**(Integer(2)) + ((_b_)**(Integer(2)) * (x)**((Integer(2) * Symbol('k'))))))**(Integer(-1))), x), x, (((_a_ * sympy.sin((_e_ + (_f_ * x)))))**((Symbol('k'))**(Integer(-1))) * (((_b_ * sympy.cos((_e_ + (_f_ * x)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, k*_a_*_b_*Subst(Int(x**(k*(m_ + 1) - 1)/(x**(2*k)*_b_**2 + _a_**2), x), x, (_a_*sin(x*_f_ + _e_))**(1/k)/(_b_*cos(x*_f_ + _e_))**(1/k))/_f_),
         module_name='4.1.0.1 (a sin)^m (b trg)^n',
         rule_number=12,
     ),
@@ -189,7 +191,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_*InertCos(x*_f_ + _e_))**m_*(_b_*InertSin(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_], x), EqQ(m_ + n_, 0), GtQ(m_, 0), LtQ(m_, 1),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), ((Integer(-1) * Symbol('k')) * _a_ * _b_ * (_f_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * (((_a_)**(Integer(2)) + ((_b_)**(Integer(2)) * (x)**((Integer(2) * Symbol('k'))))))**(Integer(-1))), x), x, (((_a_ * sympy.cos((_e_ + (_f_ * x)))))**((Symbol('k'))**(Integer(-1))) * (((_b_ * sympy.sin((_e_ + (_f_ * x)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, -k*_a_*_b_*Subst(Int(x**(k*(m_ + 1) - 1)/(x**(2*k)*_b_**2 + _a_**2), x), x, (_a_*cos(x*_f_ + _e_))**(1/k)/(_b_*sin(x*_f_ + _e_))**(1/k))/_f_),
         module_name='4.1.0.1 (a sin)^m (b trg)^n',
         rule_number=13,
     ),

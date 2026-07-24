@@ -75,6 +75,10 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+g = Symbol('g')
+h = Symbol('h')
+k = Symbol('k')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -210,7 +214,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*log(v_)*log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**_s_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _p_, _q_, _r_, _s_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), IGtQ(_s_, 0), EqQ(_p_ + _q_, 0), FreeQ([Simplify(((v_ + Integer(-1)) * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1)))), Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))], x),),
-        replacement=With(List(Set(Symbol('g'), Simplify(((v_ + Integer(-1)) * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1))))), Set(Symbol('h'), Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x)))))), (((Integer(-1) * Symbol('h')) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_) * (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))))**(Integer(-1))) + (Symbol('h') * _p_ * _r_ * _s_ * Int((sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(-1))) * (((_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))**(Integer(-1))), x)))),
+        replacement=With({g: Simplify(((v_ + Integer(-1)) * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1)))), h: Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))}, (((Integer(-1) * h) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_) * (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))))**(Integer(-1))) + (h * _p_ * _r_ * _s_ * Int((sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(-1))) * (((_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))**(Integer(-1))), x)))),
         module_name='3.2.3 u log(e (f (a+b x)^p (c+d x)^q)^r)^s',
         rule_number=11,
     ),
@@ -218,7 +222,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**_s_*log(_i_*(_j_*(x*_h_ + _g_)**_t_)**_u_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _i_, _j_, _p_, _q_, _r_, _s_, _t_, _u_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), EqQ(_p_ + _q_, 0), NeQ(_s_, -1), FreeQ(Simplify(v_*(x*_b_ + _a_)*(x*_d_ + _c_)), x),),
-        replacement=With(List(Set(Symbol('k'), Simplify((v_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x)))))), ((Symbol('k') * sympy.log((_i_ * ((_j_ * ((_g_ + (_h_ * x)))**(_t_)))**(_u_))) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(1))) * ((_p_ * _r_ * (_s_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_)))))**(Integer(-1))) + (Integer(-1) * (Symbol('k') * _h_ * _t_ * _u_ * ((_p_ * _r_ * (_s_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_)))))**(Integer(-1)) * Int(((sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(1))) * ((_g_ + (_h_ * x)))**(Integer(-1))), x))))),
+        replacement=With({k: Simplify(v_*(x*_b_ + _a_)*(x*_d_ + _c_))}, -k*_h_*_t_*_u_*Int(log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**(_s_ + 1)/(x*_h_ + _g_), x)/(_p_*_r_*(_s_ + 1)*(-_a_*_d_ + _b_*_c_)) + k*log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**(_s_ + 1)*log(_i_*(_j_*(x*_h_ + _g_)**_t_)**_u_)/(_p_*_r_*(_s_ + 1)*(-_a_*_d_ + _b_*_c_))),
         module_name='3.2.3 u log(e (f (a+b x)^p (c+d x)^q)^r)^s',
         rule_number=12,
     ),
@@ -226,7 +230,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((u_ * sympy.polylog(n_, v_) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, n_, _p_, _q_, _r_, _s_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), IGtQ(_s_, 0), EqQ(_p_ + _q_, 0), FreeQ([Simplify((v_ * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1)))), Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))], x),),
-        replacement=With(List(Set(Symbol('g'), Simplify((v_ * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1))))), Set(Symbol('h'), Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x)))))), ((Symbol('h') * sympy.polylog((n_ + Integer(1)), v_) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_) * (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))))**(Integer(-1))) + (Integer(-1) * (Symbol('h') * _p_ * _r_ * _s_ * Int((sympy.polylog((n_ + Integer(1)), v_) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(-1))) * (((_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))**(Integer(-1))), x))))),
+        replacement=With({g: Simplify((v_ * (_c_ + (_d_ * x)) * ((_a_ + (_b_ * x)))**(Integer(-1)))), h: Simplify((u_ * (_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))}, ((h * sympy.polylog((n_ + Integer(1)), v_) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_) * (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))))**(Integer(-1))) + (Integer(-1) * (h * _p_ * _r_ * _s_ * Int((sympy.polylog((n_ + Integer(1)), v_) * (sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**((_s_ + Integer(-1))) * (((_a_ + (_b_ * x)) * (_c_ + (_d_ * x))))**(Integer(-1))), x))))),
         module_name='3.2.3 u log(e (f (a+b x)^p (c+d x)^q)^r)^s',
         rule_number=13,
     ),
@@ -258,7 +262,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(RFx_*log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**_s_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _p_, _q_, _r_, _s_], x), RationalFunctionQ(RFx_, x), IGtQ(_s_, 0), SumQ(ExpandIntegrand(log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**_s_, RFx_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((sympy.log((_e_ * ((_f_ * ((_a_ + (_b_ * x)))**(_p_) * ((_c_ + (_d_ * x)))**(_q_)))**(_r_))))**(_s_), RFx_, x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand(log(_e_*(_f_*(x*_b_ + _a_)**_p_*(x*_d_ + _c_)**_q_)**_r_)**_s_, RFx_, x)}, Int(u, x)),
         module_name='3.2.3 u log(e (f (a+b x)^p (c+d x)^q)^r)^s',
         rule_number=17,
     ),

@@ -399,6 +399,20 @@ class If(MathematicaExpr):
         return self
 
 
+def _bindings_list_from_dict(bindings: dict) -> "List":
+    """Convert a ``{local: value}`` dict binding to the internal scoping ``List``.
+
+    A ``None`` value denotes an UNINITIALISED local (`Module[{k}, ...]`) -- emitted
+    as a bare symbol in the list rather than a ``Set``. This lets Module/With/Block
+    accept the Python-dict form ``Module({r: v1, s: v2, k: None}, body)`` in addition
+    to the Mathematica expression-tree form ``List(Set(r, v1), Set(s, v2), k)``.
+    """
+    items = []
+    for k, v in bindings.items():
+        items.append(k if v is None else Set(k, v))
+    return List(*items)
+
+
 class With(MathematicaExpr):
     """Mathematica ``With[{x=v, …}, body]`` — simultaneous local constants.
 
@@ -456,7 +470,7 @@ class With(MathematicaExpr):
         if isinstance(bindings, list):
             bindings = List(*bindings)
         if isinstance(bindings, dict):
-            bindings = List(*[Set(k, v) for k, v in bindings.items()])
+            bindings = _bindings_list_from_dict(bindings)
         bindings, body = _bind_scope_locals(sympify(bindings), sympify(body))
         return Expr.__new__(cls, bindings, body)
 
@@ -536,7 +550,7 @@ class Module(MathematicaExpr):
         if isinstance(locals_list, list):
             locals_list = List(*locals_list)
         elif isinstance(locals_list, dict):
-            locals_list = List(*[Set(k, v) for k, v in locals_list.items()])
+            locals_list = _bindings_list_from_dict(locals_list)
         locals_list, body = _bind_scope_locals(sympify(locals_list), sympify(body))
         return Expr.__new__(cls, locals_list, body)
 
@@ -598,6 +612,10 @@ class Block(MathematicaExpr):
     """
 
     def __new__(cls, locals_list, body):
+        if isinstance(locals_list, list):
+            locals_list = List(*locals_list)
+        elif isinstance(locals_list, dict):
+            locals_list = _bindings_list_from_dict(locals_list)
         locals_list, body = _bind_scope_locals(sympify(locals_list), sympify(body))
         return Expr.__new__(cls, locals_list, body)
 

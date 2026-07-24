@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+w = Symbol('w')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -644,7 +646,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*atanh(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*atanh(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.atanh(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (Integer(-1) * (u_)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        replacement=With({w: IntHide(v_, x)}, -_b_*Int(SimplifyIntegrand(w*D(u_, x)/(1 - u_**2), x), x) + Dist(_a_ + _b_*atanh(u_), w, x)),
         module_name='7.3.7 Miscellaneous inverse hyperbolic tangent',
         rule_number=69,
     ),
@@ -652,7 +654,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acoth(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), FalseQ(FunctionOfLinear(v_*(_a_ + _b_*acoth(u_)), x)), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acoth(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((Integer(1) + (Integer(-1) * (u_)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        replacement=With({w: IntHide(v_, x)}, -_b_*Int(SimplifyIntegrand(w*D(u_, x)/(1 - u_**2), x), x) + Dist(_a_ + _b_*acoth(u_), w, x)),
         module_name='7.3.7 Miscellaneous inverse hyperbolic tangent',
         rule_number=70,
     ),

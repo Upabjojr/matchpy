@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+ff = Symbol('ff')
+
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
 b_ = WildSymbol('b')
@@ -117,7 +119,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_b_*InertSec(x*_f_ + _e_)**2)**p_, x),
         constraints=(FreeQ([_b_, _e_, _f_, p_], x), Not(IntegerQ(p_)),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (_b_ * Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int(((_b_ + (_b_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((p_ + Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*_b_*Subst(Int((ff**2*x**2*_b_ + _b_)**(p_ - 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=3,
     ),
@@ -141,7 +143,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_b_*InertSec(x*_f_ + _e_)**n_)**p_, x),
         constraints=(FreeQ([_b_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), IntegerQ(n_), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([Symbol('sin'), Symbol('cos'), Symbol('tan'), Symbol('cot'), Symbol('sec'), Symbol('csc')], trig_))))),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sec((_e_ + (_f_ * x))), x))), (((_b_ * (Symbol('ff'))**(n_)))**(IntPart(p_)) * ((_b_ * (sympy.sec((_e_ + (_f_ * x))))**(n_)))**(FracPart(p_)) * (((sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1))))**((n_ * FracPart(p_))))**(Integer(-1)) * Int((ActivateTrig(_u_) * ((sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1))))**((n_ * p_))), x))),
+        replacement=With({ff: FreeFactors(sec(x*_f_ + _e_), x)}, (ff**n_*_b_)**IntPart(p_)*(_b_*sec(x*_f_ + _e_)**n_)**FracPart(p_)*Int((sec(x*_f_ + _e_)/ff)**(n_*p_)*ActivateTrig(_u_), x)/(sec(x*_f_ + _e_)/ff)**(n_*FracPart(p_))),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=6,
     ),
@@ -165,7 +167,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**2)**p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, p_], x), NeQ(a_ + _b_, 0), NeQ(p_, -1),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((a_ + _b_ + (_b_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(p_) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff**2*x**2*_b_ + a_ + _b_)**p_/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=9,
     ),
@@ -173,7 +175,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**4)**p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, p_], x), IntegerQ(2*p_),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((a_ + _b_ + (Integer(2) * _b_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))) + (_b_ * (Symbol('ff'))**(Integer(4)) * (x)**(Integer(4)))))**(p_) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff**4*x**4*_b_ + 2*ff**2*x**2*_b_ + a_ + _b_)**p_/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=10,
     ),
@@ -181,7 +183,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, p_], x), IntegerQ(n_/2), IGtQ(p_, -2),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((a_ + (_b_ * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1)))))))**(p_) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((a_ + _b_*(ff**2*x**2 + 1)**(n_/2))**p_/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=11,
     ),
@@ -197,7 +199,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**_p_*InertSin(x*_f_ + _e_)**m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _p_], x), IntegerQ(m_/2), IntegerQ(n_/2),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), ((Symbol('ff'))**((m_ + Integer(1))) * (_f_)**(Integer(-1)) * Subst(Int(((x)**(m_) * (ExpandToSum((a_ + (_b_ * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1)))))), x))**(_p_) * (((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(((m_ * (Integer(2))**(Integer(-1))) + Integer(1))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff**(m_ + 1)*Subst(Int(x**m_*(ff**2*x**2 + 1)**(-m_/2 - 1)*ExpandToSum(a_ + _b_*(ff**2*x**2 + 1)**(n_/2), x)**_p_, x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=13,
     ),
@@ -205,7 +207,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**_p_*InertSin(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(n_), IntegerQ(_p_),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.cos((_e_ + (_f_ * x))), x))), ((Integer(-1) * Symbol('ff')) * (_f_)**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_b_ + (a_ * ((Symbol('ff') * x))**(n_))))**(_p_) * (((Symbol('ff') * x))**((n_ * _p_)))**(Integer(-1))), x), x, (sympy.cos((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(cos(x*_f_ + _e_), x)}, -ff*Subst(Int((-ff**2*x**2 + 1)**(_m_/2 + sympy.S(-1)/2)*(a_*(ff*x)**n_ + _b_)**_p_/(ff*x)**(n_*_p_), x), x, cos(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=14,
     ),
@@ -213,7 +215,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*(_c_*InertSec(x*_f_ + _e_))**n_)**_p_*InertSin(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, n_, _p_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), Or(GtQ(_m_, 0), EqQ(n_, 2), EqQ(n_, 4)),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.cos((_e_ + (_f_ * x))), x))), (((_f_ * (Symbol('ff'))**(_m_)))**(Integer(-1)) * Subst(Int((((Integer(-1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((a_ + (_b_ * ((_c_ * Symbol('ff') * x))**(n_))))**(_p_) * ((x)**((_m_ + Integer(1))))**(Integer(-1))), x), x, (sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(cos(x*_f_ + _e_), x)}, Subst(Int(x**(-_m_ - 1)*(a_ + _b_*(ff*x*_c_)**n_)**_p_*(ff**2*x**2 - 1)**(_m_/2 + sympy.S(-1)/2), x), x, sec(x*_f_ + _e_)/ff)/(ff**_m_*_f_)),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=15,
     ),
@@ -245,7 +247,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**_p_*InertTan(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, n_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(n_), IntegerQ(_p_),),
-        replacement=Module(List(Set(Symbol('ff'), FreeFactors(sympy.cos((_e_ + (_f_ * x))), x))), (Integer(-1) * ((_f_ * (Symbol('ff'))**((_m_ + (n_ * _p_) + Integer(-1)))))**(Integer(-1)) * Subst(Int((((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((_b_ + (a_ * ((Symbol('ff') * x))**(n_))))**(_p_) * ((x)**((_m_ + (n_ * _p_))))**(Integer(-1))), x), x, (sympy.cos((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=Module({ff: FreeFactors(cos(x*_f_ + _e_), x)}, -ff**(-_m_ - n_*_p_ + 1)*Subst(Int(x**(-_m_ - n_*_p_)*(-ff**2*x**2 + 1)**(_m_/2 + sympy.S(-1)/2)*(a_*(ff*x)**n_ + _b_)**_p_, x), x, cos(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=19,
     ),
@@ -253,7 +255,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*(_c_*InertSec(x*_f_ + _e_))**n_)**_p_*InertTan(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, n_, _p_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), Or(GtQ(_m_, 0), EqQ(n_, 2), EqQ(n_, 4), IGtQ(_p_, 0), IntegersQ(2*n_, _p_)),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sec((_e_ + (_f_ * x))), x))), ((_f_)**(Integer(-1)) * Subst(Int((((Integer(-1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(((_m_ + Integer(-1)) * (Integer(2))**(Integer(-1)))) * ((a_ + (_b_ * ((_c_ * Symbol('ff') * x))**(n_))))**(_p_) * (x)**(Integer(-1))), x), x, (sympy.sec((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(sec(x*_f_ + _e_), x)}, Subst(Int((a_ + _b_*(ff*x*_c_)**n_)**_p_*(ff**2*x**2 - 1)**(_m_/2 + sympy.S(-1)/2)/x, x), x, sec(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=20,
     ),
@@ -261,7 +263,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_b_*InertSec(x*_f_ + _e_)**2)**_p_*(_d_*InertTan(x*_f_ + _e_))**m_, x),
         constraints=(FreeQ([_b_, _d_, _e_, _f_, m_, _p_], x),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (_b_ * Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((_d_ * Symbol('ff') * x))**(m_) * ((_b_ + (_b_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((_p_ + Integer(-1)))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*_b_*Subst(Int((ff*x*_d_)**m_*(ff**2*x**2*_b_ + _b_)**(_p_ - 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=21,
     ),
@@ -269,7 +271,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_d_*InertTan(x*_f_ + _e_))**m_*(a_ + _b_*InertSec(x*_f_ + _e_)**n_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_, m_, _p_], x), IntegerQ(n_/2), Or(IntegerQ(m_/2), EqQ(n_, 2)),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((_d_ * Symbol('ff') * x))**(m_) * ((a_ + (_b_ * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1)))))))**(_p_) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff*x*_d_)**m_*(a_ + _b_*(ff**2*x**2 + 1)**(n_/2))**_p_/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=22,
     ),
@@ -309,7 +311,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**p_*InertSec(x*_f_ + _e_)**m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, p_], x), IntegerQ(m_/2), IntegerQ(n_/2),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(((m_ * (Integer(2))**(Integer(-1))) + Integer(-1))) * (ExpandToSum((a_ + (_b_ * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**((n_ * (Integer(2))**(Integer(-1)))))), x))**(p_)), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff**2*x**2 + 1)**(m_/2 - 1)*ExpandToSum(a_ + _b_*(ff**2*x**2 + 1)**(n_/2), x)**p_, x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=27,
     ),
@@ -317,7 +319,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**p_*InertSec(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(n_/2), IntegerQ(p_),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sin((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int(((ExpandToSum((_b_ + (a_ * ((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**((n_ * (Integer(2))**(Integer(-1)))))), x))**(p_) * (((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + (n_ * p_) + Integer(1)) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), x), x, (sympy.sin((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(sin(x*_f_ + _e_), x)}, ff*Subst(Int((-ff**2*x**2 + 1)**(-_m_/2 - n_*p_/2 + sympy.S(-1)/2)*ExpandToSum(a_*(-ff**2*x**2 + 1)**(n_/2) + _b_, x)**p_, x), x, sin(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=28,
     ),
@@ -325,7 +327,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*InertSec(x*_f_ + _e_)**n_)**p_*InertSec(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, p_], x), IntegerQ(_m_/2 + sympy.S(-1)/2), IntegerQ(n_/2), Not(IntegerQ(p_)),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sin((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((a_ + (_b_ * (((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**((n_ * (Integer(2))**(Integer(-1)))))**(Integer(-1)))))**(p_) * (((Integer(1) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), x), x, (sympy.sin((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(sin(x*_f_ + _e_), x)}, ff*Subst(Int((a_ + _b_/(-ff**2*x**2 + 1)**(n_/2))**p_*(-ff**2*x**2 + 1)**(-_m_/2 + sympy.S(-1)/2), x), x, sin(x*_f_ + _e_)/ff)/_f_),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=29,
     ),

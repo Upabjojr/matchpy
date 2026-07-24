@@ -75,6 +75,9 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+ff = Symbol('ff')
+q = Symbol('q')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -210,7 +213,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_c_ + _d_*InertTan(x*_f_ + _e_))/sqrt(a_ + _b_*InertTan(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-a_*_d_ + _b_*_c_, 0), NeQ(a_**2 + _b_**2, 0), NeQ(_c_**2 + _d_**2, 0), NeQ(2*a_*_c_*_d_ - _b_*(_c_**2 - _d_**2), 0), Or(PerfectSquareQ(a_**2 + _b_**2), RationalQ(a_, _b_, _c_, _d_)),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((a_)**(Integer(2)) + (_b_)**(Integer(2))), Integer(2)))), ((((Integer(2) * Symbol('q')))**(Integer(-1)) * Int((((a_ * _c_) + (_b_ * _d_) + (_c_ * Symbol('q')) + (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * Symbol('q'))) * sympy.tan((_e_ + (_f_ * x))))) * (sympy.sqrt((a_ + (_b_ * sympy.tan((_e_ + (_f_ * x)))))))**(Integer(-1))), x)) + (Integer(-1) * (((Integer(2) * Symbol('q')))**(Integer(-1)) * Int((((a_ * _c_) + (_b_ * _d_) + (Integer(-1) * (_c_ * Symbol('q'))) + (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (Integer(-1) * (_d_ * Symbol('q')))) * sympy.tan((_e_ + (_f_ * x))))) * (sympy.sqrt((a_ + (_b_ * sympy.tan((_e_ + (_f_ * x)))))))**(Integer(-1))), x))))),
+        replacement=With({q: sqrt(a_**2 + _b_**2)}, -Int((-q*_c_ + a_*_c_ + _b_*_d_ + (-q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q) + Int((q*_c_ + a_*_c_ + _b_*_d_ + (q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q)),
         module_name='4.3.2.1 (a+b tan)^m (c+d tan)^n',
         rule_number=15,
     ),
@@ -522,7 +525,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*InertTan(x*_f_ + _e_))**m_*(c_ + _d_*InertTan(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _f_, m_, n_], x), NeQ(-_a_*_d_ + _b_*c_, 0), NeQ(_a_**2 + _b_**2, 0), NeQ(c_**2 + _d_**2, 0),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((_a_ + (_b_ * Symbol('ff') * x)))**(m_) * ((c_ + (_d_ * Symbol('ff') * x)))**(n_) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff*x*_b_ + _a_)**m_*(ff*x*_d_ + c_)**n_/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.3.2.1 (a+b tan)^m (c+d tan)^n',
         rule_number=54,
     ),

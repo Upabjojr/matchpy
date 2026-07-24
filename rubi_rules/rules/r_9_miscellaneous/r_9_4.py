@@ -75,6 +75,12 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+c = Symbol('c')
+k = Symbol('k')
+q = Symbol('q')
+r = Symbol('r')
+v = Symbol('v')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -156,7 +162,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_/y_, x),
         constraints=(Not(FalseQ(DerivativeDivides(y_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, u_, x))), (Symbol('q') * sympy.log(y_))),
+        replacement=With({q: DerivativeDivides(y_, u_, x)}, q*log(y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=5,
     ),
@@ -164,7 +170,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_/(w_*y_), x),
         constraints=(Not(FalseQ(DerivativeDivides(w_*y_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides((y_ * w_), u_, x))), (Symbol('q') * sympy.log((y_ * w_)))),
+        replacement=With({q: DerivativeDivides(w_*y_, u_, x)}, q*log(w_*y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=6,
     ),
@@ -172,7 +178,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*y_**_m_, x),
         constraints=(FreeQ(_m_, x), NeQ(_m_, -1), Not(FalseQ(DerivativeDivides(y_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, u_, x))), (Symbol('q') * (y_)**((_m_ + Integer(1))) * ((_m_ + Integer(1)))**(Integer(-1)))),
+        replacement=With({q: DerivativeDivides(y_, u_, x)}, q*y_**(_m_ + 1)/(_m_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=7,
     ),
@@ -180,7 +186,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*y_**_m_*z_**_n_, x),
         constraints=(FreeQ([_m_, _n_], x), NeQ(_m_, -1), Not(FalseQ(DerivativeDivides(y_*z_, u_*z_**(-_m_ + _n_), x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides((y_ * z_), (u_ * (z_)**((_n_ + (Integer(-1) * _m_)))), x))), (Symbol('q') * (y_)**((_m_ + Integer(1))) * (z_)**((_m_ + Integer(1))) * ((_m_ + Integer(1)))**(Integer(-1)))),
+        replacement=With({q: DerivativeDivides(y_*z_, u_*z_**(-_m_ + _n_), x)}, q*y_**(_m_ + 1)*z_**(_m_ + 1)/(_m_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=8,
     ),
@@ -188,7 +194,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_, x),
         constraints=(SimplerIntegrandQ(SimplifyIntegrand(u_, x), u_, x),),
-        replacement=With(List(Set(Symbol('v'), SimplifyIntegrand(u_, x))), Int(Symbol('v'), x)),
+        replacement=With({v: SimplifyIntegrand(u_, x)}, Int(v, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=9,
     ),
@@ -220,7 +226,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*y_)**_m_*(_c_ + _d_*v_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x), EqQ(v_, y_), Not(FalseQ(DerivativeDivides(y_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, u_, x))), (Symbol('q') * Subst(Int((((_a_ + (_b_ * x)))**(_m_) * ((_c_ + (_d_ * x)))**(_n_)), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, u_, x)}, q*Subst(Int((x*_b_ + _a_)**_m_*(x*_d_ + _c_)**_n_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=13,
     ),
@@ -228,7 +234,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*y_)**_m_*(_c_ + _d_*v_)**_n_*(_e_ + _f_*w_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_, _p_], x), EqQ(v_, y_), EqQ(w_, y_), Not(FalseQ(DerivativeDivides(y_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, u_, x))), (Symbol('q') * Subst(Int((((_a_ + (_b_ * x)))**(_m_) * ((_c_ + (_d_ * x)))**(_n_) * ((_e_ + (_f_ * x)))**(_p_)), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, u_, x)}, q*Subst(Int((x*_b_ + _a_)**_m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=14,
     ),
@@ -236,7 +242,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*y_)**_m_*(_c_ + _d_*v_)**_n_*(_e_ + _f_*w_)**_p_*(_g_ + _h_*z_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _m_, _n_, _p_, _q_], x), EqQ(v_, y_), EqQ(w_, y_), EqQ(z_, y_), Not(FalseQ(DerivativeDivides(y_, u_, x))),),
-        replacement=With(List(Set(Symbol('r'), DerivativeDivides(y_, u_, x))), (Symbol('r') * Subst(Int((((_a_ + (_b_ * x)))**(_m_) * ((_c_ + (_d_ * x)))**(_n_) * ((_e_ + (_f_ * x)))**(_p_) * ((_g_ + (_h_ * x)))**(_q_)), x), x, y_))),
+        replacement=With({r: DerivativeDivides(y_, u_, x)}, r*Subst(Int((x*_b_ + _a_)**_m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_*(x*_h_ + _g_)**_q_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=15,
     ),
@@ -244,7 +250,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*y_**n_), x),
         constraints=(FreeQ([a_, _b_, n_], x), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), ((a_ * Int(_u_, x)) + (_b_ * Symbol('q') * Subst(Int((x)**(n_), x), x, y_)))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*_b_*Subst(Int(x**n_, x), x, y_) + a_*Int(_u_, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=16,
     ),
@@ -252,7 +258,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*y_**n_)**p_, x),
         constraints=(FreeQ([_a_, _b_, n_, p_], x), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), (Symbol('q') * Subst(Int(((_a_ + (_b_ * (x)**(n_))))**(p_), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*Subst(Int((x**n_*_b_ + _a_)**p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=17,
     ),
@@ -260,7 +266,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*v_**_m_*(_a_ + _b_*y_**n_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _m_, n_, _p_], x),),
-        replacement=Module(List(Symbol('q'), Symbol('r')), Condition((Symbol('q') * Symbol('r') * Subst(Int(((x)**(_m_) * ((_a_ + (_b_ * (x)**(n_))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(Symbol('r'), Divides((y_)**(_m_), (v_)**(_m_), x)))), Not(FalseQ(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))))))),
+        replacement=Module({q: None, r: None}, Condition((q * r * Subst(Int(((x)**(_m_) * ((_a_ + (_b_ * (x)**(n_))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(r, Divides((y_)**(_m_), (v_)**(_m_), x)))), Not(FalseQ(Set(q, DerivativeDivides(y_, _u_, x))))))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=18,
     ),
@@ -268,7 +274,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*y_**n_ + _c_*v_**_n2_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, n_, p_], x), EqQ(_n2_, 2*n_), EqQ(v_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), (Symbol('q') * Subst(Int(((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(p_), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*Subst(Int((x**(2*n_)*_c_ + x**n_*_b_ + _a_)**p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=19,
     ),
@@ -276,7 +282,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(A_ + _B_*y_**n_)*(_a_ + _b_*v_**n_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, A_, _B_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(v_, y_), EqQ(w_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), (Symbol('q') * Subst(Int(((A_ + (_B_ * (x)**(n_))) * ((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*Subst(Int((x**n_*_B_ + A_)*(x**(2*n_)*_c_ + x**n_*_b_ + _a_)**_p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=20,
     ),
@@ -284,7 +290,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(A_ + _B_*y_**n_)*(_a_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _c_, A_, _B_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(w_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), (Symbol('q') * Subst(Int(((A_ + (_B_ * (x)**(n_))) * ((_a_ + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*Subst(Int((x**n_*_B_ + A_)*(x**(2*n_)*_c_ + _a_)**_p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=21,
     ),
@@ -292,7 +298,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*v_**_m_*(_a_ + _b_*y_**n_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(w_, y_),),
-        replacement=Module(List(Symbol('q'), Symbol('r')), Condition((Symbol('q') * Symbol('r') * Subst(Int(((x)**(_m_) * ((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(Symbol('r'), Divides((y_)**(_m_), (v_)**(_m_), x)))), Not(FalseQ(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))))))),
+        replacement=Module({q: None, r: None}, Condition((q * r * Subst(Int(((x)**(_m_) * ((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(r, Divides((y_)**(_m_), (v_)**(_m_), x)))), Not(FalseQ(Set(q, DerivativeDivides(y_, _u_, x))))))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=22,
     ),
@@ -300,7 +306,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*z_**_m_*(A_ + _B_*y_**n_)*(_a_ + _b_*v_**n_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, A_, _B_, _m_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(v_, y_), EqQ(w_, y_),),
-        replacement=Module(List(Symbol('q'), Symbol('r')), Condition((Symbol('q') * Symbol('r') * Subst(Int(((x)**(_m_) * (A_ + (_B_ * (x)**(n_))) * ((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(Symbol('r'), Divides((y_)**(_m_), (z_)**(_m_), x)))), Not(FalseQ(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))))))),
+        replacement=Module({q: None, r: None}, Condition((q * r * Subst(Int(((x)**(_m_) * (A_ + (_B_ * (x)**(n_))) * ((_a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(r, Divides((y_)**(_m_), (z_)**(_m_), x)))), Not(FalseQ(Set(q, DerivativeDivides(y_, _u_, x))))))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=23,
     ),
@@ -308,7 +314,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*z_**_m_*(A_ + _B_*y_**n_)*(_a_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _c_, A_, _B_, _m_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(w_, y_),),
-        replacement=Module(List(Symbol('q'), Symbol('r')), Condition((Symbol('q') * Symbol('r') * Subst(Int(((x)**(_m_) * (A_ + (_B_ * (x)**(n_))) * ((_a_ + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(Symbol('r'), Divides((y_)**(_m_), (z_)**(_m_), x)))), Not(FalseQ(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))))))),
+        replacement=Module({q: None, r: None}, Condition((q * r * Subst(Int(((x)**(_m_) * (A_ + (_B_ * (x)**(n_))) * ((_a_ + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)), x), x, y_)), And(Not(FalseQ(Set(r, Divides((y_)**(_m_), (z_)**(_m_), x)))), Not(FalseQ(Set(q, DerivativeDivides(y_, _u_, x))))))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=24,
     ),
@@ -316,7 +322,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*y_**n_)**_m_*(_c_ + _d_*v_**n_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x), EqQ(v_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(y_, _u_, x))), (Symbol('q') * Subst(Int((((_a_ + (_b_ * (x)**(n_))))**(_m_) * ((_c_ + (_d_ * (x)**(n_))))**(_p_)), x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, q*Subst(Int((x**n_*_b_ + _a_)**_m_*(x**n_*_d_ + _c_)**_p_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=25,
     ),
@@ -324,7 +330,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(_a_ + _b_*y_**n_)**_m_*(_c_ + _d_*v_**n_)**_p_*(_e_ + _f_*w_**n_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, n_, _p_, _q_], x), EqQ(v_, y_), EqQ(w_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With(List(Set(Symbol('r'), DerivativeDivides(y_, _u_, x))), (Symbol('r') * Subst(Int((((_a_ + (_b_ * (x)**(n_))))**(_m_) * ((_c_ + (_d_ * (x)**(n_))))**(_p_) * ((_e_ + (_f_ * (x)**(n_))))**(_q_)), x), x, y_))),
+        replacement=With({r: DerivativeDivides(y_, _u_, x)}, r*Subst(Int((x**n_*_b_ + _a_)**_m_*(x**n_*_d_ + _c_)**_p_*(x**n_*_f_ + _e_)**_q_, x), x, y_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=26,
     ),
@@ -332,7 +338,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**v_*u_, x),
         constraints=(FreeQ(F_, x), Not(FalseQ(DerivativeDivides(v_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(v_, u_, x))), (Symbol('q') * (F_)**(v_) * (sympy.log(F_))**(Integer(-1)))),
+        replacement=With({q: DerivativeDivides(v_, u_, x)}, q*F_**v_/log(F_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=27,
     ),
@@ -340,7 +346,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**v_*u_*w_**_m_, x),
         constraints=(FreeQ([F_, _m_], x), EqQ(w_, v_), Not(FalseQ(DerivativeDivides(v_, u_, x))),),
-        replacement=With(List(Set(Symbol('q'), DerivativeDivides(v_, u_, x))), (Symbol('q') * Subst(Int(((x)**(_m_) * (F_)**(x)), x), x, v_))),
+        replacement=With({q: DerivativeDivides(v_, u_, x)}, q*Subst(Int(x**_m_*F_**x, x), x, v_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=28,
     ),
@@ -348,7 +354,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(a_ + _b_*v_**_p_*w_**_p_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _m_, _p_], x), IntegerQ(_p_), FreeQ(Simplify(u_/(v_*D(w_, x) + w_*D(v_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((w_ * D(v_, x)) + (v_ * D(w_, x))))**(Integer(-1)))))), (Symbol('c') * Subst(Int(((a_ + (_b_ * (x)**(_p_))))**(_m_), x), x, (v_ * w_)))),
+        replacement=With({c: Simplify(u_/(v_*D(w_, x) + w_*D(v_, x)))}, c*Subst(Int((x**_p_*_b_ + a_)**_m_, x), x, v_*w_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=29,
     ),
@@ -356,7 +362,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_r_*(a_ + _b_*v_**_p_*w_**_q_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _m_, _p_, _q_, _r_], x), EqQ(_p_, _q_*(_r_ + 1)), NeQ(_r_, -1), IntegerQ(_p_/(_r_ + 1)), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) + _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (_q_ * v_ * D(w_, x))))**(Integer(-1)))))), (Symbol('c') * _p_ * ((_r_ + Integer(1)))**(Integer(-1)) * Subst(Int(((a_ + (_b_ * (x)**((_p_ * ((_r_ + Integer(1)))**(Integer(-1)))))))**(_m_), x), x, ((v_)**((_r_ + Integer(1))) * w_)))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) + _q_*v_*D(w_, x)))}, c*_p_*Subst(Int((x**(_p_/(_r_ + 1))*_b_ + a_)**_m_, x), x, v_**(_r_ + 1)*w_)/(_r_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=30,
     ),
@@ -364,7 +370,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_r_*w_**_s_*(a_ + _b_*v_**_p_*w_**_q_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _m_, _p_, _q_, _r_, _s_], x), EqQ(_p_*(_s_ + 1), _q_*(_r_ + 1)), NeQ(_r_, -1), IntegerQ(_p_/(_r_ + 1)), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) + _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (_q_ * v_ * D(w_, x))))**(Integer(-1)))))), (Symbol('c') * _p_ * ((_r_ + Integer(1)))**(Integer(-1)) * Subst(Int(((a_ + (_b_ * (x)**((_p_ * ((_r_ + Integer(1)))**(Integer(-1)))))))**(_m_), x), x, ((v_)**((_r_ + Integer(1))) * (w_)**((_s_ + Integer(1))))))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) + _q_*v_*D(w_, x)))}, c*_p_*Subst(Int((x**(_p_/(_r_ + 1))*_b_ + a_)**_m_, x), x, v_**(_r_ + 1)*w_**(_s_ + 1))/(_r_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=31,
     ),
@@ -372,7 +378,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_*v_**_p_ + _b_*w_**_q_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _m_, _p_, _q_], x), EqQ(_p_ + _q_*(_m_*_p_ + 1), 0), IntegerQ(_p_), IntegerQ(_m_), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (Integer(-1) * (_q_ * v_ * D(w_, x)))))**(Integer(-1)))))), (Symbol('c') * _p_ * Subst(Int(((_b_ + (_a_ * (x)**(_p_))))**(_m_), x), x, (v_ * (w_)**(((_m_ * _q_) + Integer(1))))))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x)))}, c*_p_*Subst(Int((x**_p_*_a_ + _b_)**_m_, x), x, v_*w_**(_m_*_q_ + 1))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=32,
     ),
@@ -380,7 +386,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_r_*(_a_*v_**_p_ + _b_*w_**_q_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _m_, _p_, _q_, _r_], x), EqQ(_p_ + _q_*(_m_*_p_ + _r_ + 1), 0), IntegerQ(_q_), IntegerQ(_m_), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (Integer(-1) * (_q_ * v_ * D(w_, x)))))**(Integer(-1)))))), ((Integer(-1) * Symbol('c')) * _q_ * Subst(Int(((_a_ + (_b_ * (x)**(_q_))))**(_m_), x), x, ((v_)**(((_m_ * _p_) + _r_ + Integer(1))) * w_)))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x)))}, -c*_q_*Subst(Int((x**_q_*_b_ + _a_)**_m_, x), x, v_**(_m_*_p_ + _r_ + 1)*w_)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=33,
     ),
@@ -388,7 +394,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*w_**_s_*(_a_*v_**_p_ + _b_*w_**_q_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _m_, _p_, _q_, _s_], x), EqQ(_p_*(_s_ + 1) + _q_*(_m_*_p_ + 1), 0), NeQ(_s_, -1), IntegerQ(_q_/(_s_ + 1)), IntegerQ(_m_), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (Integer(-1) * (_q_ * v_ * D(w_, x)))))**(Integer(-1)))))), ((Integer(-1) * Symbol('c')) * _q_ * ((_s_ + Integer(1)))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**((_q_ * ((_s_ + Integer(1)))**(Integer(-1)))))))**(_m_), x), x, ((v_)**(((_m_ * _p_) + Integer(1))) * (w_)**((_s_ + Integer(1))))))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x)))}, -c*_q_*Subst(Int((x**(_q_/(_s_ + 1))*_b_ + _a_)**_m_, x), x, v_**(_m_*_p_ + 1)*w_**(_s_ + 1))/(_s_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=34,
     ),
@@ -396,7 +402,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_r_*w_**_s_*(_a_*v_**_p_ + _b_*w_**_q_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _m_, _p_, _q_, _r_, _s_], x), EqQ(_p_*(_s_ + 1) + _q_*(_m_*_p_ + _r_ + 1), 0), NeQ(_s_, -1), IntegerQ(_q_/(_s_ + 1)), IntegerQ(_m_), FreeQ(Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x))), x),),
-        replacement=With(List(Set(Symbol('c'), Simplify((u_ * (((_p_ * w_ * D(v_, x)) + (Integer(-1) * (_q_ * v_ * D(w_, x)))))**(Integer(-1)))))), ((Integer(-1) * Symbol('c')) * _q_ * ((_s_ + Integer(1)))**(Integer(-1)) * Subst(Int(((_a_ + (_b_ * (x)**((_q_ * ((_s_ + Integer(1)))**(Integer(-1)))))))**(_m_), x), x, ((v_)**(((_m_ * _p_) + _r_ + Integer(1))) * (w_)**((_s_ + Integer(1))))))),
+        replacement=With({c: Simplify(u_/(_p_*w_*D(v_, x) - _q_*v_*D(w_, x)))}, -c*_q_*Subst(Int((x**(_q_/(_s_ + 1))*_b_ + _a_)**_m_, x), x, v_**(_m_*_p_ + _r_ + 1)*w_**(_s_ + 1))/(_s_ + 1)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=35,
     ),
@@ -460,7 +466,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_u_*(x**_r_*_a_ + x**_s_*_b_)**m_, x),
         constraints=(FreeQ([_a_, _b_, m_, _r_, _s_], x), Not(IntegerQ(m_)), PosQ(-_r_ + _s_), NeQ(Simplify((x**_r_*_a_ + x**_s_*_b_)**FracPart(m_)/(x**(_r_*FracPart(m_))*(x**(-_r_ + _s_)*_b_ + _a_)**FracPart(m_))), 1),),
-        replacement=With(List(Set(Symbol('v'), ((((_a_ * (x)**(_r_)) + (_b_ * (x)**(_s_))))**(FracPart(m_)) * (((x)**((_r_ * FracPart(m_))) * ((_a_ + (_b_ * (x)**((_s_ + (Integer(-1) * _r_))))))**(FracPart(m_))))**(Integer(-1))))), (Symbol('v') * Int((_u_ * (x)**((m_ * _r_)) * ((_a_ + (_b_ * (x)**((_s_ + (Integer(-1) * _r_))))))**(m_)), x))),
+        replacement=With({v: (x**_r_*_a_ + x**_s_*_b_)**FracPart(m_)/(x**(_r_*FracPart(m_))*(x**(-_r_ + _s_)*_b_ + _a_)**FracPart(m_))}, v*Int(x**(m_*_r_)*_u_*(x**(-_r_ + _s_)*_b_ + _a_)**m_, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=43,
     ),
@@ -468,7 +474,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_/(x**n_*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_, 0), SumQ(RationalFunctionExpand(u_/(x**n_*_b_ + a_), x)),),
-        replacement=With(List(Set(Symbol('v'), RationalFunctionExpand((u_ * ((a_ + (_b_ * (x)**(n_))))**(Integer(-1))), x))), Int(Symbol('v'), x)),
+        replacement=With({v: RationalFunctionExpand(u_/(x**n_*_b_ + a_), x)}, Int(v, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=44,
     ),
@@ -492,7 +498,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_/(x**_n_*_b_ + x**_n2_*_c_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_], x), EqQ(_n2_, 2*_n_), IGtQ(_n_, 0), SumQ(RationalFunctionExpand(u_/(x**(2*_n_)*_c_ + x**_n_*_b_ + _a_), x)),),
-        replacement=With(List(Set(Symbol('v'), RationalFunctionExpand((u_ * ((_a_ + (_b_ * (x)**(_n_)) + (_c_ * (x)**((Integer(2) * _n_)))))**(Integer(-1))), x))), Int(Symbol('v'), x)),
+        replacement=With({v: RationalFunctionExpand(u_/(x**(2*_n_)*_c_ + x**_n_*_b_ + _a_), x)}, Int(v, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=47,
     ),
@@ -508,7 +514,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*u_, x),
         constraints=(FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ReplaceAll(u_, Rule(x, (x)**(Symbol('k'))))), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, k*Subst(Int(x**(k*(m_ + 1) - 1)*ReplaceAll(u_, Rule(x, x**k)), x), x, x**(1/k))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=49,
     ),
@@ -548,7 +554,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_, x),
         constraints=(UnsameQ(NormalizeIntegrand(u_, x), u_),),
-        replacement=With(List(Set(Symbol('v'), NormalizeIntegrand(u_, x))), Int(Symbol('v'), x)),
+        replacement=With({v: NormalizeIntegrand(u_, x)}, Int(v, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=54,
     ),
@@ -556,7 +562,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_, x),
         constraints=(SumQ(ExpandIntegrand(u_, x)),),
-        replacement=With(List(Set(Symbol('v'), ExpandIntegrand(u_, x))), Int(Symbol('v'), x)),
+        replacement=With({v: ExpandIntegrand(u_, x)}, Int(v, x)),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=55,
     ),

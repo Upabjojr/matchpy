@@ -62,13 +62,17 @@ def _reserved_symbols(lhs) -> Dict[str, str]:
 
 
 def _collect_wildcards_from_rules(converter, rules):
-    """Pre-scan FFL rules to collect all wildcard names.
+    """Pre-scan FFL rules to collect all wildcard AND plain-symbol names.
 
     Assumes rules are SetDelayed[Int[...], ...] structure.
-    Returns (non_optional_set, optional_set).
+    Returns (non_optional_set, optional_set, plain_symbol_set). The plain symbols
+    (scoping locals like r/s/k/u, selector symbols, ...) are declared once at the top
+    of the module so the emitted code can reference them bare (`r`) instead of
+    building `Symbol('r')` inline inside every binding.
     """
     all_non_optional = set()
     all_optional = set()
+    all_symbols = set()
     for rule in rules:
         if not isinstance(rule, list) or not rule or rule[0] != 'SetDelayed':
             continue
@@ -97,7 +101,8 @@ def _collect_wildcards_from_rules(converter, rules):
             pass
         all_non_optional.update(converter.wildcards_non_optional)
         all_optional.update(converter.wildcards_optional)
-    return all_non_optional, all_optional
+        all_symbols.update(converter._bare_locals)
+    return all_non_optional, all_optional, all_symbols
 
 
 def _with_binding_substitutions(bindings_ffl) -> Dict[str, object]:
@@ -692,7 +697,8 @@ class RubiRuleTranslator:
 
     def translate_module(self, rules: List, module_name: str, source_file: str = '') -> str:
         """Translate FFL rules into a Python module with RubiRulePattern list."""
-        all_non_optional, all_optional = _collect_wildcards_from_rules(self._converter, rules)
+        all_non_optional, all_optional, all_symbols = _collect_wildcards_from_rules(
+            self._converter, rules)
 
         header = self._generate_header(module_name, source_file)
 
@@ -719,6 +725,29 @@ class RubiRuleTranslator:
             exec(header + wc_section, load_ns)
         except Exception:
             load_ns = None  # header itself won't exec -> skip per-rule validation
+
+        # Declare the plain (non-wildcard) symbols the rules reference bare -- scoping
+        # locals (r/s/k/u), selector symbols, etc. -- so bindings read
+        # `Module(List(Set(r, ...)), ...)` instead of building `Symbol('r')` inline.
+        # ONLY names NOT already defined in the module are declared: a name that is
+        # already an import/utility function (e.g. `D`, `Gamma`) or a wildcard/header
+        # symbol must NOT be shadowed by a `Symbol(...)` (that gave
+        # `'Symbol' object is not callable` when the rule later calls it).
+        import sympy as _sympy
+        sym_lines = []
+        if load_ns is not None:
+            for name in sorted(all_symbols):
+                if name in self._converter.reserved_symbols:
+                    continue
+                # A scope local IS a Symbol, so declare it even when the name shadows
+                # a SymPy singleton/import (S/C/E/...) -- rules use it as a symbol, and
+                # `sympy.S(...)` etc. stay qualified. Skip only names the header already
+                # binds to a Symbol, to avoid a redundant re-declare.
+                if isinstance(load_ns.get(name), _sympy.Symbol) and str(load_ns[name]) == name:
+                    continue
+                sym_lines.append(f"{name} = Symbol('{name}')")
+                load_ns[name] = _sympy.Symbol(name)  # visible to per-rule validation
+        sym_section = '\n'.join(sym_lines) + '\n\n' if sym_lines else ''
 
         # Generate rules, numbered by their ordinal position among the module's
         # actual rules (``SetDelayed`` entries) -- NOT by raw expression index.
@@ -756,7 +785,7 @@ class RubiRuleTranslator:
         # rules that could not be translated. (Orphans are excluded above.)
         footer = self._generate_footer(rule_number - skipped - non_rules, skipped, non_rules)
         rules_body = '\n'.join(rule_lines)
-        return header + wc_section + 'RULES = [\n' + rules_body + '\n' + footer
+        return header + sym_section + wc_section + 'RULES = [\n' + rules_body + '\n' + footer
 
     # =========================================================================
     # Header / footer

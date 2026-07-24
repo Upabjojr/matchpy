@@ -410,7 +410,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_*(x**n_*_f_ + e_)**r_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_, p_, q_, r_], x), IGtQ(n_, 0), SumQ(ExpandIntegrand((x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_*(x**n_*_f_ + e_)**r_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((((a_ + (_b_ * (x)**(n_))))**(p_) * ((c_ + (_d_ * (x)**(n_))))**(q_) * ((e_ + (_f_ * (x)**(n_))))**(r_)), x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand((x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_*(x**n_*_f_ + e_)**r_, x)}, Int(u, x)),
         module_name='1.1.3.5 (a+b x^n)^p (c+d x^n)^q (e+f x^n)^r',
         rule_number=38,
     ),

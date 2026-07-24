@@ -178,7 +178,11 @@ class TestRuleTranslation:
 
         assert code is not None
         assert "constraints=(FreeQ(_m_, x), NeQ(_m_, -1), Not(InertTrigFreeQ(u_)), Not(FalseQ(DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x))),)," in code
-        assert "replacement=With(List(Set(Symbol('q'), DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x))), (Symbol('q') * ((_m_ + Integer(1)))**(Integer(-1)) * ActivateTrig((y_)**((_m_ + Integer(1))))))" in code
+        # `q` is a With-scope local: the binding list prints as a Python DICT and `q`
+        # is emitted BARE (declared once at the module top as `q = Symbol('q')`), not
+        # built inline as Symbol('q'). Because q now round-trips, the body simplifies
+        # too (`q*.../(_m_ + 1)` instead of `q * (_m_ + 1)**(-1) * ...`).
+        assert "replacement=With({q: DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x)}, q*ActivateTrig(y_**(_m_ + 1))/(_m_ + 1))" in code
 
 
 # =============================================================================

@@ -75,6 +75,13 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+a = Symbol('a')
+b = Symbol('b')
+k = Symbol('k')
+p = Symbol('p')
+q = Symbol('q')
+r = Symbol('r')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -167,7 +174,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*_u_, x),
         constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x), And(FreeQ(_a_, x), LinearQ(v_, x))))), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, x, Integer(0)), Expon(Px_, x))), Set(Symbol('b'), sympy.root(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)))), Int((_u_ * ((Symbol('a') + (Symbol('b') * x)))**(Expon(Px_, x))), x)),
+        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Int(_u_*(a + b*x)**Expon(Px_, x), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=4,
     ),
@@ -175,7 +182,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(IntegerQ(p_), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, x, Integer(0)), Expon(Px_, x))), Set(Symbol('b'), sympy.root(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)))), Int((_u_ * ((Symbol('a') + (Symbol('b') * x)))**((Expon(Px_, x) * p_))), x)),
+        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=5,
     ),
@@ -183,7 +190,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, x, Integer(0)), Expon(Px_, x))), Set(Symbol('b'), sympy.root(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)))), Star(((((Symbol('a') + (Symbol('b') * x)))**(Expon(Px_, x)))**(p_) * (((Symbol('a') + (Symbol('b') * x)))**((Expon(Px_, x) * p_)))**(Integer(-1))), Int((_u_ * ((Symbol('a') + (Symbol('b') * x)))**((Expon(Px_, x) * p_))), x))),
+        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Star(((a + b*x)**Expon(Px_, x))**p_/(a + b*x)**(p_*Expon(Px_, x)), Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=6,
     ),
@@ -271,7 +278,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pp_/Qq_, x),
         constraints=(PolyQ(Pp_, x), PolyQ(Qq_, x), EqQ(Expon(Pp_, x), Expon(Qq_, x) - 1), EqQ(Pp_, Simplify(Coeff(Pp_, x, Expon(Pp_, x))*D(Qq_, x)/(Coeff(Qq_, x, Expon(Qq_, x))*Expon(Qq_, x)))),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), (Coeff(Pp_, x, Symbol('p')) * sympy.log(Qq_) * ((Symbol('q') * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1)))),
+        replacement=With({p: Expon(Pp_, x), q: Expon(Qq_, x)}, Coeff(Pp_, x, p)*log(Qq_)/(q*Coeff(Qq_, x, q))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=17,
     ),
@@ -279,7 +286,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pp_*Qq_**_m_, x),
         constraints=(FreeQ(_m_, x), PolyQ(Pp_, x), PolyQ(Qq_, x), NeQ(_m_, -1), NeQ(_m_*Expon(Qq_, x) + Expon(Pp_, x) + 1, 0), EqQ(Pp_*(_m_*Expon(Qq_, x) + Expon(Pp_, x) + 1)*Coeff(Qq_, x, Expon(Qq_, x)), x**(Expon(Pp_, x) - Expon(Qq_, x))*(x*(_m_ + 1)*D(Qq_, x) + Qq_*(Expon(Pp_, x) - Expon(Qq_, x) + 1))*Coeff(Pp_, x, Expon(Pp_, x))),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x))), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + Integer(1)) * Coeff(Qq_, x, Symbol('q'))))**(Integer(-1)))),
+        replacement=With({p: Expon(Pp_, x), q: Expon(Qq_, x)}, x**(p - q + 1)*Qq_**(_m_ + 1)*Coeff(Pp_, x, p)/((p + q*_m_ + 1)*Coeff(Qq_, x, q))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=18,
     ),
@@ -295,7 +302,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pp_*Qq_**_m_*Rr_**_n_, x),
         constraints=(FreeQ([_m_, _n_], x), PolyQ(Pp_, x), PolyQ(Qq_, x), PolyQ(Rr_, x), NeQ(_m_, -1), NeQ(_n_, -1), NeQ(_m_*Expon(Qq_, x) + _n_*Expon(Rr_, x) + Expon(Pp_, x) + 1, 0), EqQ(Pp_*(_m_*Expon(Qq_, x) + _n_*Expon(Rr_, x) + Expon(Pp_, x) + 1)*Coeff(Qq_, x, Expon(Qq_, x))*Coeff(Rr_, x, Expon(Rr_, x)), x**(Expon(Pp_, x) - Expon(Qq_, x) - Expon(Rr_, x))*(x*Qq_*(_n_ + 1)*D(Rr_, x) + x*Rr_*(_m_ + 1)*D(Qq_, x) + Qq_*Rr_*(Expon(Pp_, x) - Expon(Qq_, x) - Expon(Rr_, x) + 1))*Coeff(Pp_, x, Expon(Pp_, x))),),
-        replacement=With(List(Set(Symbol('p'), Expon(Pp_, x)), Set(Symbol('q'), Expon(Qq_, x)), Set(Symbol('r'), Expon(Rr_, x))), (Coeff(Pp_, x, Symbol('p')) * (x)**((Symbol('p') + (Integer(-1) * Symbol('q')) + (Integer(-1) * Symbol('r')) + Integer(1))) * (Qq_)**((_m_ + Integer(1))) * (Rr_)**((_n_ + Integer(1))) * (((Symbol('p') + (_m_ * Symbol('q')) + (_n_ * Symbol('r')) + Integer(1)) * Coeff(Qq_, x, Symbol('q')) * Coeff(Rr_, x, Symbol('r'))))**(Integer(-1)))),
+        replacement=With({p: Expon(Pp_, x), q: Expon(Qq_, x), r: Expon(Rr_, x)}, x**(p - q - r + 1)*Qq_**(_m_ + 1)*Rr_**(_n_ + 1)*Coeff(Pp_, x, p)/((p + q*_m_ + r*_n_ + 1)*Coeff(Qq_, x, q)*Coeff(Rr_, x, r))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=20,
     ),
@@ -303,7 +310,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Qr_*(Pq_**_n_*_b_ + _a_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _n_, _p_], x), PolyQ(Pq_, x), PolyQ(Qr_, x), EqQ(Expon(Qr_, x), Expon(Pq_, x) - 1), EqQ(Coeff(Qr_, x, Expon(Qr_, x))*D(Pq_, x), Qr_*Coeff(Pq_, x, Expon(Pq_, x))*Expon(Pq_, x)),),
-        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Star((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1))), Subst(Int(((_a_ + (_b_ * (x)**(_n_))))**(_p_), x), x, Pq_))),
+        replacement=With({q: Expon(Pq_, x), r: Expon(Qr_, x)}, Star(Coeff(Qr_, x, r)/(q*Coeff(Pq_, x, q)), Subst(Int((x**_n_*_b_ + _a_)**_p_, x), x, Pq_))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=21,
     ),
@@ -311,7 +318,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Qr_*(Pq_**_n_*_b_ + Pq_**_n2_*_c_ + _a_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, _p_], x), EqQ(_n2_, 2*_n_), PolyQ(Pq_, x), PolyQ(Qr_, x),),
-        replacement=Module(List(Set(Symbol('q'), Expon(Pq_, x)), Set(Symbol('r'), Expon(Qr_, x))), Condition(Star((Coeff(Qr_, x, Symbol('r')) * ((Symbol('q') * Coeff(Pq_, x, Symbol('q'))))**(Integer(-1))), Subst(Int(((_a_ + (_b_ * (x)**(_n_)) + (_c_ * (x)**((Integer(2) * _n_)))))**(_p_), x), x, Pq_)), And(EqQ(Symbol('r'), (Symbol('q') + Integer(-1))), EqQ((Coeff(Qr_, x, Symbol('r')) * D(Pq_, x)), (Symbol('q') * Coeff(Pq_, x, Symbol('q')) * Qr_))))),
+        replacement=Module({q: Expon(Pq_, x), r: Expon(Qr_, x)}, Condition(Star(Coeff(Qr_, x, r)/(q*Coeff(Pq_, x, q)), Subst(Int((x**(2*_n_)*_c_ + x**_n_*_b_ + _a_)**_p_, x), x, Pq_)), And(EqQ(r, q - 1), EqQ(Coeff(Qr_, x, r)*D(Pq_, x), q*Qr_*Coeff(Pq_, x, q))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=22,
     ),
@@ -319,7 +326,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_Fx_*Px_**_p_, x),
         constraints=(PolyQ(Px_, x), IntegerQ(_p_), Not(MonomialQ(Px_, x)), Or(ILtQ(_p_, 0), Not(PolyQ(u, x))), IGtQ(Expon(Px_, x, Min), 0),),
-        replacement=With(List(Set(Symbol('r'), Expon(Px_, x, Symbol('Min')))), Int(((x)**((_p_ * Symbol('r'))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(_p_) * _Fx_), x)),
+        replacement=With({r: Expon(Px_, x, Min)}, Int(x**(r*_p_)*_Fx_*ExpandToSum(Px_/x**r, x)**_p_, x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=23,
     ),
@@ -391,7 +398,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*Fx_, x),
         constraints=(FractionQ(m_), AlgebraicFunctionQ(Fx_, x),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star(Symbol('k'), Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * sympy.Function('SubstPower')(Fx_, x, Symbol('k'))), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, Star(k, Subst(Int(((x)**(((k * (m_ + Integer(1))) + Integer(-1))) * sympy.Function('SubstPower')(Fx_, x, k)), x), x, (x)**((k)**(Integer(-1)))))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=32,
     ),
@@ -519,7 +526,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), FractionQ(p_), IntegerQ(1/_n_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, Star(q*_e_*(-_a_*_d_ + _b_*c_)/_n_, Subst(Int(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + 1/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - 1/_n_), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q)))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=48,
     ),
@@ -527,7 +534,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_e_*(x*_b_ + _a_)/(x*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _m_], x), FractionQ(p_), IntegerQ(_m_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_)))), Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(_m_) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_m_ + Integer(2))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * x)) * ((c_ + (_d_ * x)))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, Star(q*_e_*(-_a_*_d_ + _b_*c_), Subst(Int(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**_m_*(-x**q*_d_ + _b_*_e_)**(-_m_ - 2), x), x, (_e_*(x*_b_ + _a_)/(x*_d_ + c_))**(1/q)))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=49,
     ),
@@ -551,7 +558,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegerQ(_r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, Star(q*_e_*(-_a_*_d_ + _b_*c_)/_n_, Subst(Int(SimplifyIntegrand(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + 1/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - 1/_n_)*ReplaceAll(u_, Rule(x, (x**q*c_ - _a_*_e_)**(1/_n_)/(-x**q*_d_ + _b_*_e_)**(1/_n_)))**_r_, x), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q)))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=52,
     ),
@@ -559,7 +566,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegersQ(_m_, _r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), Star((Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1))), Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, Star(q*_e_*(-_a_*_d_ + _b_*c_)/_n_, Subst(Int(SimplifyIntegrand(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + (_m_ + 1)/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - (_m_ + 1)/_n_)*ReplaceAll(u_, Rule(x, (x**q*c_ - _a_*_e_)**(1/_n_)/(-x**q*_d_ + _b_*_e_)**(1/_n_)))**_r_, x), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q)))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=53,
     ),
@@ -663,7 +670,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*_u_, x),
         constraints=(PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x**2), And(FreeQ(_a_, x), BinomialQ(v_, x, 2))))), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Integer(0)), Expon(Px_, (x)**(Integer(2))))), Set(Symbol('b'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Expon(Px_, (x)**(Integer(2)))), Expon(Px_, (x)**(Integer(2)))))), Int((_u_ * ((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**(Expon(Px_, (x)**(Integer(2))))), x)),
+        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**Expon(Px_, x**2), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=66,
     ),
@@ -671,7 +678,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(IntegerQ(p_), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Integer(0)), Expon(Px_, (x)**(Integer(2))))), Set(Symbol('b'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Expon(Px_, (x)**(Integer(2)))), Expon(Px_, (x)**(Integer(2)))))), Int((_u_ * ((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**((Expon(Px_, (x)**(Integer(2))) * p_))), x)),
+        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=67,
     ),
@@ -679,7 +686,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With(List(Set(Symbol('a'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Integer(0)), Expon(Px_, (x)**(Integer(2))))), Set(Symbol('b'), sympy.root(Coeff(Px_, (x)**(Integer(2)), Expon(Px_, (x)**(Integer(2)))), Expon(Px_, (x)**(Integer(2)))))), Star(((((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**(Expon(Px_, (x)**(Integer(2)))))**(p_) * (((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**((Expon(Px_, (x)**(Integer(2))) * p_)))**(Integer(-1))), Int((_u_ * ((Symbol('a') + (Symbol('b') * (x)**(Integer(2)))))**((Expon(Px_, (x)**(Integer(2))) * p_))), x))),
+        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Star(((a + b*x**2)**Expon(Px_, x**2))**p_/(a + b*x**2)**(p_*Expon(Px_, x**2)), Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=68,
     ),

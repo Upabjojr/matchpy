@@ -75,6 +75,17 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+a = Symbol('a')
+b = Symbol('b')
+c = Symbol('c')
+d = Symbol('d')
+e = Symbol('e')
+f = Symbol('f')
+k = Symbol('k')
+q = Symbol('q')
+r = Symbol('r')
+s = Symbol('s')
+
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
@@ -161,7 +172,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x**3*_b_ + a_)*sqrt(x**2*_f_ + x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), PosQ(a_/_b_),),
-        replacement=With(List(Set(Symbol('r'), Numerator(sympy.root((a_ * (_b_)**(Integer(-1))), Integer(3)))), Set(Symbol('s'), Denominator(sympy.root((a_ * (_b_)**(Integer(-1))), Integer(3))))), ((Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Symbol('r') + (Symbol('s') * x)) * sympy.sqrt((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))))**(Integer(-1)), x)) + (Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Integer(2) * Symbol('r')) + (Integer(-1) * (Symbol('s') * x))) * ((((Symbol('r'))**(Integer(2)) + (Integer(-1) * (Symbol('r') * Symbol('s') * x)) + ((Symbol('s'))**(Integer(2)) * (x)**(Integer(2)))) * sympy.sqrt((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))))**(Integer(-1))), x)))),
+        replacement=With({r: Numerator((a_/_b_)**(sympy.S(1)/3)), s: Denominator((a_/_b_)**(sympy.S(1)/3))}, r*Int(1/((r + s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)/(3*a_) + r*Int((2*r - s*x)/((r**2 - r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)/(3*a_)),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=6,
     ),
@@ -169,7 +180,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(x**2*_f_ + _d_)*(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _f_], x), PosQ(a_/_b_),),
-        replacement=With(List(Set(Symbol('r'), Numerator(sympy.root((a_ * (_b_)**(Integer(-1))), Integer(3)))), Set(Symbol('s'), Denominator(sympy.root((a_ * (_b_)**(Integer(-1))), Integer(3))))), ((Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Symbol('r') + (Symbol('s') * x)) * sympy.sqrt((_d_ + (_f_ * (x)**(Integer(2)))))))**(Integer(-1)), x)) + (Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Integer(2) * Symbol('r')) + (Integer(-1) * (Symbol('s') * x))) * ((((Symbol('r'))**(Integer(2)) + (Integer(-1) * (Symbol('r') * Symbol('s') * x)) + ((Symbol('s'))**(Integer(2)) * (x)**(Integer(2)))) * sympy.sqrt((_d_ + (_f_ * (x)**(Integer(2)))))))**(Integer(-1))), x)))),
+        replacement=With({r: Numerator((a_/_b_)**(sympy.S(1)/3)), s: Denominator((a_/_b_)**(sympy.S(1)/3))}, r*Int(1/((r + s*x)*sqrt(x**2*_f_ + _d_)), x)/(3*a_) + r*Int((2*r - s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 - r*s*x + s**2*x**2)), x)/(3*a_)),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=7,
     ),
@@ -177,7 +188,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x**3*_b_ + a_)*sqrt(x**2*_f_ + x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NegQ(a_/_b_),),
-        replacement=With(List(Set(Symbol('r'), Numerator(sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(3)))), Set(Symbol('s'), Denominator(sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(3))))), ((Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Symbol('r') + (Integer(-1) * (Symbol('s') * x))) * sympy.sqrt((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))))**(Integer(-1)), x)) + (Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Integer(2) * Symbol('r')) + (Symbol('s') * x)) * ((((Symbol('r'))**(Integer(2)) + (Symbol('r') * Symbol('s') * x) + ((Symbol('s'))**(Integer(2)) * (x)**(Integer(2)))) * sympy.sqrt((_d_ + (_e_ * x) + (_f_ * (x)**(Integer(2)))))))**(Integer(-1))), x)))),
+        replacement=With({r: Numerator((-a_/_b_)**(sympy.S(1)/3)), s: Denominator((-a_/_b_)**(sympy.S(1)/3))}, r*Int(1/((r - s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)/(3*a_) + r*Int((2*r + s*x)/((r**2 + r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)/(3*a_)),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=8,
     ),
@@ -185,7 +196,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(x**2*_f_ + _d_)*(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _f_], x), NegQ(a_/_b_),),
-        replacement=With(List(Set(Symbol('r'), Numerator(sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(3)))), Set(Symbol('s'), Denominator(sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), Integer(3))))), ((Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Symbol('r') + (Integer(-1) * (Symbol('s') * x))) * sympy.sqrt((_d_ + (_f_ * (x)**(Integer(2)))))))**(Integer(-1)), x)) + (Symbol('r') * ((Integer(3) * a_))**(Integer(-1)) * Int((((Integer(2) * Symbol('r')) + (Symbol('s') * x)) * ((((Symbol('r'))**(Integer(2)) + (Symbol('r') * Symbol('s') * x) + ((Symbol('s'))**(Integer(2)) * (x)**(Integer(2)))) * sympy.sqrt((_d_ + (_f_ * (x)**(Integer(2)))))))**(Integer(-1))), x)))),
+        replacement=With({r: Numerator((-a_/_b_)**(sympy.S(1)/3)), s: Denominator((-a_/_b_)**(sympy.S(1)/3))}, r*Int(1/((r - s*x)*sqrt(x**2*_f_ + _d_)), x)/(3*a_) + r*Int((2*r + s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 + r*s*x + s**2*x**2)), x)/(3*a_)),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=9,
     ),
@@ -193,7 +204,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(x**4*_B_ + A_)/sqrt(v_), x),
         constraints=(FreeQ([A_, _B_], x), PolyQ(v_, x**2, 2), PolyQ(1/u_, x**2, 2), EqQ(A_*Coeff(v_, x, 4) + _B_*Coeff(v_, x, 0), 0), EqQ(Coeff(1/u_, x, 0)*Coeff(v_, x, 4) - Coeff(1/u_, x, 4)*Coeff(v_, x, 0), 0),),
-        replacement=With(List(Set(Symbol('a'), Coeff(v_, x, Integer(0))), Set(Symbol('b'), Coeff(v_, x, Integer(2))), Set(Symbol('c'), Coeff(v_, x, Integer(4))), Set(Symbol('d'), Coeff((u_)**(Integer(-1)), x, Integer(0))), Set(Symbol('e'), Coeff((u_)**(Integer(-1)), x, Integer(2))), Set(Symbol('f'), Coeff((u_)**(Integer(-1)), x, Integer(4)))), (A_ * Subst(Int(((Symbol('d') + (Integer(-1) * (((Symbol('b') * Symbol('d')) + (Integer(-1) * (Symbol('a') * Symbol('e')))) * (x)**(Integer(2))))))**(Integer(-1)), x), x, (x * (sympy.sqrt(v_))**(Integer(-1)))))),
+        replacement=With({a: Coeff(v_, x, 0), b: Coeff(v_, x, 2), c: Coeff(v_, x, 4), d: Coeff(1/u_, x, 0), e: Coeff(1/u_, x, 2), f: Coeff(1/u_, x, 4)}, A_*Subst(Int(1/(d - x**2*(-a*e + b*d)), x), x, x/sqrt(v_))),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=10,
     ),
@@ -385,7 +396,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), NeQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((_b_ * (a_)**(Integer(-1))), Integer(3)))), (((Integer(-1) * Symbol('q')) * ((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (Integer(-1) * (c_ * Symbol('q')))))**(Integer(-1)) * Int((sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))))**(Integer(-1)), x)) + (_d_ * ((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (Integer(-1) * (c_ * Symbol('q')))))**(Integer(-1)) * Int(((Integer(1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)) * (((c_ + (_d_ * x)) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(3)))))))**(Integer(-1))), x)))),
+        replacement=With({q: (_b_/a_)**(sympy.S(1)/3)}, -q*Int(1/sqrt(x**3*_b_ + a_), x)/(-q*c_ + _d_*(1 + sqrt(3))) + _d_*Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x)/(-q*c_ + _d_*(1 + sqrt(3)))),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=34,
     ),
@@ -417,7 +428,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), NeQ(-c_*_f_ + _d_*e_, 0), EqQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0), EqQ(6*a_*_d_**4*e_ - c_*_f_*(-22*a_*_d_**3 + _b_*c_**3), 0),),
-        replacement=With(List(Set(Symbol('k'), Simplify((((_d_ * e_) + (Integer(2) * c_ * _f_)) * ((c_ * _f_))**(Integer(-1)))))), ((Integer(1) + Symbol('k')) * e_ * (_d_)**(Integer(-1)) * Subst(Int(((Integer(1) + ((Integer(3) + (Integer(2) * Symbol('k'))) * a_ * (x)**(Integer(2)))))**(Integer(-1)), x), x, ((Integer(1) + ((Integer(1) + Symbol('k')) * _d_ * x * (c_)**(Integer(-1)))) * (sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))))**(Integer(-1)))))),
+        replacement=With({k: Simplify((2*c_*_f_ + _d_*e_)/(c_*_f_))}, e_*(k + 1)*Subst(Int(1/(x**2*a_*(2*k + 3) + 1), x), x, (x*_d_*(k + 1)/c_ + 1)/sqrt(x**3*_b_ + a_))/_d_),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=38,
     ),
@@ -433,7 +444,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), NeQ(-c_*_f_ + _d_*e_, 0), EqQ(-a_*_f_**3*(10 + 6*sqrt(3)) + _b_*e_**3, 0), NeQ(-a_*_d_**3*(10 - 6*sqrt(3)) + _b_*c_**3, 0),),
-        replacement=With(List(Set(Symbol('q'), Simplify(((Integer(1) + sympy.sqrt(Integer(3))) * _f_ * (e_)**(Integer(-1)))))), (Integer(4) * (Integer(3))**((Integer(4))**(Integer(-1))) * sympy.sqrt((Integer(2) + (Integer(-1) * sympy.sqrt(Integer(3))))) * _f_ * (Integer(1) + (Symbol('q') * x)) * sympy.sqrt(((Integer(1) + (Integer(-1) * (Symbol('q') * x)) + ((Symbol('q'))**(Integer(2)) * (x)**(Integer(2)))) * (((Integer(1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)))**(Integer(2)))**(Integer(-1)))) * ((Symbol('q') * sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))) * sympy.sqrt(((Integer(1) + (Symbol('q') * x)) * (((Integer(1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)))**(Integer(2)))**(Integer(-1))))))**(Integer(-1)) * Subst(Int((((((Integer(1) + (Integer(-1) * sympy.sqrt(Integer(3)))) * _d_) + (Integer(-1) * (c_ * Symbol('q'))) + ((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (Integer(-1) * (c_ * Symbol('q')))) * x)) * sympy.sqrt((Integer(1) + (Integer(-1) * (x)**(Integer(2))))) * sympy.sqrt((Integer(7) + (Integer(-1) * (Integer(4) * sympy.sqrt(Integer(3)))) + (x)**(Integer(2))))))**(Integer(-1)), x), x, ((Integer(-1) + sympy.sqrt(Integer(3)) + (Integer(-1) * (Symbol('q') * x))) * ((Integer(1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)))**(Integer(-1)))))),
+        replacement=With({q: Simplify(_f_*(1 + sqrt(3))/e_)}, 4*3**(sympy.S(1)/4)*_f_*sqrt((q**2*x**2 - q*x + 1)/(q*x + 1 + sqrt(3))**2)*sqrt(2 - sqrt(3))*(q*x + 1)*Subst(Int(1/(sqrt(1 - x**2)*sqrt(x**2 - 4*sqrt(3) + 7)*(-q*c_ + x*(-q*c_ + _d_*(1 + sqrt(3))) + _d_*(1 - sqrt(3)))), x), x, (-q*x - 1 + sqrt(3))/(q*x + 1 + sqrt(3)))/(q*sqrt((q*x + 1)/(q*x + 1 + sqrt(3))**2)*sqrt(x**3*_b_ + a_))),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=40,
     ),
@@ -441,7 +452,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), NeQ(-c_*_f_ + _d_*e_, 0), EqQ(-a_*_f_**3*(10 - 6*sqrt(3)) + _b_*e_**3, 0), NeQ(-a_*_d_**3*(10 + 6*sqrt(3)) + _b_*c_**3, 0),),
-        replacement=With(List(Set(Symbol('q'), Simplify(((Integer(-1) + sympy.sqrt(Integer(3))) * _f_ * (e_)**(Integer(-1)))))), (Integer(4) * (Integer(3))**((Integer(4))**(Integer(-1))) * sympy.sqrt((Integer(2) + sympy.sqrt(Integer(3)))) * _f_ * (Integer(1) + (Integer(-1) * (Symbol('q') * x))) * sympy.sqrt(((Integer(1) + (Symbol('q') * x) + ((Symbol('q'))**(Integer(2)) * (x)**(Integer(2)))) * (((Integer(1) + (Integer(-1) * sympy.sqrt(Integer(3))) + (Integer(-1) * (Symbol('q') * x))))**(Integer(2)))**(Integer(-1)))) * ((Symbol('q') * sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))) * sympy.sqrt(((Integer(-1) * (Integer(1) + (Integer(-1) * (Symbol('q') * x)))) * (((Integer(1) + (Integer(-1) * sympy.sqrt(Integer(3))) + (Integer(-1) * (Symbol('q') * x))))**(Integer(2)))**(Integer(-1))))))**(Integer(-1)) * Subst(Int((((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (c_ * Symbol('q')) + ((((Integer(1) + (Integer(-1) * sympy.sqrt(Integer(3)))) * _d_) + (c_ * Symbol('q'))) * x)) * sympy.sqrt((Integer(1) + (Integer(-1) * (x)**(Integer(2))))) * sympy.sqrt((Integer(7) + (Integer(4) * sympy.sqrt(Integer(3))) + (x)**(Integer(2))))))**(Integer(-1)), x), x, ((Integer(1) + sympy.sqrt(Integer(3)) + (Integer(-1) * (Symbol('q') * x))) * ((Integer(-1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)))**(Integer(-1)))))),
+        replacement=With({q: Simplify(_f_*(-1 + sqrt(3))/e_)}, 4*3**(sympy.S(1)/4)*_f_*sqrt((q**2*x**2 + q*x + 1)/(-q*x - sqrt(3) + 1)**2)*sqrt(sqrt(3) + 2)*(-q*x + 1)*Subst(Int(1/(sqrt(1 - x**2)*sqrt(x**2 + 4*sqrt(3) + 7)*(q*c_ + x*(q*c_ + _d_*(1 - sqrt(3))) + _d_*(1 + sqrt(3)))), x), x, (-q*x + 1 + sqrt(3))/(q*x - 1 + sqrt(3)))/(q*sqrt((q*x - 1)/(-q*x - sqrt(3) + 1)**2)*sqrt(x**3*_b_ + a_))),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=41,
     ),
@@ -449,7 +460,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_], x), NeQ(-c_*_f_ + _d_*_e_, 0), NeQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0), NeQ(-8*a_**2*_f_**6 - 20*a_*_b_*_e_**3*_f_**3 + _b_**2*_e_**6, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root((_b_ * (a_)**(Integer(-1))), Integer(3)))), (((((Integer(1) + sympy.sqrt(Integer(3))) * _f_) + (Integer(-1) * (_e_ * Symbol('q')))) * ((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (Integer(-1) * (c_ * Symbol('q')))))**(Integer(-1)) * Int((sympy.sqrt((a_ + (_b_ * (x)**(Integer(3))))))**(Integer(-1)), x)) + (((_d_ * _e_) + (Integer(-1) * (c_ * _f_))) * ((((Integer(1) + sympy.sqrt(Integer(3))) * _d_) + (Integer(-1) * (c_ * Symbol('q')))))**(Integer(-1)) * Int(((Integer(1) + sympy.sqrt(Integer(3)) + (Symbol('q') * x)) * (((c_ + (_d_ * x)) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(3)))))))**(Integer(-1))), x)))),
+        replacement=With({q: (_b_/a_)**(sympy.S(1)/3)}, (-q*_e_ + _f_*(1 + sqrt(3)))*Int(1/sqrt(x**3*_b_ + a_), x)/(-q*c_ + _d_*(1 + sqrt(3))) + (-c_*_f_ + _d_*_e_)*Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x)/(-q*c_ + _d_*(1 + sqrt(3)))),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=42,
     ),
@@ -529,7 +540,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*(x**3*_b_ + a_)**(sympy.S(2)/3)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(-a_*_d_**3 + 2*_b_*c_**3, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(_b_, Integer(3)))), (((Integer(-1) * _d_) * sympy.atan(((Integer(1) + (Integer(2) * Symbol('q') * x * (((a_ + (_b_ * (x)**(Integer(3)))))**((Integer(3))**(Integer(-1))))**(Integer(-1)))) * (sympy.sqrt(Integer(3)))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(3)) * (Symbol('q'))**(Integer(2)) * (c_)**(Integer(2))))**(Integer(-1))) + (sympy.sqrt(Integer(3)) * _d_ * sympy.atan(((Integer(1) + (Integer(2) * Symbol('q') * ((Integer(2) * c_) + (_d_ * x)) * ((_d_ * ((a_ + (_b_ * (x)**(Integer(3)))))**((Integer(3))**(Integer(-1)))))**(Integer(-1)))) * (sympy.sqrt(Integer(3)))**(Integer(-1)))) * ((Integer(2) * (Symbol('q'))**(Integer(2)) * (c_)**(Integer(2))))**(Integer(-1))) + (Integer(-1) * (_d_ * sympy.log((c_ + (_d_ * x))) * ((Integer(2) * (Symbol('q'))**(Integer(2)) * (c_)**(Integer(2))))**(Integer(-1)))) + (Integer(-1) * (_d_ * sympy.log(((Symbol('q') * x) + (Integer(-1) * ((a_ + (_b_ * (x)**(Integer(3)))))**((Integer(3))**(Integer(-1)))))) * ((Integer(4) * (Symbol('q'))**(Integer(2)) * (c_)**(Integer(2))))**(Integer(-1)))) + (Integer(3) * _d_ * sympy.log(((Symbol('q') * ((Integer(2) * c_) + (_d_ * x))) + (Integer(-1) * (_d_ * ((a_ + (_b_ * (x)**(Integer(3)))))**((Integer(3))**(Integer(-1))))))) * ((Integer(4) * (Symbol('q'))**(Integer(2)) * (c_)**(Integer(2))))**(Integer(-1))))),
+        replacement=With({q: _b_**(sympy.S(1)/3)}, -_d_*log(q*x - (x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) + 3*_d_*log(q*(x*_d_ + 2*c_) - _d_*(x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) - _d_*log(x*_d_ + c_)/(2*q**2*c_**2) - sqrt(3)*_d_*atan(sqrt(3)*(2*q*x/(x**3*_b_ + a_)**(sympy.S(1)/3) + 1)/3)/(6*q**2*c_**2) + sqrt(3)*_d_*atan(sqrt(3)*(2*q*(x*_d_ + 2*c_)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)) + 1)/3)/(2*q**2*c_**2)),
         module_name='1.3.3 Miscellaneous algebraic functions',
         rule_number=52,
     ),

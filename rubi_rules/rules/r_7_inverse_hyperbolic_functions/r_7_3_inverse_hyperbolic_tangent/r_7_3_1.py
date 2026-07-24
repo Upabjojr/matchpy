@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -154,7 +156,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.atanh((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*atanh(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=7,
     ),
@@ -162,7 +164,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.acoth((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*acoth(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=8,
     ),
@@ -394,7 +396,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))*(x*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _q_], x), NeQ(_q_, -1), IntegerQ(2*_m_), Or(And(IGtQ(_m_, 0), IGtQ(_q_, 0)), And(ILtQ(_m_ + _q_ + 1, 0), LtQ(_m_*_q_, 0))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*atanh(x*_c_), u)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=37,
     ),
@@ -402,7 +404,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))*(x*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _q_], x), NeQ(_q_, -1), IntegerQ(2*_m_), Or(And(IGtQ(_m_, 0), IGtQ(_q_, 0)), And(ILtQ(_m_ + _q_ + 1, 0), LtQ(_m_*_q_, 0))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*acoth(x*_c_), u)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=38,
     ),
@@ -410,7 +412,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**p_*(x*_e_ + _d_)**q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, q_], x), IGtQ(p_, 1), EqQ(_c_**2*_d_**2 - _e_**2, 0), IntegersQ(_m_, q_), NeQ(_m_, -1), NeQ(q_, -1), ILtQ(_m_ + q_ + 1, 0), LtQ(_m_*q_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(q_)), x))), (Dist(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(p_), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * p_ * Int(ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**((p_ + Integer(-1))), (Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x*_e_ + _d_)**q_, x)}, -_b_*_c_*p_*Int(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**(p_ - 1), u/(-x**2*_c_**2 + 1), x), x) + Dist((_a_ + _b_*atanh(x*_c_))**p_, u)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=39,
     ),
@@ -418,7 +420,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**p_*(x*_e_ + _d_)**q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, q_], x), IGtQ(p_, 1), EqQ(_c_**2*_d_**2 - _e_**2, 0), IntegersQ(_m_, q_), NeQ(_m_, -1), NeQ(q_, -1), ILtQ(_m_ + q_ + 1, 0), LtQ(_m_*q_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * x)))**(q_)), x))), (Dist(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(p_), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * p_ * Int(ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**((p_ + Integer(-1))), (Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x*_e_ + _d_)**q_, x)}, -_b_*_c_*p_*Int(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**(p_ - 1), u/(-x**2*_c_**2 + 1), x), x) + Dist((_a_ + _b_*acoth(x*_c_))**p_, u)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=40,
     ),
@@ -714,7 +716,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
+        replacement=With({u: IntHide((x**2*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(u/(-x**2*_c_**2 + 1), x) + Dist(_a_ + _b_*atanh(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=77,
     ),
@@ -722,7 +724,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IntegerQ(_q_), ILtQ(_q_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x))))),
+        replacement=With({u: IntHide((x**2*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(u/(-x**2*_c_**2 + 1), x) + Dist(_a_ + _b_*acoth(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=78,
     ),
@@ -1226,7 +1228,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*atanh(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=141,
     ),
@@ -1234,7 +1236,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))*(x**2*_e_ + _d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _q_], x), Or(And(IGtQ(_q_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_q_, 0), GtQ(_m_ + 2*_q_ + 3, 0)))), And(ILtQ(_m_/2 + _q_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + _d_)**_q_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*acoth(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=142,
     ),
@@ -1258,7 +1260,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*atanh(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.atanh((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand((_a_ + _b_*atanh(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)}, Int(u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=145,
     ),
@@ -1266,7 +1268,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acoth(x*_c_))**_p_*(x**2*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IGtQ(_p_, 0), Or(GtQ(_q_, 0), IntegerQ(_m_)), SumQ(ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.acoth((_c_ * x)))))**(_p_), (((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_q_)), x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand((_a_ + _b_*acoth(x*_c_))**_p_, (x*_f_)**_m_*(x**2*_e_ + d_)**_q_, x)}, Int(u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=146,
     ),
@@ -1570,7 +1572,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.atanh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**_m_*(_d_ + _e_*log(x**2*_g_ + _f_)), x)}, -_b_*_c_*Int(ExpandIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*atanh(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=184,
     ),
@@ -1578,7 +1580,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IGtQ(_m_/2 + sympy.S.Half, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2)))))))), x))), (Dist((_a_ + (_b_ * sympy.acoth((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(ExpandIntegrand((Symbol('u') * ((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**_m_*(_d_ + _e_*log(x**2*_g_ + _f_)), x)}, -_b_*_c_*Int(ExpandIntegrand(u/(-x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*acoth(x*_c_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=185,
     ),
@@ -1586,7 +1588,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.atanh((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**_m_*(_a_ + _b_*atanh(x*_c_)), x)}, -2*_e_*_g_*Int(ExpandIntegrand(u*x/(x**2*_g_ + _f_), x), x) + Dist(_d_ + _e_*log(x**2*_g_ + _f_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=186,
     ),
@@ -1594,7 +1596,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x*_c_))*(_d_ + _e_*log(x**2*_g_ + _f_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(_m_) * (_a_ + (_b_ * sympy.acoth((_c_ * x))))), x))), (Dist((_d_ + (_e_ * sympy.log((_f_ + (_g_ * (x)**(Integer(2))))))), Symbol('u'), x) + (Integer(-1) * (Integer(2) * _e_ * _g_ * Int(ExpandIntegrand((x * Symbol('u') * ((_f_ + (_g_ * (x)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**_m_*(_a_ + _b_*acoth(x*_c_)), x)}, -2*_e_*_g_*Int(ExpandIntegrand(u*x/(x**2*_g_ + _f_), x), x) + Dist(_d_ + _e_*log(x**2*_g_ + _f_), u, x)),
         module_name='7.3.1 (a+b arctanh(c x^n))^p',
         rule_number=187,
     ),

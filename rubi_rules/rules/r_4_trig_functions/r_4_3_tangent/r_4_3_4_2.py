@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+ff = Symbol('ff')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -287,7 +289,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*InertTan(x*_f_ + _e_))**m_*(_c_ + _d_*InertTan(x*_f_ + _e_))**n_*(_A_ + _B_*InertTan(x*_f_ + _e_) + _C_*InertTan(x*_f_ + _e_)**2), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _A_, _B_, _C_, m_, n_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), NeQ(_a_**2 + _b_**2, 0), NeQ(_c_**2 + _d_**2, 0),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((_a_ + (_b_ * Symbol('ff') * x)))**(m_) * ((_c_ + (_d_ * Symbol('ff') * x)))**(n_) * (_A_ + (_B_ * Symbol('ff') * x) + (_C_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff*x*_b_ + _a_)**m_*(ff*x*_d_ + _c_)**n_*(ff**2*x**2*_C_ + ff*x*_B_ + _A_)/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.3.4.2 (a+b tan)^m (c+d tan)^n (A+B tan+C tan^2)',
         rule_number=24,
     ),
@@ -295,7 +297,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_A_ + _C_*InertTan(x*_f_ + _e_)**2)*(_a_ + _b_*InertTan(x*_f_ + _e_))**m_*(_c_ + _d_*InertTan(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _A_, _C_, m_, n_], x), NeQ(-_a_*_d_ + _b_*_c_, 0), NeQ(_a_**2 + _b_**2, 0), NeQ(_c_**2 + _d_**2, 0),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((_a_ + (_b_ * Symbol('ff') * x)))**(m_) * ((_c_ + (_d_ * Symbol('ff') * x)))**(n_) * (_A_ + (_C_ * (Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))) * ((Integer(1) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*Subst(Int((ff*x*_b_ + _a_)**m_*(ff*x*_d_ + _c_)**n_*(ff**2*x**2*_C_ + _A_)/(ff**2*x**2 + 1), x), x, tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.3.4.2 (a+b tan)^m (c+d tan)^n (A+B tan+C tan^2)',
         rule_number=25,
     ),

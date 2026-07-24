@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -203,7 +205,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), IGtQ(n_, 0), FractionQ(_m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(_m_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.atanh((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(_m_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*atanh(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.2 (d x)^m (a+b arctanh(c x^n))^p',
         rule_number=13,
     ),
@@ -211,7 +213,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), IGtQ(n_, 0), FractionQ(_m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(_m_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.acoth((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(_m_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*acoth(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.2 (d x)^m (a+b arctanh(c x^n))^p',
         rule_number=14,
     ),
@@ -235,7 +237,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*atanh(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.atanh((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*atanh(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.2 (d x)^m (a+b arctanh(c x^n))^p',
         rule_number=17,
     ),
@@ -243,7 +245,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*acoth(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.acoth((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*acoth(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='7.3.2 (d x)^m (a+b arctanh(c x^n))^p',
         rule_number=18,
     ),

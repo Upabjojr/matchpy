@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+n = Symbol('n')
+
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
@@ -125,7 +127,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**_j_*_c_ + x**_q_*_a_)**p_*(x**_r_*_B_ + A_), x),
         constraints=(FreeQ([_a_, _c_, A_, _B_, _q_], x), Not(IntegerQ(p_)), GtQ(p_, 0), EqQ(_j_, _q_ + 2*_r_), NeQ(p_*(_q_ + 2*_r_) + 1, 0), NeQ(p_*_q_ + _r_*(2*p_ + 1) + 1, 0),),
-        replacement=With(List(Set(Symbol('n'), (_q_ + _r_))), ((x * ((A_ * ((p_ * _q_) + ((Symbol('n') + (Integer(-1) * _q_)) * ((Integer(2) * p_) + Integer(1))) + Integer(1))) + (_B_ * ((p_ * ((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))) + Integer(1)) * (x)**((Symbol('n') + (Integer(-1) * _q_))))) * (((_a_ * (x)**(_q_)) + (_c_ * (x)**(((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))))))**(p_) * ((((p_ * ((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))) + Integer(1)) * ((p_ * _q_) + ((Symbol('n') + (Integer(-1) * _q_)) * ((Integer(2) * p_) + Integer(1))) + Integer(1))))**(Integer(-1))) + ((Symbol('n') + (Integer(-1) * _q_)) * p_ * ((((p_ * ((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))) + Integer(1)) * ((p_ * _q_) + ((Symbol('n') + (Integer(-1) * _q_)) * ((Integer(2) * p_) + Integer(1))) + Integer(1))))**(Integer(-1)) * Int(((x)**(_q_) * ((Integer(2) * _a_ * A_ * ((p_ * _q_) + ((Symbol('n') + (Integer(-1) * _q_)) * ((Integer(2) * p_) + Integer(1))) + Integer(1))) + ((Integer(2) * _a_ * _B_ * ((p_ * ((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))) + Integer(1))) * (x)**((Symbol('n') + (Integer(-1) * _q_))))) * (((_a_ * (x)**(_q_)) + (_c_ * (x)**(((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))))))**((p_ + Integer(-1)))), x)))),
+        replacement=With({n: _q_ + _r_}, x*(x**_q_*_a_ + x**(2*n - _q_)*_c_)**p_*(x**(n - _q_)*_B_*(p_*(2*n - _q_) + 1) + A_*(p_*_q_ + (n - _q_)*(2*p_ + 1) + 1))/((p_*(2*n - _q_) + 1)*(p_*_q_ + (n - _q_)*(2*p_ + 1) + 1)) + p_*(n - _q_)*Int(x**_q_*(x**_q_*_a_ + x**(2*n - _q_)*_c_)**(p_ - 1)*(2*x**(n - _q_)*_B_*_a_*(p_*(2*n - _q_) + 1) + 2*A_*_a_*(p_*_q_ + (n - _q_)*(2*p_ + 1) + 1)), x)/((p_*(2*n - _q_) + 1)*(p_*_q_ + (n - _q_)*(2*p_ + 1) + 1))),
         module_name='1.2.4.3 (d+e x^(n-q)) (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=4,
     ),
@@ -141,7 +143,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**_j_*_c_ + x**_q_*_a_)**p_*(x**_r_*_B_ + A_), x),
         constraints=(FreeQ([_a_, _c_, A_, _B_, _q_], x), Not(IntegerQ(p_)), LtQ(p_, -1), EqQ(_j_, _q_ + 2*_r_),),
-        replacement=With(List(Set(Symbol('n'), (_q_ + _r_))), (((Integer(-1) * (x)**(((Integer(-1) * _q_) + Integer(1)))) * ((_a_ * A_ * _c_) + (_a_ * _B_ * _c_ * (x)**((Symbol('n') + (Integer(-1) * _q_))))) * (((_a_ * (x)**(_q_)) + (_c_ * (x)**(((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))))))**((p_ + Integer(1))) * ((_a_ * (Symbol('n') + (Integer(-1) * _q_)) * (p_ + Integer(1)) * (Integer(2) * _a_ * _c_)))**(Integer(-1))) + (((_a_ * (Symbol('n') + (Integer(-1) * _q_)) * (p_ + Integer(1)) * (Integer(2) * _a_ * _c_)))**(Integer(-1)) * Int(((x)**((Integer(-1) * _q_)) * (((_a_ * A_ * _c_ * ((p_ * _q_) + (Integer(2) * (Symbol('n') + (Integer(-1) * _q_)) * (p_ + Integer(1))) + Integer(1))) + (_a_ * _B_ * _c_ * ((p_ * _q_) + ((Symbol('n') + (Integer(-1) * _q_)) * ((Integer(2) * p_) + Integer(3))) + Integer(1)) * (x)**((Symbol('n') + (Integer(-1) * _q_))))) * (((_a_ * (x)**(_q_)) + (_c_ * (x)**(((Integer(2) * Symbol('n')) + (Integer(-1) * _q_))))))**((p_ + Integer(1))))), x)))),
+        replacement=With({n: _q_ + _r_}, -x**(1 - _q_)*(x**_q_*_a_ + x**(2*n - _q_)*_c_)**(p_ + 1)*(x**(n - _q_)*_B_*_a_*_c_ + A_*_a_*_c_)/(2*_a_**2*_c_*(n - _q_)*(p_ + 1)) + Int((x**_q_*_a_ + x**(2*n - _q_)*_c_)**(p_ + 1)*(x**(n - _q_)*_B_*_a_*_c_*(p_*_q_ + (n - _q_)*(2*p_ + 3) + 1) + A_*_a_*_c_*(p_*_q_ + (2*n - 2*_q_)*(p_ + 1) + 1))/x**_q_, x)/(2*_a_**2*_c_*(n - _q_)*(p_ + 1))),
         module_name='1.2.4.3 (d+e x^(n-q)) (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=6,
     ),

@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -201,7 +203,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*sin(_c_ + _d_*(x*_f_ + _e_)**n_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_p_, 0), FractionQ(n_),),
-        replacement=Module(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * (_f_)**(Integer(-1)) * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.sin((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_)), x), x, ((_e_ + (_f_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*sin(x**(k*n_)*_d_ + _c_))**_p_, x), x, (x*_f_ + _e_)**(1/k))/_f_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=13,
     ),
@@ -209,7 +211,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*cos(_c_ + _d_*(x*_f_ + _e_)**n_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_p_, 0), FractionQ(n_),),
-        replacement=Module(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * (_f_)**(Integer(-1)) * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.cos((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_)), x), x, ((_e_ + (_f_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*cos(x**(k*n_)*_d_ + _c_))**_p_, x), x, (x*_f_ + _e_)**(1/k))/_f_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=14,
     ),
@@ -505,7 +507,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), IntegerQ(_p_), IGtQ(n_, 0), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (Symbol('k') * (_e_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.sin((_c_ + (_d_ * (x)**((Symbol('k') * n_)) * ((_e_)**(n_))**(Integer(-1))))))))**(_p_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, k*Subst(Int(x**(k*(m_ + 1) - 1)*(_a_ + _b_*sin(x**(k*n_)*_d_/_e_**n_ + _c_))**_p_, x), x, (x*_e_)**(1/k))/_e_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=51,
     ),
@@ -513,7 +515,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), IntegerQ(_p_), IGtQ(n_, 0), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), (Symbol('k') * (_e_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.cos((_c_ + (_d_ * (x)**((Symbol('k') * n_)) * ((_e_)**(n_))**(Integer(-1))))))))**(_p_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, k*Subst(Int(x**(k*(m_ + 1) - 1)*(_a_ + _b_*cos(x**(k*n_)*_d_/_e_**n_ + _c_))**_p_, x), x, (x*_e_)**(1/k))/_e_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=52,
     ),
@@ -585,7 +587,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), IGtQ(_p_, 0), ILtQ(n_, 0), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), ((Integer(-1) * Symbol('k')) * (_e_)**(Integer(-1)) * Subst(Int((((_a_ + (_b_ * sympy.sin((_c_ + (_d_ * (((_e_)**(n_) * (x)**((Symbol('k') * n_))))**(Integer(-1))))))))**(_p_) * ((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(1))))**(Integer(-1))), x), x, (((_e_ * x))**((Symbol('k'))**(Integer(-1))))**(Integer(-1))))),
+        replacement=With({k: Denominator(m_)}, -k*Subst(Int(x**(-k*(m_ + 1) - 1)*(_a_ + _b_*sin(_c_ + _d_/(x**(k*n_)*_e_**n_)))**_p_, x), x, (x*_e_)**(-1/k))/_e_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=61,
     ),
@@ -593,7 +595,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), IGtQ(_p_, 0), ILtQ(n_, 0), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), ((Integer(-1) * Symbol('k')) * (_e_)**(Integer(-1)) * Subst(Int((((_a_ + (_b_ * sympy.cos((_c_ + (_d_ * (((_e_)**(n_) * (x)**((Symbol('k') * n_))))**(Integer(-1))))))))**(_p_) * ((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(1))))**(Integer(-1))), x), x, (((_e_ * x))**((Symbol('k'))**(Integer(-1))))**(Integer(-1))))),
+        replacement=With({k: Denominator(m_)}, -k*Subst(Int(x**(-k*(m_ + 1) - 1)*(_a_ + _b_*cos(_c_ + _d_/(x**(k*n_)*_e_**n_)))**_p_, x), x, (x*_e_)**(-1/k))/_e_),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=62,
     ),
@@ -617,7 +619,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*sin(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), IntegerQ(_p_), FractionQ(n_),),
-        replacement=Module(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.sin((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: Denominator(n_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*sin(x**(k*n_)*_d_ + _c_))**_p_, x), x, x**(1/k))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=65,
     ),
@@ -625,7 +627,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*cos(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), IntegerQ(_p_), FractionQ(n_),),
-        replacement=Module(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * ((_a_ + (_b_ * sympy.cos((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: Denominator(n_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*(_a_ + _b_*cos(x**(k*n_)*_d_ + _c_))**_p_, x), x, x**(1/k))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=66,
     ),
@@ -761,7 +763,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*sin(_c_ + _d_*(x*_f_ + _e_)**n_))**_p_*(x*_h_ + _g_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_], x), IGtQ(_p_, 0), IGtQ(_m_, 0),),
-        replacement=Module(List(Set(Symbol('k'), If(FractionQ(n_), Denominator(n_), Integer(1)))), (Symbol('k') * ((_f_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand(((_a_ + (_b_ * sympy.sin((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_), ((x)**((Symbol('k') + Integer(-1))) * (((_f_ * _g_) + (Integer(-1) * (_e_ * _h_)) + (_h_ * (x)**(Symbol('k')))))**(_m_)), x), x), x, ((_e_ + (_f_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: If(FractionQ(n_), Denominator(n_), 1)}, k*_f_**(-_m_ - 1)*Subst(Int(ExpandIntegrand((_a_ + _b_*sin(x**(k*n_)*_d_ + _c_))**_p_, x**(k - 1)*(x**k*_h_ - _e_*_h_ + _f_*_g_)**_m_, x), x), x, (x*_f_ + _e_)**(1/k))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=83,
     ),
@@ -769,7 +771,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*cos(_c_ + _d_*(x*_f_ + _e_)**n_))**_p_*(x*_h_ + _g_)**_m_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_], x), IGtQ(_p_, 0), IGtQ(_m_, 0),),
-        replacement=Module(List(Set(Symbol('k'), If(FractionQ(n_), Denominator(n_), Integer(1)))), (Symbol('k') * ((_f_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand(((_a_ + (_b_ * sympy.cos((_c_ + (_d_ * (x)**((Symbol('k') * n_))))))))**(_p_), ((x)**((Symbol('k') + Integer(-1))) * (((_f_ * _g_) + (Integer(-1) * (_e_ * _h_)) + (_h_ * (x)**(Symbol('k')))))**(_m_)), x), x), x, ((_e_ + (_f_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=Module({k: If(FractionQ(n_), Denominator(n_), 1)}, k*_f_**(-_m_ - 1)*Subst(Int(ExpandIntegrand((_a_ + _b_*cos(x**(k*n_)*_d_ + _c_))**_p_, x**(k - 1)*(x**k*_h_ - _e_*_h_ + _f_*_g_)**_m_, x), x), x, (x*_f_ + _e_)**(1/k))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=84,
     ),

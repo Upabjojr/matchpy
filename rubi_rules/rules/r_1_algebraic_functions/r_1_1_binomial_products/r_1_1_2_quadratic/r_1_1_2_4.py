@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
 b_ = WildSymbol('b')
@@ -359,7 +361,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_)**m_*(x**2*_b_ + a_)**p_*(x**2*_d_ + c_)**q_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, p_, q_], x), NeQ(-a_*_d_ + _b_*c_, 0), FractionQ(m_), IntegerQ(p_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star((Symbol('k') * (_e_)**(Integer(-1))), Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((a_ + (_b_ * (x)**((Symbol('k') * Integer(2))) * ((_e_)**(Integer(2)))**(Integer(-1)))))**(p_) * ((c_ + (_d_ * (x)**((Symbol('k') * Integer(2))) * ((_e_)**(Integer(2)))**(Integer(-1)))))**(q_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, Star(k/_e_, Subst(Int(x**(k*(m_ + 1) - 1)*(x**(2*k)*_b_/_e_**2 + a_)**p_*(x**(2*k)*_d_/_e_**2 + c_)**q_, x), x, (x*_e_)**(1/k)))),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=34,
     ),
@@ -535,7 +537,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(x**2*_b_ + a_)**p_*(x**2*_d_ + c_)**_q_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), RationalQ(_m_, p_), IntegersQ(_m_/2 + p_ + sympy.S.Half, _q_), LtQ(-1, p_, 0),),
-        replacement=With(List(Set(Symbol('k'), Denominator(p_))), Star((Symbol('k') * (a_)**((p_ + ((_m_ + Integer(1)) * (Integer(2))**(Integer(-1))))) * (Integer(2))**(Integer(-1))), Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1)) * (Integer(2))**(Integer(-1))) + Integer(-1))) * ((c_ + (Integer(-1) * (((_b_ * c_) + (Integer(-1) * (a_ * _d_))) * (x)**(Symbol('k'))))))**(_q_) * (((Integer(1) + (Integer(-1) * (_b_ * (x)**(Symbol('k'))))))**((p_ + _q_ + ((_m_ + Integer(1)) * (Integer(2))**(Integer(-1))) + Integer(1))))**(Integer(-1))), x), x, ((x)**((Integer(2) * (Symbol('k'))**(Integer(-1)))) * (((a_ + (_b_ * (x)**(Integer(2)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
+        replacement=With({k: Denominator(p_)}, Star(k*a_**(_m_/2 + p_ + sympy.S.Half)/2, Subst(Int(x**(k*(_m_ + 1)/2 - 1)*(-x**k*_b_ + 1)**(-_m_/2 - p_ - _q_ + sympy.S(-3)/2)*(-x**k*(-a_*_d_ + _b_*c_) + c_)**_q_, x), x, x**(2/k)/(x**2*_b_ + a_)**(1/k)))),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=56,
     ),

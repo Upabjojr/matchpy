@@ -75,6 +75,10 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+f = Symbol('f')
+g = Symbol('g')
+h = Symbol('h')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -254,7 +258,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(P2x_**_m_*(_A_ + _B_*log(_e_*((x*_b_ + _a_)/(x*_d_ + _c_))**_n_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_, _n_], x), PolyQ(P2x_, x, 2), NeQ(-_a_*_d_ + _b_*_c_, 0), IntegerQ(_m_), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('f'), Coeff(P2x_, x, Integer(0))), Set(Symbol('g'), Coeff(P2x_, x, Integer(1))), Set(Symbol('h'), Coeff(P2x_, x, Integer(2)))), (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * Subst(Int((((((_b_)**(Integer(2)) * Symbol('f')) + (Integer(-1) * (_a_ * _b_ * Symbol('g'))) + ((_a_)**(Integer(2)) * Symbol('h')) + (Integer(-1) * (((Integer(2) * _b_ * _d_ * Symbol('f')) + (Integer(-1) * (_b_ * _c_ * Symbol('g'))) + (Integer(-1) * (_a_ * _d_ * Symbol('g'))) + (Integer(2) * _a_ * _c_ * Symbol('h'))) * x)) + ((((_d_)**(Integer(2)) * Symbol('f')) + (Integer(-1) * (_c_ * _d_ * Symbol('g'))) + ((_c_)**(Integer(2)) * Symbol('h'))) * (x)**(Integer(2)))))**(_m_) * ((_A_ + (_B_ * sympy.log((_e_ * (x)**(_n_))))))**(_p_) * (((_b_ + (Integer(-1) * (_d_ * x))))**((Integer(2) * (_m_ + Integer(1)))))**(Integer(-1))), x), x, ((_a_ + (_b_ * x)) * ((_c_ + (_d_ * x)))**(Integer(-1)))))),
+        replacement=With({f: Coeff(P2x_, x, 0), g: Coeff(P2x_, x, 1), h: Coeff(P2x_, x, 2)}, (-_a_*_d_ + _b_*_c_)*Subst(Int((_A_ + _B_*log(x**_n_*_e_))**_p_*(-x*_d_ + _b_)**(-2*_m_ - 2)*(f*_b_**2 - g*_a_*_b_ + h*_a_**2 + x**2*(f*_d_**2 - g*_c_*_d_ + h*_c_**2) - x*(2*f*_b_*_d_ - g*_a_*_d_ - g*_b_*_c_ + 2*h*_a_*_c_))**_m_, x), x, (x*_b_ + _a_)/(x*_d_ + _c_))),
         module_name='3.2.2 (f+g x)^m (h+i x)^q (A+B log(e ((a+b x) over (c+d x))^n))^p',
         rule_number=18,
     ),
@@ -262,7 +266,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(P2x_**_m_*(_A_ + _B_*log(_e_*(x*_b_ + _a_)**_n_*(x*_d_ + _c_)**mn_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_, _n_], x), PolyQ(P2x_, x, 2), EqQ(mn_ + _n_, 0), IGtQ(_n_, 0), NeQ(-_a_*_d_ + _b_*_c_, 0), IntegerQ(_m_), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('f'), Coeff(P2x_, x, Integer(0))), Set(Symbol('g'), Coeff(P2x_, x, Integer(1))), Set(Symbol('h'), Coeff(P2x_, x, Integer(2)))), (((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * Subst(Int((((((_b_)**(Integer(2)) * Symbol('f')) + (Integer(-1) * (_a_ * _b_ * Symbol('g'))) + ((_a_)**(Integer(2)) * Symbol('h')) + (Integer(-1) * (((Integer(2) * _b_ * _d_ * Symbol('f')) + (Integer(-1) * (_b_ * _c_ * Symbol('g'))) + (Integer(-1) * (_a_ * _d_ * Symbol('g'))) + (Integer(2) * _a_ * _c_ * Symbol('h'))) * x)) + ((((_d_)**(Integer(2)) * Symbol('f')) + (Integer(-1) * (_c_ * _d_ * Symbol('g'))) + ((_c_)**(Integer(2)) * Symbol('h'))) * (x)**(Integer(2)))))**(_m_) * ((_A_ + (_B_ * sympy.log((_e_ * (x)**(_n_))))))**(_p_) * (((_b_ + (Integer(-1) * (_d_ * x))))**((Integer(2) * (_m_ + Integer(1)))))**(Integer(-1))), x), x, ((_a_ + (_b_ * x)) * ((_c_ + (_d_ * x)))**(Integer(-1)))))),
+        replacement=With({f: Coeff(P2x_, x, 0), g: Coeff(P2x_, x, 1), h: Coeff(P2x_, x, 2)}, (-_a_*_d_ + _b_*_c_)*Subst(Int((_A_ + _B_*log(x**_n_*_e_))**_p_*(-x*_d_ + _b_)**(-2*_m_ - 2)*(f*_b_**2 - g*_a_*_b_ + h*_a_**2 + x**2*(f*_d_**2 - g*_c_*_d_ + h*_c_**2) - x*(2*f*_b_*_d_ - g*_a_*_d_ - g*_b_*_c_ + 2*h*_a_*_c_))**_m_, x), x, (x*_b_ + _a_)/(x*_d_ + _c_))),
         module_name='3.2.2 (f+g x)^m (h+i x)^q (A+B log(e ((a+b x) over (c+d x))^n))^p',
         rule_number=19,
     ),

@@ -75,6 +75,11 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+lst = Symbol('lst')
+v = Symbol('v')
+w = Symbol('w')
+z = Symbol('z')
+
 F_ = WildSymbol('F')
 Px_ = WildSymbol('Px')
 Qx_ = WildSymbol('Qx')
@@ -115,7 +120,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*log(v_), x),
         constraints=(Not(FalseQ(DerivativeDivides(v_, u_*(1 - v_), x))),),
-        replacement=With(List(Set(Symbol('w'), DerivativeDivides(v_, (u_ * (Integer(1) + (Integer(-1) * v_))), x))), (Symbol('w') * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))))),
+        replacement=With({w: DerivativeDivides(v_, (u_ * (Integer(1) + (Integer(-1) * v_))), x)}, (w * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))))),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=1,
     ),
@@ -123,7 +128,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(w_*(_a_ + _b_*log(u_))*log(v_), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(FalseQ(DerivativeDivides(v_, w_*(1 - v_), x))),),
-        replacement=With(List(Set(Symbol('z'), DerivativeDivides(v_, (w_ * (Integer(1) + (Integer(-1) * v_))), x))), ((Symbol('z') * (_a_ + (_b_ * sympy.log(u_))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_)))) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('z') * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * D(u_, x) * (u_)**(Integer(-1))), x), x))))),
+        replacement=With({z: DerivativeDivides(v_, (w_ * (Integer(1) + (Integer(-1) * v_))), x)}, ((z * (_a_ + (_b_ * sympy.log(u_))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_)))) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((z * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * D(u_, x) * (u_)**(Integer(-1))), x), x))))),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=2,
     ),
@@ -179,7 +184,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(log(RFx_**_n_*_c_)/(x**2*_e_ + d_), x),
         constraints=(FreeQ([_c_, d_, _e_, _n_], x), RationalFunctionQ(RFx_, x), Not(PolynomialQ(RFx_, x)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((d_ + (_e_ * (x)**(Integer(2)))))**(Integer(-1)), x))), ((Symbol('u') * sympy.log((_c_ * (RFx_)**(_n_)))) + (Integer(-1) * (_n_ * Int(SimplifyIntegrand((Symbol('u') * D(RFx_, x) * (RFx_)**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(1/(x**2*_e_ + d_), x)}, u*log(RFx_**_n_*_c_) - _n_*Int(SimplifyIntegrand(u*D(RFx_, x)/RFx_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=9,
     ),
@@ -187,7 +192,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(log(Px_**_n_*_c_)/Qx_, x),
         constraints=(FreeQ([_c_, _n_], x), QuadraticQ([Qx_, Px_], x), EqQ(D(Px_/Qx_, x), 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((Qx_)**(Integer(-1)), x))), ((Symbol('u') * sympy.log((_c_ * (Px_)**(_n_)))) + (Integer(-1) * (_n_ * Int(SimplifyIntegrand((Symbol('u') * D(Px_, x) * (Px_)**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(1/Qx_, x)}, u*log(Px_**_n_*_c_) - _n_*Int(SimplifyIntegrand(u*D(Px_, x)/Px_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=10,
     ),
@@ -195,7 +200,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(RGx_*(_a_ + _b_*log(RFx_**_p_*_c_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _p_], x), RationalFunctionQ(RFx_, x), RationalFunctionQ(RGx_, x), IGtQ(_n_, 0), SumQ(ExpandIntegrand((_a_ + _b_*log(RFx_**_p_*_c_))**_n_, RGx_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand(((_a_ + (_b_ * sympy.log((_c_ * (RFx_)**(_p_))))))**(_n_), RGx_, x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand((_a_ + _b_*log(RFx_**_p_*_c_))**_n_, RGx_, x)}, Int(u, x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=11,
     ),
@@ -203,7 +208,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(RGx_*(_a_ + _b_*log(RFx_**_p_*_c_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _p_], x), RationalFunctionQ(RFx_, x), RationalFunctionQ(RGx_, x), IGtQ(_n_, 0), SumQ(ExpandIntegrand(RGx_*(_a_ + _b_*log(RFx_**_p_*_c_))**_n_, x)),),
-        replacement=With(List(Set(Symbol('u'), ExpandIntegrand((RGx_ * ((_a_ + (_b_ * sympy.log((_c_ * (RFx_)**(_p_))))))**(_n_)), x))), Int(Symbol('u'), x)),
+        replacement=With({u: ExpandIntegrand(RGx_*(_a_ + _b_*log(RFx_**_p_*_c_))**_n_, x)}, Int(u, x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=12,
     ),
@@ -211,7 +216,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(RFx_*(_a_ + _b_*log(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), RationalFunctionQ(RFx_, x), Not(FalseQ(SubstForFractionalPowerOfLinear(RFx_*(_a_ + _b_*log(u_)), x))),),
-        replacement=With(List(Set(Symbol('lst'), SubstForFractionalPowerOfLinear((RFx_ * (_a_ + (_b_ * sympy.log(u_)))), x))), (Part(Symbol('lst'), Integer(2)) * Part(Symbol('lst'), Integer(4)) * Subst(Int(Part(Symbol('lst'), Integer(1)), x), x, (Part(Symbol('lst'), Integer(3)))**((Part(Symbol('lst'), Integer(2)))**(Integer(-1)))))),
+        replacement=With({lst: SubstForFractionalPowerOfLinear(RFx_*(_a_ + _b_*log(u_)), x)}, Part(lst, 2)*Part(lst, 4)*Subst(Int(Part(lst, 1), x), x, Part(lst, 3)**(1/Part(lst, 2)))),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=13,
     ),
@@ -387,7 +392,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(log(u_)/Qx_, x),
         constraints=(QuadraticQ(Qx_, x), InverseFunctionFreeQ(u_, x),),
-        replacement=With(List(Set(Symbol('v'), IntHide((Qx_)**(Integer(-1)), x))), ((Symbol('v') * sympy.log(u_)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('v') * D(u_, x) * (u_)**(Integer(-1))), x), x)))),
+        replacement=With({v: IntHide(1/Qx_, x)}, v*log(u_) - Int(SimplifyIntegrand(v*D(u_, x)/u_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=35,
     ),
@@ -403,7 +408,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*log(u_), x),
         constraints=(InverseFunctionFreeQ(u_, x), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist(sympy.log(u_), Symbol('w'), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * (u_)**(Integer(-1))), x), x)))),
+        replacement=With({w: IntHide(v_, x)}, Dist(log(u_), w, x) - Int(SimplifyIntegrand(w*D(u_, x)/u_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=37,
     ),
@@ -411,7 +416,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*log(u_), x),
         constraints=(ProductQ(u_), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist(sympy.log(u_), Symbol('w'), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('w') * Simplify((D(u_, x) * (u_)**(Integer(-1))))), x), x)))),
+        replacement=With({w: IntHide(v_, x)}, Dist(log(u_), w, x) - Int(SimplifyIntegrand(w*Simplify(D(u_, x)/u_), x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=38,
     ),
@@ -427,7 +432,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*log(v_)*log(w_), x),
         constraints=(InverseFunctionFreeQ(v_, x), InverseFunctionFreeQ(w_, x), InverseFunctionFreeQ(IntHide(u_, x), x),),
-        replacement=With(List(Set(Symbol('z'), IntHide(u_, x))), (Dist((sympy.log(v_) * sympy.log(w_)), Symbol('z'), x) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.log(w_) * D(v_, x) * (v_)**(Integer(-1))), x), x)) + (Integer(-1) * Int(SimplifyIntegrand((Symbol('z') * sympy.log(v_) * D(w_, x) * (w_)**(Integer(-1))), x), x)))),
+        replacement=With({z: IntHide(u_, x)}, Dist(log(v_)*log(w_), z, x) - Int(SimplifyIntegrand(z*D(v_, x)*log(w_)/v_, x), x) - Int(SimplifyIntegrand(z*D(w_, x)*log(v_)/w_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=40,
     ),

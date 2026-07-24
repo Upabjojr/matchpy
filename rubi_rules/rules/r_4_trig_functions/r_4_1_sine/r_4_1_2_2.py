@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+q = Symbol('q')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -692,7 +694,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_d_*InertSin(x*_f_ + _e_))/((a_ + _b_*InertSin(x*_f_ + _e_))*sqrt(InertCos(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * (a_)**(Integer(2))) + (_b_)**(Integer(2))), Integer(2)))), ((Integer(2) * sympy.sqrt(Integer(2)) * _d_ * (_b_ + Symbol('q')) * ((_f_ * Symbol('q')))**(Integer(-1)) * Subst(Int(((((_d_ * (_b_ + Symbol('q'))) + (a_ * (x)**(Integer(2)))) * sympy.sqrt((Integer(1) + (Integer(-1) * ((x)**(Integer(4)) * ((_d_)**(Integer(2)))**(Integer(-1))))))))**(Integer(-1)), x), x, (sympy.sqrt((_d_ * sympy.sin((_e_ + (_f_ * x))))) * (sympy.sqrt((Integer(1) + sympy.cos((_e_ + (_f_ * x))))))**(Integer(-1))))) + (Integer(-1) * (Integer(2) * sympy.sqrt(Integer(2)) * _d_ * (_b_ + (Integer(-1) * Symbol('q'))) * ((_f_ * Symbol('q')))**(Integer(-1)) * Subst(Int(((((_d_ * (_b_ + (Integer(-1) * Symbol('q')))) + (a_ * (x)**(Integer(2)))) * sympy.sqrt((Integer(1) + (Integer(-1) * ((x)**(Integer(4)) * ((_d_)**(Integer(2)))**(Integer(-1))))))))**(Integer(-1)), x), x, (sympy.sqrt((_d_ * sympy.sin((_e_ + (_f_ * x))))) * (sympy.sqrt((Integer(1) + sympy.cos((_e_ + (_f_ * x))))))**(Integer(-1)))))))),
+        replacement=With({q: sqrt(-a_**2 + _b_**2)}, -2*sqrt(2)*_d_*(-q + _b_)*Subst(Int(1/((x**2*a_ + _d_*(-q + _b_))*sqrt(-x**4/_d_**2 + 1)), x), x, sqrt(_d_*sin(x*_f_ + _e_))/sqrt(cos(x*_f_ + _e_) + 1))/(q*_f_) + 2*sqrt(2)*_d_*(q + _b_)*Subst(Int(1/((x**2*a_ + _d_*(q + _b_))*sqrt(-x**4/_d_**2 + 1)), x), x, sqrt(_d_*sin(x*_f_ + _e_))/sqrt(cos(x*_f_ + _e_) + 1))/(q*_f_)),
         module_name='4.1.2.2 (g cos)^p (a+b sin)^m (c+d sin)^n',
         rule_number=75,
     ),

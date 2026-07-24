@@ -75,6 +75,11 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+Qx = Symbol('Qx')
+R = Symbol('R')
+k = Symbol('k')
+q = Symbol('q')
+
 Px_ = WildSymbol('Px')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -132,7 +137,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_b_ + _a_)**m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_, _p_], x), PolyQ(Px_, x), ILtQ(m_, -1),),
-        replacement=With(List(Set(Symbol('Qx'), PolynomialQuotient(Px_, (_a_ + (_b_ * x)), x)), Set(Symbol('R'), PolynomialRemainder(Px_, (_a_ + (_b_ * x)), x))), ((_b_ * Symbol('R') * ((_a_ + (_b_ * x)))**((m_ + Integer(1))) * ((_c_ + (_d_ * x)))**((_n_ + Integer(1))) * ((_e_ + (_f_ * x)))**((_p_ + Integer(1))) * (((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_)))))**(Integer(-1))) + ((((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_)))))**(Integer(-1)) * Int((((_a_ + (_b_ * x)))**((m_ + Integer(1))) * ((_c_ + (_d_ * x)))**(_n_) * ((_e_ + (_f_ * x)))**(_p_) * ExpandToSum((((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_))) * Symbol('Qx')) + (_a_ * _d_ * _f_ * Symbol('R') * (m_ + Integer(1))) + (Integer(-1) * (_b_ * Symbol('R') * ((_d_ * _e_ * (m_ + _n_ + Integer(2))) + (_c_ * _f_ * (m_ + _p_ + Integer(2)))))) + (Integer(-1) * (_b_ * _d_ * _f_ * Symbol('R') * (m_ + _n_ + _p_ + Integer(3)) * x))), x)), x)))),
+        replacement=With({Qx: PolynomialQuotient(Px_, x*_b_ + _a_, x), R: PolynomialRemainder(Px_, x*_b_ + _a_, x)}, R*_b_*(x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_)) + Int((x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_*ExpandToSum(Qx*(m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_) - R*x*_b_*_d_*_f_*(m_ + _n_ + _p_ + 3) + R*_a_*_d_*_f_*(m_ + 1) - R*_b_*(_c_*_f_*(m_ + _p_ + 2) + _d_*_e_*(m_ + _n_ + 2)), x), x)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_))),
         module_name='1.1.1.6 P(x) (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=5,
     ),
@@ -140,7 +145,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_b_ + _a_)**m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_, _p_], x), PolyQ(Px_, x), LtQ(m_, -1), IntegersQ(2*m_, 2*_n_, 2*_p_),),
-        replacement=With(List(Set(Symbol('Qx'), PolynomialQuotient(Px_, (_a_ + (_b_ * x)), x)), Set(Symbol('R'), PolynomialRemainder(Px_, (_a_ + (_b_ * x)), x))), ((_b_ * Symbol('R') * ((_a_ + (_b_ * x)))**((m_ + Integer(1))) * ((_c_ + (_d_ * x)))**((_n_ + Integer(1))) * ((_e_ + (_f_ * x)))**((_p_ + Integer(1))) * (((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_)))))**(Integer(-1))) + ((((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_)))))**(Integer(-1)) * Int((((_a_ + (_b_ * x)))**((m_ + Integer(1))) * ((_c_ + (_d_ * x)))**(_n_) * ((_e_ + (_f_ * x)))**(_p_) * ExpandToSum((((m_ + Integer(1)) * ((_b_ * _c_) + (Integer(-1) * (_a_ * _d_))) * ((_b_ * _e_) + (Integer(-1) * (_a_ * _f_))) * Symbol('Qx')) + (_a_ * _d_ * _f_ * Symbol('R') * (m_ + Integer(1))) + (Integer(-1) * (_b_ * Symbol('R') * ((_d_ * _e_ * (m_ + _n_ + Integer(2))) + (_c_ * _f_ * (m_ + _p_ + Integer(2)))))) + (Integer(-1) * (_b_ * _d_ * _f_ * Symbol('R') * (m_ + _n_ + _p_ + Integer(3)) * x))), x)), x)))),
+        replacement=With({Qx: PolynomialQuotient(Px_, x*_b_ + _a_, x), R: PolynomialRemainder(Px_, x*_b_ + _a_, x)}, R*_b_*(x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_)) + Int((x*_b_ + _a_)**(m_ + 1)*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_*ExpandToSum(Qx*(m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_) - R*x*_b_*_d_*_f_*(m_ + _n_ + _p_ + 3) + R*_a_*_d_*_f_*(m_ + 1) - R*_b_*(_c_*_f_*(m_ + _p_ + 2) + _d_*_e_*(m_ + _n_ + 2)), x), x)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)*(-_a_*_f_ + _b_*_e_))),
         module_name='1.1.1.6 P(x) (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=6,
     ),
@@ -148,7 +153,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_b_ + _a_)**_m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _n_, _p_], x), PolyQ(Px_, x), NeQ(_m_ + _n_ + _p_ + Expon(Px_, x) + 1, 0),),
-        replacement=With(List(Set(Symbol('q'), Expon(Px_, x)), Set(Symbol('k'), Coeff(Px_, x, Expon(Px_, x)))), ((Symbol('k') * ((_a_ + (_b_ * x)))**((_m_ + Symbol('q') + Integer(-1))) * ((_c_ + (_d_ * x)))**((_n_ + Integer(1))) * ((_e_ + (_f_ * x)))**((_p_ + Integer(1))) * ((_d_ * _f_ * (_b_)**((Symbol('q') + Integer(-1))) * (_m_ + _n_ + _p_ + Symbol('q') + Integer(1))))**(Integer(-1))) + (((_d_ * _f_ * (_b_)**(Symbol('q')) * (_m_ + _n_ + _p_ + Symbol('q') + Integer(1))))**(Integer(-1)) * Int((((_a_ + (_b_ * x)))**(_m_) * ((_c_ + (_d_ * x)))**(_n_) * ((_e_ + (_f_ * x)))**(_p_) * ExpandToSum(((_d_ * _f_ * (_b_)**(Symbol('q')) * (_m_ + _n_ + _p_ + Symbol('q') + Integer(1)) * Px_) + (Integer(-1) * (_d_ * _f_ * Symbol('k') * (_m_ + _n_ + _p_ + Symbol('q') + Integer(1)) * ((_a_ + (_b_ * x)))**(Symbol('q')))) + (Symbol('k') * ((_a_ + (_b_ * x)))**((Symbol('q') + Integer(-2))) * (((_a_)**(Integer(2)) * _d_ * _f_ * (_m_ + _n_ + _p_ + Symbol('q') + Integer(1))) + (Integer(-1) * (_b_ * ((_b_ * _c_ * _e_ * (_m_ + Symbol('q') + Integer(-1))) + (_a_ * ((_d_ * _e_ * (_n_ + Integer(1))) + (_c_ * _f_ * (_p_ + Integer(1)))))))) + (_b_ * ((_a_ * _d_ * _f_ * ((Integer(2) * (_m_ + Symbol('q'))) + _n_ + _p_)) + (Integer(-1) * (_b_ * ((_d_ * _e_ * (_m_ + Symbol('q') + _n_)) + (_c_ * _f_ * (_m_ + Symbol('q') + _p_)))))) * x)))), x)), x)))),
+        replacement=With({k: Coeff(Px_, x, Expon(Px_, x)), q: Expon(Px_, x)}, k*_b_**(1 - q)*(x*_b_ + _a_)**(q + _m_ - 1)*(x*_d_ + _c_)**(_n_ + 1)*(x*_f_ + _e_)**(_p_ + 1)/(_d_*_f_*(q + _m_ + _n_ + _p_ + 1)) + Int((x*_b_ + _a_)**_m_*(x*_d_ + _c_)**_n_*(x*_f_ + _e_)**_p_*ExpandToSum(-k*_d_*_f_*(x*_b_ + _a_)**q*(q + _m_ + _n_ + _p_ + 1) + k*(x*_b_ + _a_)**(q - 2)*(x*_b_*(_a_*_d_*_f_*(2*q + 2*_m_ + _n_ + _p_) - _b_*(_c_*_f_*(q + _m_ + _p_) + _d_*_e_*(q + _m_ + _n_))) + _a_**2*_d_*_f_*(q + _m_ + _n_ + _p_ + 1) - _b_*(_a_*(_c_*_f_*(_p_ + 1) + _d_*_e_*(_n_ + 1)) + _b_*_c_*_e_*(q + _m_ - 1))) + Px_*_b_**q*_d_*_f_*(q + _m_ + _n_ + _p_ + 1), x), x)/(_b_**q*_d_*_f_*(q + _m_ + _n_ + _p_ + 1))),
         module_name='1.1.1.6 P(x) (a+b x)^m (c+d x)^n (e+f x)^p',
         rule_number=7,
     ),

@@ -75,6 +75,11 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+Pqq = Symbol('Pqq')
+d = Symbol('d')
+g = Symbol('g')
+q = Symbol('q')
+
 Pq_ = WildSymbol('Pq')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -94,7 +99,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x**_j_*_a_ + x**n_*_b_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _j_, n_, p_], x), PolyQ(Pq_, x**n_), Not(IntegerQ(p_)), NeQ(n_, _j_), RationalQ(_j_, n_), IntegerQ(_j_/n_), LtQ(-1, n_, 1),),
-        replacement=With(List(Set(Symbol('d'), Denominator(n_))), (Symbol('d') * Subst(Int(((x)**((Symbol('d') + Integer(-1))) * ReplaceAll(SubstFor((x)**(n_), Pq_, x), Rule(x, (x)**((Symbol('d') * n_)))) * (((_a_ * (x)**((Symbol('d') * _j_))) + (_b_ * (x)**((Symbol('d') * n_)))))**(p_)), x), x, (x)**((Symbol('d'))**(Integer(-1)))))),
+        replacement=With({d: Denominator(n_)}, d*Subst(Int(x**(d - 1)*(x**(d*_j_)*_a_ + x**(d*n_)*_b_)**p_*ReplaceAll(SubstFor(x**n_, Pq_, x), Rule(x, x**(d*n_))), x), x, x**(1/d))),
         module_name='1.1.4.4 P(x) (c x)^m (a x^j+b x^n)^p',
         rule_number=1,
     ),
@@ -126,7 +131,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*Pq_*(x**_j_*_a_ + x**n_*_b_)**p_, x),
         constraints=(FreeQ([_a_, _b_, p_], x), PolyQ(Pq_, x**n_), Not(IntegerQ(p_)), IGtQ(_j_, 0), IGtQ(n_, 0), IGtQ(_j_/n_, 0), IntegerQ(_m_), NeQ(GCD(_m_ + 1, n_), 1),),
-        replacement=With(List(Set(Symbol('g'), GCD((_m_ + Integer(1)), n_))), ((Symbol('g'))**(Integer(-1)) * Subst(Int(((x)**((((_m_ + Integer(1)) * (Symbol('g'))**(Integer(-1))) + Integer(-1))) * ReplaceAll(Pq_, Rule(x, (x)**((Symbol('g'))**(Integer(-1))))) * (((_a_ * (x)**((_j_ * (Symbol('g'))**(Integer(-1))))) + (_b_ * (x)**((n_ * (Symbol('g'))**(Integer(-1)))))))**(p_)), x), x, (x)**(Symbol('g'))))),
+        replacement=With({g: GCD(_m_ + 1, n_)}, Subst(Int(x**(-1 + (_m_ + 1)/g)*(x**(_j_/g)*_a_ + x**(n_/g)*_b_)**p_*ReplaceAll(Pq_, Rule(x, x**(1/g))), x), x, x**g)/g),
         module_name='1.1.4.4 P(x) (c x)^m (a x^j+b x^n)^p',
         rule_number=5,
     ),
@@ -134,7 +139,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x*_c_)**_m_*(x**_j_*_a_ + x**n_*_b_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, p_], x), PolyQ(Pq_, x), Not(IntegerQ(p_)), IGtQ(_j_, 0), IGtQ(n_, 0), LtQ(_j_, n_), GtQ(Expon(Pq_, x), n_ - 1), NeQ(_m_ + n_*p_ + Expon(Pq_, x) + 1, 0), Or(IntegerQ(2*p_), IntegerQ(p_ + (Expon(Pq_, x) + 1)/(2*n_))),),
-        replacement=With(List(Set(Symbol('q'), Expon(Pq_, x))), With(List(Set(Symbol('Pqq'), Coeff(Pq_, x, Symbol('q')))), ((Symbol('Pqq') * ((_c_ * x))**((_m_ + Symbol('q') + (Integer(-1) * n_) + Integer(1))) * (((_a_ * (x)**(_j_)) + (_b_ * (x)**(n_))))**((p_ + Integer(1))) * ((_b_ * (_c_)**((Symbol('q') + (Integer(-1) * n_) + Integer(1))) * (_m_ + Symbol('q') + (n_ * p_) + Integer(1))))**(Integer(-1))) + Int((((_c_ * x))**(_m_) * ExpandToSum((Pq_ + (Integer(-1) * (Symbol('Pqq') * (x)**(Symbol('q')))) + (Integer(-1) * (_a_ * Symbol('Pqq') * (_m_ + Symbol('q') + (Integer(-1) * n_) + Integer(1)) * (x)**((Symbol('q') + (Integer(-1) * n_))) * ((_b_ * (_m_ + Symbol('q') + (n_ * p_) + Integer(1))))**(Integer(-1))))), x) * (((_a_ * (x)**(_j_)) + (_b_ * (x)**(n_))))**(p_)), x)))),
+        replacement=With({q: Expon(Pq_, x)}, With({Pqq: Coeff(Pq_, x, q)}, Pqq*_c_**(-q + n_ - 1)*(x*_c_)**(q + _m_ - n_ + 1)*(x**_j_*_a_ + x**n_*_b_)**(p_ + 1)/(_b_*(q + _m_ + n_*p_ + 1)) + Int((x*_c_)**_m_*(x**_j_*_a_ + x**n_*_b_)**p_*ExpandToSum(-Pqq*x**q - Pqq*x**(q - n_)*_a_*(q + _m_ - n_ + 1)/(_b_*(q + _m_ + n_*p_ + 1)) + Pq_, x), x))),
         module_name='1.1.4.4 P(x) (c x)^m (a x^j+b x^n)^p',
         rule_number=6,
     ),

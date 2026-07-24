@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+v = Symbol('v')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -213,7 +215,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*asech(x*_c_))*(x**2*_e_ + _d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IGtQ(_p_, 0), ILtQ(_p_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_p_), x))), (Dist((_a_ + (_b_ * sympy.asech((_c_ * x)))), Symbol('u'), x) + (_b_ * sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt(((Integer(1) + (_c_ * x)))**(Integer(-1))) * Int(SimplifyIntegrand((Symbol('u') * ((x * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * sympy.sqrt((Integer(1) + (_c_ * x)))))**(Integer(-1))), x), x)))),
+        replacement=With({u: IntHide((x**2*_e_ + _d_)**_p_, x)}, _b_*sqrt(x*_c_ + 1)*sqrt(1/(x*_c_ + 1))*Int(SimplifyIntegrand(u/(x*sqrt(-x*_c_ + 1)*sqrt(x*_c_ + 1)), x), x) + Dist(_a_ + _b_*asech(x*_c_), u, x)),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=15,
     ),
@@ -221,7 +223,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acsch(x*_c_))*(x**2*_e_ + _d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_], x), Or(IGtQ(_p_, 0), ILtQ(_p_ + sympy.S.Half, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((_d_ + (_e_ * (x)**(Integer(2)))))**(_p_), x))), (Dist((_a_ + (_b_ * sympy.acsch((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * x * (sympy.sqrt(((Integer(-1) * (_c_)**(Integer(2))) * (x)**(Integer(2)))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('u') * ((x * sympy.sqrt((Integer(-1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x**2*_e_ + _d_)**_p_, x)}, -x*_b_*_c_*Int(SimplifyIntegrand(u/(x*sqrt(-x**2*_c_**2 - 1)), x), x)/sqrt(-x**2*_c_**2) + Dist(_a_ + _b_*acsch(x*_c_), u, x)),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=16,
     ),
@@ -293,7 +295,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*asech(x*_c_))*(x**2*_e_ + _d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _p_], x), Or(And(IGtQ(_p_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_p_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_p_, 0), GtQ(_m_ + 2*_p_ + 3, 0)))), And(ILtQ(_m_/2 + _p_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.asech((_c_ * x)))), Symbol('u'), x) + (_b_ * sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt(((Integer(1) + (_c_ * x)))**(Integer(-1))) * Int(SimplifyIntegrand((Symbol('u') * ((x * sympy.sqrt((Integer(1) + (Integer(-1) * (_c_ * x)))) * sympy.sqrt((Integer(1) + (_c_ * x)))))**(Integer(-1))), x), x)))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + _d_)**_p_, x)}, _b_*sqrt(x*_c_ + 1)*sqrt(1/(x*_c_ + 1))*Int(SimplifyIntegrand(u/(x*sqrt(-x*_c_ + 1)*sqrt(x*_c_ + 1)), x), x) + Dist(_a_ + _b_*asech(x*_c_), u, x)),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=25,
     ),
@@ -301,7 +303,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acsch(x*_c_))*(x**2*_e_ + _d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_, _p_], x), Or(And(IGtQ(_p_, 0), Not(And(ILtQ(_m_/2 + sympy.S(-1)/2, 0), GtQ(_m_ + 2*_p_ + 3, 0)))), And(IGtQ(_m_/2 + sympy.S.Half, 0), Not(And(ILtQ(_p_, 0), GtQ(_m_ + 2*_p_ + 3, 0)))), And(ILtQ(_m_/2 + _p_ + sympy.S.Half, 0), Not(ILtQ(_m_/2 + sympy.S(-1)/2, 0)))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((_d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.acsch((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * x * (sympy.sqrt(((Integer(-1) * (_c_)**(Integer(2))) * (x)**(Integer(2)))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('u') * ((x * sympy.sqrt((Integer(-1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + _d_)**_p_, x)}, -x*_b_*_c_*Int(SimplifyIntegrand(u/(x*sqrt(-x**2*_c_**2 - 1)), x), x)/sqrt(-x**2*_c_**2) + Dist(_a_ + _b_*acsch(x*_c_), u, x)),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=26,
     ),
@@ -357,7 +359,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*asech(x*_c_)), x),
         constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.asech((_c_ * x)))), Symbol('v'), x) + (_b_ * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2)))))) * ((_c_ * x * sympy.sqrt((Integer(-1) + ((_c_ * x))**(Integer(-1)))) * sympy.sqrt((Integer(1) + ((_c_ * x))**(Integer(-1))))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * ((x * sympy.sqrt((Integer(1) + (Integer(-1) * ((_c_)**(Integer(2)) * (x)**(Integer(2))))))))**(Integer(-1))), x), x)))),
+        replacement=With({v: IntHide(u_, x)}, Dist(_a_ + _b_*asech(x*_c_), v, x) + _b_*sqrt(-x**2*_c_**2 + 1)*Int(SimplifyIntegrand(v/(x*sqrt(-x**2*_c_**2 + 1)), x), x)/(x*_c_*sqrt(-1 + 1/(x*_c_))*sqrt(1 + 1/(x*_c_)))),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=33,
     ),
@@ -365,7 +367,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*(_a_ + _b_*acsch(x*_c_)), x),
         constraints=(FreeQ([_a_, _b_, _c_], x), InverseFunctionFreeQ(IntHide(u_, x), x),),
-        replacement=With(List(Set(Symbol('v'), IntHide(u_, x))), (Dist((_a_ + (_b_ * sympy.acsch((_c_ * x)))), Symbol('v'), x) + (_b_ * (_c_)**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('v') * (((x)**(Integer(2)) * sympy.sqrt((Integer(1) + (((_c_)**(Integer(2)) * (x)**(Integer(2))))**(Integer(-1))))))**(Integer(-1))), x), x)))),
+        replacement=With({v: IntHide(u_, x)}, _b_*Int(SimplifyIntegrand(v/(x**2*sqrt(1 + 1/(x**2*_c_**2))), x), x)/_c_ + Dist(_a_ + _b_*acsch(x*_c_), v, x)),
         module_name='7.5.1 u (a+b arcsech(c x))^n',
         rule_number=34,
     ),

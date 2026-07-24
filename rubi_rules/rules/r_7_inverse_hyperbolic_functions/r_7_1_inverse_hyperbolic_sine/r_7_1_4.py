@@ -151,7 +151,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*asinh(x*_c_))*(x**2*_e_ + d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_e_, _c_**2*d_), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.asinh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * (sympy.sqrt((Integer(1) + ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**m_*(x**2*_e_ + d_)**_p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/sqrt(x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*asinh(x*_c_), u, x)),
         module_name='7.1.4 (f x)^m (d+e x^2)^p (a+b arcsinh(c x))^n',
         rule_number=7,
     ),
@@ -159,7 +159,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*(_a_ + _b_*asinh(x*_c_))*(x**2*_e_ + d_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_e_, _c_**2*d_), IntegerQ(p_ + sympy.S(-1)/2), NeQ(p_, sympy.S(-1)/2), Or(IGtQ(m_/2 + sympy.S.Half, 0), ILtQ(m_/2 + p_ + sympy.S(3)/2, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_)), x))), (Dist((_a_ + (_b_ * sympy.asinh((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Simp((sympy.sqrt((d_ + (_e_ * (x)**(Integer(2))))) * (sympy.sqrt((Integer(1) + ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1)))) * Int(SimplifyIntegrand((Symbol('u') * (sympy.sqrt((d_ + (_e_ * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**m_*(x**2*_e_ + d_)**p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/sqrt(x**2*_e_ + d_), x), x)*Simp(sqrt(x**2*_e_ + d_)/sqrt(x**2*_c_**2 + 1)) + Dist(_a_ + _b_*asinh(x*_c_), u)),
         module_name='7.1.4 (f x)^m (d+e x^2)^p (a+b arcsinh(c x))^n',
         rule_number=8,
     ),
@@ -303,7 +303,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*asinh(x*_c_))*(x**2*_e_ + d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(_e_, _c_**2*d_), IntegerQ(_p_), Or(GtQ(_p_, 0), And(IGtQ(_m_/2 + sympy.S(-1)/2, 0), LeQ(_m_ + _p_, 0))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.asinh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * (sympy.sqrt((Integer(1) + ((_c_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + d_)**_p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/sqrt(x**2*_c_**2 + 1), x), x) + Dist(_a_ + _b_*asinh(x*_c_), u, x)),
         module_name='7.1.4 (f x)^m (d+e x^2)^p (a+b arcsinh(c x))^n',
         rule_number=26,
     ),

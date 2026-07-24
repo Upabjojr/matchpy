@@ -165,7 +165,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((((_c_ + (_d_ * x)))**(_m_) * Gamma(n_, (_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), Or(IGtQ(_m_, 0), IGtQ(n_, 0), IntegersQ(_m_, n_)), NeQ(_m_, -1),),
-        replacement=sympy.Function('Block')(List(Set(Symbol('UseGamma'), sympy.true)), ((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * Gamma(n_, (_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * ((_a_ + (_b_ * x)))**((n_ + Integer(-1))) * ((sympy.E)**((_a_ + (_b_ * x))))**(Integer(-1))), x)))),
+        replacement=sympy.Function('Block')(List(Set(UseGamma, sympy.true)), ((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * Gamma(n_, (_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * ((_a_ + (_b_ * x)))**((n_ + Integer(-1))) * ((sympy.E)**((_a_ + (_b_ * x))))**(Integer(-1))), x)))),
         module_name='8.6 Gamma functions',
         rule_number=9,
     ),

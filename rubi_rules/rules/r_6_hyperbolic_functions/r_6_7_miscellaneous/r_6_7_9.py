@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+lst = Symbol('lst')
+
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
@@ -528,7 +530,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sinh(u_)**_n_, x),
         constraints=(IGtQ(_n_, 0), QuotientOfLinearsQ(u_, x),),
-        replacement=With(List(Set(Symbol('lst'), QuotientOfLinearsParts(u_, x))), Int((sympy.sinh(((Part(Symbol('lst'), Integer(1)) + (Part(Symbol('lst'), Integer(2)) * x)) * ((Part(Symbol('lst'), Integer(3)) + (Part(Symbol('lst'), Integer(4)) * x)))**(Integer(-1)))))**(_n_), x)),
+        replacement=With({lst: QuotientOfLinearsParts(u_, x)}, Int(sinh((x*Part(lst, 2) + Part(lst, 1))/(x*Part(lst, 4) + Part(lst, 3)))**_n_, x)),
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=53,
     ),
@@ -536,7 +538,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(cosh(u_)**_n_, x),
         constraints=(IGtQ(_n_, 0), QuotientOfLinearsQ(u_, x),),
-        replacement=With(List(Set(Symbol('lst'), QuotientOfLinearsParts(u_, x))), Int((sympy.cosh(((Part(Symbol('lst'), Integer(1)) + (Part(Symbol('lst'), Integer(2)) * x)) * ((Part(Symbol('lst'), Integer(3)) + (Part(Symbol('lst'), Integer(4)) * x)))**(Integer(-1)))))**(_n_), x)),
+        replacement=With({lst: QuotientOfLinearsParts(u_, x)}, Int(cosh((x*Part(lst, 2) + Part(lst, 1))/(x*Part(lst, 4) + Part(lst, 3)))**_n_, x)),
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=54,
     ),

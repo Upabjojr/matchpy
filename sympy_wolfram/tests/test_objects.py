@@ -233,6 +233,26 @@ class TestCompoundExpression:
         result = CompoundExpression(Integer(42)).doit()
         assert result == Integer(42)
 
+    def test_scoping_constructs_accept_dict_bindings(self):
+        """Module/With/Block accept a Python-dict binding form in addition to the
+        Mathematica `List(Set(...))` tree -- the codegen now emits the dict form
+        (`Module({r: v1, s: v2, k: None}, body)`). A None value is an UNINITIALISED
+        local. Dict and List forms must be equivalent."""
+        from sympy_wolfram.objects import Block
+        r, s, k = Symbol('r'), Symbol('s'), Symbol('k')
+        i = Integer
+        # dict form works for all three constructs
+        assert With({r: i(2), s: i(3)}, r**2 + s).doit() == Integer(7)
+        assert Module({r: i(4)}, r*(r + i(1))).doit() == Integer(20)
+        assert Block({r: i(2)}, r + i(1)).doit() == Integer(3)
+        # None = uninitialised local, assigned later inside the body
+        m = Module({r: i(2), k: None},
+                   CompoundExpression(Set(k, i(3)*r), r + k))
+        assert m.doit() == Integer(8)
+        # dict form is equivalent to the explicit List(Set(...)) form
+        assert (Module({r: i(2), s: i(3)}, r + s).doit()
+                == Module(List(Set(r, i(2)), Set(s, i(3))), r + s).doit())
+
     def test_compound_set_binds_for_later_statements(self):
         """CompoundExpression[Set[u, val], body] BINDS u for the following
         statements (Mathematica's assignment side effect). Verified vs Mathematica:

@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+q = Symbol('q')
+
 Pq_ = WildSymbol('Pq')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -186,7 +188,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), FractionQ(p_), IntegerQ(1/_n_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, q*_e_*(-_a_*_d_ + _b_*c_)*Subst(Int(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + 1/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - 1/_n_), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q))/_n_),
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=10,
     ),
@@ -194,7 +196,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_e_*(x*_b_ + _a_)/(x*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _m_], x), FractionQ(p_), IntegerQ(_m_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * Subst(Int(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(_m_) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_m_ + Integer(2))))**(Integer(-1))), x), x, ((_e_ * (_a_ + (_b_ * x)) * ((c_ + (_d_ * x)))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, q*_e_*(-_a_*_d_ + _b_*c_)*Subst(Int(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**_m_*(-x**q*_d_ + _b_*_e_)**(-_m_ - 2), x), x, (_e_*(x*_b_ + _a_)/(x*_d_ + c_))**(1/q))),
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=11,
     ),
@@ -218,7 +220,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegerQ(_r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1)) * Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**(((_n_)**(Integer(-1)) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**(((_n_)**(Integer(-1)) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, q*_e_*(-_a_*_d_ + _b_*c_)*Subst(Int(SimplifyIntegrand(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + 1/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - 1/_n_)*ReplaceAll(u_, Rule(x, (x**q*c_ - _a_*_e_)**(1/_n_)/(-x**q*_d_ + _b_*_e_)**(1/_n_)))**_r_, x), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q))/_n_),
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=14,
     ),
@@ -226,7 +228,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*u_**_r_*(_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_], x), PolynomialQ(u_, x), FractionQ(p_), IntegerQ(1/_n_), IntegersQ(_m_, _r_),),
-        replacement=With(List(Set(Symbol('q'), Denominator(p_))), (Symbol('q') * _e_ * ((_b_ * c_) + (Integer(-1) * (_a_ * _d_))) * (_n_)**(Integer(-1)) * Subst(Int(SimplifyIntegrand(((x)**(((Symbol('q') * (p_ + Integer(1))) + Integer(-1))) * ((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((((_m_ + Integer(1)) * (_n_)**(Integer(-1))) + Integer(1))))**(Integer(-1)) * (ReplaceAll(u_, Rule(x, (((((Integer(-1) * _a_) * _e_) + (c_ * (x)**(Symbol('q')))))**((_n_)**(Integer(-1))) * ((((_b_ * _e_) + (Integer(-1) * (_d_ * (x)**(Symbol('q'))))))**((_n_)**(Integer(-1))))**(Integer(-1))))))**(_r_)), x), x), x, ((_e_ * (_a_ + (_b_ * (x)**(_n_))) * ((c_ + (_d_ * (x)**(_n_))))**(Integer(-1))))**((Symbol('q'))**(Integer(-1)))))),
+        replacement=With({q: Denominator(p_)}, q*_e_*(-_a_*_d_ + _b_*c_)*Subst(Int(SimplifyIntegrand(x**(q*(p_ + 1) - 1)*(x**q*c_ - _a_*_e_)**(-1 + (_m_ + 1)/_n_)*(-x**q*_d_ + _b_*_e_)**(-1 - (_m_ + 1)/_n_)*ReplaceAll(u_, Rule(x, (x**q*c_ - _a_*_e_)**(1/_n_)/(-x**q*_d_ + _b_*_e_)**(1/_n_)))**_r_, x), x), x, (_e_*(x**_n_*_b_ + _a_)/(x**_n_*_d_ + c_))**(1/q))/_n_),
         module_name='1.3.4 Normalizing algebraic functions',
         rule_number=15,
     ),

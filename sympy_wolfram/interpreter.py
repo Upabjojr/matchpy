@@ -20,6 +20,7 @@ objects and the appropriate wildcard symbols.
 """
 from __future__ import annotations
 
+import keyword
 import warnings
 from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
@@ -167,6 +168,10 @@ class FFLConverter:
         self._wildcards_non_optional: Set[str] = set()
         self._wildcards_optional: Set[str] = set()
         self._symbols: Set[str] = set()
+        # Names declared as locals of an enclosing Module/With/Block binding list.
+        # These (and only these) are emitted bare and declared at the module top.
+        self._scope_locals: Set[str] = set()
+        self._bare_locals: Set[str] = set()
         self._wild_defs: List[str] = []
         # Slot mapping for Function/Lambda conversion (slot_number -> var_name)
         self._slot_vars: Dict[str, str] = {}
@@ -286,6 +291,8 @@ class FFLConverter:
         self._wildcards_non_optional = set()
         self._wildcards_optional = set()
         self._symbols = set()
+        self._scope_locals = set()
+        self._bare_locals = set()
         self._wild_defs = []
 
     def convert(self, ffl: Any, *, is_pattern: bool = False) -> str:
@@ -423,6 +430,17 @@ class FFLConverter:
                 return pairs[0]
             return f"And({', '.join(pairs)})"
 
+        # -- Scoping constructs: register the binding-list locals (so they print BARE,
+        #    declared once at the module top) and emit the binding list as a Python
+        #    DICT -- `Module({r: v1, s: v2, k: None}, body)` -- instead of the verbose
+        #    `List(Set(r, v1), Set(s, v2), k)`. Falls back to the generic form for a
+        #    binding that is not a plain List of Set / bare-symbol items.
+        if head in ('Module', 'With', 'Block') and len(ffl) >= 2:
+            self._register_scope_locals(ffl[1])
+            scoped = self._scoping_to_code(head, ffl, is_pattern)
+            if scoped is not None:
+                return scoped
+
         # -- Custom functions (before built-in map) ----------------------------
         if head in self._custom_functions:
             code_str, _ = self._custom_functions[head]
@@ -466,6 +484,46 @@ class FFLConverter:
     # Internals
     # -------------------------------------------------------------------------
 
+    def _scoping_to_code(self, head: str, ffl, is_pattern: bool) -> Optional[str]:
+        """Emit a Module/With/Block with its binding list as a Python dict:
+        ``Head({local: value, ...}, body)``. A ``None`` value denotes an
+        uninitialised local. Returns None (fall back to the generic ``List(Set(...))``
+        form) when the head is not mapped or a binding item is non-standard."""
+        if head not in self._custom_functions:
+            return None
+        binding = ffl[1]
+        if not (isinstance(binding, list) and binding and binding[0] == 'List'):
+            return None
+        entries = []
+        for item in binding[1:]:
+            if isinstance(item, str):
+                entries.append(f"{self.convert(item, is_pattern=is_pattern)}: None")
+            elif (isinstance(item, list) and len(item) == 3 and item[0] == 'Set'):
+                key = self.convert(item[1], is_pattern=is_pattern)
+                val = self.convert(item[2], is_pattern=is_pattern)
+                entries.append(f"{key}: {val}")
+            else:
+                return None
+        body = self.convert(ffl[2], is_pattern=is_pattern) if len(ffl) >= 3 else 'Null'
+        head_code = self._custom_functions[head][0]
+        return f"{head_code}({{{', '.join(entries)}}}, {body})"
+
+    def _register_scope_locals(self, binding_ffl) -> None:
+        """Record the local names of a Module/With/Block binding list so they emit
+        bare. Locals are ``['Set', name, value]`` (initialised) or a bare string
+        (uninitialised) inside the leading ``List``."""
+        if not (isinstance(binding_ffl, list) and binding_ffl and binding_ffl[0] == 'List'):
+            return
+        for item in binding_ffl[1:]:
+            name = None
+            if isinstance(item, str):
+                name = item
+            elif (isinstance(item, list) and len(item) >= 2
+                  and item[0] == 'Set' and isinstance(item[1], str)):
+                name = item[1]
+            if name and name.isidentifier() and not keyword.iskeyword(name):
+                self._scope_locals.add(name)
+
     def _atom_to_code(self, atom: str, is_pattern: bool) -> str:
         """Convert an atom (string) to SymPy code."""
         if atom in self.CONSTANT_MAP:
@@ -496,11 +554,23 @@ class FFLConverter:
                 ws = WildSymbol(atom)
                 self._eval_ns[var_name] = ws
             return var_name
-        # Plain symbol
+        # A scoping local (declared in an enclosing Module/With/Block binding list) is
+        # emitted BARE -- it is declared once at the top of the generated module, so
+        # bindings read `Module({r: ...}, ...)` instead of building `Symbol('r')`
+        # inline. Any other plain symbol keeps the inline constructor (bare-ifying all
+        # atoms would shadow single-letter imports like S/I/E). A local whose name is
+        # also a KNOWN CALLABLE (func_map / custom_functions, e.g. the derivative `D`)
+        # is NOT bare-ified either -- declaring `D = Symbol('D')` would shadow the
+        # function the rule also calls. Only the actually-bare-ified names go into
+        # ``_bare_locals`` (that is what the generator declares).
         self._symbols.add(atom)
-        symbol_code = f"Symbol('{atom}')"
         self._eval_ns.setdefault(atom, Symbol(atom))
-        return symbol_code
+        if (atom in self._scope_locals and atom.isidentifier()
+                and not keyword.iskeyword(atom)
+                and atom not in self.func_map and atom not in self._custom_functions):
+            self._bare_locals.add(atom)
+            return atom
+        return f"Symbol('{atom}')"
 
     def _pattern_to_code(self, ffl) -> str:
         """['Pattern', name, ['Blank', ...]] -> wildcard reference."""

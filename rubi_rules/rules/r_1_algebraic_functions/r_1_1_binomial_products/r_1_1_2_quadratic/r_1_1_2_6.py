@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -127,7 +129,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_g_)**m_*(x**2*_b_ + a_)**p_*(x**2*_d_ + c_)**q_*(x**2*_f_ + e_)**r_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_, _g_, p_, q_, r_], x), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star((Symbol('k') * (_g_)**(Integer(-1))), Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((a_ + (_b_ * (x)**((Symbol('k') * Integer(2))) * ((_g_)**(Integer(2)))**(Integer(-1)))))**(p_) * ((c_ + (_d_ * (x)**((Symbol('k') * Integer(2))) * ((_g_)**(Integer(2)))**(Integer(-1)))))**(q_) * ((e_ + (_f_ * (x)**((Symbol('k') * Integer(2))) * ((_g_)**(Integer(2)))**(Integer(-1)))))**(r_)), x), x, ((_g_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, Star(k/_g_, Subst(Int(x**(k*(m_ + 1) - 1)*(x**(2*k)*_b_/_g_**2 + a_)**p_*(x**(2*k)*_d_/_g_**2 + c_)**q_*(x**(2*k)*_f_/_g_**2 + e_)**r_, x), x, (x*_g_)**(1/k)))),
         module_name='1.1.2.6 (g x)^m (a+b x^2)^p (c+d x^2)^q (e+f x^2)^r',
         rule_number=4,
     ),

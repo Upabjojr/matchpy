@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+f = Symbol('f')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -172,7 +174,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), EqQ(a_ + _b_, 0),),
-        replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cot(((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1)))), x))), ((Integer(-1) * Symbol('f')) * (_e_)**(Integer(-1)) * Subst(Int(((a_ + (_c_ * Symbol('f') * x)))**(Integer(-1)), x), x, (sympy.cot(((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1)))) * (Symbol('f'))**(Integer(-1)))))),
+        replacement=Module({f: FreeFactors(cot(x*_e_/2 + _d_/2), x)}, -f*Subst(Int(1/(f*x*_c_ + a_), x), x, cot(x*_e_/2 + _d_/2)/f)/_e_),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=10,
     ),
@@ -180,7 +182,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), EqQ(a_ + _c_, 0),),
-        replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.tan((((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1))) + (sympy.pi * (Integer(4))**(Integer(-1))))), x))), (Symbol('f') * (_e_)**(Integer(-1)) * Subst(Int(((a_ + (_b_ * Symbol('f') * x)))**(Integer(-1)), x), x, (sympy.tan((((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1))) + (sympy.pi * (Integer(4))**(Integer(-1))))) * (Symbol('f'))**(Integer(-1)))))),
+        replacement=Module({f: FreeFactors(tan(x*_e_/2 + _d_/2 + pi/4), x)}, f*Subst(Int(1/(f*x*_b_ + a_), x), x, tan(x*_e_/2 + _d_/2 + pi/4)/f)/_e_),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=11,
     ),
@@ -188,7 +190,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), EqQ(a_ - _c_, 0), NeQ(a_ - _b_, 0),),
-        replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.cot((((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1))) + (sympy.pi * (Integer(4))**(Integer(-1))))), x))), ((Integer(-1) * Symbol('f')) * (_e_)**(Integer(-1)) * Subst(Int(((a_ + (_b_ * Symbol('f') * x)))**(Integer(-1)), x), x, (sympy.cot((((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1))) + (sympy.pi * (Integer(4))**(Integer(-1))))) * (Symbol('f'))**(Integer(-1)))))),
+        replacement=Module({f: FreeFactors(cot(x*_e_/2 + _d_/2 + pi/4), x)}, -f*Subst(Int(1/(f*x*_b_ + a_), x), x, cot(x*_e_/2 + _d_/2 + pi/4)/f)/_e_),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=12,
     ),
@@ -196,7 +198,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), NeQ(a_**2 - _b_**2 - _c_**2, 0),),
-        replacement=Module(List(Set(Symbol('f'), FreeFactors(sympy.tan(((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1)))), x))), (Integer(2) * Symbol('f') * (_e_)**(Integer(-1)) * Subst(Int(((a_ + _b_ + (Integer(2) * _c_ * Symbol('f') * x) + ((a_ + (Integer(-1) * _b_)) * (Symbol('f'))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1)), x), x, (sympy.tan(((_d_ + (_e_ * x)) * (Integer(2))**(Integer(-1)))) * (Symbol('f'))**(Integer(-1)))))),
+        replacement=Module({f: FreeFactors(tan(x*_e_/2 + _d_/2), x)}, 2*f*Subst(Int(1/(f**2*x**2*(a_ - _b_) + 2*f*x*_c_ + a_ + _b_), x), x, tan(x*_e_/2 + _d_/2)/f)/_e_),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=13,
     ),

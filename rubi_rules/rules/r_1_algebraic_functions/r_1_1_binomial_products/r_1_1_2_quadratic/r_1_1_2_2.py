@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
 b_ = WildSymbol('b')
@@ -298,7 +300,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_c_)**m_*(x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, p_], x), FractionQ(m_), IntBinomialQ(a_, _b_, _c_, 2, m_, p_, x),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star((Symbol('k') * (_c_)**(Integer(-1))), Subst(Int(((x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((a_ + (_b_ * (x)**((Integer(2) * Symbol('k'))) * ((_c_)**(Integer(2)))**(Integer(-1)))))**(p_)), x), x, ((_c_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, Star(k/_c_, Subst(Int(x**(k*(m_ + 1) - 1)*(x**(2*k)*_b_/_c_**2 + a_)**p_, x), x, (x*_c_)**(1/k)))),
         module_name='1.1.2.2 (c x)^m (a+b x^2)^p',
         rule_number=27,
     ),
@@ -346,7 +348,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _m_], x), IntegerQ(p_ + Simplify(_m_/2 + sympy.S.Half)), LtQ(-1, p_, 0),),
-        replacement=With(List(Set(Symbol('k'), Denominator(p_))), Star((Symbol('k') * (a_)**((p_ + Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))))) * (Integer(2))**(Integer(-1))), Subst(Int(((x)**(((Symbol('k') * Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1))))) + Integer(-1))) * (((Integer(1) + (Integer(-1) * (_b_ * (x)**(Symbol('k'))))))**((p_ + Simplify(((_m_ + Integer(1)) * (Integer(2))**(Integer(-1)))) + Integer(1))))**(Integer(-1))), x), x, ((x)**((Integer(2) * (Symbol('k'))**(Integer(-1)))) * (((a_ + (_b_ * (x)**(Integer(2)))))**((Symbol('k'))**(Integer(-1))))**(Integer(-1)))))),
+        replacement=With({k: Denominator(p_)}, Star(k*a_**(p_ + Simplify(_m_/2 + sympy.S.Half))/2, Subst(Int(x**(k*Simplify(_m_/2 + sympy.S.Half) - 1)*(-x**k*_b_ + 1)**(-p_ - Simplify(_m_/2 + sympy.S.Half) - 1), x), x, x**(2/k)/(x**2*_b_ + a_)**(1/k)))),
         module_name='1.1.2.2 (c x)^m (a+b x^2)^p',
         rule_number=33,
     ),

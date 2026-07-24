@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+k = Symbol('k')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -139,7 +141,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*atan(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.atan((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*atan(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='5.3.1 (a+b arctan(c x^n))^p',
         rule_number=7,
     ),
@@ -147,7 +149,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acot(x**n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), IGtQ(p_, 1), FractionQ(n_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * ((_a_ + (_b_ * sympy.acot((_c_ * (x)**((Symbol('k') * n_)))))))**(p_)), x), x, (x)**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(_a_ + _b_*acot(x**(k*n_)*_c_))**p_, x), x, x**(1/k))),
         module_name='5.3.1 (a+b arctan(c x^n))^p',
         rule_number=8,
     ),

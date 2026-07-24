@@ -210,7 +210,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + _c_)**_m_*tanh(x*_b_ + _a_)**_p_*sech(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, _p_], x), IGtQ(_m_, 0), Or(IntegerQ(_n_/2), IntegerQ(_p_/2 + sympy.S(-1)/2)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((sympy.sech((_a_ + (_b_ * x))))**(_n_) * (sympy.tanh((_a_ + (_b_ * x))))**(_p_)), x))), (Dist(((_c_ + (_d_ * x)))**(_m_), Symbol('u'), x) + (Integer(-1) * (_d_ * _m_ * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide(tanh(x*_b_ + _a_)**_p_*sech(x*_b_ + _a_)**_n_, x)}, -_d_*_m_*Int(u*(x*_d_ + _c_)**(_m_ - 1), x) + Dist((x*_d_ + _c_)**_m_, u, x)),
         module_name='6.7.6 (c+d x)^m hyper(a+b x)^n hyper(a+b x)^p',
         rule_number=14,
     ),
@@ -218,7 +218,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + _c_)**_m_*coth(x*_b_ + _a_)**_p_*csch(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, _p_], x), IGtQ(_m_, 0), Or(IntegerQ(_n_/2), IntegerQ(_p_/2 + sympy.S(-1)/2)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((sympy.csch((_a_ + (_b_ * x))))**(_n_) * (sympy.coth((_a_ + (_b_ * x))))**(_p_)), x))), (Dist(((_c_ + (_d_ * x)))**(_m_), Symbol('u'), x) + (Integer(-1) * (_d_ * _m_ * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide(coth(x*_b_ + _a_)**_p_*csch(x*_b_ + _a_)**_n_, x)}, -_d_*_m_*Int(u*(x*_d_ + _c_)**(_m_ - 1), x) + Dist((x*_d_ + _c_)**_m_, u, x)),
         module_name='6.7.6 (c+d x)^m hyper(a+b x)^n hyper(a+b x)^p',
         rule_number=15,
     ),
@@ -234,7 +234,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + _c_)**_m_*csch(x*_b_ + _a_)**_n_*sech(x*_b_ + _a_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IntegersQ(_n_, _p_), GtQ(_m_, 0), NeQ(_n_, _p_),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((sympy.csch((_a_ + (_b_ * x))))**(_n_) * (sympy.sech((_a_ + (_b_ * x))))**(_p_)), x))), (Dist(((_c_ + (_d_ * x)))**(_m_), Symbol('u'), x) + (Integer(-1) * (_d_ * _m_ * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide(csch(x*_b_ + _a_)**_n_*sech(x*_b_ + _a_)**_p_, x)}, -_d_*_m_*Int(u*(x*_d_ + _c_)**(_m_ - 1), x) + Dist((x*_d_ + _c_)**_m_, u, x)),
         module_name='6.7.6 (c+d x)^m hyper(a+b x)^n hyper(a+b x)^p',
         rule_number=17,
     ),

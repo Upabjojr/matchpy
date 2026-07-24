@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+w = Symbol('w')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -252,7 +254,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*asinh(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.asinh(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * (sympy.sqrt((Integer(1) + (u_)**(Integer(2)))))**(Integer(-1))), x), x))))),
+        replacement=With({w: IntHide(v_, x)}, -_b_*Int(SimplifyIntegrand(w*D(u_, x)/sqrt(u_**2 + 1), x), x) + Dist(_a_ + _b_*asinh(u_), w, x)),
         module_name='7.1.6 Miscellaneous inverse hyperbolic sine',
         rule_number=19,
     ),

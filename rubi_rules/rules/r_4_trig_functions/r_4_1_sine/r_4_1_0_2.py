@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+ff = Symbol('ff')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -109,7 +111,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_b_*InertTan(x*_f_ + _e_))**_n_*InertSin(x*_f_ + _e_)**m_, x),
         constraints=(FreeQ([_b_, _e_, _f_, _n_], x), IntegerQ(m_/2),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.tan((_e_ + (_f_ * x))), x))), (_b_ * Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((Symbol('ff') * x))**((m_ + _n_)) * ((((_b_)**(Integer(2)) + ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2)))))**(((m_ * (Integer(2))**(Integer(-1))) + Integer(1))))**(Integer(-1))), x), x, (_b_ * sympy.tan((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(tan(x*_f_ + _e_), x)}, ff*_b_*Subst(Int((ff*x)**(m_ + _n_)*(ff**2*x**2 + _b_**2)**(-m_/2 - 1), x), x, _b_*tan(x*_f_ + _e_)/ff)/_f_),
         module_name='4.1.0.2 (a trg)^m (b tan)^n',
         rule_number=3,
     ),
@@ -117,7 +119,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_*InertSin(x*_f_ + _e_))**_m_*InertTan(x*_f_ + _e_)**_n_, x),
         constraints=(FreeQ([_a_, _e_, _f_, _m_], x), IntegerQ(_n_/2 + sympy.S.Half),),
-        replacement=With(List(Set(Symbol('ff'), FreeFactors(sympy.sin((_e_ + (_f_ * x))), x))), (Symbol('ff') * (_f_)**(Integer(-1)) * Subst(Int((((Symbol('ff') * x))**((_m_ + _n_)) * ((((_a_)**(Integer(2)) + (Integer(-1) * ((Symbol('ff'))**(Integer(2)) * (x)**(Integer(2))))))**(((_n_ + Integer(1)) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), x), x, (_a_ * sympy.sin((_e_ + (_f_ * x))) * (Symbol('ff'))**(Integer(-1)))))),
+        replacement=With({ff: FreeFactors(sin(x*_f_ + _e_), x)}, ff*Subst(Int((ff*x)**(_m_ + _n_)*(-ff**2*x**2 + _a_**2)**(-_n_/2 + sympy.S(-1)/2), x), x, _a_*sin(x*_f_ + _e_)/ff)/_f_),
         module_name='4.1.0.2 (a trg)^m (b tan)^n',
         rule_number=4,
     ),

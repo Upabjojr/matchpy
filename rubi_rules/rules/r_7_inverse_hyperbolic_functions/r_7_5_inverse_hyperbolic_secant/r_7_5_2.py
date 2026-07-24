@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+w = Symbol('w')
+
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -374,7 +376,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*asech(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.asech(u_))), Symbol('w'), x) + (_b_ * sympy.sqrt((Integer(1) + (Integer(-1) * (u_)**(Integer(2))))) * ((u_ * sympy.sqrt((Integer(-1) + (u_)**(Integer(-1)))) * sympy.sqrt((Integer(1) + (u_)**(Integer(-1))))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((u_ * sympy.sqrt((Integer(1) + (Integer(-1) * (u_)**(Integer(2)))))))**(Integer(-1))), x), x)))),
+        replacement=With({w: IntHide(v_, x)}, _b_*sqrt(1 - u_**2)*Int(SimplifyIntegrand(w*D(u_, x)/(u_*sqrt(1 - u_**2)), x), x)/(u_*sqrt(-1 + 1/u_)*sqrt(1 + 1/u_)) + Dist(_a_ + _b_*asech(u_), w, x)),
         module_name='7.5.2 Miscellaneous inverse hyperbolic secant',
         rule_number=35,
     ),
@@ -382,7 +384,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(v_*(_a_ + _b_*acsch(u_)), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(MatchQ(v_, Condition(((_c_ + (_d_ * x)))**(_m_), FreeQ([_c_, _d_, _m_], x)))), InverseFunctionFreeQ(IntHide(v_, x), x),),
-        replacement=With(List(Set(Symbol('w'), IntHide(v_, x))), (Dist((_a_ + (_b_ * sympy.acsch(u_))), Symbol('w'), x) + (Integer(-1) * (_b_ * u_ * (sympy.sqrt((Integer(-1) * (u_)**(Integer(2)))))**(Integer(-1)) * Int(SimplifyIntegrand((Symbol('w') * D(u_, x) * ((u_ * sympy.sqrt((Integer(-1) + (Integer(-1) * (u_)**(Integer(2)))))))**(Integer(-1))), x), x))))),
+        replacement=With({w: IntHide(v_, x)}, -_b_*u_*Int(SimplifyIntegrand(w*D(u_, x)/(u_*sqrt(-u_**2 - 1)), x), x)/sqrt(-u_**2) + Dist(_a_ + _b_*acsch(u_), w, x)),
         module_name='7.5.2 Miscellaneous inverse hyperbolic secant',
         rule_number=36,
     ),

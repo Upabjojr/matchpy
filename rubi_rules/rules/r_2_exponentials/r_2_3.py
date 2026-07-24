@@ -75,6 +75,20 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+b = Symbol('b')
+d = Symbol('d')
+e = Symbol('e')
+f = Symbol('f')
+g = Symbol('g')
+k = Symbol('k')
+m = Symbol('m')
+p = Symbol('p')
+q = Symbol('q')
+uu = Symbol('uu')
+v = Symbol('v')
+w = Symbol('w')
+z = Symbol('z')
+
 _A_ = WildSymbol('A', optional_value=IDENTITY_ELEMENT)
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
@@ -156,7 +170,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_c_*v_)*u_**_m_*w_, x),
         constraints=(FreeQ([F_, _c_, _m_], x), LinearQ([u_, v_, w_], x), EqQ(-_c_*(-Coefficient(u_, x, 0)*Coefficient(w_, x, 1) + Coefficient(u_, x, 1)*Coefficient(w_, x, 0))*Coefficient(v_, x, 1)*log(F_) + (_m_ + 1)*Coefficient(u_, x, 1)*Coefficient(w_, x, 1), 0),),
-        replacement=With(List(Set(Symbol('b'), Coefficient(v_, x, Integer(1))), Set(Symbol('d'), Coefficient(u_, x, Integer(0))), Set(Symbol('e'), Coefficient(u_, x, Integer(1))), Set(Symbol('f'), Coefficient(w_, x, Integer(0))), Set(Symbol('g'), Coefficient(w_, x, Integer(1)))), (Symbol('g') * (u_)**((_m_ + Integer(1))) * (F_)**((_c_ * v_)) * ((Symbol('b') * _c_ * Symbol('e') * sympy.log(F_)))**(Integer(-1)))),
+        replacement=With({b: Coefficient(v_, x, 1), d: Coefficient(u_, x, 0), e: Coefficient(u_, x, 1), f: Coefficient(w_, x, 0), g: Coefficient(w_, x, 1)}, g*F_**(_c_*v_)*u_**(_m_ + 1)/(b*e*_c_*log(F_))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=4,
     ),
@@ -180,7 +194,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_c_*v_)*u_**_m_*w_, x),
         constraints=(FreeQ([F_, _c_, _m_], x), PolynomialQ(w_, x), LinearQ(v_, x), PowerOfLinearQ(u_, x), Not(IntegerQ(_m_)),),
-        replacement=Module(List(Set(Symbol('uu'), NormalizePowerOfLinear(u_, x)), Symbol('z')), CompoundExpression(Set(Symbol('z'), If(And(PowerQ(Symbol('uu')), FreeQ(Part(Symbol('uu'), Integer(2)), x)), (Part(Symbol('uu'), Integer(1)))**((_m_ * Part(Symbol('uu'), Integer(2)))), (Symbol('uu'))**(_m_))), ((Symbol('uu'))**(_m_) * (Symbol('z'))**(Integer(-1)) * Int(ExpandIntegrand((w_ * Symbol('z') * (F_)**((_c_ * ExpandToSum(v_, x)))), x), x)))),
+        replacement=Module({uu: NormalizePowerOfLinear(u_, x), z: None}, CompoundExpression(Set(z, If(And(PowerQ(uu), FreeQ(Part(uu, Integer(2)), x)), (Part(uu, Integer(1)))**((_m_ * Part(uu, Integer(2)))), (uu)**(_m_))), ((uu)**(_m_) * (z)**(Integer(-1)) * Int(ExpandIntegrand((w_ * z * (F_)**((_c_ * ExpandToSum(v_, x)))), x), x)))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=7,
     ),
@@ -236,7 +250,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_], x), IntegerQ(2/n_), Not(IntegerQ(n_)),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * (_d_)**(Integer(-1)) * Subst(Int(((x)**((Symbol('k') + Integer(-1))) * (F_)**((_a_ + (_b_ * (x)**((Symbol('k') * n_)))))), x), x, ((_c_ + (_d_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*F_**(x**(k*n_)*_b_ + _a_), x), x, (x*_d_ + _c_)**(1/k))/_d_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=14,
     ),
@@ -308,7 +322,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _m_, n_], x), IntegerQ((2*_m_ + 2)/n_), LtQ(0, (_m_ + 1)/n_, 5), Not(IntegerQ(n_)),),
-        replacement=With(List(Set(Symbol('k'), Denominator(n_))), (Symbol('k') * (_d_)**(Integer(-1)) * Subst(Int(((x)**(((Symbol('k') * (_m_ + Integer(1))) + Integer(-1))) * (F_)**((_a_ + (_b_ * (x)**((Symbol('k') * n_)))))), x), x, ((_c_ + (_d_ * x)))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k*(_m_ + 1) - 1)*F_**(x**(k*n_)*_b_ + _a_), x), x, (x*_d_ + _c_)**(1/k))/_d_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=23,
     ),
@@ -324,7 +338,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)*(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, _m_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0), Not(TrueQ(UseGamma)), IGtQ(Simplify((_m_ + 1)/n_), 0),),
-        replacement=With(List(Set(Symbol('p'), Simplify(((_m_ + Integer(1)) * (n_)**(Integer(-1)))))), ((Integer(-1) * (F_)**(_a_)) * ((_f_ * (_d_)**(Integer(-1))))**(_m_) * ((_d_ * n_ * (((Integer(-1) * _b_) * sympy.log(F_)))**(Symbol('p'))))**(Integer(-1)) * Simplify(FunctionExpand(Gamma(Symbol('p'), ((Integer(-1) * _b_) * ((_c_ + (_d_ * x)))**(n_) * sympy.log(F_))))))),
+        replacement=With({p: Simplify((_m_ + 1)/n_)}, -F_**_a_*(_f_/_d_)**_m_*Simplify(FunctionExpand(Gamma(p, -_b_*(x*_d_ + _c_)**n_*log(F_))))/(_d_*n_*(-_b_*log(F_))**p)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=25,
     ),
@@ -548,7 +562,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*F_**(_e_*(x*_d_ + _c_))*(F_**v_*_b_ + _a_)**p_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_], x), EqQ(v_, 2*_e_*(x*_d_ + _c_)), GtQ(_m_, 0), ILtQ(p_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((F_)**((_e_ * (_c_ + (_d_ * x)))) * ((_a_ + (_b_ * (F_)**(v_))))**(p_)), x))), (Dist((x)**(_m_), Symbol('u'), x) + (Integer(-1) * (_m_ * Int(((x)**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide(F_**(_e_*(x*_d_ + _c_))*(F_**v_*_b_ + _a_)**p_, x)}, -_m_*Int(u*x**(_m_ - 1), x) + Dist(x**_m_, u, x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=53,
     ),
@@ -572,7 +586,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(G_**(_h_*(x*_g_ + _f_))*(F_**(_e_*(x*_d_ + _c_))*_b_ + a_)**_p_, x),
         constraints=(FreeQ([F_, G_, a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _p_], x), Or(LeQ(FullSimplify(_g_*_h_*log(G_)/(_d_*_e_*log(F_))), -1), GeQ(FullSimplify(_g_*_h_*log(G_)/(_d_*_e_*log(F_))), 1)),),
-        replacement=With(List(Set(Symbol('m'), FullSimplify((_g_ * _h_ * sympy.log(G_) * ((_d_ * _e_ * sympy.log(F_)))**(Integer(-1)))))), (Denominator(Symbol('m')) * (G_)**(((_f_ * _h_) + (Integer(-1) * (_c_ * _g_ * _h_ * (_d_)**(Integer(-1)))))) * ((_d_ * _e_ * sympy.log(F_)))**(Integer(-1)) * Subst(Int(((x)**((Numerator(Symbol('m')) + Integer(-1))) * ((a_ + (_b_ * (x)**(Denominator(Symbol('m'))))))**(_p_)), x), x, (F_)**((_e_ * (_c_ + (_d_ * x)) * (Denominator(Symbol('m')))**(Integer(-1))))))),
+        replacement=With({m: FullSimplify(_g_*_h_*log(G_)/(_d_*_e_*log(F_)))}, G_**(-_c_*_g_*_h_/_d_ + _f_*_h_)*Denominator(m)*Subst(Int(x**(Numerator(m) - 1)*(x**Denominator(m)*_b_ + a_)**_p_, x), x, F_**(_e_*(x*_d_ + _c_)/Denominator(m)))/(_d_*_e_*log(F_))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=56,
     ),
@@ -580,7 +594,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(G_**(_h_*(x*_g_ + _f_))*(F_**(_e_*(x*_d_ + _c_))*_b_ + a_)**_p_, x),
         constraints=(FreeQ([F_, G_, a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _p_], x), Or(LtQ(FullSimplify(_d_*_e_*log(F_)/(_g_*_h_*log(G_))), -1), GtQ(FullSimplify(_d_*_e_*log(F_)/(_g_*_h_*log(G_))), 1)),),
-        replacement=With(List(Set(Symbol('m'), FullSimplify((_d_ * _e_ * sympy.log(F_) * ((_g_ * _h_ * sympy.log(G_)))**(Integer(-1)))))), (Denominator(Symbol('m')) * ((_g_ * _h_ * sympy.log(G_)))**(Integer(-1)) * Subst(Int(((x)**((Denominator(Symbol('m')) + Integer(-1))) * ((a_ + (_b_ * (F_)**(((_c_ * _e_) + (Integer(-1) * (_d_ * _e_ * _f_ * (_g_)**(Integer(-1)))))) * (x)**(Numerator(Symbol('m'))))))**(_p_)), x), x, (G_)**((_h_ * (_f_ + (_g_ * x)) * (Denominator(Symbol('m')))**(Integer(-1))))))),
+        replacement=With({m: FullSimplify(_d_*_e_*log(F_)/(_g_*_h_*log(G_)))}, Denominator(m)*Subst(Int(x**(Denominator(m) - 1)*(x**Numerator(m)*F_**(_c_*_e_ - _d_*_e_*_f_/_g_)*_b_ + a_)**_p_, x), x, G_**(_h_*(x*_g_ + _f_)/Denominator(m)))/(_g_*_h_*log(G_))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=57,
     ),
@@ -620,7 +634,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*(F_**u_*_b_ + _a_)**_p_*(F_**v_*_d_ + _c_)**_q_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, _m_], x), IntegersQ(_p_, _q_), LinearQ([u_, v_], x), RationalQ(Simplify(u_/v_)), SumQ(ExpandIntegrand((x*_f_ + _e_)**_m_, (F_**u_*_b_ + _a_)**_p_*(F_**v_*_d_ + _c_)**_q_, x)),),
-        replacement=With(List(Set(Symbol('w'), ExpandIntegrand(((_e_ + (_f_ * x)))**(_m_), (((_a_ + (_b_ * (F_)**(u_))))**(_p_) * ((_c_ + (_d_ * (F_)**(v_))))**(_q_)), x))), Int(Symbol('w'), x)),
+        replacement=With({w: ExpandIntegrand((x*_f_ + _e_)**_m_, (F_**u_*_b_ + _a_)**_p_*(F_**v_*_d_ + _c_)**_q_, x)}, Int(w, x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=62,
     ),
@@ -628,7 +642,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(G_**(_h_*(x*_g_ + _f_))*H_**(_t_*(x*_s_ + _r_))*(F_**(_e_*(x*_d_ + _c_))*_b_ + a_)**_p_, x),
         constraints=(FreeQ([F_, G_, H_, a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, _r_, _s_, _t_, _p_], x), RationalQ(FullSimplify((_g_*_h_*log(G_) + _s_*_t_*log(H_))/(_d_*_e_*log(F_)))),),
-        replacement=With(List(Set(Symbol('m'), FullSimplify((((_g_ * _h_ * sympy.log(G_)) + (_s_ * _t_ * sympy.log(H_))) * ((_d_ * _e_ * sympy.log(F_)))**(Integer(-1)))))), (Denominator(Symbol('m')) * (G_)**(((_f_ * _h_) + (Integer(-1) * (_c_ * _g_ * _h_ * (_d_)**(Integer(-1)))))) * (H_)**(((_r_ * _t_) + (Integer(-1) * (_c_ * _s_ * _t_ * (_d_)**(Integer(-1)))))) * ((_d_ * _e_ * sympy.log(F_)))**(Integer(-1)) * Subst(Int(((x)**((Numerator(Symbol('m')) + Integer(-1))) * ((a_ + (_b_ * (x)**(Denominator(Symbol('m'))))))**(_p_)), x), x, (F_)**((_e_ * (_c_ + (_d_ * x)) * (Denominator(Symbol('m')))**(Integer(-1))))))),
+        replacement=With({m: FullSimplify((_g_*_h_*log(G_) + _s_*_t_*log(H_))/(_d_*_e_*log(F_)))}, G_**(-_c_*_g_*_h_/_d_ + _f_*_h_)*H_**(-_c_*_s_*_t_/_d_ + _r_*_t_)*Denominator(m)*Subst(Int(x**(Numerator(m) - 1)*(x**Denominator(m)*_b_ + a_)**_p_, x), x, F_**(_e_*(x*_d_ + _c_)/Denominator(m)))/(_d_*_e_*log(F_))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=63,
     ),
@@ -692,7 +706,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_g_ + _f_)**_m_/(F_**u_*_b_ + F_**v_*_c_ + _a_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _f_, _g_], x), EqQ(v_, 2*u_), LinearQ(u_, x), NeQ(-4*_a_*_c_ + _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), ((Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int((((_f_ + (_g_ * x)))**(_m_) * ((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x)) + (Integer(-1) * (Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int((((_f_ + (_g_ * x)))**(_m_) * ((_b_ + Symbol('q') + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x))))),
+        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, 2*_c_*Int((x*_g_ + _f_)**_m_/(-q + 2*F_**u_*_c_ + _b_), x)/q - 2*_c_*Int((x*_g_ + _f_)**_m_/(q + 2*F_**u_*_c_ + _b_), x)/q),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=71,
     ),
@@ -700,7 +714,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**u_*(x*_g_ + _f_)**_m_/(F_**u_*_b_ + F_**v_*_c_ + _a_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _f_, _g_], x), EqQ(v_, 2*u_), LinearQ(u_, x), NeQ(-4*_a_*_c_ + _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), ((Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int((((_f_ + (_g_ * x)))**(_m_) * (F_)**(u_) * ((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x)) + (Integer(-1) * (Integer(2) * _c_ * (Symbol('q'))**(Integer(-1)) * Int((((_f_ + (_g_ * x)))**(_m_) * (F_)**(u_) * ((_b_ + Symbol('q') + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x))))),
+        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, 2*_c_*Int(F_**u_*(x*_g_ + _f_)**_m_/(-q + 2*F_**u_*_c_ + _b_), x)/q - 2*_c_*Int(F_**u_*(x*_g_ + _f_)**_m_/(q + 2*F_**u_*_c_ + _b_), x)/q),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=72,
     ),
@@ -708,7 +722,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_g_ + _f_)**_m_*(F_**u_*_i_ + h_)/(F_**u_*_b_ + F_**v_*_c_ + _a_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _f_, _g_, h_, _i_], x), EqQ(v_, 2*u_), LinearQ(u_, x), NeQ(-4*_a_*_c_ + _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((_b_)**(Integer(2)) + (Integer(-1) * (Integer(4) * _a_ * _c_))), Integer(2)))), (((Simplify((((Integer(2) * _c_ * h_) + (Integer(-1) * (_b_ * _i_))) * (Symbol('q'))**(Integer(-1)))) + _i_) * Int((((_f_ + (_g_ * x)))**(_m_) * ((_b_ + (Integer(-1) * Symbol('q')) + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x)) + (Integer(-1) * ((Simplify((((Integer(2) * _c_ * h_) + (Integer(-1) * (_b_ * _i_))) * (Symbol('q'))**(Integer(-1)))) + (Integer(-1) * _i_)) * Int((((_f_ + (_g_ * x)))**(_m_) * ((_b_ + Symbol('q') + (Integer(2) * _c_ * (F_)**(u_))))**(Integer(-1))), x))))),
+        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, -(-_i_ + Simplify((-_b_*_i_ + 2*_c_*h_)/q))*Int((x*_g_ + _f_)**_m_/(q + 2*F_**u_*_c_ + _b_), x) + (_i_ + Simplify((-_b_*_i_ + 2*_c_*h_)/q))*Int((x*_g_ + _f_)**_m_/(-q + 2*F_**u_*_c_ + _b_), x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=73,
     ),
@@ -716,7 +730,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_/(F_**v_*_b_ + F_**(x*_d_ + _c_)*_a_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_], x), EqQ(v_, -x*_d_ - _c_), GtQ(_m_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_a_ * (F_)**((_c_ + (_d_ * x)))) + (_b_ * (F_)**(v_))))**(Integer(-1)), x))), (((x)**(_m_) * Symbol('u')) + (Integer(-1) * (_m_ * Int(((x)**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide(1/(F_**v_*_b_ + F_**(x*_d_ + _c_)*_a_), x)}, u*x**_m_ - _m_*Int(u*x**(_m_ - 1), x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=74,
     ),
@@ -892,7 +906,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_, x),
         constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))), Not(MatchQ(u_, Condition(((sympy.E)**((_c_ * (_a_ + (_b_ * x)))) * WildHeadApp(F_, v_)), And(FreeQ([_a_, _b_, _c_], x), InverseFunctionQ(sympy.Function('F')(x)))))),),
-        replacement=With(List(Set(Symbol('v'), FunctionOfExponential(u_, x))), (Symbol('v') * (D(Symbol('v'), x))**(Integer(-1)) * Subst(Int((FunctionOfExponentialFunction(u_, x) * (x)**(Integer(-1))), x), x, Symbol('v')))),
+        replacement=With({v: FunctionOfExponential(u_, x)}, v*Subst(Int(FunctionOfExponentialFunction(u_, x)/x, x), x, v)/D(v, x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=96,
     ),
@@ -932,7 +946,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**v_*G_**w_*_u_, x),
         constraints=(FreeQ([F_, G_], x), Or(BinomialQ(v_*log(F_) + w_*log(G_), x), And(PolynomialQ(v_*log(F_) + w_*log(G_), x), LeQ(Exponent(v_*log(F_) + w_*log(G_), x), 2))),),
-        replacement=With(List(Set(Symbol('z'), ((v_ * sympy.log(F_)) + (w_ * sympy.log(G_))))), Int((_u_ * NormalizeIntegrand((sympy.E)**(Symbol('z')), x)), x)),
+        replacement=With({z: v_*log(F_) + w_*log(G_)}, Int(_u_*NormalizeIntegrand(exp(z), x), x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=101,
     ),
@@ -940,7 +954,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**u_*_y_*(v_ + w_), x),
         constraints=(FreeQ(F_, x), EqQ(D(v_*_y_/(D(u_, x)*log(F_)), x), w_*_y_),),
-        replacement=With(List(Set(Symbol('z'), (v_ * _y_ * ((sympy.log(F_) * D(u_, x)))**(Integer(-1))))), ((F_)**(u_) * Symbol('z'))),
+        replacement=With({z: v_*_y_/(D(u_, x)*log(F_))}, z*F_**u_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=102,
     ),
@@ -948,7 +962,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**u_*v_**_n_*w_, x),
         constraints=(FreeQ([F_, _n_], x), PolynomialQ(u_, x), PolynomialQ(v_, x), PolynomialQ(w_, x), EqQ(Exponent(w_, x), Exponent(v_*D(u_, x)*log(F_) + (_n_ + 1)*D(v_, x), x)), EqQ(w_*Coefficient(v_*D(u_, x)*log(F_) + (_n_ + 1)*D(v_, x), x, Exponent(v_*D(u_, x)*log(F_) + (_n_ + 1)*D(v_, x), x)), (v_*D(u_, x)*log(F_) + (_n_ + 1)*D(v_, x))*Coefficient(w_, x, Exponent(w_, x))),),
-        replacement=With(List(Set(Symbol('z'), ((sympy.log(F_) * v_ * D(u_, x)) + ((_n_ + Integer(1)) * D(v_, x))))), (Coefficient(w_, x, Exponent(w_, x)) * (Coefficient(Symbol('z'), x, Exponent(Symbol('z'), x)))**(Integer(-1)) * (F_)**(u_) * (v_)**((_n_ + Integer(1))))),
+        replacement=With({z: v_*D(u_, x)*log(F_) + (_n_ + 1)*D(v_, x)}, F_**u_*v_**(_n_ + 1)*Coefficient(w_, x, Exponent(w_, x))/Coefficient(z, x, Exponent(z, x))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=103,
     ),

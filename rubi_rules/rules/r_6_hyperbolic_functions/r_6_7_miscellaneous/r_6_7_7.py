@@ -381,7 +381,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_c_*(x*_b_ + _a_))*(x*_f_)**_m_*sinh(x*_e_ + _d_)**_n_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_n_, 0), GtQ(_m_, 0),),
-        replacement=Module(List(Set(Symbol('u'), IntHide(((F_)**((_c_ * (_a_ + (_b_ * x)))) * (sympy.sinh((_d_ + (_e_ * x))))**(_n_)), x))), (Dist(((_f_ * x))**(_m_), Symbol('u'), x) + (Integer(-1) * (_f_ * _m_ * Int((((_f_ * x))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=Module({u: IntHide(F_**(_c_*(x*_b_ + _a_))*sinh(x*_e_ + _d_)**_n_, x)}, -_f_*_m_*Int(u*(x*_f_)**(_m_ - 1), x) + Dist((x*_f_)**_m_, u, x)),
         module_name='6.7.7 F^(c (a+b x)) hyper(d+e x)^n',
         rule_number=35,
     ),
@@ -389,7 +389,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_c_*(x*_b_ + _a_))*(x*_f_)**_m_*cosh(x*_e_ + _d_)**_n_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_n_, 0), GtQ(_m_, 0),),
-        replacement=Module(List(Set(Symbol('u'), IntHide(((F_)**((_c_ * (_a_ + (_b_ * x)))) * (sympy.cosh((_d_ + (_e_ * x))))**(_n_)), x))), (Dist(((_f_ * x))**(_m_), Symbol('u'), x) + (Integer(-1) * (_f_ * _m_ * Int((((_f_ * x))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=Module({u: IntHide(F_**(_c_*(x*_b_ + _a_))*cosh(x*_e_ + _d_)**_n_, x)}, -_f_*_m_*Int(u*(x*_f_)**(_m_ - 1), x) + Dist((x*_f_)**_m_, u, x)),
         module_name='6.7.7 F^(c (a+b x)) hyper(d+e x)^n',
         rule_number=36,
     ),

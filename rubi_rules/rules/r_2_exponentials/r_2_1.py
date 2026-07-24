@@ -75,6 +75,9 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+uu = Symbol('uu')
+z = Symbol('z')
+
 F_ = WildSymbol('F')
 _a_ = WildSymbol('a', optional_value=IDENTITY_ELEMENT)
 a_ = WildSymbol('a')
@@ -184,7 +187,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((a_ + _b_*(F_**(_g_*(x*_f_ + _e_)))**_n_)**p_*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([F_, a_, _b_, _c_, _d_, _e_, _f_, _g_, _n_], x), IGtQ(_m_, 0), LtQ(p_, -1),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((a_ + (_b_ * ((F_)**((_g_ * (_e_ + (_f_ * x)))))**(_n_))))**(p_), x))), (Dist(((_c_ + (_d_ * x)))**(_m_), Symbol('u'), x) + (Integer(-1) * (_d_ * _m_ * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * Symbol('u')), x))))),
+        replacement=With({u: IntHide((a_ + _b_*(F_**(_g_*(x*_f_ + _e_)))**_n_)**p_, x)}, -_d_*_m_*Int(u*(x*_d_ + _c_)**(_m_ - 1), x) + Dist((x*_d_ + _c_)**_m_, u, x)),
         module_name='2.1 (c+d x)^m (a+b (F^(g (e+f x)))^n)^p',
         rule_number=11,
     ),
@@ -200,7 +203,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_**_m_*(_a_ + _b_*(F_**(_g_*v_))**_n_)**_p_, x),
         constraints=(FreeQ([F_, _a_, _b_, _g_, _m_, _n_, _p_], x), LinearQ(v_, x), PowerOfLinearQ(u_, x), Not(And(LinearMatchQ(v_, x), PowerOfLinearMatchQ(u_, x))), Not(IntegerQ(_m_)),),
-        replacement=Module(List(Set(Symbol('uu'), NormalizePowerOfLinear(u_, x)), Symbol('z')), CompoundExpression(Set(Symbol('z'), If(And(PowerQ(Symbol('uu')), FreeQ(Part(Symbol('uu'), Integer(2)), x)), (Part(Symbol('uu'), Integer(1)))**((_m_ * Part(Symbol('uu'), Integer(2)))), (Symbol('uu'))**(_m_))), ((Symbol('uu'))**(_m_) * (Symbol('z'))**(Integer(-1)) * Int((Symbol('z') * ((_a_ + (_b_ * ((F_)**((_g_ * ExpandToSum(v_, x))))**(_n_))))**(_p_)), x)))),
+        replacement=Module({uu: NormalizePowerOfLinear(u_, x), z: None}, CompoundExpression(Set(z, If(And(PowerQ(uu), FreeQ(Part(uu, Integer(2)), x)), (Part(uu, Integer(1)))**((_m_ * Part(uu, Integer(2)))), (uu)**(_m_))), ((uu)**(_m_) * (z)**(Integer(-1)) * Int((z * ((_a_ + (_b_ * ((F_)**((_g_ * ExpandToSum(v_, x))))**(_n_))))**(_p_)), x)))),
         module_name='2.1 (c+d x)^m (a+b (F^(g (e+f x)))^n)^p',
         rule_number=13,
     ),

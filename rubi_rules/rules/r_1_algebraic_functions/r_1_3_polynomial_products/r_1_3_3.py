@@ -75,6 +75,16 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+Qx = Symbol('Qx')
+Rx = Symbol('Rx')
+S = Symbol('S')
+a = Symbol('a')
+b = Symbol('b')
+c = Symbol('c')
+d = Symbol('d')
+e = Symbol('e')
+r = Symbol('r')
+
 _Fx_ = WildSymbol('Fx', optional_value=IDENTITY_ELEMENT)
 Fx_ = WildSymbol('Fx')
 Pn_ = WildSymbol('Pn')
@@ -151,7 +161,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*Qx_**q_*_u_, x),
         constraints=(IGtQ(p_, 0), ILtQ(q_, 0), PolyQ(Px_, x), PolyQ(Qx_, x),),
-        replacement=Module(List(Set(Symbol('Rx'), PolyGCD(Px_, Qx_, x))), Condition(Int((_u_ * (Symbol('Rx'))**((p_ + q_)) * (PolynomialQuotient(Px_, Symbol('Rx'), x))**(p_) * (PolynomialQuotient(Qx_, Symbol('Rx'), x))**(q_)), x), NeQ(Symbol('Rx'), Integer(1)))),
+        replacement=Module({Rx: PolyGCD(Px_, Qx_, x)}, Condition(Int(Rx**(p_ + q_)*_u_*PolynomialQuotient(Px_, Rx, x)**p_*PolynomialQuotient(Qx_, Rx, x)**q_, x), NeQ(Rx, 1))),
         module_name='1.3.3 P(x)^p',
         rule_number=6,
     ),
@@ -159,7 +169,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*Qx_**q_*_u_, x),
         constraints=(ILtQ(q_, 0), PolyQ(Px_, x), PolyQ(Qx_, x),),
-        replacement=Module(List(Set(Symbol('Rx'), PolyGCD(Px_, Qx_, x))), Condition(Int((_u_ * (Symbol('Rx'))**((q_ + Integer(1))) * PolynomialQuotient(Px_, Symbol('Rx'), x) * (PolynomialQuotient(Qx_, Symbol('Rx'), x))**(q_)), x), NeQ(Symbol('Rx'), Integer(1)))),
+        replacement=Module({Rx: PolyGCD(Px_, Qx_, x)}, Condition(Int(Rx**(q_ + 1)*_u_*PolynomialQuotient(Px_, Rx, x)*PolynomialQuotient(Qx_, Rx, x)**q_, x), NeQ(Rx, 1))),
         module_name='1.3.3 P(x)^p',
         rule_number=7,
     ),
@@ -167,7 +177,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pn_**_p_, x),
         constraints=(FreeQ(_p_, x), PolyQ(Pn_, x), GtQ(Expon(Pn_, x), 2), NeQ(Coeff(Pn_, x, Expon(Pn_, x) - 1), 0), Or(BinomialQ(ReplaceAll(Pn_, Rule(x, x - Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x)))), x), And(IntegerQ(Expon(Pn_, x)/2), TrinomialQ(ReplaceAll(Pn_, Rule(x, x - Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x)))), x))),),
-        replacement=With(List(Set(Symbol('S'), (Coeff(Pn_, x, (Expon(Pn_, x) + Integer(-1))) * ((Expon(Pn_, x) * Coeff(Pn_, x, Expon(Pn_, x))))**(Integer(-1))))), Subst(Int((ExpandToSum(ReplaceAll(Pn_, Rule(x, (x + (Integer(-1) * Symbol('S'))))), x))**(_p_), x), x, (x + Symbol('S')))),
+        replacement=With({S: Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x))}, Subst(Int(ExpandToSum(ReplaceAll(Pn_, Rule(x, -S + x)), x)**_p_, x), x, S + x)),
         module_name='1.3.3 P(x)^p',
         rule_number=8,
     ),
@@ -175,7 +185,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pn_**_p_*Qx_, x),
         constraints=(FreeQ(_p_, x), PolyQ(Pn_, x), GtQ(Expon(Pn_, x), 2), NeQ(Coeff(Pn_, x, Expon(Pn_, x) - 1), 0), PolyQ(Qx_, x), Not(And(MonomialQ(Qx_, x), IGtQ(_p_, 0))), Or(BinomialQ(ReplaceAll(Pn_, Rule(x, x - Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x)))), x), And(IntegerQ(Expon(Pn_, x)/2), TrinomialQ(ReplaceAll(Pn_, Rule(x, x - Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x)))), x))),),
-        replacement=With(List(Set(Symbol('S'), (Coeff(Pn_, x, (Expon(Pn_, x) + Integer(-1))) * ((Expon(Pn_, x) * Coeff(Pn_, x, Expon(Pn_, x))))**(Integer(-1))))), Subst(Int(((ExpandToSum(ReplaceAll(Pn_, Rule(x, (x + (Integer(-1) * Symbol('S'))))), x))**(_p_) * ExpandToSum(ReplaceAll(Qx_, Rule(x, (x + (Integer(-1) * Symbol('S'))))), x)), x), x, (x + Symbol('S')))),
+        replacement=With({S: Coeff(Pn_, x, Expon(Pn_, x) - 1)/(Coeff(Pn_, x, Expon(Pn_, x))*Expon(Pn_, x))}, Subst(Int(ExpandToSum(ReplaceAll(Pn_, Rule(x, -S + x)), x)**_p_*ExpandToSum(ReplaceAll(Qx_, Rule(x, -S + x)), x), x), x, S + x)),
         module_name='1.3.3 P(x)^p',
         rule_number=9,
     ),
@@ -183,7 +193,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(PolyQ(Px_, x**2), GtQ(Expon(Px_, x), 2), Not(BinomialQ(Px_, x)), Not(TrinomialQ(Px_, x)), ILtQ(p_, 0), RationalFunctionQ(_u_, x), Not(SumQ(NonfreeFactors(ReplaceAll(Px_, Rule(x, sqrt(x))), x))),),
-        replacement=With(List(Set(Symbol('Qx'), sympy.factor(ReplaceAll(Px_, Rule(x, sympy.sqrt(x)))))), Int(ExpandIntegrand((_u_ * (ReplaceAll(Symbol('Qx'), Rule(x, (x)**(Integer(2)))))**(p_)), x), x)),
+        replacement=With({Qx: ReplaceAll(Px_, Rule(x, sqrt(x)))}, Int(ExpandIntegrand(_u_*ReplaceAll(Qx, Rule(x, x**2))**p_, x), x)),
         module_name='1.3.3 P(x)^p',
         rule_number=10,
     ),
@@ -191,7 +201,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(PolyQ(Px_, x**2), GtQ(Expon(Px_, x), 2), Not(BinomialQ(Px_, x)), Not(TrinomialQ(Px_, x)), ILtQ(p_, 0), Not(SumQ(NonfreeFactors(ReplaceAll(Px_, Rule(x, sqrt(x))), x))),),
-        replacement=With(List(Set(Symbol('Qx'), sympy.factor(ReplaceAll(Px_, Rule(x, sympy.sqrt(x)))))), Int(ExpandIntegrand(_u_, (ReplaceAll(Symbol('Qx'), Rule(x, (x)**(Integer(2)))))**(p_), x), x)),
+        replacement=With({Qx: ReplaceAll(Px_, Rule(x, sqrt(x)))}, Int(ExpandIntegrand(_u_, ReplaceAll(Qx, Rule(x, x**2))**p_, x), x)),
         module_name='1.3.3 P(x)^p',
         rule_number=11,
     ),
@@ -199,7 +209,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 2), Not(BinomialQ(Px_, x)), Not(TrinomialQ(Px_, x)), ILtQ(p_, 0), RationalFunctionQ(_u_, x), Not(SumQ(NonfreeFactors(Px_, x))),),
-        replacement=With(List(Set(Symbol('Qx'), sympy.factor(Px_))), Int(ExpandIntegrand((_u_ * (Symbol('Qx'))**(p_)), x), x)),
+        replacement=With({Qx: Px_}, Int(ExpandIntegrand(Qx**p_*_u_, x), x)),
         module_name='1.3.3 P(x)^p',
         rule_number=12,
     ),
@@ -207,7 +217,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 2), Not(BinomialQ(Px_, x)), Not(TrinomialQ(Px_, x)), ILtQ(p_, 0), Not(SumQ(NonfreeFactors(Px_, x))),),
-        replacement=With(List(Set(Symbol('Qx'), sympy.factor(Px_))), Int(ExpandIntegrand(_u_, (Symbol('Qx'))**(p_), x), x)),
+        replacement=With({Qx: Px_}, Int(ExpandIntegrand(_u_, Qx**p_, x), x)),
         module_name='1.3.3 P(x)^p',
         rule_number=13,
     ),
@@ -215,7 +225,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
         constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 2), Not(BinomialQ(Px_, x)), Not(TrinomialQ(Px_, x)), IGtQ(p_, 1), Not(SumQ(NonfreeFactors(Px_, x))),),
-        replacement=With(List(Set(Symbol('Qx'), sympy.factor(Px_))), Int((_u_ * (Symbol('Qx'))**(p_)), x)),
+        replacement=With({Qx: Px_}, Int(Qx**p_*_u_, x)),
         module_name='1.3.3 P(x)^p',
         rule_number=14,
     ),
@@ -231,7 +241,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Q6_**p_*_u_, x),
         constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(_u_, x), EqQ(-3*Coeff(Q6_, x, 0)*Coeff(Q6_, x, 4) + Coeff(Q6_, x, 2)**2, 0), EqQ(-27*Coeff(Q6_, x, 0)**2*Coeff(Q6_, x, 6) + Coeff(Q6_, x, 2)**3, 0),),
-        replacement=With(List(Set(Symbol('a'), Coeff(Q6_, x, Integer(0))), Set(Symbol('b'), Coeff(Q6_, x, Integer(2))), Set(Symbol('c'), Coeff(Q6_, x, Integer(3))), Set(Symbol('d'), Coeff(Q6_, x, Integer(4))), Set(Symbol('e'), Coeff(Q6_, x, Integer(6)))), Star((((Integer(3))**((Integer(3) * p_)) * (Symbol('a'))**((Integer(2) * p_))))**(Integer(-1)), Int(ExpandIntegrand((_u_ * (((Integer(3) * Symbol('a')) + (Integer(3) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(-1) * (Integer(3) * (Integer(-1))**((Integer(3))**(Integer(-1))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x)) + (Symbol('b') * (x)**(Integer(2)))))**(p_) * (((Integer(3) * Symbol('a')) + (Integer(3) * (Integer(-1))**((Integer(2) * (Integer(3))**(Integer(-1)))) * (sympy.root(Symbol('a'), Integer(3)))**(Integer(2)) * sympy.root(Symbol('c'), Integer(3)) * x) + (Symbol('b') * (x)**(Integer(2)))))**(p_)), x), x))),
+        replacement=With({a: Coeff(Q6_, x, 0), b: Coeff(Q6_, x, 2), c: Coeff(Q6_, x, 3), d: Coeff(Q6_, x, 4), e: Coeff(Q6_, x, 6)}, Star(1/(3**(3*p_)*a**(2*p_)), Int(ExpandIntegrand(_u_*(3*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(-3*(-1)**(sympy.S(1)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(3*(-1)**(sympy.S(2)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_, x), x))),
         module_name='1.3.3 P(x)^p',
         rule_number=16,
     ),
@@ -239,7 +249,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(_Fx_*Px_**p_, x),
         constraints=(FreeQ(p_, x), PolyQ(Px_, x), Not(IntegerQ(p_)), Not(MonomialQ(Px_, x)), Not(PolyQ(_Fx_, x)), IGtQ(Expon(Px_, x, Min), 0),),
-        replacement=With(List(Set(Symbol('r'), Expon(Px_, x, Symbol('Min')))), Star(((Px_)**(FracPart(p_)) * (((x)**((Symbol('r') * FracPart(p_))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(FracPart(p_))))**(Integer(-1))), Int(((x)**((p_ * Symbol('r'))) * (ExpandToSum((Px_ * ((x)**(Symbol('r')))**(Integer(-1))), x))**(p_) * _Fx_), x))),
+        replacement=With({r: Expon(Px_, x, Min)}, Star(Px_**FracPart(p_)/(x**(r*FracPart(p_))*ExpandToSum(Px_/x**r, x)**FracPart(p_)), Int(x**(r*p_)*_Fx_*ExpandToSum(Px_/x**r, x)**p_, x))),
         module_name='1.3.3 P(x)^p',
         rule_number=17,
     ),

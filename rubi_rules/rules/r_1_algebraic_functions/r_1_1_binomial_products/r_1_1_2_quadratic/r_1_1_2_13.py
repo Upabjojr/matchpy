@@ -75,6 +75,9 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+Px0 = Symbol('Px0')
+k = Symbol('k')
+
 Px_ = WildSymbol('Px')
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
@@ -112,7 +115,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_e_)**m_/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_], x), PolynomialQ(Px_, x), LtQ(m_, -1),),
-        replacement=With(List(Set(Symbol('Px0'), Coefficient(Px_, x, Integer(0)))), ((Symbol('Px0') * ((_e_ * x))**((m_ + Integer(1))) * sympy.sqrt((c_ + (_d_ * x))) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(2))))) * ((a_ * c_ * _e_ * (m_ + Integer(1))))**(Integer(-1))) + Star(((Integer(2) * a_ * c_ * _e_ * (m_ + Integer(1))))**(Integer(-1)), Int((((_e_ * x))**((m_ + Integer(1))) * ((sympy.sqrt((c_ + (_d_ * x))) * sympy.sqrt((a_ + (_b_ * (x)**(Integer(2)))))))**(Integer(-1)) * ExpandToSum(((Integer(2) * a_ * c_ * (m_ + Integer(1)) * ((Px_ + (Integer(-1) * Symbol('Px0'))) * (x)**(Integer(-1)))) + (Integer(-1) * (Symbol('Px0') * ((a_ * _d_ * ((Integer(2) * m_) + Integer(3))) + (Integer(2) * _b_ * c_ * (m_ + Integer(2)) * x) + (_b_ * _d_ * ((Integer(2) * m_) + Integer(5)) * (x)**(Integer(2))))))), x)), x)))),
+        replacement=With({Px0: Coefficient(Px_, x, 0)}, Px0*(x*_e_)**(m_ + 1)*sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)/(a_*c_*_e_*(m_ + 1)) + Star(1/(2*a_*c_*_e_*(m_ + 1)), Int((x*_e_)**(m_ + 1)*ExpandToSum(-Px0*(x**2*_b_*_d_*(2*m_ + 5) + 2*x*_b_*c_*(m_ + 2) + a_*_d_*(2*m_ + 3)) + 2*a_*c_*(-Px0 + Px_)*(m_ + 1)/x, x)/(sqrt(x*_d_ + c_)*sqrt(x**2*_b_ + a_)), x))),
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=3,
     ),
@@ -128,7 +131,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Px_*(x*_e_)**m_*(x*_d_ + c_)**_n_*(x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _n_, _p_], x), PolyQ(Px_, x), FractionQ(m_),),
-        replacement=With(List(Set(Symbol('k'), Denominator(m_))), Star((Symbol('k') * (_e_)**(Integer(-1))), Subst(Int((ReplaceAll(Px_, Rule(x, ((x)**(Symbol('k')) * (_e_)**(Integer(-1))))) * (x)**(((Symbol('k') * (m_ + Integer(1))) + Integer(-1))) * ((c_ + (_d_ * (x)**(Symbol('k')) * (_e_)**(Integer(-1)))))**(_n_) * ((a_ + (_b_ * (x)**((Integer(2) * Symbol('k'))) * ((_e_)**(Integer(2)))**(Integer(-1)))))**(_p_)), x), x, ((_e_ * x))**((Symbol('k'))**(Integer(-1)))))),
+        replacement=With({k: Denominator(m_)}, Star(k/_e_, Subst(Int(x**(k*(m_ + 1) - 1)*(x**k*_d_/_e_ + c_)**_n_*(x**(2*k)*_b_/_e_**2 + a_)**_p_*ReplaceAll(Px_, Rule(x, x**k/_e_)), x), x, (x*_e_)**(1/k)))),
         module_name='1.1.2.13 P(x) (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=5,
     ),

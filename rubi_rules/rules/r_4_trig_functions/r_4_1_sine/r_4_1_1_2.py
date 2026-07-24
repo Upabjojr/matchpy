@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+q = Symbol('q')
+
 a_ = WildSymbol('a')
 _b_ = WildSymbol('b', optional_value=IDENTITY_ELEMENT)
 b_ = WildSymbol('b')
@@ -366,7 +368,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_g_*InertCos(x*_f_ + _e_))/(a_ + _b_*InertSin(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * (a_)**(Integer(2))) + (_b_)**(Integer(2))), Integer(2)))), ((a_ * _g_ * ((Integer(2) * _b_))**(Integer(-1)) * Int(((sympy.sqrt((_g_ * sympy.cos((_e_ + (_f_ * x))))) * (Symbol('q') + (_b_ * sympy.cos((_e_ + (_f_ * x)))))))**(Integer(-1)), x)) + (Integer(-1) * (a_ * _g_ * ((Integer(2) * _b_))**(Integer(-1)) * Int(((sympy.sqrt((_g_ * sympy.cos((_e_ + (_f_ * x))))) * (Symbol('q') + (Integer(-1) * (_b_ * sympy.cos((_e_ + (_f_ * x))))))))**(Integer(-1)), x))) + (_b_ * _g_ * (_f_)**(Integer(-1)) * Subst(Int((sympy.sqrt(x) * ((((_g_)**(Integer(2)) * ((a_)**(Integer(2)) + (Integer(-1) * (_b_)**(Integer(2))))) + ((_b_)**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1))), x), x, (_g_ * sympy.cos((_e_ + (_f_ * x)))))))),
+        replacement=With({q: sqrt(-a_**2 + _b_**2)}, -a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + _b_*_g_*Subst(Int(sqrt(x)/(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2)), x), x, _g_*cos(x*_f_ + _e_))/_f_),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=35,
     ),
@@ -374,7 +376,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(_g_*InertCos(x*_f_ + _e_))*(a_ + _b_*InertSin(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=With(List(Set(Symbol('q'), sympy.root(((Integer(-1) * (a_)**(Integer(2))) + (_b_)**(Integer(2))), Integer(2)))), (((Integer(-1) * a_) * ((Integer(2) * Symbol('q')))**(Integer(-1)) * Int(((sympy.sqrt((_g_ * sympy.cos((_e_ + (_f_ * x))))) * (Symbol('q') + (_b_ * sympy.cos((_e_ + (_f_ * x)))))))**(Integer(-1)), x)) + (Integer(-1) * (a_ * ((Integer(2) * Symbol('q')))**(Integer(-1)) * Int(((sympy.sqrt((_g_ * sympy.cos((_e_ + (_f_ * x))))) * (Symbol('q') + (Integer(-1) * (_b_ * sympy.cos((_e_ + (_f_ * x))))))))**(Integer(-1)), x))) + (_b_ * _g_ * (_f_)**(Integer(-1)) * Subst(Int(((sympy.sqrt(x) * (((_g_)**(Integer(2)) * ((a_)**(Integer(2)) + (Integer(-1) * (_b_)**(Integer(2))))) + ((_b_)**(Integer(2)) * (x)**(Integer(2))))))**(Integer(-1)), x), x, (_g_ * sympy.cos((_e_ + (_f_ * x)))))))),
+        replacement=With({q: sqrt(-a_**2 + _b_**2)}, _b_*_g_*Subst(Int(1/(sqrt(x)*(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2))), x), x, _g_*cos(x*_f_ + _e_))/_f_ - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*q) - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*q)),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=36,
     ),

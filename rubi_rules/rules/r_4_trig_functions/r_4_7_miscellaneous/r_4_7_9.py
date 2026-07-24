@@ -75,6 +75,8 @@ Max = Symbol('Max')
 # dot wildcards (must match exactly one expression)
 # optional wildcards (can match identity element if absent in commutative ops)
 
+lst = Symbol('lst')
+
 A_ = WildSymbol('A')
 _B_ = WildSymbol('B', optional_value=IDENTITY_ELEMENT)
 B_ = WildSymbol('B')
@@ -514,7 +516,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sin(u_)**_n_, x),
         constraints=(IGtQ(_n_, 0), QuotientOfLinearsQ(u_, x),),
-        replacement=Module(List(Set(Symbol('lst'), QuotientOfLinearsParts(u_, x))), Int((sympy.sin(((Part(Symbol('lst'), Integer(1)) + (Part(Symbol('lst'), Integer(2)) * x)) * ((Part(Symbol('lst'), Integer(3)) + (Part(Symbol('lst'), Integer(4)) * x)))**(Integer(-1)))))**(_n_), x)),
+        replacement=Module({lst: QuotientOfLinearsParts(u_, x)}, Int(sin((x*Part(lst, 2) + Part(lst, 1))/(x*Part(lst, 4) + Part(lst, 3)))**_n_, x)),
         module_name='4.7.9 Active trig functions',
         rule_number=51,
     ),
@@ -522,7 +524,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(cos(u_)**_n_, x),
         constraints=(IGtQ(_n_, 0), QuotientOfLinearsQ(u_, x),),
-        replacement=Module(List(Set(Symbol('lst'), QuotientOfLinearsParts(u_, x))), Int((sympy.cos(((Part(Symbol('lst'), Integer(1)) + (Part(Symbol('lst'), Integer(2)) * x)) * ((Part(Symbol('lst'), Integer(3)) + (Part(Symbol('lst'), Integer(4)) * x)))**(Integer(-1)))))**(_n_), x)),
+        replacement=Module({lst: QuotientOfLinearsParts(u_, x)}, Int(cos((x*Part(lst, 2) + Part(lst, 1))/(x*Part(lst, 4) + Part(lst, 3)))**_n_, x)),
         module_name='4.7.9 Active trig functions',
         rule_number=52,
     ),

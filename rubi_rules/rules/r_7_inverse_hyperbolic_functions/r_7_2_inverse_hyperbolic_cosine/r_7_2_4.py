@@ -176,7 +176,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**m_*(_a_ + _b_*acosh(x*_c_))*(x**2*_e_ + d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, m_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_p_, 0),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.acosh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt((Integer(-1) + (_c_ * x)))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**m_*(x**2*_e_ + d_)**_p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(sqrt(x*_c_ - 1)*sqrt(x*_c_ + 1)), x), x) + Dist(_a_ + _b_*acosh(x*_c_), u, x)),
         module_name='7.2.4 (f x)^m (d+e x^2)^p (a+b arccosh(c x))^n',
         rule_number=10,
     ),
@@ -184,7 +184,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*(_a_ + _b_*acosh(x*_c_))*(x**2*_e_ + d_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), EqQ(_c_**2*d_ + _e_, 0), IntegerQ(p_ + sympy.S(-1)/2), NeQ(p_, sympy.S(-1)/2), Or(IGtQ(m_/2 + sympy.S.Half, 0), ILtQ(m_/2 + p_ + sympy.S(3)/2, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(p_)), x))), (Dist((_a_ + (_b_ * sympy.acosh((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Simp((sympy.sqrt((d_ + (_e_ * (x)**(Integer(2))))) * ((sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt((Integer(-1) + (_c_ * x)))))**(Integer(-1)))) * Int(SimplifyIntegrand((Symbol('u') * (sympy.sqrt((d_ + (_e_ * (x)**(Integer(2))))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**m_*(x**2*_e_ + d_)**p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/sqrt(x**2*_e_ + d_), x), x)*Simp(sqrt(x**2*_e_ + d_)/(sqrt(x*_c_ - 1)*sqrt(x*_c_ + 1))) + Dist(_a_ + _b_*acosh(x*_c_), u)),
         module_name='7.2.4 (f x)^m (d+e x^2)^p (a+b arccosh(c x))^n',
         rule_number=11,
     ),
@@ -192,7 +192,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*(_a_ + _b_*acosh(x*_c_))*(x*_e1_ + d1_)**p_*(x*_e2_ + d2_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d1_, _e1_, d2_, _e2_], x), EqQ(_e1_, _c_*d1_), EqQ(_e2_, -_c_*d2_), IntegerQ(p_ + sympy.S(-1)/2), NeQ(p_, sympy.S(-1)/2), Or(IGtQ(m_/2 + sympy.S.Half, 0), ILtQ(m_/2 + p_ + sympy.S(3)/2, 0)),),
-        replacement=With(List(Set(Symbol('u'), IntHide(((x)**(m_) * ((d1_ + (_e1_ * x)))**(p_) * ((d2_ + (_e2_ * x)))**(p_)), x))), (Dist((_a_ + (_b_ * sympy.acosh((_c_ * x)))), Symbol('u')) + (Integer(-1) * (_b_ * _c_ * Simp((sympy.sqrt((d1_ + (_e1_ * x))) * sympy.sqrt((d2_ + (_e2_ * x))) * ((sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt((Integer(-1) + (_c_ * x)))))**(Integer(-1)))) * Int(SimplifyIntegrand((Symbol('u') * ((sympy.sqrt((d1_ + (_e1_ * x))) * sympy.sqrt((d2_ + (_e2_ * x)))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide(x**m_*(x*_e1_ + d1_)**p_*(x*_e2_ + d2_)**p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(sqrt(x*_e1_ + d1_)*sqrt(x*_e2_ + d2_)), x), x)*Simp(sqrt(x*_e1_ + d1_)*sqrt(x*_e2_ + d2_)/(sqrt(x*_c_ - 1)*sqrt(x*_c_ + 1))) + Dist(_a_ + _b_*acosh(x*_c_), u)),
         module_name='7.2.4 (f x)^m (d+e x^2)^p (a+b arccosh(c x))^n',
         rule_number=12,
     ),
@@ -472,7 +472,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(_a_ + _b_*acosh(x*_c_))*(x**2*_e_ + d_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(_c_**2*d_ + _e_, 0), IntegerQ(_p_), Or(GtQ(_p_, 0), And(IGtQ(_m_/2 + sympy.S(-1)/2, 0), LeQ(_m_ + _p_, 0))),),
-        replacement=With(List(Set(Symbol('u'), IntHide((((_f_ * x))**(_m_) * ((d_ + (_e_ * (x)**(Integer(2)))))**(_p_)), x))), (Dist((_a_ + (_b_ * sympy.acosh((_c_ * x)))), Symbol('u'), x) + (Integer(-1) * (_b_ * _c_ * Int(SimplifyIntegrand((Symbol('u') * ((sympy.sqrt((Integer(1) + (_c_ * x))) * sympy.sqrt((Integer(-1) + (_c_ * x)))))**(Integer(-1))), x), x))))),
+        replacement=With({u: IntHide((x*_f_)**_m_*(x**2*_e_ + d_)**_p_, x)}, -_b_*_c_*Int(SimplifyIntegrand(u/(sqrt(x*_c_ - 1)*sqrt(x*_c_ + 1)), x), x) + Dist(_a_ + _b_*acosh(x*_c_), u, x)),
         module_name='7.2.4 (f x)^m (d+e x^2)^p (a+b arccosh(c x))^n',
         rule_number=47,
     ),
