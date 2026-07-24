@@ -3,7 +3,32 @@ Utility functions for Rubi integration.
 
 See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Integration%20utility%20functions.pdf
 """
-from functools import wraps
+from functools import wraps, lru_cache
+
+
+def _pure_expr_cache(maxsize):
+    """Memoise a PURE predicate of hashable SymPy arguments.
+
+    The wrapped predicates (PosQ, LinearQ, ...) are deterministic functions of their
+    arguments -- their result depends only on the expression, never on mutable state
+    -- so caching can never change a verdict; it only skips recomputation. During the
+    backtracking DFS the SAME predicate is evaluated on identical sub-expressions
+    thousands of times (measured repeat rates 96-99%), and each PosQ/LinearQ does real
+    work (a Simplify / polynomial build). The cache is BOUNDED (``maxsize``) so a long
+    corpus run cannot grow it without limit, and it falls back to a direct call on the
+    rare unhashable argument.
+    """
+    def deco(fn):
+        cached = lru_cache(maxsize=maxsize)(fn)
+        @wraps(fn)
+        def wrapper(*args):
+            try:
+                return cached(*args)
+            except TypeError:  # unhashable arg -> compute without caching
+                return fn(*args)
+        wrapper.cache_clear = cached.cache_clear
+        return wrapper
+    return deco
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -507,7 +532,12 @@ def LinearQ(expr, x):
     """
     if isinstance(expr, (tuple, list, Tuple)):
         return all(LinearQ(i, x) for i in expr)
-    elif expr.is_polynomial(x):
+    return _LinearQ_scalar(expr, x)
+
+
+@_pure_expr_cache(maxsize=20000)
+def _LinearQ_scalar(expr, x):
+    if expr.is_polynomial(x):
         if degree(Poly(expr, x), gen=x) == 1:
             return True
     return False
@@ -1404,6 +1434,7 @@ def PosAux(u):
             return res
         return True
 
+@_pure_expr_cache(maxsize=20000)
 def PosQ(u):
     # If u is not 0 and has a positive form, PosQ[u] returns True, else it returns False.
     return PosAux(TogetherSimplify(u))

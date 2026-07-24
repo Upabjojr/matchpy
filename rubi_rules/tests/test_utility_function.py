@@ -133,6 +133,33 @@ def test_NonzeroQ():
     assert NonzeroQ(S(1)) == True
 
 
+def test_PosQ_LinearQ_cached_values_match_rubi():
+    """PosQ and LinearQ are memoised (pure predicates, 96-99% call-repeat during the
+    DFS). Caching must not change a verdict. The PosQ expectations below were checked
+    against real Rubi (``<<Rubi`IntegrationUtilityFunctions``; PosQ[...]``): symbols
+    are treated as positive, only explicitly-negated forms are negative.
+
+    NB: PosQ of a SUM (e.g. ``b*c - a*d``) follows Mathematica's canonical term order
+    for ``First``, which SymPy does not reproduce, so those are deliberately excluded
+    -- a known, pre-existing divergence unrelated to caching.
+    """
+    from sympy import sqrt, Rational
+    from rubi_rules.utils.utility_functions import PosQ, LinearQ
+    xx, aa, bb, cc, dd = (Symbol(s) for s in 'x a b c d'.split())
+    # `==` not `is`: PosAux returns a SymPy Boolean for numeric inputs (3 > 0), a
+    # Python bool for symbolic ones.
+    for u, want in [(aa, True), (-aa, False), (aa*bb, True), (-aa*bb, False),
+                    (aa**2, True), (S(3), True), (S(-3), False), (aa/bb, True),
+                    (sqrt(aa), True), ((aa + bb)**2, True), (-(aa + bb)**2, False),
+                    (-xx, False), ((cc/dd)**Rational(1, 3), True)]:
+        assert bool(PosQ(u)) == want, (u, PosQ(u), want)
+        assert bool(PosQ(u)) == want  # second call hits the cache -> same verdict
+    for u, want in [(aa, False), (3*xx + bb, True), (xx**2, False),
+                    (aa + bb*xx, True), (sqrt(xx), False)]:
+        assert bool(LinearQ(u, xx)) == want, (u, LinearQ(u, xx), want)
+        assert bool(LinearQ(u, xx)) == want
+
+
 def test_ZeroQ_numeric_pretest_is_sound():
     """ZeroQ has a fast numeric pre-test that returns False (nonzero) when the
     expression is provably nonzero at a probe point, skipping the expensive
