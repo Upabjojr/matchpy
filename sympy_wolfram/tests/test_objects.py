@@ -253,6 +253,40 @@ class TestCompoundExpression:
         assert (Module({r: i(2), s: i(3)}, r + s).doit()
                 == Module(List(Set(r, i(2)), Set(s, i(3))), r + s).doit())
 
+    def test_scoping_constructs_have_all_sympy_args(self):
+        """After construction, EVERY node reachable through ``.args`` must be a
+        ``sympy.Basic``. The dict/``None`` binding form is normalised through
+        ``_bindings_list_from_dict`` + ``sympify``, so no raw Python ``dict``,
+        ``None`` or ``int`` may leak into the expression tree (which would break
+        ``xreplace``, ``srepr`` round-trips and matcher traversal)."""
+        from sympy import Basic
+        from sympy_wolfram.objects import Block
+
+        def non_sympy_nodes(expr, path='root'):
+            if not isinstance(expr, Basic):
+                return [(path, type(expr).__name__, repr(expr)[:40])]
+            bad = []
+            for i, arg in enumerate(expr.args):
+                bad += non_sympy_nodes(arg, f"{path}.args[{i}]")
+            return bad
+
+        r, s, k, u = (Symbol(n) for n in ('r', 's', 'k', 'u'))
+        i = Integer
+        cases = [
+            # dict form with initialised + uninitialised (None) locals
+            Module({r: i(2), s: i(3), k: None, u: None},
+                   CompoundExpression(Set(u, r*k), r + u)),
+            With({r: i(2)}, r + i(1)),
+            Block({r: i(2), k: None}, r + k),
+            # a plain Python int as a dict value must be sympified, not left raw
+            Module({r: 5}, r),
+            # the equivalent explicit List(Set(...)) tree form
+            Module(List(Set(r, i(2)), k), r + k),
+        ]
+        for expr in cases:
+            bad = non_sympy_nodes(expr)
+            assert not bad, f"non-SymPy nodes in {type(expr).__name__}.args: {bad}"
+
     def test_compound_set_binds_for_later_statements(self):
         """CompoundExpression[Set[u, val], body] BINDS u for the following
         statements (Mathematica's assignment side effect). Verified vs Mathematica:

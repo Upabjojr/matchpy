@@ -102,6 +102,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] are there memory leaks?
 - [ ] generated rules contain stuff like: With(List(Set(Symbol('g'), ... ) ==> could you please avoid defining Symbol('g') in the rule? All symbols should be defined at the beginning of the file.
 - [ ] remember to document IDENTITY_ELEMENT as optional matching character.
+- [ ] remove not used variables from generated rules.
+- [ ] RubiConstraint ==> rename and make it a subtype of MathematicaExpr?
 
 Strange warning:
 

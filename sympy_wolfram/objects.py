@@ -47,7 +47,7 @@ All examples below run with ``pytest --doctest-modules``.
 """
 from __future__ import annotations
 
-from typing import Any, Iterable, Iterator
+from typing import Any, Dict, Iterable, Iterator, Optional, Tuple, Union
 
 import sympy
 from sympy import Add, Basic, Dummy, Expr, Integer, Mul, Pow, Rational, S, Symbol
@@ -166,7 +166,7 @@ class Set(MathematicaExpr):
     6
     """
 
-    def __new__(cls, symbol, expr):
+    def __new__(cls, symbol: Any, expr: Any) -> "Set":
         return Expr.__new__(cls, sympify(symbol), sympify(expr))
 
     def _evaluate(self, **kwargs):
@@ -198,7 +198,7 @@ class SetDelayed(MathematicaExpr):
         The (held) value to bind to *symbol*.
     """
 
-    def __new__(cls, symbol, expr):
+    def __new__(cls, symbol: Any, expr: Any) -> "SetDelayed":
         return Expr.__new__(cls, sympify(symbol), sympify(expr))
 
     def _evaluate(self, **kwargs):
@@ -233,7 +233,7 @@ class List(MathematicaExpr):
     ()
     """
 
-    def __new__(cls, *items):
+    def __new__(cls, *items: Any) -> "List":
         return Expr.__new__(cls, *[sympify(item) for item in items])
 
     def _evaluate(self, **kwargs):
@@ -274,7 +274,7 @@ class CompoundExpression(MathematicaExpr):
     [10, 20]
     """
 
-    def __new__(cls, *exprs):
+    def __new__(cls, *exprs: Any) -> "CompoundExpression":
         return Expr.__new__(cls, *[sympify(expr) for expr in exprs])
 
     def doit(self, **kwargs):
@@ -399,7 +399,7 @@ class If(MathematicaExpr):
         return self
 
 
-def _bindings_list_from_dict(bindings: dict) -> "List":
+def _bindings_list_from_dict(bindings: "Dict[Symbol, Optional[Any]]") -> "List":
     """Convert a ``{local: value}`` dict binding to the internal scoping ``List``.
 
     A ``None`` value denotes an UNINITIALISED local (`Module[{k}, ...]`) -- emitted
@@ -430,8 +430,13 @@ class With(MathematicaExpr):
 
     Parameters
     ----------
-    bindings : List
-        A ``List`` of ``Set(symbol, value)`` nodes.
+    bindings : List or dict
+        Either the Mathematica expression-tree form -- a ``List`` of
+        ``Set(symbol, value)`` nodes -- or the Python-dict form
+        ``{symbol: value, ...}``.  In the dict form a ``None`` value denotes
+        an uninitialised local (a bare symbol).  Both forms are normalised
+        to a ``List`` at construction, so after construction every entry in
+        ``self.args`` is a SymPy object.
     body : sympy.Expr
         The expression to evaluate after substitution.
 
@@ -441,6 +446,11 @@ class With(MathematicaExpr):
 
     >>> x = Symbol('x')
     >>> With(List(Set(x, Integer(5))), x + Integer(1)).doit()
+    6
+
+    The dict form is equivalent to the ``List(Set(...))`` form::
+
+    >>> With({x: Integer(5)}, x + Integer(1)).doit()
     6
 
     Multiple simultaneous bindings (order does not matter)::
@@ -466,7 +476,8 @@ class With(MathematicaExpr):
     20
     """
 
-    def __new__(cls, bindings, body):
+    def __new__(cls, bindings: "Union[List, Dict[Symbol, Optional[Any]], list]",
+                body: Any) -> "With":
         if isinstance(bindings, list):
             bindings = List(*bindings)
         if isinstance(bindings, dict):
@@ -503,8 +514,14 @@ class Module(MathematicaExpr):
 
     Parameters
     ----------
-    locals_list : List
-        A ``List`` of ``Symbol`` or ``Set(symbol, init_value)`` entries.
+    locals_list : List or dict
+        Either the Mathematica expression-tree form -- a ``List`` of
+        ``Symbol`` or ``Set(symbol, init_value)`` entries -- or the
+        Python-dict form ``{symbol: init_value, ...}``.  In the dict form a
+        ``None`` value denotes an uninitialised local (equivalent to a plain
+        ``Symbol`` entry).  Both forms are normalised to a ``List`` at
+        construction, so after construction every entry in ``self.args`` is a
+        SymPy object.
     body : sympy.Expr
         The expression to evaluate in the local scope.
 
@@ -515,6 +532,12 @@ class Module(MathematicaExpr):
     >>> n = Symbol('n')
     >>> Module(List(Set(n, Integer(4))), n * (n + Integer(1))).doit()
     20
+
+    The dict form accepts ``None`` for an uninitialised local::
+
+    >>> k = Symbol('k')
+    >>> isinstance(Module({k: None}, k).doit(), Symbol)
+    True
 
     Uninitialized local produces a fresh symbol::
 
@@ -546,7 +569,8 @@ class Module(MathematicaExpr):
     25
     """
 
-    def __new__(cls, locals_list, body):
+    def __new__(cls, locals_list: "Union[List, Dict[Symbol, Optional[Any]], list]",
+                body: Any) -> "Module":
         if isinstance(locals_list, list):
             locals_list = List(*locals_list)
         elif isinstance(locals_list, dict):
@@ -586,8 +610,12 @@ class Block(MathematicaExpr):
 
     Parameters
     ----------
-    locals_list : List
-        A ``List`` of ``Set(symbol, value)`` bindings.
+    locals_list : List or dict
+        Either the Mathematica expression-tree form -- a ``List`` of
+        ``Set(symbol, value)`` bindings -- or the Python-dict form
+        ``{symbol: value, ...}`` (a ``None`` value denotes an uninitialised
+        local).  Both forms are normalised to a ``List`` at construction, so
+        after construction every entry in ``self.args`` is a SymPy object.
     body : sympy.Expr
         The expression to evaluate under the local bindings.
 
@@ -597,6 +625,11 @@ class Block(MathematicaExpr):
 
     >>> x = Symbol('x')
     >>> Block(List(Set(x, Integer(10))), x + Integer(5)).doit()
+    15
+
+    The dict form is equivalent::
+
+    >>> Block({x: Integer(10)}, x + Integer(5)).doit()
     15
 
     Multiple bindings::
@@ -611,7 +644,8 @@ class Block(MathematicaExpr):
     10
     """
 
-    def __new__(cls, locals_list, body):
+    def __new__(cls, locals_list: "Union[List, Dict[Symbol, Optional[Any]], list]",
+                body: Any) -> "Block":
         if isinstance(locals_list, list):
             locals_list = List(*locals_list)
         elif isinstance(locals_list, dict):
@@ -1212,7 +1246,7 @@ def _list_items(expr) -> Iterable[Any]:
     return (expr,)
 
 
-def _bind_scope_locals(bindings, body):
+def _bind_scope_locals(bindings: Basic, body: Any) -> "Tuple[List, Any]":
     """Close a scoping construct over its own locals, by alpha-renaming them to
     ``Dummy`` symbols.
 
@@ -1258,7 +1292,7 @@ def _bind_scope_locals(bindings, body):
     return List(*new_items), body
 
 
-def _binding_substitutions(bindings, evaluate_values: bool, **kwargs):
+def _binding_substitutions(bindings: Basic, evaluate_values: bool, **kwargs) -> "Dict[Basic, Any]":
     subs = {}
     for item in _list_items(bindings):
         if isinstance(item, Set):
@@ -1280,14 +1314,14 @@ def _is_condition_wrapper(expr) -> bool:
     return getattr(expr.__class__, '__name__', '') == 'Condition' and len(getattr(expr, 'args', ())) == 2
 
 
-def _substitute_body(body, substitutions):
+def _substitute_body(body: Basic, substitutions: "Dict[Basic, Any]") -> Basic:
     if _is_condition_wrapper(body):
         expr, test = body.args
         return body.func(expr.xreplace(substitutions), test.xreplace(substitutions))
     return body.xreplace(substitutions)
 
 
-def _resolve_bindings(expr, bindings, _max_iter=64):
+def _resolve_bindings(expr: Any, bindings: "Dict[Basic, Any]", _max_iter: int = 64) -> Any:
     """Substitute ``bindings`` into ``expr`` to a FIXPOINT.
 
     A single ``xreplace`` only substitutes one level; iterating to a fixpoint is what
