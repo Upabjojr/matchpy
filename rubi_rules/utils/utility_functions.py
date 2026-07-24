@@ -1402,20 +1402,37 @@ def NiceSqrtQ(u):
 def Together(u):
     return factor(u)
 
+def _cmp_gt0(val):
+    """``val > 0`` guarded against a NaN / non-real comparison.
+
+    Returns True/False for a determinate result, or None when the comparison
+    cannot be decided -- SymPy raises ``TypeError`` ("Invalid NaN comparison" or
+    "cannot determine truth value" for a complex value), where the old direct
+    ``val > 0`` aborted the whole DFS. Mathematica leaves such an ordering
+    unevaluated, so an undeterminable numeric comparison is treated as "not
+    positive" by the callers below (faithful: the rule simply does not apply).
+    """
+    try:
+        res = val > 0
+    except TypeError:
+        return None
+    if res is S.true or res is True:
+        return True
+    if res is S.false or res is False:
+        return False
+    return None
+
+
 def PosAux(u):
     if RationalQ(u):
         return u>0
     elif NumberQ(u):
-        if ZeroQ(Re(u)):
-            return Im(u) > 0
-        else:
-            return Re(u) > 0
+        r = _cmp_gt0(Im(u) if ZeroQ(Re(u)) else Re(u))
+        return bool(r)  # a genuine number whose sign is undeterminable (NaN) -> False
     elif NumericQ(u):
         v = N(u)
-        if ZeroQ(Re(v)):
-            return Im(v) > 0
-        else:
-            return Re(v) > 0
+        r = _cmp_gt0(Im(v) if ZeroQ(Re(v)) else Re(v))
+        return bool(r)
     elif PowerQ(u):
         if OddQ(u.exp):
             return PosAux(u.base)
@@ -1429,10 +1446,10 @@ def PosAux(u):
     elif SumQ(u):
         return PosAux(First(u))
     else:
-        res = u > 0
-        if res in(True, False):
-            return res
-        return True
+        r = _cmp_gt0(u)
+        if r is not None:
+            return r
+        return True  # symbolic/undeterminable form -> assume positive (Rubi default)
 
 @_pure_expr_cache(maxsize=20000)
 def PosQ(u):

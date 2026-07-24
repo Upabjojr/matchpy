@@ -132,3 +132,66 @@ will be removed in a future version of SymPy.
   implementation (plain `sympy.expand` does not collect `x - I*x → (1-I)*x`).
 - `powsimp(combine='exp')` applied before each `_integration_step` so
   `E^a * E^b → E^(a+b)`.
+
+## 2. `x^m/(a+b x^n)` partial-fraction family (1.1.3.2 #37–44) gives WRONG answers — OPEN
+
+**Status:** OPEN. A genuine multi-bug knot; a faithful `Rt` fix was implemented and
+**reverted** because it regressed without fixing the integrals (see below). Suite is
+back to green (1003 passed, 1 skip).
+
+**Symptom (numerically verified WRONG — derivative ≠ integrand):**
+
+    x/(a + b*x**6)        -> WRONG
+    x**3/(a + b*x**6)     -> WRONG
+    x/(a + b*x**10)       -> WRONG
+    x**3/(1 - x**6)       -> WRONG   (the only wrong answer found in a full
+                                      numeric re-verification of a 81-case suite log)
+
+These match Rubi's rules `1.1.3.2 #37/#38/#41–44` (the roots-of-unity partial-fraction
+decomposition of `Int[x^m/(a+b x^n)]`), e.g. source line 43 (PosQ branch):
+
+    Module[{r=Numerator[Rt[a/b,n]], s=Denominator[Rt[a/b,n]], k, u},
+      u = Int[(r*Cos[(2k-1)m*Pi/n] - s*Cos[(2k-1)(m+1)Pi/n]*x)/(r^2 - 2 r s Cos[(2k-1)Pi/n] x + s^2 x^2), x] + Int[...+...];
+      2*(-1)^(m/2)*r^(m+2)/(a n s^m)*Int[1/(r^2+s^2 x^2)] + Dist[2 r^(m+1)/(a n s^m), Sum[u,{k,1,(n-2)/4}], x]]
+
+**This is a MULTI-bug knot — needs all of the following, coordinated:**
+
+1. **`Rt` is NOT faithful.** Codegen maps `'Rt' -> sympy.root` (interpreter
+   `SYMPY_FUNC_MAP`), which does NOT split fractions. Rubi's
+   `Rt[u,n] := RtAux[TogetherSimplify[u], n]` splits: `Rt[a/b,n] = a^(1/n)/b^(1/n)`
+   (Pi-verified: `Numerator[Rt[a/b,6]] = a^(1/6)`, `Denominator = b^(1/6)`).
+   Because ours doesn't split, `r,s` come out `(a/b)^(1/6)` / `1` — wrong.
+   NOTE: a faithful eager `Rt`/`RtAux` ALREADY EXISTS in `utility_functions.py`; it
+   is simply bypassed. The intended fix is a DEFERRED `Rt` node in `rubi_utils.py`
+   (stay symbolic until `n` is a concrete integer, then delegate to eager `Rt`) +
+   `'Rt': 'Rt'` in `generate.py` `RUBI_UTILS_MAP` + regenerate. This was tried and
+   correctly produced `r=a^(1/6)`, `s=b^(1/6)`.
+
+2. **BUT `r,s` correct is NOT sufficient** — the integrals stay WRONG, so rule 37/38
+   have a SECOND, DEEPER assembly bug. For `x^3/(1-x^6)` (rule 38, where `r=s=1`, so
+   `Rt` is irrelevant) the leftover error is exactly
+   `d/dx(ours) - integrand = (-2x - 1)/(3 (x+1)(x^2+x+1))`
+   — an incorrectly-integrated sub-piece in the roots-of-unity decomposition. Needs a
+   step-by-step diff against Rubi's `Steps[Int[x^3/(1-x^6),x]]` on the Pi to localize
+   (candidates: a `Cos[(2k-1)·/n]` value, a coefficient, the `Sum`, or a downstream
+   quadratic-denominator sub-integral rule).
+
+3. **Our `RtAux` does not terminate on some input.** Wiring the faithful `Rt` in made
+   rule 101 of `r_1_2_1_2` fail to load with `RecursionError` (a pre-existing
+   `RtAux` non-convergence, NOT caught by a `try/except RecursionError` in the
+   deferred node — so the recursion is triggered somewhere in generation, not in
+   `_evaluate`). Must be fixed before `Rt` can be rewired, else it adds a skip and
+   breaks `test_the_only_skipped_rule_is_the_upstream_rubi_typo`.
+
+**Do NOT** fix this by broadening `Numerator`/`Denominator` to split `Rational`
+exponents globally — TRIED, it splits `(a/b)^(1/6)` correctly but REGRESSES
+`x^2/(a+b x^6)` (and others) from CORRECT to WRONG, because those two functions are
+used pervasively and many rules rely on the Integer-only behavior. The split must
+live in `Rt` (only `Rt` callers affected), matching Rubi.
+
+**Recommended plan (as a unit):** (i) make `RtAux` terminate; (ii) re-add the deferred
+`Rt` + `RUBI_UTILS_MAP` entry + regenerate, confirm `r,s` and no new skip; (iii)
+deep-trace the assembly residual for `x^3/(1-x^6)` against Rubi on the Pi
+(`ssh pi@192.168.1.119`, `<<Rubi\`; Steps[Int[...]]`) and fix the specific utility /
+rule term. Verify by NUMERIC complex-point derivative check (never `simplify(diff-f)==0`,
+which false-positives on these special-function results).

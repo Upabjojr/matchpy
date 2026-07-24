@@ -2489,6 +2489,26 @@ def test_comparisons_on_non_real_do_not_crash():
     assert Greater(3, 2, 1) is True
 
 
+def test_PosAux_robust_to_nan_and_non_real():
+    """PosAux/PosQ used a bare `Re(u) > 0` / `u > 0` that aborted the DFS when the
+    value was NaN ("Invalid NaN comparison") or non-real ("cannot determine truth
+    value of Relational"). Two corpus integrands crashed here:
+    1/((d+e*x)*(c*(d+e*x)^2)) and x^6/(3*x^4+2). Must not raise; sign of an
+    undeterminable numeric value is treated as not-positive (rule just doesn't apply)."""
+    from sympy import S, I, root
+    from rubi_rules.utils.utility_functions import PosAux, PosQ
+    crash_vals = [S.NaN,
+                  -3*root(6, 4)*(1 + I)**3 + 6*root(6, 4)*(1 + I)]  # from x^6/(3x^4+2)
+    for v in crash_vals:
+        PosAux(v)   # must not raise
+        PosQ(v)     # must not raise
+    assert PosAux(S.NaN) is False
+    # normal behaviour preserved (symbols positive; negatives negative)
+    aa = Symbol('a')
+    assert bool(PosQ(aa)) is True
+    assert bool(PosQ(-aa)) is False
+
+
 def test_Simplify_robust_to_boolean_from_non_binomial():
     # BinomialDegree/TrinomialDegree return False on a non-binomial/-trinomial.
     # An EqQ of two such degrees (used as a rule constraint) forms
