@@ -47,6 +47,7 @@ from .objects import (
     Return,
     Scan,
     Set,
+    SetDelayed,
     Sow,
     Throw,
     With,
@@ -62,6 +63,6 @@ __all__ = [
     'mathematica_to_sympy_short_code',
     # objects: the modelled Mathematica constructs
     'Block', 'Catch', 'CompoundExpression', 'Do', 'Gamma', 'Head', 'If', 'List',
-    'MathematicaExpr', 'Module', 'Null', 'Reap', 'Return', 'Scan', 'Set', 'Sow',
+    'MathematicaExpr', 'Module', 'Null', 'Reap', 'Return', 'Scan', 'Set', 'SetDelayed', 'Sow',
     'Throw', 'With',
 ]

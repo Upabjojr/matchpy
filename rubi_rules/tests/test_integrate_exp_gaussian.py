@@ -310,6 +310,27 @@ def _check_no_crash():
     return failures
 
 
+def test_compound_expression_set_binding_no_leaked_local():
+    """Rule 1.1.3.2 #37 (x^m/(a+b x^n) partial fractions) uses
+    Module[{r,s,k,u}, u = Int[f(k)]; ... Sum[u, {k, 1, N}]]. The u=... binding is a
+    CompoundExpression side effect; before the fix it was dropped, so the scoping
+    Dummy for u leaked into the Sum and the antiderivative was WRONG. Verify: no bare
+    u/z symbol survives, and the derivative matches the integrand numerically."""
+    from sympy import Symbol, sqrt, Float, I, diff
+    xx, a, b, A, B = (Symbol(s) for s in 'x a b A B'.split())
+    for u in (sqrt(xx)*(A + B*xx**3)/(a + b*xx**3),
+              xx**2/(a + b*xx**6),
+              sqrt(xx)/(a + b*xx**3)):
+        r = rubi_integrate(u, xx)
+        assert not any(str(s) in ('u', 'z') or str(s).startswith(('_u', '_z'))
+                       for s in r.free_symbols), (u, r)
+        # numeric derivative check at a generic complex point (reliable regardless of branch)
+        pt = {s: Float(0.4 + 0.3 * (i + 1)) + Float(0.2 * (i + 1)) * I
+              for i, s in enumerate(sorted(r.free_symbols, key=str))}
+        val = complex((diff(r, xx) - u).subs(pt).evalf(30))
+        assert abs(val) < 1e-8, (u, abs(val))
+
+
 def test_polynomial_remainder_surd_coeffs_do_not_crash():
     """PolynomialQuotient/Remainder on surd-coefficient polynomials must not raise.
 

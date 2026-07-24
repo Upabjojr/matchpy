@@ -46,7 +46,6 @@ Doctest configuration
 All examples below run with ``pytest --doctest-modules``.
 """
 from __future__ import annotations
-from __future__ import annotations
 
 from typing import Any, Iterable, Iterator
 
@@ -174,6 +173,38 @@ class Set(MathematicaExpr):
         return self
 
 
+class SetDelayed(MathematicaExpr):
+    """Mathematica ``SetDelayed[symbol, expr]`` (the ``:=`` operator).
+
+    Like ``Set`` (``=``) it is a structural binding marker interpreted by the
+    enclosing scope / sequence, but with DELAYED evaluation: the right-hand side is
+    HELD and re-evaluated in the current environment every time the symbol is used,
+    rather than evaluated once at assignment time. The observable difference from
+    ``Set`` is when the RHS references a variable that is reassigned AFTER the
+    binding (Mathematica-verified):
+
+        Module[{u, y}, y = 2; u := y^2; y = 3; u]   (* SetDelayed -> 9 *)
+        Module[{u, y}, y = 2; u  = y^2; y = 3; u]   (* Set        -> 4 *)
+
+    ``CompoundExpression`` (and the scoping constructs) realise this by binding the
+    symbol to the UNRESOLVED right-hand side and resolving bindings transitively at
+    use time; ``Set`` resolves the value immediately. ``doit()`` returns ``self``.
+
+    Parameters
+    ----------
+    symbol : sympy.Symbol
+        The local variable name.
+    expr : sympy.Expr
+        The (held) value to bind to *symbol*.
+    """
+
+    def __new__(cls, symbol, expr):
+        return Expr.__new__(cls, sympify(symbol), sympify(expr))
+
+    def _evaluate(self, **kwargs):
+        return self
+
+
 class List(MathematicaExpr):
     """Mathematica ``List[e1, e2, …]`` — an ordered container of expressions.
 
@@ -248,8 +279,34 @@ class CompoundExpression(MathematicaExpr):
 
     def doit(self, **kwargs):
         result = Null
+        # A ``Set``/``SetDelayed`` statement BINDS its symbol as a side effect for
+        # every later statement in the sequence (Mathematica semantics). Rubi relies
+        # on this, e.g. Module[{...,k,u}, u = Int[f(k)]; ... Sum[u, {k, 1, N}]] --
+        # without propagating the u binding into the body, ``u`` (renamed to a Dummy
+        # by the scoping construct) leaks unresolved into the Sum. Accumulate the
+        # bindings and resolve them into the remaining statements.
+        #
+        #   * Set (=): fix the value NOW -- resolve the RHS against the current
+        #     bindings at assignment time.
+        #   * SetDelayed (:=): HOLD the RHS -- store it unresolved; it is resolved
+        #     transitively at use time (`_resolve_bindings` iterates to a fixpoint),
+        #     so a variable it references picks up the value in effect when used.
+        #
+        # SCOPING is correct because With/Module/Block rename their locals to fresh
+        # Dummies at CONSTRUCTION (see _binding_substitutions): the bound symbol here
+        # is that scope-unique Dummy, so resolution can never reach an identically-
+        # named local of a nested scope (which owns a different Dummy). Verified
+        # against Mathematica incl. nested/With shadowing -- see the tests.
+        bindings = {}
         for expr in self.args:
-            result = _eval(expr, **kwargs)
+            if isinstance(expr, (Set, SetDelayed)):
+                var, val = expr.args
+                if isinstance(expr, Set):
+                    val = _resolve_bindings(val, bindings)   # eager: fix value now
+                bindings[var] = val                          # SetDelayed holds RHS
+                result = val
+                continue
+            result = _eval(_resolve_bindings(expr, bindings), **kwargs)
         return result
 
     def _evaluate(self, **kwargs):
@@ -1212,6 +1269,27 @@ def _substitute_body(body, substitutions):
     return body.xreplace(substitutions)
 
 
+def _resolve_bindings(expr, bindings, _max_iter=64):
+    """Substitute ``bindings`` into ``expr`` to a FIXPOINT.
+
+    A single ``xreplace`` only substitutes one level; iterating to a fixpoint is what
+    makes ``SetDelayed`` transitive -- e.g. with ``{u: y**2, y: 3}`` resolving ``u``
+    gives ``y**2`` then ``9``. The iteration is BOUNDED: a self-referential delayed
+    binding (``u := u + 100``; which Mathematica reports as an unterminating recursion
+    and no Rubi rule produces) stops after ``_max_iter`` rounds instead of looping
+    forever. For ``Set`` bindings, whose values are already resolved, this converges
+    in one round.
+    """
+    if not bindings or not isinstance(expr, Basic):
+        return expr
+    for _ in range(_max_iter):
+        new = expr.xreplace(bindings)
+        if new == expr:
+            return new
+        expr = new
+    return expr
+
+
 def _condition_holds(test, **kwargs) -> bool:
     # Evaluate boolean connectives LAZILY, conjunct-by-conjunct, BEFORE evaluating
     # the whole test. Mathematica's And/Or/Not are short-circuiting; more
@@ -1395,6 +1473,7 @@ __all__ = [
     'Return',
     'Scan',
     'Set',
+    'SetDelayed',
     'Sow',
     'Throw',
     'With',

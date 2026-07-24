@@ -21,6 +21,7 @@ from sympy_wolfram.objects import (
     Return,
     Scan,
     Set,
+    SetDelayed,
     Sow,
     Throw,
     With,
@@ -231,6 +232,71 @@ class TestCompoundExpression:
         """CompoundExpression[42] -> 42"""
         result = CompoundExpression(Integer(42)).doit()
         assert result == Integer(42)
+
+    def test_compound_set_binds_for_later_statements(self):
+        """CompoundExpression[Set[u, val], body] BINDS u for the following
+        statements (Mathematica's assignment side effect). Verified vs Mathematica:
+        ``(u = 5; u + 1)`` -> 6 and ``(u = 3; v = 2 u; v + u)`` -> 9. Rubi relies on
+        this in Module[{..., k, u}, u = Int[f(k)]; ... Sum[u, {k, 1, N}]]; without it
+        u (a scoping Dummy) leaked unresolved into the Sum and gave wrong integrals
+        (e.g. sqrt(x)*(A+B*x**3)/(a+b*x**3))."""
+        u, v = Symbol('u'), Symbol('v')
+        assert CompoundExpression(Set(u, Integer(5)), u + Integer(1)).doit() == Integer(6)
+        assert CompoundExpression(
+            Set(u, Integer(3)), Set(v, Integer(2)*u), v + u).doit() == Integer(9)
+
+    def test_compound_set_scoping_matches_mathematica(self):
+        """Set inside a CompoundExpression is scoped to the ENCLOSING Module/With
+        (via the Dummy renaming those constructs apply at construction), and does not
+        leak into nested scopes. Every expected value here was checked against real
+        Mathematica (`<<Rubi`; wolframscript`), including the Rubi ``u = f(k); Sum[u,
+        {k,1,N}]`` pattern and nested/With shadowing.
+        """
+        from sympy_wolfram.objects import Module, With, List
+        from rubi_rules.utils.rubi_utils import Sum
+        u, v, k = Symbol('u'), Symbol('v'), Symbol('k')
+        i = Integer
+        cases = [
+            (Module(List(u), CompoundExpression(Set(u, i(5)), u + i(1))), 6),
+            # Rubi pattern: u bound to an expression in the Sum index k
+            (Module(List(k, u), CompoundExpression(Set(u, k**2), Sum(u, List(k, i(1), i(3))))), 14),
+            (Module(List(k, u), CompoundExpression(Set(u, k + i(10)), Sum(u, List(k, i(1), i(3))))), 36),
+            # nested Module shadow: inner u=10 must NOT be clobbered by outer u=5
+            (Module(List(u), CompoundExpression(Set(u, i(5)),
+                Module(List(u), CompoundExpression(Set(u, i(10)), u)) + u)), 15),
+            # With shadow
+            (Module(List(u), CompoundExpression(Set(u, i(5)),
+                With(List(Set(u, i(10))), u) + u)), 15),
+            # reassignment sees the previous value
+            (Module(List(u), CompoundExpression(Set(u, i(3)), Set(u, u + i(100)), u)), 103),
+            (Module(List(u, v), CompoundExpression(Set(u, i(3)), Set(v, i(2)*u), v + u)), 9),
+        ]
+        for expr, want in cases:
+            assert expr.doit() == Integer(want), (expr, expr.doit(), want)
+
+    def test_setdelayed_holds_rhs_unlike_set(self):
+        """SetDelayed (:=) HOLDS its RHS and re-evaluates it at use time; Set (=)
+        fixes the value at assignment. The distinguishing case is a RHS variable
+        reassigned AFTER the binding -- every expected value verified against real
+        Mathematica (`<<Rubi`; wolframscript`):
+
+            Module[{u,y}, y=2; u:=y^2; y=3; u]  -> 9  (SetDelayed re-evaluates y^2)
+            Module[{u,y}, y=2; u =y^2; y=3; u]  -> 4  (Set fixed y^2 at y=2)
+        """
+        u, y = Symbol('u'), Symbol('y')
+        i = Integer
+        # basic: SetDelayed binds like Set when nothing is reassigned
+        assert Module(List(u), CompoundExpression(
+            SetDelayed(u, i(5)), u + i(1))).doit() == Integer(6)
+        # the distinguishing behaviour
+        assert Module(List(u, y), CompoundExpression(
+            Set(y, i(2)), SetDelayed(u, y**2), Set(y, i(3)), u)).doit() == Integer(9)
+        assert Module(List(u, y), CompoundExpression(
+            Set(y, i(2)), Set(u, y**2), Set(y, i(3)), u)).doit() == Integer(4)
+        # a self-referential delayed binding (Mathematica: unterminating recursion)
+        # must TERMINATE here rather than hang -- the resolution is bounded.
+        Module(List(u), CompoundExpression(
+            SetDelayed(u, i(3)), SetDelayed(u, u + i(100)), u)).doit()
 
 
 class TestReturn:
