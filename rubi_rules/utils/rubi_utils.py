@@ -37,7 +37,6 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
                    expand, simplify, together, gcd, numer, sign,
                    Poly, frac, floor, Expr)
 
-from sympy_matching import RubiConstraint
 from sympy_wolfram.objects import (
     CompoundExpression,
     Condition,   # standard Wolfram node; defined in sympy_wolfram, re-exported here
@@ -54,27 +53,36 @@ from sympy_wolfram.objects import (
 from sympy_wolfram.objects import (
     Gamma,
 )
-
-# =============================================================================
-# Coefficient[expr, x, n] — coefficient of x^n in expr
-# =============================================================================
-
-class Coefficient(MathematicaExpr):
-    """Mathematica Coefficient[expr, x, n] -> coefficient of x^n in expr."""
-
-    def __new__(cls, expr, x, n=S.One):
-        n = sympy.sympify(n)
-        return Expr.__new__(cls, expr, x, n)
-
-    def _evaluate(self, **kwargs):
-        expr, x, n = self.args
-        if n == S.Zero:
-            return expr.coeff(x, 0)
-        try:
-            return Poly(expr, x).nth(int(n))
-        except Exception:
-            return expr.coeff(x, int(n))
-
+# Standard Wolfram-language function nodes — moved to sympy_wolfram (not
+# Rubi-specific). Re-exported here so generated rules (which do
+# `from ...rubi_utils import *`) keep resolving them unchanged.
+from sympy_wolfram.mathematica_functions import (
+    Apply,
+    Binomial,
+    Coefficient,
+    Complex,
+    EllipticPi,
+    Floor,
+    FullSimplify,
+    FunctionExpand,
+    GCD,
+    Hypergeometric2F1,
+    LeafCount,
+    Length,
+    Not,
+    Numerator,
+    PolynomialQuotient,
+    PolynomialRemainder,
+    ProductLog,
+    Quotient,
+    ReplaceAll,
+    Rule,
+    Sign,
+    Simplify,
+    Sum,
+    SumWolfram,
+    Together,
+)
 
 # =============================================================================
 # Subst[expr, x, v] — substitute x=v in expr
@@ -294,52 +302,6 @@ class RubiSimplify(MathematicaExpr):
 
 
 # =============================================================================
-# PolynomialQuotient[p, q, x] — polynomial division quotient
-# =============================================================================
-
-class PolynomialQuotient(MathematicaExpr):
-    """Mathematica PolynomialQuotient[p, q, x] -> quotient of p/q in x."""
-
-    def __new__(cls, p, q, x):
-        return Expr.__new__(cls, p, q, x)
-
-    def _evaluate(self, **kwargs):
-        p, q, x = self.args
-        try:
-            return sympy.quo(p, q, x)
-        except sympy.polys.polyerrors.BasePolynomialError:
-            # Either p is transcendental in x (e.g. contains log(...x...)) --
-            # Mathematica treats such a term as degree 0 in x, so the quotient by a
-            # positive-degree q is 0 (remainder is p) -- OR SymPy could not perform
-            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
-            # coefficients Mathematica would cancel symbolically). Either way fall
-            # back to quotient 0 rather than crashing the whole integration.
-            return sympy.Integer(0)
-
-
-# =============================================================================
-# PolynomialRemainder[p, q, x] — polynomial division remainder
-# =============================================================================
-
-class PolynomialRemainder(MathematicaExpr):
-    """Mathematica PolynomialRemainder[p, q, x] -> remainder of p/q in x."""
-
-    def __new__(cls, p, q, x):
-        return Expr.__new__(cls, p, q, x)
-
-    def _evaluate(self, **kwargs):
-        p, q, x = self.args
-        try:
-            return sympy.rem(p, q, x)
-        except sympy.polys.polyerrors.BasePolynomialError:
-            # p is transcendental in x (Mathematica treats it as degree 0, so it is
-            # its own remainder mod a positive-degree q) OR SymPy could not perform
-            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
-            # coefficients). Either way return p rather than crashing integration.
-            return p
-
-
-# =============================================================================
 # CannotIntegrate[expr, x] — integration failure sentinel
 # =============================================================================
 
@@ -362,42 +324,6 @@ class CannotIntegrate(MathematicaExpr):
 # =============================================================================
 # Condition[expr, test] — conditional expression
 # =============================================================================
-
-# =============================================================================
-# Rule[lhs, rhs] — Mathematica substitution rule (lhs -> rhs)
-# =============================================================================
-
-class Rule(MathematicaExpr):
-    """Mathematica Rule[lhs, rhs] — a (lhs -> rhs) substitution descriptor.
-
-    Used as argument to ReplaceAll. _evaluate returns self because Rule
-    is structural rather than a reducible expression.
-    """
-
-    def __new__(cls, lhs, rhs):
-        return Expr.__new__(cls, lhs, rhs)
-
-    def _evaluate(self, **kwargs):
-        return self
-
-
-# =============================================================================
-# ReplaceAll[expr, Rule[lhs, rhs]] — apply substitution rule
-# =============================================================================
-
-class ReplaceAll(MathematicaExpr):
-    """Mathematica ReplaceAll[expr, Rule[lhs, rhs]] — substitute lhs -> rhs."""
-
-    def __new__(cls, expr, rule):
-        return Expr.__new__(cls, expr, rule)
-
-    def _evaluate(self, **kwargs):
-        expr, rule = self.args
-        if isinstance(rule, Rule):
-            lhs, rhs = rule.args
-            return expr.subs(lhs, rhs)
-        return expr
-
 
 # =============================================================================
 # Unintegrable[expr, x] — integration failure sentinel
@@ -443,60 +369,6 @@ class IntHide(MathematicaExpr):
         return result
 
 
-# =============================================================================
-# Sum[expr, limits] — symbolic summation
-# =============================================================================
-
-class SumWolfram(MathematicaExpr):
-    """Mathematica Sum[expr, {i, imin, imax}] — symbolic summation.
-
-    Delegates to sympy.Sum when limits is a List of three elements.
-    """
-
-    def __new__(cls, expr, limits):
-        return Expr.__new__(cls, expr, limits)
-
-    def _evaluate(self, **kwargs):
-        expr, limits = self.args
-        if isinstance(limits, List) and len(limits.args) == 3:
-            i, imin, imax = limits.args
-            return sympy.Sum(expr, (i, imin, imax)).doit()
-        return sympy.Sum(expr, limits)
-
-
-# Trick used to avoid name conflict with SymPy's Sum class:
-Sum = SumWolfram
-
-# =============================================================================
-# Numerator[expr] — numerator of a rational expression
-# =============================================================================
-
-class Numerator(MathematicaExpr):
-    """Mathematica Numerator[expr] -> numerator of rational expression."""
-
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-
-    def _evaluate(self, **kwargs):
-        expr, = self.args
-        return numer(expr)
-
-
-# =============================================================================
-# Together[expr] — combine fractions over a common denominator
-# =============================================================================
-
-class Together(MathematicaExpr):
-    """Mathematica Together[expr] -> combine fractions."""
-
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-
-    def _evaluate(self, **kwargs):
-        expr, = self.args
-        return together(expr)
-
-
 class FunctionOfExponential(MathematicaExpr):
     """Deferred FunctionOfExponential[u, x] -- delegates to the eager utility.
 
@@ -523,83 +395,6 @@ class FunctionOfExponentialFunction(MathematicaExpr):
     def _evaluate(self, **kwargs):
         from .utility_functions import FunctionOfExponentialFunction as _f
         return _f(*self.args)
-
-
-# =============================================================================
-# GCD[a, b, ...] — greatest common divisor
-# =============================================================================
-
-class GCD(MathematicaExpr):
-    """Mathematica GCD[a, b, ...] -> greatest common divisor."""
-
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-
-    def _evaluate(self, **kwargs):
-        args = self.args
-        if len(args) == 0:
-            return S.Zero
-        if len(args) == 1:
-            return args[0]
-        result = gcd(args[0], args[1])
-        for a in args[2:]:
-            result = gcd(result, a)
-        return result
-
-
-# =============================================================================
-# Sign[expr] — sign of expression (-1, 0, or 1)
-# =============================================================================
-
-class Sign(MathematicaExpr):
-    """Mathematica Sign[expr] -> sign (-1, 0, or 1)."""
-
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-
-    def _evaluate(self, **kwargs):
-        expr, = self.args
-        return sign(expr)
-
-
-# =============================================================================
-# Quotient[a, b] — integer quotient floor(a/b)
-# =============================================================================
-
-class Quotient(MathematicaExpr):
-    """Mathematica Quotient[a, b] -> floor(a/b)."""
-
-    def __new__(cls, a, b):
-        return Expr.__new__(cls, a, b)
-
-    def _evaluate(self, **kwargs):
-        a, b = self.args
-        return floor(a / b)
-
-
-# =============================================================================
-# EllipticPi — elliptic integral of the third kind
-# =============================================================================
-
-class EllipticPi(MathematicaExpr):
-    """Mathematica EllipticPi[n, m] or EllipticPi[n, phi, m].
-
-    Maps to sympy.elliptic_pi(n, m) or sympy.elliptic_pi(n, phi, m).
-    """
-
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-
-    def _evaluate(self, **kwargs):
-        if len(self.args) == 2:
-            n, m = self.args
-            return sympy.elliptic_pi(n, m)
-        elif len(self.args) == 3:
-            n, phi, m = self.args
-            return sympy.elliptic_pi(n, phi, m)
-        return self
 
 
 # =============================================================================
@@ -895,15 +690,6 @@ class TrinomialDegree(MathematicaExpr):
         return _TrinomialDegree(*self.args)
 
 
-class LeafCount(MathematicaExpr):
-    """Mathematica LeafCount[expr] — count nodes in expression tree."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import LeafCount as _LeafCount
-        return Integer(_LeafCount(self.args[0]))
-
-
 class Part(MathematicaExpr):
     """Mathematica Part[expr, n] — extract nth part."""
     def __new__(cls, expr, *indices):
@@ -933,24 +719,6 @@ class Rest(MathematicaExpr):
         return _Rest(self.args[0])
 
 
-class Length(MathematicaExpr):
-    """Mathematica Length[expr] — number of elements."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Length as _Length
-        return Integer(_Length(self.args[0]))
-
-
-class Complex(MathematicaExpr):
-    """Mathematica Complex[re, im] — construct complex number."""
-    def __new__(cls, re, im):
-        from .utility_functions import Complex as _Complex
-        return _Complex(re, im)
-    def _evaluate(self, **kwargs):
-        pass
-
-
 class Numer(MathematicaExpr):
     """Rubi Numer[u] — numerator (simple form)."""
     def __new__(cls, u):
@@ -969,24 +737,6 @@ class Denom(MathematicaExpr):
         return _Denom(self.args[0])
 
 
-class Apply(MathematicaExpr):
-    """Mathematica Apply[f, {a, b, ...}] — apply f to list elements."""
-    def __new__(cls, f, args):
-        return Expr.__new__(cls, f, args)
-    def _evaluate(self, **kwargs):
-        f, args = self.args
-        if hasattr(args, 'args'):
-            return f(*args.args)
-        return f(*args)
-
-
-class Not(MathematicaExpr):
-    """Mathematica Not[expr] — logical negation."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Not as _Not
-        return _Not(self.args[0])
 
 
 
@@ -1023,31 +773,6 @@ class Exponent(MathematicaExpr):
     def _evaluate(self, **kwargs):
         from .utility_functions import Exponent as _Exponent
         return _Exponent(*self.args)
-
-
-class FullSimplify(MathematicaExpr):
-    """Mathematica FullSimplify[expr]."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        return simplify(self.args[0])
-
-
-class Simplify(MathematicaExpr):
-    """Mathematica Simplify[expr]."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        return simplify(self.args[0])
-
-
-class FunctionExpand(MathematicaExpr):
-    """Mathematica FunctionExpand[expr]."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        from sympy import expand_func
-        return expand_func(self.args[0])
 
 
 class ExpandLinearProduct(MathematicaExpr):
@@ -1138,83 +863,6 @@ class ExpandTrigToExp(MathematicaExpr):
     def _evaluate(self, **kwargs):
         from .utility_functions import ExpandTrigToExp as _ExpandTrigToExp
         return _ExpandTrigToExp(*self.args)
-
-
-class Binomial(MathematicaExpr):
-    """Mathematica Binomial[n, k]."""
-    def __new__(cls, n, k):
-        return Expr.__new__(cls, n, k)
-    def _evaluate(self, **kwargs):
-        from sympy import binomial
-        return binomial(*self.args)
-
-
-# =============================================================================
-# ProductLog[z] or ProductLog[k, z] — Lambert W function
-# Mathematica: ProductLog[k, z] where k=branch index, z=value
-# SymPy:       LambertW(z, k)   where z=value, k=branch  (args REVERSED)
-# =============================================================================
-
-class ProductLog(MathematicaExpr):
-    """Mathematica ProductLog[z] or ProductLog[k, z] -> LambertW.
-
-    1-arg: ProductLog(z)    -> LambertW(z)
-    2-arg: ProductLog(k, z) -> LambertW(z, k)  [Mathematica arg order reversed vs SymPy]
-    """
-
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-
-    def _evaluate(self, **kwargs):
-        if len(self.args) == 1:
-            z = self.args[0]
-            return sympy.LambertW(z)
-        elif len(self.args) == 2:
-            k, z = self.args          # Mathematica: ProductLog[k, z]
-            return sympy.LambertW(z, k)  # SymPy:       LambertW(z, k)
-        return self
-
-
-# =============================================================================
-# Floor[x] or Floor[x, a] — round toward -inf / to nearest multiple of a
-# =============================================================================
-
-class Floor(MathematicaExpr):
-    """Mathematica Floor[x] or Floor[x, a].
-
-    1-arg: Floor(x)    -> floor(x)
-    2-arg: Floor(x, a) -> a * floor(x / a)   [rounds to nearest multiple of a]
-    """
-
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-
-    def _evaluate(self, **kwargs):
-        if len(self.args) == 1:
-            return floor(self.args[0])
-        elif len(self.args) == 2:
-            x, a = self.args
-            return a * floor(x / a)
-        return self
-
-
-# =============================================================================
-# Hypergeometric2F1[a, b, c, z] — Gauss hypergeometric function
-# SymPy uses hyper([a, b], [c], z) — numerator params packed into a list
-# =============================================================================
-
-class Hypergeometric2F1(MathematicaExpr):
-    """Mathematica Hypergeometric2F1[a, b, c, z] -> hyper([a, b], [c], z)."""
-
-    def __new__(cls, a, b, c, z):
-        return Expr.__new__(cls, a, b, c, z)
-
-    def _evaluate(self, **kwargs):
-        a, b, c, z = self.args
-        from sympy.functions.special.hyper import hyper
-        return hyper([a, b], [c], z)
 
 
 # =============================================================================
@@ -1334,20 +982,6 @@ class Denominator(MathematicaExpr):
         return _f(*self.args)
 
 
-# =============================================================================
-# Gamma[z] or Gamma[a, z] — gamma and upper incomplete gamma function
-# =============================================================================
-# Mathematica: Gamma[z] -> gamma(z), Gamma[a, z] -> uppergamma(a, z)
-# Needs a wrapper because sympy.gamma only takes 1 arg.
-
-class Gamma(MathematicaExpr):
-    """Mathematica Gamma[z] or Gamma[a, z] -> sympy.gamma / sympy.uppergamma."""
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-
-    def _evaluate(self, **kwargs):
-        if len(self.args) == 1:
-            return sympy.gamma(self.args[0])
-        else:
-            return sympy.uppergamma(self.args[0], self.args[1])
+# NOTE: Gamma[z] / Gamma[a, z] is a standard Wolfram function and lives in
+# sympy_wolfram.objects (imported at the top of this module). It used to be
+# redefined here identically -- that duplicate has been removed.

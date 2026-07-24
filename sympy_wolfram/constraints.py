@@ -1,19 +1,31 @@
 # -*- coding: utf-8 -*-
-"""Abstract base class for Rubi pattern constraints.
+"""Abstract base class for Wolfram-language pattern constraints.
 
-This module is part of sympy_matching and has NO dependency on rubi_rules or
-MatchPy.  Concrete constraint subclasses (FreeQ, EqQ, IntegerQ, …) live in
+This module is part of sympy_wolfram and has NO dependency on rubi_rules.
+Concrete constraint subclasses (FreeQ, EqQ, IntegerQ, …) live in
 rubi_rules.utils.constraints_wolfram / constraints_rubi and import
-RubiConstraint from here.
+``MathematicaConstraint`` from here.
+
+``MathematicaConstraint`` used to be called ``RubiConstraint`` and lived in
+``sympy_matching.constraints``.  It is not Rubi-specific — it is the generic
+base for any Wolfram-language predicate — so it was renamed and moved up into
+sympy_wolfram, where it can inherit from :class:`~sympy_wolfram.objects.MathematicaExpr`.
 
 Design
 ------
-RubiConstraint inherits from SymPy's Boolean so that constraints compose
-naturally with SymPy logic operators::
+``MathematicaConstraint`` inherits from BOTH
+:class:`~sympy_wolfram.objects.MathematicaExpr` (so a constraint is a first-class
+Mathematica-inspired SymPy node like every other object in this package) AND
+:class:`sympy.logic.boolalg.Boolean` (so constraints compose naturally with
+SymPy logic operators)::
 
-    Not(FreeQ(a, x))         — negation
+    Not(FreeQ(a, x))             — negation
     And(EqQ(n, 0), IntegerQ(m))  — conjunction
-    Or(EqQ(n, 1), EqQ(n, -1))   — disjunction
+    Or(EqQ(n, 1), EqQ(n, -1))    — disjunction
+
+The MRO is ``MathematicaConstraint → MathematicaExpr → Expr → Boolean → Basic``:
+both mixins ultimately derive from ``sympy.Basic``, so there is no metaclass or
+layout conflict.
 
 The SymPy invariant
     constraint == constraint.func(*constraint.args)
@@ -36,7 +48,7 @@ Argument normalisation rules applied in ``__new__``
 Subclasses MUST implement
     ``check``  — predicate called with substitution dict as kwargs
 
-The ``variables`` property is now auto-computed from ``self.args`` by finding
+The ``variables`` property is auto-computed from ``self.args`` by finding
 all WildSymbol instances and extracting their wildcard names.
 """
 from abc import abstractmethod
@@ -44,6 +56,8 @@ from typing import Tuple
 
 import sympy
 from sympy.logic.boolalg import Boolean
+
+from sympy_wolfram.objects import MathematicaExpr
 
 
 # ---------------------------------------------------------------------------
@@ -177,10 +191,12 @@ def _resolve_with_substitution(expr, substitution):
 # Base class
 # ---------------------------------------------------------------------------
 
-class RubiConstraint(Boolean):
-    """Abstract base class for all Rubi pattern constraints.
+class MathematicaConstraint(MathematicaExpr, Boolean):
+    """Abstract base class for all Wolfram-language pattern constraints.
 
-    Inherits from SymPy's Boolean, enabling logic composition::
+    Inherits from BOTH :class:`~sympy_wolfram.objects.MathematicaExpr` (so a
+    constraint is a proper Mathematica-inspired SymPy node) and SymPy's
+    :class:`~sympy.logic.boolalg.Boolean` (enabling logic composition)::
 
         Not(FreeQ(a, x))   — negation
         And(EqQ(...), ...)  — conjunction
@@ -205,11 +221,17 @@ class RubiConstraint(Boolean):
       ``Boolean.__new__``.
     * ``__eq__`` / ``__hash__`` come from ``sympy.Basic`` and compare by
       ``(type, args)``.
+
+    A constraint is a predicate, not a reducible expression, so ``doit`` and
+    ``_evaluate`` are overridden to return the node unchanged (its truth value
+    is obtained through :meth:`check`, never through Mathematica-style
+    evaluation).
     """
 
-    # Allow instance attributes (__init__-set _var_name, _value, etc.)
-    # even though Boolean's ancestor Basic uses __slots__.
-    __slots__ = ('__dict__',)
+    # NOTE: MathematicaExpr already grants instance a ``__dict__`` (it declares
+    # no __slots__), so subclass state set in __init__ (_var_name, _value, …)
+    # works without re-declaring ``__slots__`` here -- and re-declaring
+    # ``('__dict__',)`` would raise "__dict__ slot disallowed: we already got one".
 
     def __new__(cls, *args, **kwargs):
         # **kwargs are forwarded to __init__ by Python automatically;
@@ -219,6 +241,15 @@ class RubiConstraint(Boolean):
         safe_args = tuple(_normalize_constraint_arg(a) for a in args)
         obj = Boolean.__new__(cls, *safe_args)
         return obj
+
+    def doit(self, **kwargs):
+        # A constraint is a predicate, not a reducible expression; MathematicaExpr's
+        # default doit would deep-evaluate the args and call _evaluate. Keep the node
+        # intact instead -- its truth value comes from check(), not doit().
+        return self
+
+    def _evaluate(self, **kwargs):
+        return self
 
     @property
     def variables(self) -> Tuple[str, ...]:

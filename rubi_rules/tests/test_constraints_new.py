@@ -10,7 +10,7 @@ Covers all constraints added in the second round of implementation:
 - Simplicity predicates: NiceSqrtQ, SimplerSqrtQ, FractionalPowerFactorQ
 
 Also verifies that:
-- RubiConstraint inherits from sympy.logic.boolalg.Boolean
+- MathematicaConstraint inherits from sympy.logic.boolalg.Boolean
 - FreeQ accepts list form: FreeQ(['a', 'b'], x)
 - Not(FreeQ(...)) composes correctly
 """
@@ -24,7 +24,8 @@ from sympy import (
 )
 from sympy.logic.boolalg import Boolean
 
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
+from sympy_wolfram.objects import MathematicaExpr
 from sympy_matching.wild import WildSymbol
 from rubi_rules.utils.constraints_wolfram import FreeQ, FalseQ
 from rubi_rules.utils.constraints_rubi import (
@@ -57,11 +58,15 @@ a, b, c, d, e, m, n, p, q = sympy.symbols('a b c d e m n p q')
 # =============================================================================
 
 
-class TestRubiConstraintBoolean:
-    """Verify RubiConstraint inherits from SymPy Boolean."""
+class TestMathematicaConstraintBoolean:
+    """Verify MathematicaConstraint inherits from SymPy Boolean and MathematicaExpr."""
 
     def test_inheritance(self):
-        assert issubclass(RubiConstraint, Boolean)
+        assert issubclass(MathematicaConstraint, Boolean)
+
+    def test_inherits_mathematica_expr(self):
+        assert issubclass(MathematicaConstraint, MathematicaExpr)
+        assert isinstance(FreeQ('a', x), MathematicaExpr)
 
     def test_instance_is_boolean(self):
         fq = FreeQ('a', x)

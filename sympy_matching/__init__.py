@@ -27,7 +27,6 @@ Usage:
 """
 from .operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
 from .wild import WildSymbol, IDENTITY_ELEMENT
-from .constraints import RubiConstraint
 from . import conversion  # registers singledispatch handlers
 from . import registered_heads  # registers additional SymPy function heads
 from . import json_ext  # registers JSON serialization extensions

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Tests for RubiConstraint integration with concrete rubi_rules constraints.
+"""Tests for MathematicaConstraint integration with concrete rubi_rules constraints.
 
 Tests that concrete constraint subclasses (FreeQ, IntegerQ, EqQ, etc.) properly
-integrate with the RubiConstraint base class from sympy_matching:
-- Re-export: rubi_rules.utils.constraints.RubiConstraint is the same object
+integrate with the MathematicaConstraint base class from sympy_wolfram:
+- Re-export: rubi_rules.utils.constraints.MathematicaConstraint is the same object
 - Boolean inheritance and logic composition with concrete constraints
 - Argument normalisation with concrete constraints
 - The SymPy invariant: constraint == constraint.func(*constraint.args)
@@ -21,7 +21,7 @@ from sympy import Symbol, Integer, Rational, Tuple
 from sympy.logic.boolalg import Boolean, Not, And, Or
 
 import sympy_matching
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
 from sympy_matching.json_ext import serialize_wrapped_value, deserialize_wrapped_value
 
 
@@ -42,8 +42,13 @@ def _roundtrip(constraint):
 class TestReExport:
     def test_re_export_is_same_class(self):
         """rubi_rules.utils.constraints re-exports the identical class object."""
-        from rubi_rules.utils.constraints import RubiConstraint as RC_rubi
-        assert RC_rubi is RubiConstraint
+        from rubi_rules.utils.constraints import MathematicaConstraint as MC_rubi
+        assert MC_rubi is MathematicaConstraint
+
+    def test_deprecated_rubiconstraint_alias(self):
+        """The old name RubiConstraint is kept as a deprecated alias."""
+        from rubi_rules.utils.constraints import RubiConstraint as RC_alias
+        assert RC_alias is MathematicaConstraint
 
 
 # ---------------------------------------------------------------------------
@@ -54,7 +59,7 @@ class TestBooleanInheritance:
     def test_freeq_is_boolean_subclass(self):
         from rubi_rules.utils.constraints_wolfram import FreeQ
         assert issubclass(FreeQ, Boolean)
-        assert issubclass(FreeQ, RubiConstraint)
+        assert issubclass(FreeQ, MathematicaConstraint)
 
     def test_instance_is_boolean(self):
         from rubi_rules.utils.constraints_wolfram import IntegerQ

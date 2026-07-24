@@ -1537,6 +1537,12 @@ __all__ = [
 # =============================================================================
 
 class Gamma(MathematicaExpr):
+    """Mathematica Gamma[z] or Gamma[a, z] -> sympy.gamma / sympy.uppergamma."""
+
+    def __new__(cls, *args):
+        safe = [sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+
     def _evaluate(self, **kwargs):
         if len(self.args) == 1:
             return sympy.gamma(self.args[0])

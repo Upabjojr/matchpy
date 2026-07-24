@@ -75,6 +75,11 @@ from sympy.core.random import randint
 from sympy_matching import WildSymbol, IDENTITY_ELEMENT
 from sympy_matching.conversion import matchpy_to_sympy
 
+# Self-contained Wolfram-standard eager helpers now live in sympy_wolfram (the
+# correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
+# in-module callers keep resolving these names; the local defs were removed.
+from sympy_wolfram.functions_eager import LeafCount, Length, Complex, Not
+
 
 from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_expression, \
     to_expression
@@ -610,16 +615,6 @@ def Denominator(var):
 def Hypergeometric2F1(a, b, c, z):
     return hyper([a, b], [c], z)
 
-def Not(var):
-    if isinstance(var, bool):
-        return not var
-    elif var is None:
-        return None
-    elif isinstance(var, Basic) and var.is_Relational:
-        var = False
-    return not var
-
-
 def FractionalPart(a):
     # FractionalPart[a] = a - IntegerPart[a]; carries the sign of a (Mathematica),
     # e.g. FractionalPart[-7/2] = -1/2. sympy's frac() is floor-based (-> 1/2).
@@ -891,9 +886,6 @@ def InverseTrigQ(u):
 def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
 
-def LeafCount(expr):
-    return len(list(postorder_traversal(expr)))
-
 def Numerator(u):
     u = Simplify(u)
     if isinstance(u, Pow):
@@ -913,26 +905,6 @@ def NumberQ(u):
 
 def NumericQ(u):
     return N(u).is_number
-
-def Length(expr):
-    """
-    Returns number of elements in the expression just as SymPy's len.
-
-    Examples
-    ========
-
-    >>> from rubi_rules.utils.utility_functions import Length
-    >>> from sympy.abc import x, a, b
-    >>> from sympy import cos, sin
-    >>> Length(a + b)
-    2
-    >>> Length(sin(a)*cos(a))
-    2
-
-    """
-    if isinstance(expr, (tuple, list, Tuple)):
-        return len(expr)
-    return len(expr.args)
 
 def ListQ(u):
     return isinstance(u, (tuple, list, Tuple))
@@ -6579,9 +6551,6 @@ def ElementaryFunctionQ(u):
                 return False
         return True
     return False
-
-def Complex(a, b):
-    return a + I*b
 
 def UnsameQ(a, b):
     return a != b

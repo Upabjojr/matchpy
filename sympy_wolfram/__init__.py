@@ -52,6 +52,34 @@ from .objects import (
     Throw,
     With,
 )
+from .constraints import MathematicaConstraint
+from .mathematica_functions import (
+    Apply,
+    Binomial,
+    Coefficient,
+    Complex,
+    EllipticPi,
+    Floor,
+    FullSimplify,
+    FunctionExpand,
+    GCD,
+    Hypergeometric2F1,
+    LeafCount,
+    Length,
+    Not,
+    Numerator,
+    PolynomialQuotient,
+    PolynomialRemainder,
+    ProductLog,
+    Quotient,
+    ReplaceAll,
+    Rule,
+    Sign,
+    Simplify,
+    Sum,
+    SumWolfram,
+    Together,
+)
 
 __all__ = [
     # parser: text -> FFL
@@ -65,4 +93,12 @@ __all__ = [
     'Block', 'Catch', 'CompoundExpression', 'Do', 'Gamma', 'Head', 'If', 'List',
     'MathematicaExpr', 'Module', 'Null', 'Reap', 'Return', 'Scan', 'Set', 'SetDelayed', 'Sow',
     'Throw', 'With',
+    # constraints: the Wolfram-predicate base class
+    'MathematicaConstraint',
+    # standard Wolfram function nodes
+    'Apply', 'Binomial', 'Coefficient', 'Complex', 'EllipticPi', 'Floor',
+    'FullSimplify', 'FunctionExpand', 'GCD', 'Hypergeometric2F1', 'LeafCount',
+    'Length', 'Not', 'Numerator', 'PolynomialQuotient', 'PolynomialRemainder',
+    'ProductLog', 'Quotient', 'ReplaceAll', 'Rule', 'Sign', 'Simplify', 'Sum',
+    'SumWolfram', 'Together',
 ]

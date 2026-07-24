@@ -165,7 +165,7 @@ _WRAPPED_VALUE_DESERIALIZERS['sympy'] = _deserialize_sympy_value
 # =============================================================================
 # Python tuple serialization -- for multi-variable constraint args
 # =============================================================================
-# RubiConstraint.__new__ normalises list args to tuples so that
+# MathematicaConstraint.__new__ normalises list args to tuples so that
 # constraint.args is always hashable (required by SymPy Basic.__hash__).
 # When a constraint such as FreeQ(['a', 'b'], x) is serialised its first arg
 # is the Python tuple (Symbol('a'), Symbol('b')) and needs its own handler.

@@ -3,7 +3,7 @@
 
 These are constraints defined by the RUBI (Rule-Based Integrator) project
 that are NOT part of standard Wolfram Mathematica. They are implemented as
-RubiConstraint subclasses for use in Rubi integration rule conditions.
+MathematicaConstraint subclasses for use in Rubi integration rule conditions.
 
 All constraints operate on SymPy expressions after conversion from MatchPy.
 
@@ -17,7 +17,7 @@ from sympy import asin, acos, atan, acot, asec, acsc
 from sympy import asinh, acosh, atanh, acoth, asech, acsch
 from sympy import log
 
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
 from .constraints_wolfram import _to_sympy
 
 
@@ -25,7 +25,7 @@ from .constraints_wolfram import _to_sympy
 # Equality and Inequality Predicates
 # =============================================================================
 
-class EqQ(RubiConstraint):
+class EqQ(MathematicaConstraint):
     """Constraint: u - v equals 0 (possibly symbolically).
 
     Rubi: EqQ[u,v] — If u-v equals 0, returns True; else False.
@@ -45,7 +45,7 @@ class EqQ(RubiConstraint):
         return f"EqQ({self._u}, {self._v})"
 
 
-class NeQ(RubiConstraint):
+class NeQ(MathematicaConstraint):
     """Constraint: u - v does NOT equal 0."""
     def __init__(self, u, v):
         self._u = self.args[0]
@@ -66,7 +66,7 @@ class NeQ(RubiConstraint):
 # Integer Inequality Predicates
 # =============================================================================
 
-class IGtQ(RubiConstraint):
+class IGtQ(MathematicaConstraint):
     """Constraint: u is an integer AND u > n."""
     def __init__(self, u, n):
         self._u = self.args[0]
@@ -81,7 +81,7 @@ class IGtQ(RubiConstraint):
         return f"IGtQ({self._u}, {self._n})"
 
 
-class ILtQ(RubiConstraint):
+class ILtQ(MathematicaConstraint):
     """Constraint: u is an integer AND u < n."""
     def __init__(self, u, n):
         self._u = self.args[0]
@@ -96,7 +96,7 @@ class ILtQ(RubiConstraint):
         return f"ILtQ({self._u}, {self._n})"
 
 
-class IGeQ(RubiConstraint):
+class IGeQ(MathematicaConstraint):
     """Constraint: u is an integer AND u >= n."""
     def __init__(self, u, n):
         self._u = self.args[0]
@@ -111,7 +111,7 @@ class IGeQ(RubiConstraint):
         return f"IGeQ({self._u}, {self._n})"
 
 
-class ILeQ(RubiConstraint):
+class ILeQ(MathematicaConstraint):
     """Constraint: u is an integer AND u <= n."""
     def __init__(self, u, n):
         self._u = self.args[0]
@@ -130,7 +130,7 @@ class ILeQ(RubiConstraint):
 # Numeric Inequality Predicates
 # =============================================================================
 
-class GtQ(RubiConstraint):
+class GtQ(MathematicaConstraint):
     """Constraint: u > v.  If w given, u > v and v > w."""
     def __init__(self, u, v, w=None):
         self._u = self.args[0]
@@ -153,7 +153,7 @@ class GtQ(RubiConstraint):
         return f"GtQ({self._u}, {self._v})"
 
 
-class LtQ(RubiConstraint):
+class LtQ(MathematicaConstraint):
     """Constraint: u < v.  If w given, u < v and v < w."""
     def __init__(self, u, v, w=None):
         self._u = self.args[0]
@@ -176,7 +176,7 @@ class LtQ(RubiConstraint):
         return f"LtQ({self._u}, {self._v})"
 
 
-class GeQ(RubiConstraint):
+class GeQ(MathematicaConstraint):
     """Constraint: u >= v.  If w given, u >= v and v >= w."""
     def __init__(self, u, v, w=None):
         self._u = self.args[0]
@@ -199,7 +199,7 @@ class GeQ(RubiConstraint):
         return f"GeQ({self._u}, {self._v})"
 
 
-class LeQ(RubiConstraint):
+class LeQ(MathematicaConstraint):
     """Constraint: u <= v.  If w given, u <= v and v <= w."""
     def __init__(self, u, v, w=None):
         self._u = self.args[0]
@@ -226,7 +226,7 @@ class LeQ(RubiConstraint):
 # Sign Predicates and Single-arg Numeric Type Predicates
 # =============================================================================
 
-class PosQ(RubiConstraint):
+class PosQ(MathematicaConstraint):
     """Constraint: u is positive."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -238,7 +238,7 @@ class PosQ(RubiConstraint):
     def __repr__(self):
         return f"PosQ({self._u})"
 
-class NegQ(RubiConstraint):
+class NegQ(MathematicaConstraint):
     """Constraint: u is negative."""
     def __init__(self, u, v=None):
         self._u = self.args[0]
@@ -250,7 +250,7 @@ class NegQ(RubiConstraint):
     def __repr__(self):
         return f"NegQ({self._u})"
 
-class HalfIntegerQ(RubiConstraint):
+class HalfIntegerQ(MathematicaConstraint):
     """Constraint: u is a half-integer."""
     def __init__(self, *u):
         self._u = sympy.Tuple(*self.args)
@@ -266,7 +266,7 @@ class HalfIntegerQ(RubiConstraint):
     def __repr__(self):
         return f"HalfIntegerQ({', '.join(self._u)})"
 
-class FractionQ(RubiConstraint):
+class FractionQ(MathematicaConstraint):
     """Constraint: all args are explicit fractions."""
     def __init__(self, *args):
         self._vars = self.args
@@ -281,7 +281,7 @@ class FractionQ(RubiConstraint):
     def __repr__(self):
         return f"FractionQ({', '.join(str(a) for a in self._vars)})"
 
-class ComplexNumberQ(RubiConstraint):
+class ComplexNumberQ(MathematicaConstraint):
     """Constraint: u is an explicit complex number."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -293,7 +293,7 @@ class ComplexNumberQ(RubiConstraint):
     def __repr__(self):
         return f"ComplexNumberQ({self._u})"
 
-class RealNumberQ(RubiConstraint):
+class RealNumberQ(MathematicaConstraint):
     """Constraint: u is an explicit real number."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -305,7 +305,7 @@ class RealNumberQ(RubiConstraint):
     def __repr__(self):
         return f"RealNumberQ({self._u})"
 
-class FractionOrNegativeQ(RubiConstraint):
+class FractionOrNegativeQ(MathematicaConstraint):
     """Constraint: u is a fraction or negative."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -317,7 +317,7 @@ class FractionOrNegativeQ(RubiConstraint):
     def __repr__(self):
         return f"FractionOrNegativeQ({self._u})"
 
-class SqrtNumberQ(RubiConstraint):
+class SqrtNumberQ(MathematicaConstraint):
     """Constraint: u is a sqrt of a rational."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -329,7 +329,7 @@ class SqrtNumberQ(RubiConstraint):
     def __repr__(self):
         return f"SqrtNumberQ({self._u})"
 
-class PowerQ(RubiConstraint):
+class PowerQ(MathematicaConstraint):
     """Constraint: u is a power expression."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -341,7 +341,7 @@ class PowerQ(RubiConstraint):
     def __repr__(self):
         return f"PowerQ({self._u})"
 
-class ProductQ(RubiConstraint):
+class ProductQ(MathematicaConstraint):
     """Constraint: u is a product (Times)."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -353,7 +353,7 @@ class ProductQ(RubiConstraint):
     def __repr__(self):
         return f"ProductQ({self._u})"
 
-class SumQ(RubiConstraint):
+class SumQ(MathematicaConstraint):
     """Constraint: u is a sum (Plus)."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -365,7 +365,7 @@ class SumQ(RubiConstraint):
     def __repr__(self):
         return f"SumQ({self._u})"
 
-class NonsumQ(RubiConstraint):
+class NonsumQ(MathematicaConstraint):
     """Constraint: u is NOT a sum."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -377,7 +377,7 @@ class NonsumQ(RubiConstraint):
     def __repr__(self):
         return f"NonsumQ({self._u})"
 
-class IntegerPowerQ(RubiConstraint):
+class IntegerPowerQ(MathematicaConstraint):
     """Constraint: u is a power with integer exponent."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -389,7 +389,7 @@ class IntegerPowerQ(RubiConstraint):
     def __repr__(self):
         return f"IntegerPowerQ({self._u})"
 
-class FractionalPowerQ(RubiConstraint):
+class FractionalPowerQ(MathematicaConstraint):
     """Constraint: u is a power with fractional exponent."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -401,7 +401,7 @@ class FractionalPowerQ(RubiConstraint):
     def __repr__(self):
         return f"FractionalPowerQ({self._u})"
 
-class ComplexFreeQ(RubiConstraint):
+class ComplexFreeQ(MathematicaConstraint):
     """Constraint: u is free of complex numbers."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -413,7 +413,7 @@ class ComplexFreeQ(RubiConstraint):
     def __repr__(self):
         return f"ComplexFreeQ({self._u})"
 
-class FractionalPowerFreeQ(RubiConstraint):
+class FractionalPowerFreeQ(MathematicaConstraint):
     """Constraint: u is free of fractional powers."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -425,7 +425,7 @@ class FractionalPowerFreeQ(RubiConstraint):
     def __repr__(self):
         return f"FractionalPowerFreeQ({self._u})"
 
-class IntegralFreeQ(RubiConstraint):
+class IntegralFreeQ(MathematicaConstraint):
     """Constraint: u is free of integrals."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -437,7 +437,7 @@ class IntegralFreeQ(RubiConstraint):
     def __repr__(self):
         return f"IntegralFreeQ({self._u})"
 
-class NiceSqrtQ(RubiConstraint):
+class NiceSqrtQ(MathematicaConstraint):
     """Constraint: u has a nice square root."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -449,7 +449,7 @@ class NiceSqrtQ(RubiConstraint):
     def __repr__(self):
         return f"NiceSqrtQ({self._u})"
 
-class InverseFunctionQ(RubiConstraint):
+class InverseFunctionQ(MathematicaConstraint):
     """Constraint: u is a call on an inverse function."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -461,7 +461,7 @@ class InverseFunctionQ(RubiConstraint):
     def __repr__(self):
         return f"InverseFunctionQ({self._u})"
 
-class InertTrigQ(RubiConstraint):
+class InertTrigQ(MathematicaConstraint):
     """Constraint: u is an inert trig function."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -473,7 +473,7 @@ class InertTrigQ(RubiConstraint):
     def __repr__(self):
         return f"InertTrigQ({self._u})"
 
-class InertTrigFreeQ(RubiConstraint):
+class InertTrigFreeQ(MathematicaConstraint):
     """Constraint: u is free of inert trig functions."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -485,7 +485,7 @@ class InertTrigFreeQ(RubiConstraint):
     def __repr__(self):
         return f"InertTrigFreeQ({self._u})"
 
-class PerfectSquareQ(RubiConstraint):
+class PerfectSquareQ(MathematicaConstraint):
     """Constraint: u is a perfect square."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -497,7 +497,7 @@ class PerfectSquareQ(RubiConstraint):
     def __repr__(self):
         return f"PerfectSquareQ({self._u})"
 
-class TrigQ(RubiConstraint):
+class TrigQ(MathematicaConstraint):
     """Constraint: u is a trig function call."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -509,7 +509,7 @@ class TrigQ(RubiConstraint):
     def __repr__(self):
         return f"TrigQ({self._u})"
 
-class HyperbolicQ(RubiConstraint):
+class HyperbolicQ(MathematicaConstraint):
     """Constraint: u is a hyperbolic function call."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -521,7 +521,7 @@ class HyperbolicQ(RubiConstraint):
     def __repr__(self):
         return f"HyperbolicQ({self._u})"
 
-class InverseTrigQ(RubiConstraint):
+class InverseTrigQ(MathematicaConstraint):
     """Constraint: u is an inverse trig function call."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -533,7 +533,7 @@ class InverseTrigQ(RubiConstraint):
     def __repr__(self):
         return f"InverseTrigQ({self._u})"
 
-class InverseHyperbolicQ(RubiConstraint):
+class InverseHyperbolicQ(MathematicaConstraint):
     """Constraint: u is an inverse hyperbolic function call."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -545,7 +545,7 @@ class InverseHyperbolicQ(RubiConstraint):
     def __repr__(self):
         return f"InverseHyperbolicQ({self._u})"
 
-class LogQ(RubiConstraint):
+class LogQ(MathematicaConstraint):
     """Constraint: u is a Log function call."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -562,7 +562,7 @@ class LogQ(RubiConstraint):
 # Variadic predicates
 # =============================================================================
 
-class IntegersQ(RubiConstraint):
+class IntegersQ(MathematicaConstraint):
     """Constraint: all values are explicit integers."""
     def __init__(self, *args):
         self._vars = self.args
@@ -575,7 +575,7 @@ class IntegersQ(RubiConstraint):
         return f"IntegersQ({', '.join(str(a) for a in self._vars)})"
 
 
-class RationalQ(RubiConstraint):
+class RationalQ(MathematicaConstraint):
     """Constraint: all values are rational numbers."""
     def __init__(self, *args):
         self._vars = self.args
@@ -592,7 +592,7 @@ class RationalQ(RubiConstraint):
 # Polynomial Predicates (u, x) pattern
 # =============================================================================
 
-class PolyQ(RubiConstraint):
+class PolyQ(MathematicaConstraint):
     """Constraint: u is polynomial in x, optionally of degree n."""
     def __init__(self, u, x, n=None):
         self._u = self.args[0]
@@ -611,7 +611,7 @@ class PolyQ(RubiConstraint):
             return f"PolyQ({self._u}, {self._x}, {self._n})"
         return f"PolyQ({self._u}, {self._x})"
 
-class LinearQ(RubiConstraint):
+class LinearQ(MathematicaConstraint):
     """Constraint: u is linear in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -624,7 +624,7 @@ class LinearQ(RubiConstraint):
     def __repr__(self):
         return f"LinearQ({self._u}, {self._x})"
 
-class QuadraticQ(RubiConstraint):
+class QuadraticQ(MathematicaConstraint):
     """Constraint: u is quadratic in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -637,7 +637,7 @@ class QuadraticQ(RubiConstraint):
     def __repr__(self):
         return f"QuadraticQ({self._u}, {self._x})"
 
-class BinomialQ(RubiConstraint):
+class BinomialQ(MathematicaConstraint):
     """Constraint: u is binomial in x.  If n given, checks degree n."""
     def __init__(self, u, x, n=None):
         self._u = self.args[0]
@@ -656,7 +656,7 @@ class BinomialQ(RubiConstraint):
             return f"BinomialQ({self._u}, {self._x}, {self._n})"
         return f"BinomialQ({self._u}, {self._x})"
 
-class TrinomialQ(RubiConstraint):
+class TrinomialQ(MathematicaConstraint):
     """Constraint: u is trinomial in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -669,7 +669,7 @@ class TrinomialQ(RubiConstraint):
     def __repr__(self):
         return f"TrinomialQ({self._u}, {self._x})"
 
-class LinearMatchQ(RubiConstraint):
+class LinearMatchQ(MathematicaConstraint):
     """Pattern matching version of LinearQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -682,7 +682,7 @@ class LinearMatchQ(RubiConstraint):
     def __repr__(self):
         return f"LinearMatchQ({self._u}, {self._x})"
 
-class QuadraticMatchQ(RubiConstraint):
+class QuadraticMatchQ(MathematicaConstraint):
     """Pattern matching version of QuadraticQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -695,7 +695,7 @@ class QuadraticMatchQ(RubiConstraint):
     def __repr__(self):
         return f"QuadraticMatchQ({self._u}, {self._x})"
 
-class BinomialMatchQ(RubiConstraint):
+class BinomialMatchQ(MathematicaConstraint):
     """Pattern matching version of BinomialQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -708,7 +708,7 @@ class BinomialMatchQ(RubiConstraint):
     def __repr__(self):
         return f"BinomialMatchQ({self._u}, {self._x})"
 
-class TrinomialMatchQ(RubiConstraint):
+class TrinomialMatchQ(MathematicaConstraint):
     """Pattern matching version of TrinomialQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -721,7 +721,7 @@ class TrinomialMatchQ(RubiConstraint):
     def __repr__(self):
         return f"TrinomialMatchQ({self._u}, {self._x})"
 
-class MonomialQ(RubiConstraint):
+class MonomialQ(MathematicaConstraint):
     """Constraint: u is a monomial in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -734,7 +734,7 @@ class MonomialQ(RubiConstraint):
     def __repr__(self):
         return f"MonomialQ({self._u}, {self._x})"
 
-class GeneralizedBinomialQ(RubiConstraint):
+class GeneralizedBinomialQ(MathematicaConstraint):
     """Constraint: u is a generalized binomial."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -747,7 +747,7 @@ class GeneralizedBinomialQ(RubiConstraint):
     def __repr__(self):
         return f"GeneralizedBinomialQ({self._u}, {self._x})"
 
-class GeneralizedBinomialMatchQ(RubiConstraint):
+class GeneralizedBinomialMatchQ(MathematicaConstraint):
     """Pattern matching version of GeneralizedBinomialQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -760,7 +760,7 @@ class GeneralizedBinomialMatchQ(RubiConstraint):
     def __repr__(self):
         return f"GeneralizedBinomialMatchQ({self._u}, {self._x})"
 
-class GeneralizedTrinomialQ(RubiConstraint):
+class GeneralizedTrinomialQ(MathematicaConstraint):
     """Constraint: u is a generalized trinomial."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -773,7 +773,7 @@ class GeneralizedTrinomialQ(RubiConstraint):
     def __repr__(self):
         return f"GeneralizedTrinomialQ({self._u}, {self._x})"
 
-class GeneralizedTrinomialMatchQ(RubiConstraint):
+class GeneralizedTrinomialMatchQ(MathematicaConstraint):
     """Pattern matching version of GeneralizedTrinomialQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -786,7 +786,7 @@ class GeneralizedTrinomialMatchQ(RubiConstraint):
     def __repr__(self):
         return f"GeneralizedTrinomialMatchQ({self._u}, {self._x})"
 
-class InverseFunctionFreeQ(RubiConstraint):
+class InverseFunctionFreeQ(MathematicaConstraint):
     """Constraint: u is free of inverse functions in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -799,7 +799,7 @@ class InverseFunctionFreeQ(RubiConstraint):
     def __repr__(self):
         return f"InverseFunctionFreeQ({self._u}, {self._x})"
 
-class TrigHyperbolicFreeQ(RubiConstraint):
+class TrigHyperbolicFreeQ(MathematicaConstraint):
     """Constraint: u is free of trig/hyperbolic in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -812,7 +812,7 @@ class TrigHyperbolicFreeQ(RubiConstraint):
     def __repr__(self):
         return f"TrigHyperbolicFreeQ({self._u}, {self._x})"
 
-class RationalFunctionQ(RubiConstraint):
+class RationalFunctionQ(MathematicaConstraint):
     """Constraint: u is a rational function in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -825,7 +825,7 @@ class RationalFunctionQ(RubiConstraint):
     def __repr__(self):
         return f"RationalFunctionQ({self._u}, {self._x})"
 
-class AlgebraicFunctionQ(RubiConstraint):
+class AlgebraicFunctionQ(MathematicaConstraint):
     """Constraint: u is algebraic in x."""
     def __init__(self, u, x, flag_=False):
         self._u = self.args[0]
@@ -839,7 +839,7 @@ class AlgebraicFunctionQ(RubiConstraint):
     def __repr__(self):
         return f"AlgebraicFunctionQ({self._u}, {self._x})"
 
-class IndependentQ(RubiConstraint):
+class IndependentQ(MathematicaConstraint):
     """Constraint: u is independent of x (alias for FreeQ)."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -852,7 +852,7 @@ class IndependentQ(RubiConstraint):
     def __repr__(self):
         return f"IndependentQ({self._u}, {self._x})"
 
-class QuotientOfLinearsQ(RubiConstraint):
+class QuotientOfLinearsQ(MathematicaConstraint):
     """Constraint: u is a quotient of linears in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -865,7 +865,7 @@ class QuotientOfLinearsQ(RubiConstraint):
     def __repr__(self):
         return f"QuotientOfLinearsQ({self._u}, {self._x})"
 
-class PowerOfLinearQ(RubiConstraint):
+class PowerOfLinearQ(MathematicaConstraint):
     """Constraint: u is a power of a linear in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -878,7 +878,7 @@ class PowerOfLinearQ(RubiConstraint):
     def __repr__(self):
         return f"PowerOfLinearQ({self._u}, {self._x})"
 
-class PowerOfLinearMatchQ(RubiConstraint):
+class PowerOfLinearMatchQ(MathematicaConstraint):
     """Pattern matching version of PowerOfLinearQ."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -896,7 +896,7 @@ class PowerOfLinearMatchQ(RubiConstraint):
 # Simplicity Comparison Predicates (u, v)
 # =============================================================================
 
-class SimplerQ(RubiConstraint):
+class SimplerQ(MathematicaConstraint):
     """Constraint: u is simpler than v."""
     def __init__(self, u, v):
         self._u = self.args[0]
@@ -911,7 +911,7 @@ class SimplerQ(RubiConstraint):
         return f"SimplerQ({self._u}, {self._v})"
 
 
-class SumSimplerQ(RubiConstraint):
+class SumSimplerQ(MathematicaConstraint):
     """Constraint: u is a simpler addition operand than v."""
     def __init__(self, u, v):
         self._u = self.args[0]
@@ -926,7 +926,7 @@ class SumSimplerQ(RubiConstraint):
         return f"SumSimplerQ({self._u}, {self._v})"
 
 
-class SimplerSqrtQ(RubiConstraint):
+class SimplerSqrtQ(MathematicaConstraint):
     """Constraint: sqrt(u) is simpler than sqrt(v)."""
     def __init__(self, u, v):
         self._u = self.args[0]
@@ -945,7 +945,7 @@ class SimplerSqrtQ(RubiConstraint):
 # Three-argument predicates (u, v, x)
 # =============================================================================
 
-class FunctionOfQ(RubiConstraint):
+class FunctionOfQ(MathematicaConstraint):
     """Constraint: u is a function of v wrt x."""
     def __init__(self, v, u, x, pure_flag: bool = False):
         self._v = self.args[0]
@@ -963,7 +963,7 @@ class FunctionOfQ(RubiConstraint):
         return f"FunctionOfQ({self._v}, {self._u}, {self._x})"
 
 
-class LinearPairQ(RubiConstraint):
+class LinearPairQ(MathematicaConstraint):
     """Constraint: u and v are linear, and u/v is constant wrt x."""
     def __init__(self, u, v, x):
         self._u = self.args[0]
@@ -979,7 +979,7 @@ class LinearPairQ(RubiConstraint):
         return f"LinearPairQ({self._u}, {self._v}, {self._x})"
 
 
-class PolynomialInQ(RubiConstraint):
+class PolynomialInQ(MathematicaConstraint):
     """Constraint: u is polynomial in v wrt x."""
     def __init__(self, u, v, x):
         self._u = self.args[0]
@@ -995,7 +995,7 @@ class PolynomialInQ(RubiConstraint):
         return f"PolynomialInQ({self._u}, {self._v}, {self._x})"
 
 
-class SimplerIntegrandQ(RubiConstraint):
+class SimplerIntegrandQ(MathematicaConstraint):
     """Constraint: u is simpler to integrate than v."""
     def __init__(self, u, v, x):
         self._u = self.args[0]
@@ -1017,7 +1017,7 @@ class SimplerIntegrandQ(RubiConstraint):
         return f"SimplerIntegrandQ({self._u}, {self._v}, {self._x})"
 
 
-class PseudoBinomialPairQ(RubiConstraint):
+class PseudoBinomialPairQ(MathematicaConstraint):
     """Constraint: u and v are pseudo-binomial pairs."""
     def __init__(self, u, v, x):
         self._u = self.args[0]
@@ -1033,7 +1033,7 @@ class PseudoBinomialPairQ(RubiConstraint):
         return f"PseudoBinomialPairQ({self._u}, {self._v}, {self._x})"
 
 
-class SubstForFractionalPowerQ(RubiConstraint):
+class SubstForFractionalPowerQ(MathematicaConstraint):
     """Constraint: substitution x=v^(1/n) is safe."""
     def __init__(self, u, v, x):
         self._u = self.args[0]
@@ -1053,7 +1053,7 @@ class SubstForFractionalPowerQ(RubiConstraint):
 # Integrability Predicates
 # =============================================================================
 
-class IntLinearQ(RubiConstraint):
+class IntLinearQ(MathematicaConstraint):
     """Constraint: exponents are integrable for linear binomial products."""
     def __init__(self, a, b, c, d, m, n, x):
         self._a = self.args[0]
@@ -1077,7 +1077,7 @@ class IntLinearQ(RubiConstraint):
         return f"IntLinearQ({self._a}, {self._b}, {self._c}, {self._d}, {self._m}, {self._n}, {self._x})"
 
 
-class IntBinomialQ(RubiConstraint):
+class IntBinomialQ(MathematicaConstraint):
     """Constraint: exponents are integrable for binomial products.
 
     Supports multiple arities from Mathematica:
@@ -1099,7 +1099,7 @@ class IntBinomialQ(RubiConstraint):
         return f"IntBinomialQ({', '.join(str(a) for a in self._vars)})"
 
 
-class IntQuadraticQ(RubiConstraint):
+class IntQuadraticQ(MathematicaConstraint):
     """Constraint: exponents are integrable for quadratic products."""
     def __init__(self, a, b, c, d, e, m, p, x):
         self._a = self.args[0]
@@ -1129,7 +1129,7 @@ class IntQuadraticQ(RubiConstraint):
 # Complex single-arg predicates with custom logic
 # =============================================================================
 
-class FractionalPowerFactorQ(RubiConstraint):
+class FractionalPowerFactorQ(MathematicaConstraint):
     """Constraint: a factor of u is complex constant or fractional power."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -1148,7 +1148,7 @@ class FractionalPowerFactorQ(RubiConstraint):
         return f"FractionalPowerFactorQ({self._u})"
 
 
-class SumBaseQ(RubiConstraint):
+class SumBaseQ(MathematicaConstraint):
     """Constraint: u is a sum or sum raised to an odd power."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -1164,7 +1164,7 @@ class SumBaseQ(RubiConstraint):
         return f"SumBaseQ({self._u})"
 
 
-class PiecewiseLinearQ(RubiConstraint):
+class PiecewiseLinearQ(MathematicaConstraint):
     """Constraint: u is piecewise linear in x."""
     def __init__(self, *args):
         self._u = self.args[0]
@@ -1192,7 +1192,7 @@ class PiecewiseLinearQ(RubiConstraint):
         return f"PiecewiseLinearQ({self._u}, {self._x})"
 
 
-class CalculusFreeQ(RubiConstraint):
+class CalculusFreeQ(MathematicaConstraint):
     """Constraint: u is free of calculus functions in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1209,7 +1209,7 @@ class CalculusFreeQ(RubiConstraint):
         return f"CalculusFreeQ({self._u}, {self._x})"
 
 
-class FunctionOfExponentialQ(RubiConstraint):
+class FunctionOfExponentialQ(MathematicaConstraint):
     """Constraint: u contains an exponential F^(a+b*x)."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1224,7 +1224,7 @@ class FunctionOfExponentialQ(RubiConstraint):
         return f"FunctionOfExponentialQ({self._u}, {self._x})"
 
 
-class FunctionOfTrigOfLinearQ(RubiConstraint):
+class FunctionOfTrigOfLinearQ(MathematicaConstraint):
     """Constraint: u involves trig of linear expression in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1238,7 +1238,7 @@ class FunctionOfTrigOfLinearQ(RubiConstraint):
         return f"FunctionOfTrigOfLinearQ({self._u}, {self._x})"
 
 
-class QuadraticProductQ(RubiConstraint):
+class QuadraticProductQ(MathematicaConstraint):
     """Constraint: u is a product of quadratics in x."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1262,7 +1262,7 @@ class QuadraticProductQ(RubiConstraint):
 
 
 # Trig integrand predicates (u, x) with custom check logic
-class KnownSineIntegrandQ(RubiConstraint):
+class KnownSineIntegrandQ(MathematicaConstraint):
     """Constraint: u is a known sine/cosine integrand pattern."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1276,7 +1276,7 @@ class KnownSineIntegrandQ(RubiConstraint):
         return f"KnownSineIntegrandQ({self._u}, {self._x})"
 
 
-class KnownSecantIntegrandQ(RubiConstraint):
+class KnownSecantIntegrandQ(MathematicaConstraint):
     """Constraint: u is a known secant/cosecant integrand pattern."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1290,7 +1290,7 @@ class KnownSecantIntegrandQ(RubiConstraint):
         return f"KnownSecantIntegrandQ({self._u}, {self._x})"
 
 
-class KnownTangentIntegrandQ(RubiConstraint):
+class KnownTangentIntegrandQ(MathematicaConstraint):
     """Constraint: u is a known tangent integrand pattern."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1304,7 +1304,7 @@ class KnownTangentIntegrandQ(RubiConstraint):
         return f"KnownTangentIntegrandQ({self._u}, {self._x})"
 
 
-class KnownCotangentIntegrandQ(RubiConstraint):
+class KnownCotangentIntegrandQ(MathematicaConstraint):
     """Constraint: u is a known cotangent integrand pattern."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1318,7 +1318,7 @@ class KnownCotangentIntegrandQ(RubiConstraint):
         return f"KnownCotangentIntegrandQ({self._u}, {self._x})"
 
 
-class EulerIntegrandQ(RubiConstraint):
+class EulerIntegrandQ(MathematicaConstraint):
     """Constraint: u is an Euler integrand."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -1336,7 +1336,7 @@ class EulerIntegrandQ(RubiConstraint):
 # Rarely-used / stub predicates
 # =============================================================================
 
-class EqM(RubiConstraint):
+class EqM(MathematicaConstraint):
     """Constraint: symbolic expression equality (stub)."""
     def __init__(self, *args, **kw):
         self._args_stored = args
@@ -1346,7 +1346,7 @@ class EqM(RubiConstraint):
         return f"EqM({self._args_stored})"
 
 
-class ExpressionEqQ(RubiConstraint):
+class ExpressionEqQ(MathematicaConstraint):
     """Generic constraint for linear combination equality."""
     def __init__(self, coefficients, constant=0, target=0):
         if isinstance(coefficients, dict):
@@ -1369,7 +1369,7 @@ class ExpressionEqQ(RubiConstraint):
         return f"ExpressionEqQ({self._coefficients}, {self._constant}, {self._target})"
 
 
-class EveryQ(RubiConstraint):
+class EveryQ(MathematicaConstraint):
     """Constraint: predicate holds for all sub-expressions."""
     def __init__(self, func, u):
         self._func = self.args[0]
@@ -1384,7 +1384,7 @@ class EveryQ(RubiConstraint):
         return f"EveryQ(<func>, {self._u})"
 
 
-class TrigSimplifyQ(RubiConstraint):
+class TrigSimplifyQ(MathematicaConstraint):
     """Constraint: TrigSimplify[u] actually simplifies u.
 
     Rubi: TrigSimplifyQ[u] returns True if TrigSimplify[u] != ActivateTrig[u].
@@ -1400,7 +1400,7 @@ class TrigSimplifyQ(RubiConstraint):
         return f"TrigSimplifyQ({self._u})"
 
 
-class TryPureTanSubst(RubiConstraint):
+class TryPureTanSubst(MathematicaConstraint):
     """Constraint: u admits a pure tan/cot substitution."""
     def __init__(self, u, x):
         self._u = self.args[0]

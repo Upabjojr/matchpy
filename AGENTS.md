@@ -152,8 +152,8 @@ generates the test suite under `rubi_rules/rubi_test_suite/**`.
 
 - `matchpy/expressions/` — `expressions.py` (`TypedModel` expression types), `constraints.py`, `substitution.py`, `functions.py`; `matchpy/_typed.py` — the `TypedModel` base
 - `matchpy/matching/` — `one_to_one.py`, `many_to_one.py`, `syntactic.py` (discrimination net), `bipartite.py`, `hopcroft_karp.py`, `code_generation.py`, `json_serialization.py`
-- `sympy_matching/` — `operations.py` (the `SYMPY_NODES` head table), `conversion.py` (singledispatch converters), `wild.py`, `constraints.py`, `registered_heads.py`, `json_ext.py`
-- `sympy_wolfram/` — `ffl_to_sympy.py`, `mathematica_parser.py`, `mathematica_expressions.py`, `mathematica_functions.py`
+- `sympy_matching/` — `operations.py` (the `SYMPY_NODES` head table), `conversion.py` (singledispatch converters), `wild.py`, `registered_heads.py`, `json_ext.py`
+- `sympy_wolfram/` — `parser.py` (text→FFL), `interpreter.py` (FFL→SymPy), `objects.py` (`MathematicaExpr` + language constructs), `constraints.py` (`MathematicaConstraint`, the generic Wolfram-predicate base — formerly `RubiConstraint` in `sympy_matching`), `mathematica_functions.py` + `functions_eager.py` (standard Wolfram function nodes: `GCD`, `Sign`, `Floor`, `LeafCount`, …)
 - `rubi_rules/base_objects.py` — `Int`, `RubiRulePattern`, `build_tracing_replacer`, `rubi_integrate`, `load_rule_patterns`
 - `rubi_rules/rules/` — **auto-generated; DO NOT EDIT** (organized `r_1_algebraic_functions/…`, mirroring the Rubi Mathematica tree)
 - `rubi_rules/codegen/` — `parse_rubi_to_ffl.py` and `generate.py` (the FFL→Python rule generator)

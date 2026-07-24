@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Tests for sympy_matching.constraints.RubiConstraint base class.
+"""Tests for sympy_wolfram.constraints.MathematicaConstraint base class.
+
+(Formerly sympy_matching.constraints.RubiConstraint — renamed and moved up into
+sympy_wolfram so it can inherit from MathematicaExpr.)
 
 Covers (without importing rubi_rules):
-- Module location: RubiConstraint lives in sympy_matching, NOT rubi_rules
-- No import of rubi_rules anywhere in sympy_matching.constraints
-- Boolean inheritance and logic composition (using a local test subclass)
+- Module location: MathematicaConstraint lives in sympy_wolfram, NOT rubi_rules
+- No import of rubi_rules anywhere in sympy_wolfram.constraints
+- Dual inheritance: MathematicaExpr AND Boolean, plus logic composition
 - Argument normalisation: str->Symbol, int->Integer, list->tuple, dict->tuple-of-pairs
 - The SymPy invariant: constraint == constraint.func(*constraint.args)
 - Hash consistency (equal objects have equal hashes)
@@ -22,7 +25,8 @@ from sympy import Symbol, Integer, Rational, Tuple
 from sympy.logic.boolalg import Boolean, Not, And, Or
 
 import sympy_matching  # registers json_ext + conversion handlers
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
+from sympy_wolfram.objects import MathematicaExpr
 from sympy_matching.json_ext import serialize_wrapped_value, deserialize_wrapped_value
 
 
@@ -30,8 +34,8 @@ from sympy_matching.json_ext import serialize_wrapped_value, deserialize_wrapped
 # Local test subclass (avoids rubi_rules dependency)
 # ---------------------------------------------------------------------------
 
-class _TestPredicate(RubiConstraint):
-    """A minimal RubiConstraint subclass for testing base-class features."""
+class _TestPredicate(MathematicaConstraint):
+    """A minimal MathematicaConstraint subclass for testing base-class features."""
     variables = ('x',)
 
     def check(self, **kwargs):
@@ -42,8 +46,8 @@ class _TestPredicate(RubiConstraint):
         return val.is_integer is True
 
 
-class _TestBinaryPredicate(RubiConstraint):
-    """A two-argument RubiConstraint subclass for testing."""
+class _TestBinaryPredicate(MathematicaConstraint):
+    """A two-argument MathematicaConstraint subclass for testing."""
     variables = ('a', 'b')
 
     def check(self, **kwargs):
@@ -65,19 +69,19 @@ def _roundtrip(constraint):
 
 
 # ---------------------------------------------------------------------------
-# 1. Module location: sympy_matching has NO rubi_rules import
+# 1. Module location: sympy_wolfram has NO rubi_rules import
 # ---------------------------------------------------------------------------
 
 class TestModuleLocation:
-    """RubiConstraint belongs to sympy_matching, not rubi_rules."""
+    """MathematicaConstraint belongs to sympy_wolfram, not rubi_rules."""
 
-    def test_module_is_sympy_matching(self):
-        assert RubiConstraint.__module__ == 'sympy_matching.constraints'
+    def test_module_is_sympy_wolfram(self):
+        assert MathematicaConstraint.__module__ == 'sympy_wolfram.constraints'
 
     def test_no_rubi_import_in_module(self):
-        """sympy_matching.constraints must not import anything from rubi_rules."""
+        """sympy_wolfram.constraints must not import anything from rubi_rules."""
         import importlib
-        mod = importlib.import_module('sympy_matching.constraints')
+        mod = importlib.import_module('sympy_wolfram.constraints')
         tree = ast.parse(open(mod.__file__).read())
         rubi_imports = [
             node for node in ast.walk(tree)
@@ -92,17 +96,27 @@ class TestModuleLocation:
 
 
 # ---------------------------------------------------------------------------
-# 2. Boolean inheritance (using local test subclass)
+# 2. Dual inheritance: MathematicaExpr AND Boolean
 # ---------------------------------------------------------------------------
 
-class TestBooleanInheritance:
+class TestDualInheritance:
     def test_is_boolean_subclass(self):
         assert issubclass(_TestPredicate, Boolean)
-        assert issubclass(_TestPredicate, RubiConstraint)
+        assert issubclass(_TestPredicate, MathematicaConstraint)
 
-    def test_instance_is_boolean(self):
+    def test_is_mathematica_expr_subclass(self):
+        assert issubclass(MathematicaConstraint, MathematicaExpr)
+        assert issubclass(_TestPredicate, MathematicaExpr)
+
+    def test_instance_is_boolean_and_mathematica_expr(self):
         c = _TestPredicate('n')
         assert isinstance(c, Boolean)
+        assert isinstance(c, MathematicaExpr)
+
+    def test_doit_returns_self(self):
+        # A constraint is a predicate, not a reducible expression.
+        c = _TestPredicate('n')
+        assert c.doit() is c
 
     def test_not_composition(self):
         c = _TestPredicate('n')

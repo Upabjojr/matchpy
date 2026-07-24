@@ -104,6 +104,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] remember to document IDENTITY_ELEMENT as optional matching character.
 - [ ] remove not used variables from generated rules.
 - [ ] RubiConstraint ==> rename and make it a subtype of MathematicaExpr?
+- [ ] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even RubiRulePattern should be renamed and moved to sympy_matching/ ?
+
 
 Strange warning:
 

@@ -2,14 +2,15 @@
 """RUBI utility modules.
 
 This package contains:
-- constraints.py: Base RubiConstraint class
+- constraints.py: Base MathematicaConstraint class (re-exported from sympy_wolfram)
 - constraints_wolfram.py: Standard Wolfram Mathematica constraint predicates
 - constraints_rubi.py: RUBI-specific constraint predicates
 - rubi_utils.py: Utility functions for RUBI rules
 """
 
-# Base constraint class
-from sympy_matching.constraints import RubiConstraint
+# Base constraint class (formerly RubiConstraint; RubiConstraint kept as a
+# deprecated alias in constraints.py for backward compatibility).
+from sympy_wolfram.constraints import MathematicaConstraint
 
 # Standard Wolfram Mathematica constraints
 from .constraints_wolfram import (

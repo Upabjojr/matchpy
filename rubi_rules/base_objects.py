@@ -41,7 +41,7 @@ from matchpy.functions import ReplacementRule
 from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
 
 
 class Int(sympy.Function):
@@ -103,7 +103,7 @@ def _make_replacement_fn(replacement_expr, wild_names, rule):
 def _extract_wild_names(constraint_obj):
     """Extract WildSymbol/Symbol names from a constraint.
 
-    Handles RubiConstraint (via .variables), and Boolean wrappers
+    Handles MathematicaConstraint (via .variables), and Boolean wrappers
     Not(...), Or(...), And(...) by recursing into their args.
     """
     # Handle Not/Or/And wrappers by recursing into args
@@ -200,8 +200,8 @@ def _make_constraint_checker(constraint_obj, variables):
             return all(c(**kwargs) for c in inner_checkers)
         return check_and
 
-    # RubiConstraint: use .check() directly
-    if isinstance(constraint_obj, RubiConstraint):
+    # MathematicaConstraint: use .check() directly
+    if isinstance(constraint_obj, MathematicaConstraint):
         def check_rubi(**kwargs):
             return constraint_obj.check(**kwargs)
         return check_rubi
@@ -223,7 +223,7 @@ def _make_constraint_checker(constraint_obj, variables):
 def _make_matchpy_constraint(constraint_obj, wild_names, pattern_wilds):
     """Convert a constraint into a MatchPy CustomConstraint.
 
-    Handles RubiConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
+    Handles MathematicaConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
     """
     # A constraint may mention variables the PATTERN does not bind. MatchQ is the
     # case that matters: Mathematica scopes the variables of its inner pattern to

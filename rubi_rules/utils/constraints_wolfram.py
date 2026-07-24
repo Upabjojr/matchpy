@@ -2,7 +2,7 @@
 """Standard Wolfram Mathematica constraint predicates.
 
 These are constraints that are part of the standard Wolfram Mathematica
-language (not RUBI-specific). They are implemented as RubiConstraint
+language (not RUBI-specific). They are implemented as MathematicaConstraint
 subclasses for use in Rubi integration rule conditions.
 
 All constraints operate on SymPy expressions after conversion from MatchPy.
@@ -11,14 +11,14 @@ import sympy
 from sympy import Symbol
 
 from sympy_matching.conversion import matchpy_to_sympy
-from sympy_matching.constraints import RubiConstraint
+from sympy_wolfram.constraints import MathematicaConstraint
 
 
 # =============================================================================
 # FreeQ — expression is free of a symbol
 # =============================================================================
 
-class FreeQ(RubiConstraint):
+class FreeQ(MathematicaConstraint):
     """Constraint: matched value(s) are free of a given symbol.
 
     Mathematica: FreeQ[expr, form] — True if no subexpression matches form.
@@ -56,7 +56,7 @@ class FreeQ(RubiConstraint):
 # Single-argument predicates
 # =============================================================================
 
-class IntegerQ(RubiConstraint):
+class IntegerQ(MathematicaConstraint):
     """Constraint: matched value is an explicit integer."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -69,7 +69,7 @@ class IntegerQ(RubiConstraint):
         return f"IntegerQ({self._u})"
 
 
-class OddQ(RubiConstraint):
+class OddQ(MathematicaConstraint):
     """Constraint: matched value is an odd integer."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -82,7 +82,7 @@ class OddQ(RubiConstraint):
         return f"OddQ({self._u})"
 
 
-class EvenQ(RubiConstraint):
+class EvenQ(MathematicaConstraint):
     """Constraint: matched value is an even integer."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -95,7 +95,7 @@ class EvenQ(RubiConstraint):
         return f"EvenQ({self._u})"
 
 
-class NumberQ(RubiConstraint):
+class NumberQ(MathematicaConstraint):
     """Constraint: matched value is an explicit numeric quantity."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -108,7 +108,7 @@ class NumberQ(RubiConstraint):
         return f"NumberQ({self._u})"
 
 
-class NumericQ(RubiConstraint):
+class NumericQ(MathematicaConstraint):
     """Constraint: matched value is numeric (including constants like pi, E)."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -121,7 +121,7 @@ class NumericQ(RubiConstraint):
         return f"NumericQ({self._u})"
 
 
-class AtomQ(RubiConstraint):
+class AtomQ(MathematicaConstraint):
     """Constraint: matched value is atomic (symbol, number, etc.)."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -134,7 +134,7 @@ class AtomQ(RubiConstraint):
         return f"AtomQ({self._u})"
 
 
-class PositiveQ(RubiConstraint):
+class PositiveQ(MathematicaConstraint):
     """Constraint: matched value is positive."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -147,7 +147,7 @@ class PositiveQ(RubiConstraint):
         return f"PositiveQ({self._u})"
 
 
-class NegativeQ(RubiConstraint):
+class NegativeQ(MathematicaConstraint):
     """Constraint: matched value is negative."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -160,7 +160,7 @@ class NegativeQ(RubiConstraint):
         return f"NegativeQ({self._u})"
 
 
-class PrimeQ(RubiConstraint):
+class PrimeQ(MathematicaConstraint):
     """Constraint: matched value is a prime number."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -176,7 +176,7 @@ class PrimeQ(RubiConstraint):
 # Two-argument predicates
 # =============================================================================
 
-class MemberQ(RubiConstraint):
+class MemberQ(MathematicaConstraint):
     """Constraint: matched value is a member of a given list."""
     def __init__(self, u, members):
         self._u = self.args[0]
@@ -191,7 +191,7 @@ class MemberQ(RubiConstraint):
         return f"MemberQ({self._u}, {self._members})"
 
 
-class PolynomialQ(RubiConstraint):
+class PolynomialQ(MathematicaConstraint):
     """Constraint: matched value is a polynomial in the integration variable."""
     def __init__(self, u, x):
         self._u = self.args[0]
@@ -205,7 +205,7 @@ class PolynomialQ(RubiConstraint):
         return f"PolynomialQ({self._u}, {self._x})"
 
 
-class TrueQ(RubiConstraint):
+class TrueQ(MathematicaConstraint):
     """Constraint: matched value is explicitly True."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -219,7 +219,7 @@ class TrueQ(RubiConstraint):
         return f"TrueQ({self._u})"
 
 
-class FalseQ(RubiConstraint):
+class FalseQ(MathematicaConstraint):
     """Constraint: matched value is explicitly False."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -234,7 +234,7 @@ class FalseQ(RubiConstraint):
         return f"FalseQ({self._u})"
 
 
-class UnsameQ(RubiConstraint):
+class UnsameQ(MathematicaConstraint):
     """Constraint: two matched values are not identical (structurally different).
 
     Mathematica: UnsameQ[expr1, expr2] — True if expr1 and expr2 are not identical.
@@ -251,7 +251,7 @@ class UnsameQ(RubiConstraint):
     def __repr__(self):
         return f"UnsameQ({self._a}, {self._b})"
 
-class MatchQ(RubiConstraint):
+class MatchQ(MathematicaConstraint):
     """Mathematica ``MatchQ[expr, pattern]`` -- does *expr* match *pattern*?
 
     The pattern may carry its own guard, ``pattern /; test``, which arrives here as
@@ -325,7 +325,7 @@ def _pattern_matches(subject, pattern) -> bool:
 
 def _guard_holds(test, bindings) -> bool:
     """Evaluate a MatchQ pattern's ``/;`` guard under one match's bindings."""
-    from sympy_matching.constraints import RubiConstraint as _RC
+    from sympy_wolfram.constraints import MathematicaConstraint as _RC
 
     if isinstance(test, sympy.logic.boolalg.Not):
         return not _guard_holds(test.args[0], bindings)
