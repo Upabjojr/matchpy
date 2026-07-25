@@ -17,7 +17,7 @@ import importlib
 
 import pytest
 import sympy
-from sympy import Symbol, Integer, I, sin
+from sympy import Symbol, Integer, I, S, sin, cos
 
 from sympy_wolfram import mathematica_functions as mf
 from sympy_wolfram import functions_eager as fe
@@ -93,38 +93,73 @@ def test_eager_helpers_are_self_contained():
 
 
 # ---------------------------------------------------------------------------
-# 2b. Relocated First/Rest/Part/Apart/Numerator/Denominator (behaviour + coupling)
+# 2b. Relocated First/Rest/Part/Apart/Numerator/Denominator/Exponent/Simplify
+#     (behaviour moved here from rubi_rules/tests/test_utility_function.py, since
+#     the functions themselves moved into this layer).
 # ---------------------------------------------------------------------------
 
-def test_relocated_nodes_behaviour():
-    a, b = Symbol('a'), Symbol('b')
-    assert mf.First(a + b + x).doit() == a          # canonical sort_key order
-    assert mf.Rest(a * b * x).doit() == b * x
+a, b, c, y = sympy.symbols('a b c y')
+
+
+def test_eager_First_Rest():
+    assert fe.First([2, 3, 5, 7]) == 2
+    assert fe.First(y ** 2) == y
+    assert fe.First(a + b + c) == a          # canonical sort_key order
+    assert fe.First(a * b * c) == a
+    assert fe.Rest([2, 3, 5, 7]) == [3, 5, 7]
+    assert fe.Rest(a + b + c) == b + c
+    assert fe.Rest(a * b * c) == b * c
+    assert fe.Rest(1 / b) == -1
+
+
+def test_eager_Numerator_Denominator():
+    assert fe.Numerator((-a / b) ** 3) == (-a) ** 3
+    assert fe.Numerator(S(3) / 2) == 3
+    assert fe.Numerator(x / y) == x
+    assert fe.Numerator(-S(1) / 2 + I / 3) == -3 + 2 * I
+    assert fe.Denominator((-a / b) ** 3) == b ** 3
+    assert fe.Denominator(S(3) / 2) == 2
+    assert fe.Denominator(x / y) == y
+    assert fe.Denominator(-S(1) / 2 + I / 3) == 6
+
+
+def test_eager_Part():
+    assert fe.Part([1, 2, 3], 1) == 1
+    assert fe.Part(a * b, 1) == a
+    assert fe.Util_Part(1, a + b).doit() == a
+    assert fe.Util_Part(c, a + b).doit() == fe.Util_Part(c, a + b)   # symbolic index -> deferred
+
+
+def test_eager_Apart():
+    assert fe.Apart(1 / (x ** 2 * (a + b * x) ** 2), x) == (
+        b ** 2 / (a ** 2 * (a + b * x) ** 2) + 1 / (a ** 2 * x ** 2)
+        + 2 * b ** 2 / (a ** 3 * (a + b * x)) - 2 * b / (a ** 3 * x))
+    # Non-rational: returned unchanged (matches Mathematica, guards SymPy's apart).
+    assert fe.Apart(x ** (S(2) / 3) * (a + b * x) ** 2, x) == x ** (S(2) / 3) * (a + b * x) ** 2
+
+
+def test_eager_Exponent_is_rational_function_faithful():
+    assert fe.Exponent(x ** 3 + x + 1, x) == 3
+    assert fe.Exponent(x ** 2 + 2 * x + 1, x) == 2
+    assert fe.Exponent(S(1), x) == 0
+    # Mathematica treats the argument as a rational function: Exponent[x^-3, x] == -3
+    # (a polynomial-only implementation would wrongly return 0).
+    assert fe.Exponent(x ** (-3), x) == -3
+
+
+def test_eager_Simplify():
+    assert fe.Simplify(sin(x) ** 2 + cos(x) ** 2) == 1
+    assert fe.Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
+
+
+def test_deferred_nodes_delegate_to_eager():
+    assert mf.First(a + b + c).doit() == a
+    assert mf.Rest(a * b * c).doit() == b * c
     assert mf.Part(sympy.Tuple(a, b, x), Integer(2)).doit() == b
     assert mf.Numerator((a + 1) / (b * x)).doit() == a + 1
     assert mf.Denominator((a + 1) / (b * x)).doit() == b * x
     assert mf.Apart(1 / (x * (x + 1)), x).doit() == 1 / x - 1 / (x + 1)
-    assert mf.Apart(x + sympy.sqrt(x), x).doit() == x + sympy.sqrt(x)  # non-rational: unchanged
     assert mf.Exponent(a + b * x ** 3, x).doit() == 3
-
-
-def test_eager_relocated_are_self_contained():
-    a, b = Symbol('a'), Symbol('b')
-    assert fe.First(a + b + x) == a
-    assert fe.Rest(a * b * x) == b * x
-    assert fe.Part([a, b, x], 2) == b
-    assert fe.Numerator((a + 1) / (b * x)) == a + 1
-    assert fe.Denominator((a + 1) / (b * x)) == b * x
-
-
-def test_apart_matches_rational_function_test():
-    """Apart's guard is SymPy's is_rational_function — the generic equivalent of
-    Rubi's RationalFunctionQ (they agree, so relocating did not change behaviour)."""
-    from rubi_rules.utils.utility_functions import RationalFunctionQ
-    cases = [1 / (x * (x + 1)), x + sympy.sqrt(x), sin(x) / (x + 1),
-             x ** 3 / (Symbol('a') + Symbol('b') * x), 1 / x + x]
-    for u in cases:
-        assert bool(RationalFunctionQ(u, x)) == bool(u.is_rational_function(x))
 
 
 # ---------------------------------------------------------------------------

@@ -108,6 +108,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ.
 - [ ] rename MatchPy classes that have a naming conflict with SymPy classes.
 - [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
+- [ ] name conflict of utility and eager functions: prepend eager_ to their names
 
 Strange warning:
 

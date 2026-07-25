@@ -274,12 +274,11 @@ def test_Coefficient():
     assert Coefficient(b*x + c*x**3, x, 3) == c
     assert Coefficient(x, x, -1) == 0
 
-def test_Denominator():
-    assert Denominator(-S(1)/S(2) + I/3) == 6
-    assert Denominator((-a/b)**3) == (b)**(3)
-    assert Denominator(S(3)/2) == 2
-    assert Denominator(x/y) == y
-    assert Denominator(S(4)/5) == 5
+# First/Rest/Numerator/Denominator/Part/Apart/Simplify are standard Wolfram functions
+# that now live in sympy_wolfram; their behaviour tests moved to
+# sympy_wolfram/tests/test_mathematica_functions.py. The Rubi-integration behaviour of
+# Simplify (resolving deferred Rubi nodes / Boolean-from-non-binomial) is still tested
+# below, since that scenario is Rubi-specific.
 
 def test_Hypergeometric2F1():
     assert Hypergeometric2F1(1, 2, 3, x) == hyper((1, 2), (3,), x)
@@ -302,10 +301,6 @@ def test_IntegerPart():
 def test_AppellF1():
     assert AppellF1(1,0,0.5,1,0.5,0.25).evalf() == 1.154700538379251529018298
     assert unchanged(AppellF1, a, b, c, d, e, f)
-
-def test_Simplify():
-    assert Simplify(sin(x)**2 + cos(x)**2) == 1
-    assert Simplify((x**3 + x**2 - x - 1)/(x**2 + 2*x + 1)) == x - 1
 
 def test_ArcTanh():
     assert ArcTanh(a) == atanh(a)
@@ -534,12 +529,6 @@ def test_SinhCoshQ():
 def test_LeafCount():
     assert LeafCount(1 + a + x**2) == 6
 
-def test_Numerator():
-    assert Numerator((-a/b)**3) == (-a)**(3)
-    assert Numerator(S(3)/2) == 3
-    assert Numerator(x/y) == x
-    assert Numerator(-S(1)/S(2) + I/3) == -3 + 2*I
-
 def test_Length():
     assert Length(a + b) == 2
     assert Length(sin(a)*cos(a)) == 2
@@ -578,18 +567,6 @@ def test_SquareFreeFactorTest():
     assert not SquareFreeFactorTest(sqrt(x), x)
     assert SquareFreeFactorTest(x**5 - x**3 - x**2 + 1, x) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
 
-def test_Rest():
-    assert Rest([2, 3, 5, 7]) == [3, 5, 7]
-    assert Rest(a + b + c) == b + c
-    assert Rest(a*b*c) == b*c
-    assert Rest(1/b) == -1
-
-def test_First():
-    assert First([2, 3, 5, 7]) == 2
-    assert First(y**S(2)) == y
-    assert First(a + b + c) == a
-    assert First(a*b*c) == a
-
 def test_ComplexFreeQ():
     assert ComplexFreeQ(a)
     assert not ComplexFreeQ(a + 2*I)
@@ -598,18 +575,14 @@ def test_FractionalPowerFreeQ():
     assert not FractionalPowerFreeQ(x**(S(2)/3))
     assert FractionalPowerFreeQ(x)
 
-def test_Exponent():
+# ExponentList is Rubi-specific and stays here; Exponent itself moved to
+# sympy_wolfram (behaviour tested in test_mathematica_functions.py).
+def test_ExponentList():
     assert Min(*ExponentList(x**2 + x + 1 + 5, x)) == 0
     assert ExponentList(x**2 + x + 1 + 5, x) == [0, 1, 2]
     assert ExponentList(x**2 + x + 1, x) == [0, 1, 2]
     assert ExponentList(x**2 + 2*x + 1, x) == [0, 1, 2]
-    assert Exponent(x**3 + x + 1, x) == 3
-    assert Exponent(x**2 + 2*x + 1, x) == 2
     assert ExponentList(x**3, x) == [3]
-    assert Exponent(S(1), x) == 0
-    # Mathematica's Exponent treats its argument as a rational function, so
-    # Exponent[x^-3, x] == -3 (not 0 as a polynomial-only implementation returns).
-    assert Exponent(x**(-3), x) == -3
 
 def test_Expon():
     assert Expon(x**2+2*x+1, x) == 2
@@ -895,9 +868,15 @@ def test_RationalFunctionQ():
     assert not RationalFunctionQ(x**3 + x**(0.5), x)
     assert not RationalFunctionQ(x**(S(2)/3)*(a + b*x)**2, x)
 
-def test_Apart():
-    assert Apart(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
-    assert Apart(x**(S(2)/3)*(a + b*x)**2, x) == x**(S(2)/3)*(a + b*x)**2
+# Apart moved to sympy_wolfram (behaviour tested there). It used to gate on Rubi's
+# RationalFunctionQ; the relocated version uses SymPy's is_rational_function. This test
+# stays here (RationalFunctionQ is Rubi-specific) and documents that the swap is safe:
+# the two predicates agree, so Apart's behaviour is unchanged.
+def test_Apart_guard_matches_RationalFunctionQ():
+    cases = [1/(x*(x + 1)), x + sqrt(x), sin(x)/(x + 1),
+             x**3/(a + b*x), 1/x + x, (a + b*x)/(c + x**2)]
+    for u in cases:
+        assert bool(RationalFunctionQ(u, x)) == bool(u.is_rational_function(x))
 
 def test_RationalFunctionFactors():
     assert RationalFunctionFactors(a, x) == a
@@ -1988,14 +1967,7 @@ def test_ElementaryFunctionQ():
     assert ElementaryFunctionQ(sin(x + y))
     assert ElementaryFunctionQ(E**(x*a))
 
-def test_Util_Part():
-    from rubi_rules.utils.utility_functions import Util_Part
-    assert Util_Part(1, a + b).doit() == a
-    assert Util_Part(c, a + b).doit() == Util_Part(c, a + b)
-
-def test_Part():
-    assert Part([1, 2, 3], 1) == 1
-    assert Part(a*b, 1) == a
+# Part / Util_Part moved to sympy_wolfram (behaviour tested in test_mathematica_functions.py).
 
 def test_PolyLog():
     assert PolyLog(a, b) == polylog(a, b)
