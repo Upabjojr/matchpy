@@ -32,7 +32,7 @@ class FreeQ(MathematicaConstraint):
         self._free_of = self.args[1]
 
     def check(self, **kwargs):
-        from .utility_functions import FreeQ as _FreeQ
+        from sympy_wolfram.functions_eager import FreeQ as _FreeQ
         sk = self._resolve_all(kwargs)
         free_of = self._free_of  # integration variable, not resolved
         if isinstance(self._expr_vars, (list, tuple, sympy.Tuple)):

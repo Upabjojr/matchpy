@@ -5,7 +5,7 @@ import pytest
 from multiset import Multiset
 
 from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import Symbol, Wildcard, Pattern
+from matchpy.expressions.expressions import NamedAtom, Wildcard, Pattern
 from matchpy.expressions.functions import get_variables
 from matchpy.matching.many_to_one import ManyToOneMatcher
 from matchpy.functions import substitute
@@ -834,13 +834,13 @@ class TestMatch:
         c = CustomConstraint(lambda x: len(str(x)) > 1)
 
         pattern = Pattern(f(___, x_, ___), c)
-        subject = f(a, Symbol('aa'), b, Symbol('bb'))
+        subject = f(a, NamedAtom('aa'), b, NamedAtom('bb'))
 
         result = list(match(subject, pattern))
 
         assert len(result) == 2
-        assert {'x': Symbol('aa')} in result
-        assert {'x': Symbol('bb')} in result
+        assert {'x': NamedAtom('aa')} in result
+        assert {'x': NamedAtom('bb')} in result
 
     def test_double_custom_constraint(self, match_many):
         constraint1 = CustomConstraint(lambda x, y: (x > 0) and (y > 0))

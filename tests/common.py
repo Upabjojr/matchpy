@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 from matchpy.expressions.expressions import (
-    Arity, Operation, Symbol, Wildcard, SymbolWildcard, make_dot_variable, make_plus_variable, make_star_variable,
+    Arity, Operation, NamedAtom, Wildcard, SymbolWildcard, make_dot_variable, make_plus_variable, make_star_variable,
     make_symbol_variable
 )
 
 from .utils import MockConstraint
 
 
-class SpecialSymbol(Symbol):
+class SpecialSymbol(NamedAtom):
     pass
 
 
@@ -20,11 +20,11 @@ f_ci = Operation.new('f_ci', Arity.variadic, commutative=True, one_identity=True
 f2_c = Operation.new('f2_c', Arity.variadic, commutative=True)
 f_a = Operation.new('f_a', Arity.variadic, associative=True)
 f_ac = Operation.new('f_ac', Arity.variadic, associative=True, commutative=True)
-a = Symbol('a')
-b = Symbol('b')
-c = Symbol('c')
-d = Symbol('d')
-a_x = Symbol('a', variable_name='x')
+a = NamedAtom('a')
+b = NamedAtom('b')
+c = NamedAtom('c')
+d = NamedAtom('d')
+a_x = NamedAtom('a', variable_name='x')
 s = SpecialSymbol('s')
 _ = Wildcard.dot()
 _s = Wildcard.symbol()
@@ -52,7 +52,7 @@ mock_constraint_true = MockConstraint(True)
 
 del Arity
 del Operation
-del Symbol
+del NamedAtom
 del Wildcard
 del MockConstraint
 

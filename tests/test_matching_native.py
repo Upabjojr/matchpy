@@ -6,7 +6,7 @@ from multiset import Multiset
 
 from matchpy.expressions.constraints import CustomConstraint
 from matchpy.expressions.expressions import (
-    Symbol, Wildcard, Pattern, to_expression, from_expression,
+    NamedAtom, Wildcard, Pattern, to_expression, from_expression,
     Operation, OperationHead, Arity
 )
 from matchpy.matching.many_to_one import ManyToOneMatcher
@@ -21,10 +21,10 @@ from .common import *
     [
         ({'b': 0},              {'a': x_},          []),
         (('a', 0),              {'a': x_},          []),
-        ({'a': 0},              {'a': x_},          [{'x': Symbol('0')}]),
-        ({'a': 0},              {x_: 0},            [{'x': Symbol('a')}]),
-        ({'a': 0, 'b': 1},      {x_: 0, _: _},      [{'x': Symbol('a')}]),
-        ({'a': 0, 'b': 0},      {x_: 0, _: _},      [{'x': Symbol('a')}, {'x': Symbol('b')}]),
+        ({'a': 0},              {'a': x_},          [{'x': NamedAtom('0')}]),
+        ({'a': 0},              {x_: 0},            [{'x': NamedAtom('a')}]),
+        ({'a': 0, 'b': 1},      {x_: 0, _: _},      [{'x': NamedAtom('a')}]),
+        ({'a': 0, 'b': 0},      {x_: 0, _: _},      [{'x': NamedAtom('a')}, {'x': NamedAtom('b')}]),
         ({'a': 0, 'b': 0},      {'a': _, 'b': _},   [{}]),
         ({'a': 0, 'b': 0},      {'a': _, 'c': _},   []),
     ]
@@ -86,7 +86,7 @@ class TestMySumSingledispatch:
 
     def test_from_expression_roundtrip(self):
         """to_expression and a custom from_expression are inverses (for string terms)."""
-        # Note: integers become Symbol(str(n)), so roundtrip only preserves string terms.
+        # Note: integers become NamedAtom(str(n)), so roundtrip only preserves string terms.
         # Commutative operations sort operands, so use already-sorted terms.
         original = MySum('a', 'b', 'c')
         expr = to_expression(original)
@@ -105,25 +105,25 @@ class TestMySumSingledispatch:
         for subst in results:
             values.add(subst['x'])
             values.add(subst['y'])
-        assert Symbol('1') in values
-        assert Symbol('2') in values
+        assert NamedAtom('1') in values
+        assert NamedAtom('2') in values
 
     def test_match_specific_value(self):
         """Match a specific symbol inside MySum."""
         subject = to_expression(MySum(1, 2, 3))
         # Pattern: MySum(1, x_, y_) — match with 1 as a fixed element
-        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('1'), Wildcard.dot('x'), Wildcard.dot('y')))
+        pattern = Pattern(Operation(MYSUM_HEAD, NamedAtom('1'), Wildcard.dot('x'), Wildcard.dot('y')))
         results = list(match(subject, pattern))
         assert len(results) >= 1
         # x and y should be 2 and 3 (in some order)
         for subst in results:
             matched = {subst['x'], subst['y']}
-            assert matched == {Symbol('2'), Symbol('3')}
+            assert matched == {NamedAtom('2'), NamedAtom('3')}
 
     def test_match_no_match(self):
         """No match when a required element is missing."""
         subject = to_expression(MySum(1, 2))
-        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('5'), Wildcard.dot('x')))
+        pattern = Pattern(Operation(MYSUM_HEAD, NamedAtom('5'), Wildcard.dot('x')))
         results = list(match(subject, pattern))
         assert results == []
 
@@ -132,7 +132,7 @@ class TestMySumSingledispatch:
         subject = to_expression(MySum(1, 2, 3))
         # Pattern: MySum(1, ___) — match 1 and collect the rest
         rest = Wildcard.star('rest')
-        pattern = Pattern(Operation(MYSUM_HEAD, Symbol('1'), rest))
+        pattern = Pattern(Operation(MYSUM_HEAD, NamedAtom('1'), rest))
         results = list(match(subject, pattern))
         assert len(results) >= 1
         # rest should be a multiset of {2, 3} (commutative)
@@ -140,12 +140,12 @@ class TestMySumSingledispatch:
             rest_val = subst['rest']
             assert isinstance(rest_val, (Multiset, tuple, list, frozenset))
             rest_set = set(rest_val) if not isinstance(rest_val, Multiset) else set(rest_val)
-            assert rest_set == {Symbol('2'), Symbol('3')}
+            assert rest_set == {NamedAtom('2'), NamedAtom('3')}
 
     def test_many_to_one_matching(self):
         """MySum expressions work with the ManyToOneMatcher."""
-        pat1 = Pattern(Operation(MYSUM_HEAD, Symbol('1'), Wildcard.dot('x')))
-        pat2 = Pattern(Operation(MYSUM_HEAD, Symbol('2'), Wildcard.dot('y')))
+        pat1 = Pattern(Operation(MYSUM_HEAD, NamedAtom('1'), Wildcard.dot('x')))
+        pat2 = Pattern(Operation(MYSUM_HEAD, NamedAtom('2'), Wildcard.dot('y')))
         matcher = ManyToOneMatcher(pat1, pat2)
 
         subject = to_expression(MySum(1, 2))
@@ -165,6 +165,6 @@ class TestMySumSingledispatch:
         results = list(match(subject, pattern))
         assert len(results) >= 1
         for subst in results:
-            assert subst['z'] == Symbol('3')
+            assert subst['z'] == NamedAtom('3')
             matched_inner = {subst['x'], subst['y']}
-            assert matched_inner == {Symbol('1'), Symbol('2')}
+            assert matched_inner == {NamedAtom('1'), NamedAtom('2')}

@@ -20,7 +20,7 @@ Naming convention:
     stripped when deriving the MatchPy variable name. For example,
     `WildSymbol('a_')` becomes a wildcard with MatchPy variable name `'a'`.
     This makes SymPy-side names like `a_`, `b_`, `c_` line up with MatchPy
-    constraint variables such as `FreeQ('a', 'x')`.
+    constraint variables such as `FreeOf('a', 'x')`.
 """
 from sympy import Expr as SympyExpr
 from sympy import Symbol as SympySymbol

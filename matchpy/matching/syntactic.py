@@ -20,7 +20,7 @@ except ImportError:
     Digraph = None
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, Symbol, SymbolWildcard, Wildcard, Pattern
+    Expression, Operation, OperationHead, NamedAtom, SymbolWildcard, Wildcard, Pattern
 )
 from ..expressions.substitution import Substitution
 from ..expressions.functions import is_syntactic, op_iter, op_len
@@ -43,17 +43,17 @@ def is_operation(term: Any) -> bool:
 
 
 def is_symbol_wildcard(term: Any) -> bool:
-    """Return True iff the given term is a subclass of :class:`.Symbol`."""
-    return isinstance(term, type) and issubclass(term, Symbol)
+    """Return True iff the given term is a subclass of :class:`.NamedAtom`."""
+    return isinstance(term, type) and issubclass(term, NamedAtom)
 
 
-def _get_symbol_wildcard_label(state: '_State', symbol: Symbol) -> Type[Symbol]:
+def _get_symbol_wildcard_label(state: '_State', symbol: NamedAtom) -> Type[NamedAtom]:
     """Return the transition target for the given symbol type from the the given state or None if it does not exist."""
     return next((t for t in state.keys() if is_symbol_wildcard(t) and isinstance(symbol, t)), None)
 
 
-TermAtom = Union[Symbol, Wildcard, OperationHead, Type[Symbol], type(OPERATION_END)]
-TransitionLabel = Union[Symbol, OperationHead, Type[Symbol], Type[Wildcard], type(OPERATION_END), type(EPSILON)]
+TermAtom = Union[NamedAtom, Wildcard, OperationHead, Type[NamedAtom], type(OPERATION_END)]
+TransitionLabel = Union[NamedAtom, OperationHead, Type[NamedAtom], Type[Wildcard], type(OPERATION_END), type(EPSILON)]
 
 
 class FlatTerm(Sequence[TermAtom]):
@@ -83,14 +83,14 @@ class FlatTerm(Sequence[TermAtom]):
 
     Furthermore, every :class:`SymbolWildcard` is replaced by its :attr:`~SymbolWildcard.symbol_type`:
 
-    >>> class SpecialSymbol(Symbol):
+    >>> class SpecialSymbol(NamedAtom):
     ...     pass
     >>> _s = Wildcard.symbol(SpecialSymbol)
     >>> FlatTerm(_s)
     [<class '__main__.SpecialSymbol'>]
 
 
-    Symbol wildcards are also not merged like other wildcards, because they can never be sequence wildcards:
+    NamedAtom wildcards are also not merged like other wildcards, because they can never be sequence wildcards:
 
     >>> FlatTerm(f(_, _s))
     [f, _, <class '__main__.SpecialSymbol'>, )]
@@ -165,7 +165,7 @@ class FlatTerm(Sequence[TermAtom]):
             yield OPERATION_END
         elif isinstance(expression, SymbolWildcard):
             yield expression.symbol_type
-        elif isinstance(expression, (Symbol, Wildcard)):
+        elif isinstance(expression, (NamedAtom, Wildcard)):
             yield expression
         else:
             assert False, "Unreachable unless a new unsupported expression type is added."
@@ -520,7 +520,7 @@ class DiscriminationNet(Generic[T]):
         for s in state:
             if label in states[s]:
                 output.add(states[s][label].id)
-            if isinstance(label, Symbol):
+            if isinstance(label, NamedAtom):
                 type_label = _get_symbol_wildcard_label(states[s], label)
                 if type_label in states[s]:
                     # A symbol with an alternative symbol wildcard can never be the final edge in the automaton
@@ -543,7 +543,7 @@ class DiscriminationNet(Generic[T]):
                     return state[label], False
                 except KeyError:
                     if label != OPERATION_END:
-                        if isinstance(label, Symbol):
+                        if isinstance(label, NamedAtom):
                             symbol_wildcard_key = _get_symbol_wildcard_label(state, label)
                             if symbol_wildcard_key is not None:
                                 return state[symbol_wildcard_key], False
@@ -630,7 +630,7 @@ class DiscriminationNet(Generic[T]):
                             state = state[Wildcard]
                         elif term == OPERATION_END:
                             return []
-                        elif isinstance(term, Symbol):
+                        elif isinstance(term, NamedAtom):
                             symbol_wildcard_key = _get_symbol_wildcard_label(state, term)
                             state = state[symbol_wildcard_key or Wildcard]
                         else:

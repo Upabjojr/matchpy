@@ -39,7 +39,7 @@ from sympy import (
 from sympy.core.basic import Basic as SympyBasic
 
 from matchpy.expressions.expressions import (
-    Expression, Operation, OperationHead, Symbol, SymbolWrapper, Wildcard,
+    Expression, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard,
     WildcardOperationHead, to_expression, from_expression,
     LIST_HEAD, TUPLE_HEAD,
 )
@@ -329,7 +329,7 @@ def matchpy_to_sympy(expr):
             return _head_to_sympy(expr.value)
         return expr.value
 
-    if isinstance(expr, Symbol):
+    if isinstance(expr, NamedAtom):
         return SympySymbol(expr.name)
 
     return from_expression(expr)

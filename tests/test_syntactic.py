@@ -5,7 +5,7 @@ from hypothesis import assume, example, given
 import hypothesis.strategies as st
 import pytest
 
-from matchpy.expressions.expressions import Atom, Operation, Symbol, Wildcard, Pattern
+from matchpy.expressions.expressions import AtomExpr, Operation, NamedAtom, Wildcard, Pattern
 from matchpy.matching.one_to_one import match
 from matchpy.matching.syntactic import OPERATION_END as OP_END
 from matchpy.matching.syntactic import DiscriminationNet, FlatTerm, SequenceMatcher, is_operation, is_symbol_wildcard
@@ -20,7 +20,7 @@ CONSTANT_EXPRESSIONS = [e for e in [a, b, c, d]]
         (a,                     [a]),
         (_,                     [_]),
         (x_,                    [_]),
-        (_s,                    [Symbol]),
+        (_s,                    [NamedAtom]),
         (f(_, variable_name='v'),    [f, _, OP_END]),
         (f(),                   [f, OP_END]),
         (f(a),                  [f, a, OP_END]),
@@ -121,7 +121,7 @@ def test_is_symbol_wildcard():
     assert is_symbol_wildcard(str) is False
     assert is_symbol_wildcard(1) is False
     assert is_symbol_wildcard(None) is False
-    assert is_symbol_wildcard(Symbol) is True
+    assert is_symbol_wildcard(NamedAtom) is True
     assert is_symbol_wildcard(SpecialSymbol) is True
 
 
@@ -251,7 +251,7 @@ def test_variable_expression_match_error():
 @given(st.sets(expression_strategy, max_size=20))
 @example({f(a), f(_s)})
 def test_randomized_product_net(patterns):
-    assume(all(not isinstance(p, Atom) for p in patterns))
+    assume(all(not isinstance(p, AtomExpr) for p in patterns))
 
     patterns = [Pattern(p) for p in patterns]
     net = DiscriminationNet()

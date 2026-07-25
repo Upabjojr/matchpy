@@ -152,6 +152,28 @@ def test_eager_Simplify():
     assert fe.Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
 
 
+def test_eager_FreeQ():
+    """FreeQ is a standard Wolfram predicate lifted here from rubi_rules; a list is free
+    iff every element is. It accepts either SymPy or match-bound MatchPy values."""
+    a, b, y = sympy.symbols('a b y')
+    assert fe.FreeQ(a + b * y, x) is True          # no x
+    assert fe.FreeQ(a + b * x, x) is False         # contains x
+    assert fe.FreeQ([a, b, y], x) is True          # all free
+    assert fe.FreeQ([a, b * x], x) is False        # one contains x
+    # matchpy SymbolWrapper coerces to its sympy value
+    from matchpy.expressions.expressions import SymbolWrapper
+    assert fe.FreeQ(SymbolWrapper(a), x) is True
+
+
+def test_freeq_lifted_and_reexported():
+    """FreeQ (and its matchpy->sympy helper _ensure_sympy) live in sympy_wolfram now;
+    rubi_rules re-exports the SAME objects, and the Rubi FreeQ constraint delegates here."""
+    import importlib
+    uf = importlib.import_module('rubi_rules.utils.utility_functions')
+    assert uf.FreeQ is fe.FreeQ
+    assert uf._ensure_sympy is fe._ensure_sympy
+
+
 def test_head_to_class_unwraps_headref_and_class():
     """head_to_class is the structural bridge that lets a wildcard function head
     (bound as a HeadRef carrying its SymPy class) compare against a list of function

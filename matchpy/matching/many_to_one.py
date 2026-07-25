@@ -49,7 +49,7 @@ except ImportError:
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, Symbol, SymbolWildcard, SymbolWrapper,
+    Expression, Operation, OperationHead, NamedAtom, SymbolWildcard, SymbolWrapper,
     Wildcard, WildcardOperationHead, Pattern
 )
 from ..expressions.constraints import Constraint
@@ -165,7 +165,7 @@ class HeadType(TransitionKey):
     pass
 
 class HeadTypeExpression(HeadType):
-    """Head is a specific expression value (e.g. a Symbol instance or native object)."""
+    """Head is a specific expression value (e.g. a NamedAtom instance or native object)."""
     value: object  # Expression or native Python hashable object
 
     def __hash__(self):
@@ -506,7 +506,7 @@ class _MatchIter:
         else:
             # For Symbols, traverse class hierarchy for SymbolWildcard matching
             for base in type(expression).__mro__:
-                if base is not object and issubclass(base, Symbol):
+                if base is not object and issubclass(base, NamedAtom):
                     yield HeadTypeSymbol(value=base)
             yield HeadTypeExpression(value=expression)
         yield _HEAD_NONE
@@ -859,7 +859,7 @@ class ManyToOneMatcher(TypedModel):
                 head = _HEAD_NONE
                 label_expr = Wildcard(expression.min_count, expression.fixed_size, default_value=expression.default_value)
                 return LabelTypeExpression(value=label_expr), head
-            elif isinstance(expression, Symbol):
+            elif isinstance(expression, NamedAtom):
                 label_copy = copy.copy(expression)
                 label_copy.variable_name = None
                 return LabelTypeExpression(value=label_copy), HeadTypeExpression(value=label_copy)

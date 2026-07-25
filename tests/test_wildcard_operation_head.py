@@ -20,7 +20,7 @@ import itertools
 import pytest
 
 from matchpy.expressions.expressions import (
-    Arity, Operation, OperationHead, Pattern, Symbol, Wildcard,
+    Arity, Operation, OperationHead, Pattern, NamedAtom, Wildcard,
     WildcardOperationHead,
 )
 from matchpy.matching.many_to_one import ManyToOneMatcher
@@ -36,7 +36,7 @@ ADD = OperationHead(name='ADD', arity=Arity.variadic, commutative=True,
 MUL = OperationHead(name='MUL', arity=Arity.variadic, commutative=True,
                     associative=True, one_identity=True)
 
-a, b, x, y, z, w = (Symbol(n) for n in ('a', 'b', 'x', 'y', 'z', 'w'))
+a, b, x, y, z, w = (NamedAtom(n) for n in ('a', 'b', 'x', 'y', 'z', 'w'))
 
 
 def anyhead(var='F'):

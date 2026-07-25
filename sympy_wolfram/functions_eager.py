@@ -26,6 +26,43 @@ from sympy.core.function import Function
 from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
 
+# MatchPy is a lower layer, so these are safe module-level imports; they back the
+# matchpy->sympy coercion used by FreeQ (see _ensure_sympy).
+from matchpy.expressions.expressions import Operation as _MatchPyOperation
+from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
+
+
+def _ensure_sympy(expr):
+    """Coerce a MatchPy expression to SymPy if needed; SymPy objects pass through.
+
+    A ``SymbolWrapper`` unwraps to the SymPy value it carries; a MatchPy ``Operation``
+    is converted structurally via ``sympy_matching``. This is the bridge that lets the
+    Wolfram-standard predicates below accept either a match-bound MatchPy value or a
+    plain SymPy expression.
+    """
+    if isinstance(expr, _MatchPySymbolWrapper):
+        return expr.value
+    if isinstance(expr, _MatchPyOperation):
+        from sympy_matching.conversion import matchpy_to_sympy   # lazy: avoids any load-order edge
+        return matchpy_to_sympy(expr)
+    return expr
+
+
+def FreeQ(nodes, var):
+    """Mathematica ``FreeQ[expr, form]`` -- True iff ``form`` (``var``) occurs nowhere
+    in ``expr``. A list/tuple of ``nodes`` is free iff *every* element is.
+
+    This is a standard Wolfram-library predicate (not Rubi-specific): its body is
+    ``expr.has(var)`` over SymPy, with the matchpy->sympy coercion handled by
+    :func:`_ensure_sympy`. The Rubi ``FreeQ`` *constraint* class in
+    ``rubi_rules.utils.constraints_wolfram`` delegates here.
+    """
+    var = _ensure_sympy(var)
+    if isinstance(nodes, (tuple, list)):
+        return not any(S(_ensure_sympy(expr)).has(var) for expr in nodes)
+    nodes = S(_ensure_sympy(nodes))
+    return not nodes.has(var)
+
 
 def head_to_class(obj):
     """Resolve a function HEAD to its SymPy class, or ``None`` if not resolvable.

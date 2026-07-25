@@ -81,6 +81,7 @@ from sympy_matching.conversion import matchpy_to_sympy
 from sympy_wolfram.functions_eager import (
     LeafCount, Length, Complex, Not, Exponent,
     Simplify, First, Rest, Numerator, Denominator, Part, Util_Part, Apart,
+    FreeQ, _ensure_sympy,
 )
 
 
@@ -90,13 +91,9 @@ from matchpy import is_match, replace_all
 from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
 
 
-def _ensure_sympy(expr):
-    """Convert matchpy expression to SymPy if needed."""
-    if isinstance(expr, _MatchPySymbolWrapper):
-        return expr.value
-    if isinstance(expr, Operation):
-        return matchpy_to_sympy(expr)
-    return expr
+# _ensure_sympy and FreeQ moved to sympy_wolfram.functions_eager (imported above):
+# FreeQ is a standard Wolfram predicate and _ensure_sympy is the generic matchpy->sympy
+# coercion it needs -- neither is Rubi-specific.
 
 
 def _patched_custom_constraint_call(func):
@@ -292,16 +289,6 @@ def NonzeroQ(expr):
     # constraint avoids the expensive full Simplify (see _provably_nonzero).
     return not ZeroQ(expr)
 
-
-def FreeQ(nodes, var):
-    var = _ensure_sympy(var)
-    if isinstance(nodes, (tuple, list)):
-        return not any(S(_ensure_sympy(expr)).has(var) for expr in nodes)
-    else:
-        nodes = S(_ensure_sympy(nodes))
-        return not nodes.has(var)
-
-    # return not FreeQ(nodes, var)
 
 def List(*var):
     return list(var)

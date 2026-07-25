@@ -10,7 +10,7 @@ import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Integer, Rational, Eq, pi, E, I, oo
 
 from matchpy.expressions.expressions import (
-    Operation, Symbol, SymbolWrapper, Wildcard, Pattern, to_expression,
+    Operation, NamedAtom, SymbolWrapper, Wildcard, Pattern, to_expression,
 )
 from matchpy.matching.many_to_one import ManyToOneMatcher
 from matchpy.matching.json_serialization import to_json, from_json

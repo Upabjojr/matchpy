@@ -205,7 +205,7 @@ class Substitution(dict):
 
             >>> subst = Substitution({'x': a})
             >>> subst.rename({'x': 'y'})
-            {'y': Symbol('a')}
+            {'y': NamedAtom('a')}
 
         Args:
             renaming:

@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, Symbol, SymbolWrapper, Wildcard, SymbolWildcard, Pattern, Arity
+    Expression, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard, SymbolWildcard, Pattern, Arity
 )
 from ..expressions.constraints import Constraint, EqualVariablesConstraint, CustomConstraint
 from ..expressions.substitution import Substitution
@@ -22,9 +22,9 @@ from ..utils import VariableWithCount
 
 
 def _resolve_symbol_type(name: str):
-    """Look up a Symbol subclass by name. Falls back to Symbol."""
-    if name == 'Symbol':
-        return Symbol
+    """Look up a NamedAtom subclass by name. Falls back to NamedAtom."""
+    if name == 'NamedAtom':
+        return NamedAtom
     def _find(cls):
         for sub in cls.__subclasses__():
             if sub.__name__ == name:
@@ -33,8 +33,8 @@ def _resolve_symbol_type(name: str):
             if found:
                 return found
         return None
-    result = _find(Symbol)
-    return result if result is not None else Symbol
+    result = _find(NamedAtom)
+    return result if result is not None else NamedAtom
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -101,7 +101,7 @@ def _serialize_expression(expr) -> Optional[dict]:
         return None
     # Fallback for unknown expression types
     return {
-        '_expr_type': 'Symbol',
+        '_expr_type': 'NamedAtom',
         'name': str(expr),
         'variable_name': getattr(expr, 'variable_name', None),
     }
@@ -145,10 +145,10 @@ def _serialize_symbol_wrapper_expr(expr):
         'variable_name': expr.variable_name,
     }
 
-@_serialize_expression.register(Symbol)
+@_serialize_expression.register(NamedAtom)
 def _serialize_symbol_expr(expr):
     return {
-        '_expr_type': 'Symbol',
+        '_expr_type': 'NamedAtom',
         'name': expr.name,
         'variable_name': expr.variable_name,
     }
@@ -378,7 +378,7 @@ def _deser_operation(data):
     return Operation(head, *operands, variable_name=data.get('variable_name'))
 
 def _deser_symbol_wildcard(data):
-    st = _resolve_symbol_type(data.get('symbol_type', 'Symbol'))
+    st = _resolve_symbol_type(data.get('symbol_type', 'NamedAtom'))
     return SymbolWildcard(variable_name=data.get('variable_name'), symbol_type=st)
 
 def _deser_wildcard(data):
@@ -396,24 +396,24 @@ def _deser_symbol_wrapper(data):
     if val is not None:
         return SymbolWrapper(val, variable_name=variable_name)
     # Legacy fallback (old format with just 'name')
-    return Symbol(data.get('name', ''), variable_name=variable_name)
+    return NamedAtom(data.get('name', ''), variable_name=variable_name)
 
 def _deser_symbol(data):
-    return Symbol(data['name'], variable_name=data.get('variable_name'))
+    return NamedAtom(data['name'], variable_name=data.get('variable_name'))
 
 _EXPRESSION_DESERIALIZERS = {
     'Operation': _deser_operation,
     'SymbolWildcard': _deser_symbol_wildcard,
     'Wildcard': _deser_wildcard,
     'SymbolWrapper': _deser_symbol_wrapper,
-    'Symbol': _deser_symbol,
+    'NamedAtom': _deser_symbol,
 }
 
 def _deserialize_expression(data) -> Optional[Expression]:
     """Reconstruct an Expression from a JSON-safe dict."""
     if data is None:
         return None
-    expr_type = data.get('_expr_type', 'Symbol')
+    expr_type = data.get('_expr_type', 'NamedAtom')
     handler = _EXPRESSION_DESERIALIZERS.get(expr_type, _deser_symbol)
     return handler(data)
 
@@ -538,7 +538,7 @@ def _deser_key_head_expression(data):
 
 def _deser_key_head_symbol(data):
     from .many_to_one import HeadTypeSymbol
-    return HeadTypeSymbol(value=_resolve_symbol_type(data.get('value', 'Symbol')))
+    return HeadTypeSymbol(value=_resolve_symbol_type(data.get('value', 'NamedAtom')))
 
 def _deser_key_head_none(data):
     from .many_to_one import _HEAD_NONE

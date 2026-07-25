@@ -4,7 +4,7 @@ import hypothesis.strategies as st
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.expressions import Arity, Operation, Symbol, Wildcard, Pattern
+from matchpy.expressions.expressions import Arity, Operation, NamedAtom, Wildcard, Pattern
 from matchpy.functions import ReplacementRule, replace, replace_all, substitute, replace_many, is_match
 from matchpy.matching.one_to_one import match_anywhere
 from matchpy.matching.one_to_one import match as match_one_to_one
@@ -209,20 +209,20 @@ def test_logic_simplify(replacer):
 
     ___ = Wildcard.star()
 
-    a1 = Symbol('a1')
-    a2 = Symbol('a2')
-    a3 = Symbol('a3')
-    a4 = Symbol('a4')
-    a5 = Symbol('a5')
-    a6 = Symbol('a6')
-    a7 = Symbol('a7')
-    a8 = Symbol('a8')
-    a9 = Symbol('a9')
-    a10 = Symbol('a10')
-    a11 = Symbol('a11')
+    a1 = NamedAtom('a1')
+    a2 = NamedAtom('a2')
+    a3 = NamedAtom('a3')
+    a4 = NamedAtom('a4')
+    a5 = NamedAtom('a5')
+    a6 = NamedAtom('a6')
+    a7 = NamedAtom('a7')
+    a8 = NamedAtom('a8')
+    a9 = NamedAtom('a9')
+    a10 = NamedAtom('a10')
+    a11 = NamedAtom('a11')
 
-    LBot = Symbol(u'⊥')
-    LTop = Symbol(u'⊤')
+    LBot = NamedAtom(u'⊥')
+    LTop = NamedAtom(u'⊤')
 
     expression = LImplies(
         LAnd(

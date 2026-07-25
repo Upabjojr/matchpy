@@ -2,7 +2,7 @@
 import pytest
 
 from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import Symbol, Pattern, Operation, Arity, Wildcard
+from matchpy.expressions.expressions import NamedAtom, Pattern, Operation, Arity, Wildcard
 from matchpy.matching.many_to_one import ManyToOneMatcher
 from .common import *
 from .utils import MockConstraint
@@ -44,11 +44,11 @@ def test_different_constraints():
     assert results[0][0] == pattern2
     assert results[0][1] == {'x': a}
 
-    subject = f(Symbol('longer'), b)
+    subject = f(NamedAtom('longer'), b)
     results = sorted(matcher.match(subject))
     assert len(results) == 1
     assert results[0][0] == pattern3
-    assert results[0][1] == {'x': Symbol('longer')}
+    assert results[0][1] == {'x': NamedAtom('longer')}
 
 
 def test_different_constraints_with_match_on_operation():
@@ -66,11 +66,11 @@ def test_different_constraints_with_match_on_operation():
     assert results[0][0] == pattern2
     assert results[0][1] == {'x': a}
 
-    subject = f(Symbol('longer'), b)
+    subject = f(NamedAtom('longer'), b)
     results = sorted(matcher.match(subject))
     assert len(results) == 1
     assert results[0][0] == pattern3
-    assert results[0][1] == {'x': Symbol('longer')}
+    assert results[0][1] == {'x': NamedAtom('longer')}
 
 
 def test_different_constraints_no_match_on_operation():
@@ -100,11 +100,11 @@ def test_different_constraints_on_commutative_operation():
     assert results[0][0] == pattern2
     assert results[0][1] == {'x': a}
 
-    subject = f_c(Symbol('longer'), b)
+    subject = f_c(NamedAtom('longer'), b)
     results = sorted(matcher.match(subject))
     assert len(results) == 1
     assert results[0][0] == pattern3
-    assert results[0][1] == {'x': Symbol('longer')}
+    assert results[0][1] == {'x': NamedAtom('longer')}
 
     subject = f_c(a, b)
     results = list(matcher.match(subject))
@@ -205,7 +205,7 @@ def test_one_identity_optional_commutativity():
     Mul = Operation.new('*', Arity.variadic, 'Mul', infix=True, associative=True, commutative=True, one_identity=True)
     Pow = Operation.new('^', Arity.binary, 'Pow', infix=True)
 
-    class Integer(Symbol):
+    class Integer(NamedAtom):
         def __init__(self, value):
             super().__init__(str(value))
 
@@ -214,7 +214,7 @@ def test_one_identity_optional_commutativity():
     i2 = Integer(2)
 
     x_, m_, a_ = map(Wildcard.dot, 'xma')
-    x, m = map(Symbol, 'xm')
+    x, m = map(NamedAtom, 'xm')
     a0_ = Wildcard.optional('a', i0)
     b1_ = Wildcard.optional('b', i1)
     c0_ = Wildcard.optional('c', i0)

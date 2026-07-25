@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Eq, Integer, Rational, S
 
-from matchpy.expressions.expressions import Operation, Symbol, SymbolWrapper, to_expression
+from matchpy.expressions.expressions import Operation, NamedAtom, SymbolWrapper, to_expression
 from sympy_matching import to_expression, matchpy_to_sympy
 from sympy_matching.operations import (
     ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY,

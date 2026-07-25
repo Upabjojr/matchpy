@@ -5,7 +5,7 @@ import itertools
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.expressions import (Arity, Operation, Symbol, SymbolWildcard, Wildcard, Expression, Pattern)
+from matchpy.expressions.expressions import (Arity, Operation, NamedAtom, SymbolWildcard, Wildcard, Expression, Pattern)
 from matchpy import match
 
 from .common import *
@@ -229,8 +229,8 @@ class TestExpression:
         '   expression1,                    expression2',
         [
             (a,                             b),
-            (a,                             Symbol('a', variable_name='x')),
-            (Symbol('a', variable_name='x'),     Symbol('a', variable_name='y')),
+            (a,                             NamedAtom('a', variable_name='x')),
+            (NamedAtom('a', variable_name='x'),     NamedAtom('a', variable_name='y')),
             (a,                             _),
             (a,                             _s),
             (a,                             x_),
@@ -253,7 +253,7 @@ class TestExpression:
             (s_,                            ss_),
             (_s,                            __),
             (_,                             _s),
-            (SymbolWildcard(SpecialSymbol), SymbolWildcard(Symbol)),
+            (SymbolWildcard(NamedAtom), SymbolWildcard(SpecialSymbol)),
             (f(a),                          SpecialF(a)),
         ]
     )  # yapf: disable

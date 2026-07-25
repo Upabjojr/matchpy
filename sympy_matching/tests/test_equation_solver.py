@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-"""Advanced polynomial equation solver using FreeQ constraints.
+"""Advanced polynomial equation solver using FreeOf constraints.
 
 Demonstrates a many-to-one pattern matching approach where:
-- FreeQ constraints ensure coefficients are free of the solving variable
+- FreeOf constraints ensure coefficients are free of the solving variable
 - Optional WildSymbol defaults let a single quadratic pattern cover monic and
   missing-term cases
 - Expressions like y*x² + 3*z*x + 5 = 0 correctly identify y, 3*z, 5 as
   coefficients (all free of x) and solve using the quadratic formula
 
-This is the key use case for FreeQ: in a commutative+associative operation like
-Mul(3, z, x), the pattern Mul(b_, x) matches with b_ = Mul(3, z). The FreeQ('b', 'x')
+This is the key use case for FreeOf: in a commutative+associative operation like
+Mul(3, z, x), the pattern Mul(b_, x) matches with b_ = Mul(3, z). The FreeOf('b', 'x')
 constraint then verifies that Mul(3, z) does NOT contain x — confirming it's a valid
 coefficient.
 
@@ -28,7 +28,7 @@ from sympy import symbols, sqrt, Eq, Rational, simplify, solve, Poly, cbrt, Inte
 from matchpy.expressions.expressions import (
     Operation, Pattern, to_expression,
 )
-from matchpy.expressions.constraints import FreeQ
+from matchpy.expressions.constraints import FreeOf
 from matchpy.matching.many_to_one import ManyToOneMatcher, ManyToOneReplacer
 from matchpy import functions as matchpy_functions
 
@@ -60,9 +60,9 @@ def make_polynomial_solver(var_name: str = 'x'):
     b_ = WildSymbol('b_', optional_value=IDENTITY_ELEMENT)
     c_ = WildSymbol('c_', optional_value=IDENTITY_ELEMENT)
 
-    a_free = FreeQ('a', var_name)
-    b_free = FreeQ('b', var_name)
-    c_free = FreeQ('c', var_name)
+    a_free = FreeOf('a', var_name)
+    b_free = FreeOf('b', var_name)
+    c_free = FreeOf('c', var_name)
 
     rules = []
 
@@ -117,7 +117,7 @@ def make_polynomial_solver(var_name: str = 'x'):
     # ─── Cubic: a*x³ + b*x² + c*x + d = 0 ────────────────────────────────
 
     d_ = WildSymbol('d_', optional_value=IDENTITY_ELEMENT)
-    d_free = FreeQ('d', var_name)
+    d_free = FreeOf('d', var_name)
 
     cubic = Pattern(
         to_expression(Eq(a_ * var**3 + b_ * var**2 + c_ * var + d_, 0)),
@@ -169,7 +169,7 @@ def make_polynomial_solver(var_name: str = 'x'):
     # ─── Quartic: a*x⁴ + b*x³ + c*x² + d*x + e = 0 ──────────────────────
 
     e_ = WildSymbol('e_', optional_value=IDENTITY_ELEMENT)
-    e_free = FreeQ('e', var_name)
+    e_free = FreeOf('e', var_name)
 
     quartic = Pattern(
         to_expression(Eq(a_ * var**4 + b_ * var**3 + c_ * var**2 + d_ * var + e_, 0)),
@@ -225,7 +225,7 @@ def make_polynomial_solver(var_name: str = 'x'):
 # ─── Tests ────────────────────────────────────────────────────────────────────
 
 class TestLinearEquations:
-    """Test solving linear equations with FreeQ-constrained coefficients."""
+    """Test solving linear equations with FreeOf-constrained coefficients."""
 
     @pytest.fixture
     def solver(self):
@@ -261,7 +261,7 @@ class TestLinearEquations:
 
 
 class TestQuadraticEquations:
-    """Test solving quadratic equations with FreeQ-constrained coefficients."""
+    """Test solving quadratic equations with FreeOf-constrained coefficients."""
 
     @pytest.fixture
     def solver(self):
@@ -306,7 +306,7 @@ class TestQuadraticEquations:
 
 
 class TestFreeQFiltering:
-    """Test that FreeQ correctly rejects invalid matches."""
+    """Test that FreeOf correctly rejects invalid matches."""
 
     def test_does_not_match_when_coeff_contains_var(self):
         solver = make_polynomial_solver('x')
@@ -454,12 +454,12 @@ class TestManyToOneMatcherWithFreeQ:
 
         linear = Pattern(
             to_expression(Eq(a_ * var + b_, 0)),
-            FreeQ('a', 'x'), FreeQ('b', 'x'),
+            FreeOf('a', 'x'), FreeOf('b', 'x'),
         )
 
         quadratic = Pattern(
             to_expression(Eq(a_ * var**2 + b_ * var + c_, 0)),
-            FreeQ('a', 'x'), FreeQ('b', 'x'), FreeQ('c', 'x'),
+            FreeOf('a', 'x'), FreeOf('b', 'x'), FreeOf('c', 'x'),
         )
 
         matcher = ManyToOneMatcher()
@@ -483,7 +483,7 @@ class TestManyToOneMatcherWithFreeQ:
 
         quadratic = Pattern(
             to_expression(Eq(a_ * var**2 + b_ * var + c_, 0)),
-            FreeQ('a', 'x'), FreeQ('b', 'x'), FreeQ('c', 'x'),
+            FreeOf('a', 'x'), FreeOf('b', 'x'), FreeOf('c', 'x'),
         )
 
         eq = to_expression(Eq(y * x**2 + 3 * z * x + 5, 0))

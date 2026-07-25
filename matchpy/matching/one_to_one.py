@@ -4,7 +4,7 @@ from typing import Iterable, Iterator, List, Sequence, Tuple, cast, Set
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Pattern, Operation, OperationHead, Symbol, SymbolWrapper, SymbolWildcard, Wildcard
+    Expression, Pattern, Operation, OperationHead, NamedAtom, SymbolWrapper, SymbolWildcard, Wildcard
 )
 from ..expressions.constraints import Constraint
 from ..expressions.substitution import Substitution
@@ -96,8 +96,8 @@ def _match(subjects: List[Expression], pattern: Expression, subst: Substitution,
         elif not pattern.fixed_size:
             expr = tuple(subjects)
 
-    elif isinstance(pattern, (Symbol, SymbolWrapper)):
-        if len(subjects) == 1 and isinstance(subjects[0], (Symbol, SymbolWrapper)) and subjects[0].name == pattern.name:
+    elif isinstance(pattern, (NamedAtom, SymbolWrapper)):
+        if len(subjects) == 1 and isinstance(subjects[0], (NamedAtom, SymbolWrapper)) and subjects[0].name == pattern.name:
             match_iter = iter([subst])
 
     elif isinstance(pattern, Operation):

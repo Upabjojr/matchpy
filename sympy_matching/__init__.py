@@ -14,7 +14,7 @@ Usage:
     import sympy
     from sympy import Eq
     from matchpy import to_expression, Pattern
-    from matchpy.expressions.constraints import FreeQ
+    from matchpy.expressions.constraints import FreeOf
 
     # Define wildcards as SymPy-compatible symbols
     a_ = WildSymbol('a')
@@ -23,7 +23,7 @@ Usage:
 
     # Write patterns naturally using SymPy arithmetic
     linear = Pattern(to_expression(Eq(a_*var + b_, 0)),
-                     FreeQ('a', 'x'), FreeQ('b', 'x'))
+                     FreeOf('a', 'x'), FreeOf('b', 'x'))
 """
 from .operations import ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY
 from .wild import WildSymbol, IDENTITY_ELEMENT

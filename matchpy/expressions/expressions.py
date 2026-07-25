@@ -17,7 +17,7 @@ from multiset import Multiset
 from .._typed import TypedModel, field
 
 __all__ = [
-    'Expression', 'Arity', 'Atom', 'Symbol', 'SymbolWrapper', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern',
+    'Expression', 'Arity', 'AtomExpr', 'NamedAtom', 'SymbolWrapper', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern',
     'OperationHead', 'to_expression', 'from_expression',
     'make_dot_variable', 'make_plus_variable', 'make_star_variable', 'make_symbol_variable',
     'LIST_HEAD', 'TUPLE_HEAD', 'DICT_HEAD', 'DICT_PAIR_HEAD',
@@ -79,7 +79,7 @@ class Expression(TypedModel):
         for expr, _ in self.preorder_iter():
             if isinstance(expr, Operation):
                 result.append(expr.head.name)
-            elif isinstance(expr, (Symbol, SymbolWrapper)) and not isinstance(expr, Wildcard):
+            elif isinstance(expr, (NamedAtom, SymbolWrapper)) and not isinstance(expr, Wildcard):
                 result.append(expr.name)
         return Multiset(result)
 
@@ -375,7 +375,7 @@ class Operation(Expression):
             if isinstance(op, Expression):
                 op_list.append(op)
             elif isinstance(op, str):
-                op_list.append(Symbol(op))
+                op_list.append(NamedAtom(op))
             else:
                 op_list.append(SymbolWrapper(op))
         _normalize_operands(head, op_list)
@@ -432,7 +432,7 @@ class Operation(Expression):
         if not isinstance(other, Expression):
             return NotImplemented
         if not isinstance(other, Operation):
-            return False  # Operations sort after all atoms (Symbol, Wildcard)
+            return False  # Operations sort after all atoms (NamedAtom, Wildcard)
         if self.head != other.head:
             return self.head.name < other.head.name
         if len(self.operands) != len(other.operands):
@@ -458,16 +458,16 @@ class Operation(Expression):
         return hash((Operation, self.head, tuple(self.operands), self.variable_name))
 
 
-# ─── Atom base ────────────────────────────────────────────────────────────────
+# ─── AtomExpr base ────────────────────────────────────────────────────────────────
 
-class Atom(Expression):
+class AtomExpr(Expression):
     """Base for all atomic (leaf) expressions."""
     __iter__ = None
 
 
-# ─── Symbol ───────────────────────────────────────────────────────────────────
+# ─── NamedAtom ───────────────────────────────────────────────────────────────────
 
-class Symbol(Atom):
+class NamedAtom(AtomExpr):
     """An atomic constant expression term, uniquely identified by its name."""
     name: str = ""
 
@@ -488,16 +488,16 @@ class Symbol(Atom):
     def collect_symbols(self, symbols):
         symbols.add(self.name)
 
-    def with_renamed_vars(self, renaming) -> 'Symbol':
+    def with_renamed_vars(self, renaming) -> 'NamedAtom':
         return type(self)(self.name, variable_name=renaming.get(self.variable_name, self.variable_name))
 
-    def __copy__(self) -> 'Symbol':
+    def __copy__(self) -> 'NamedAtom':
         return type(self)(self.name, variable_name=self.variable_name)
 
     def __lt__(self, other):
         if not isinstance(other, Expression):
             return NotImplemented
-        if isinstance(other, Symbol):
+        if isinstance(other, NamedAtom):
             if self.name == other.name:
                 return (self.variable_name or '') < (other.variable_name or '')
             return self.name < other.name
@@ -510,7 +510,7 @@ class Symbol(Atom):
         return NotImplemented
 
     def __eq__(self, other):
-        if isinstance(other, Symbol):
+        if isinstance(other, NamedAtom):
             return self.name == other.name and self.variable_name == other.variable_name
         if isinstance(other, SymbolWrapper):
             return self.name == other.name and self.variable_name == other.variable_name
@@ -522,17 +522,17 @@ class Symbol(Atom):
 
 # ─── SymbolWrapper ────────────────────────────────────────────────────────────
 
-class SymbolWrapper(Atom):
+class SymbolWrapper(AtomExpr):
     """An atomic expression wrapping an arbitrary Python object.
 
-    Unlike Symbol (which stores a string name), SymbolWrapper stores the
+    Unlike NamedAtom (which stores a string name), SymbolWrapper stores the
     original object directly. This enables lossless roundtripping when
     converting expressions from external libraries (e.g. SymPy integers,
     constants like I, pi) without string-based encoding/decoding.
 
-    SymbolWrapper is cross-compatible with Symbol for matching: a Symbol('x')
+    SymbolWrapper is cross-compatible with NamedAtom for matching: a NamedAtom('x')
     pattern will match a SymbolWrapper whose name property returns 'x'.
-    This allows patterns to be written with plain Symbol('2') and still match
+    This allows patterns to be written with plain NamedAtom('2') and still match
     against SymbolWrapper(Integer(2)).
     """
     value: object = None
@@ -543,7 +543,7 @@ class SymbolWrapper(Atom):
 
     @cached_property
     def name(self) -> str:
-        """String representation for display and cross-type matching with Symbol."""
+        """String representation for display and cross-type matching with NamedAtom."""
         return str(self.value)
 
     def __str__(self):
@@ -572,7 +572,7 @@ class SymbolWrapper(Atom):
             if self.name == other.name:
                 return (self.variable_name or '') < (other.variable_name or '')
             return self.name < other.name
-        if isinstance(other, Symbol):
+        if isinstance(other, NamedAtom):
             return self.name < other.name
         if isinstance(other, Operation):
             return True  # Atoms sort before Operations
@@ -581,7 +581,7 @@ class SymbolWrapper(Atom):
     def __eq__(self, other):
         if isinstance(other, SymbolWrapper):
             return self.value == other.value and self.variable_name == other.variable_name
-        if isinstance(other, Symbol):
+        if isinstance(other, NamedAtom):
             return self.name == other.name and self.variable_name == other.variable_name
         # Allow direct comparison with the wrapped value (e.g. SymbolWrapper(Integer(2)) == Integer(2))
         if not isinstance(other, Expression) and self.variable_name is None:
@@ -609,7 +609,7 @@ class SymbolWrapper(Atom):
 
 # ─── Wildcard ─────────────────────────────────────────────────────────────────
 
-class Wildcard(Atom):
+class Wildcard(AtomExpr):
     """A wildcard that matches any expression.
 
     Attributes:
@@ -659,8 +659,8 @@ class Wildcard(Atom):
         """Create a wildcard that only matches symbols of a given type.
 
         Can be called as:
-            Wildcard.symbol()                  — matches any Symbol
-            Wildcard.symbol('name')            — named, matches any Symbol
+            Wildcard.symbol()                  — matches any NamedAtom
+            Wildcard.symbol('name')            — named, matches any NamedAtom
             Wildcard.symbol(SpecialSymbol)     — matches SpecialSymbol subclass
             Wildcard.symbol('name', SpecialSymbol) — named, matches SpecialSymbol
         """
@@ -668,7 +668,7 @@ class Wildcard(Atom):
             # First arg is a type, not a name
             return SymbolWildcard(variable_name=None, symbol_type=name_or_type)
         name = name_or_type
-        return SymbolWildcard(variable_name=name, symbol_type=symbol_type or Symbol)
+        return SymbolWildcard(variable_name=name, symbol_type=symbol_type or NamedAtom)
 
     def __str__(self):
         if self.variable_name:
@@ -704,7 +704,7 @@ class Wildcard(Atom):
     def __lt__(self, other):
         if not isinstance(other, Expression):
             return NotImplemented
-        if isinstance(other, (Symbol, SymbolWrapper)) and not isinstance(other, Wildcard):
+        if isinstance(other, (NamedAtom, SymbolWrapper)) and not isinstance(other, Wildcard):
             return False  # Wildcards sort after Symbols
         if isinstance(other, Operation):
             return True  # Atoms sort before Operations
@@ -740,7 +740,7 @@ class Wildcard(Atom):
 
 class SymbolWildcard(Wildcard):
     """A wildcard that only matches atoms of a specific type."""
-    symbol_type: type = Symbol
+    symbol_type: type = NamedAtom
 
     def __init__(self, variable_name_or_type=None, symbol_type=None, **kwargs):
         # Handle multiple calling conventions:
@@ -754,9 +754,9 @@ class SymbolWildcard(Wildcard):
             variable_name = None
         else:
             variable_name = variable_name_or_type
-        st = symbol_type or Symbol
-        if not issubclass(st, Symbol):
-            raise TypeError(f"symbol_type must be a subclass of Symbol, got {st!r}")
+        st = symbol_type or NamedAtom
+        if not issubclass(st, NamedAtom):
+            raise TypeError(f"symbol_type must be a subclass of NamedAtom, got {st!r}")
         TypedModel.__init__(self, min_count=1, fixed_size=True, variable_name=variable_name,
                            default_value=None, symbol_type=st, **kwargs)
         self.head = None
@@ -868,7 +868,7 @@ def to_expression(obj) -> Expression:
         head = LIST_HEAD if isinstance(obj, list) else TUPLE_HEAD
         operands = [to_expression(item) for item in obj]
         return Operation(head, *operands)
-    return Symbol(str(obj))
+    return NamedAtom(str(obj))
 
 
 @singledispatch
@@ -877,7 +877,7 @@ def from_expression(expr):
 
     Register handlers for specific types using @from_expression.register(type).
     """
-    if isinstance(expr, Symbol) and not isinstance(expr, Wildcard):
+    if isinstance(expr, NamedAtom) and not isinstance(expr, Wildcard):
         return expr.name
     return expr
 
@@ -901,4 +901,4 @@ def make_star_variable(name: str) -> Wildcard:
 
 def make_symbol_variable(name: str, symbol_type=None) -> SymbolWildcard:
     """Create a named symbol wildcard (matches atoms of a specific type)."""
-    return SymbolWildcard(variable_name=name, symbol_type=symbol_type or Symbol)
+    return SymbolWildcard(variable_name=name, symbol_type=symbol_type or NamedAtom)

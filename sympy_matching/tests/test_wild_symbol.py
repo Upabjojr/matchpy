@@ -20,7 +20,7 @@ from sympy import symbols, Eq, Integer, sin, cos, Rational, simplify
 from matchpy.expressions.expressions import (
     Operation, Wildcard, Pattern, to_expression,
 )
-from matchpy.expressions.constraints import FreeQ
+from matchpy.expressions.constraints import FreeOf
 from matchpy.matching.one_to_one import match as match_one
 from matchpy.matching.many_to_one import ManyToOneMatcher
 
@@ -270,14 +270,14 @@ class TestMixedOptionalValues:
         assert matchpy_to_sympy(matches[0]['b']) == Integer(7)
 
     def test_mixed_with_freeq_constraint(self):
-        """Pattern: a_*x**n_ + b_ with FreeQ on a_ and b_.
+        """Pattern: a_*x**n_ + b_ with FreeOf on a_ and b_.
         Subject: y*x**2 + z → a_=y, n_=2, b_=z (all free of x)."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=IDENTITY_ELEMENT)
         pattern = Pattern(
             to_expression(a_ * x**n_ + b_),
-            FreeQ('a', 'x'), FreeQ('b', 'x'),
+            FreeOf('a', 'x'), FreeOf('b', 'x'),
         )
         subject = to_expression(y * x**2 + z)
         matches = list(match_one(subject, pattern))

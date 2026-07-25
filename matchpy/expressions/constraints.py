@@ -7,9 +7,9 @@ The most common use would be the :class:`CustomConstraint`, which wraps a lambda
 
 >>> a_symbol_constraint = CustomConstraint(lambda x: x.name.startswith('a'))
 >>> pattern = Pattern(x_, a_symbol_constraint)
->>> is_match(Symbol('a1'), pattern)
+>>> is_match(NamedAtom('a1'), pattern)
 True
->>> is_match(Symbol('b1'), pattern)
+>>> is_match(NamedAtom('b1'), pattern)
 False
 
 There is also the :class:`EqualVariablesConstraint` which will try to unify the substitutions of the variables and only
@@ -35,7 +35,7 @@ from . import substitution
 from ..utils import get_short_lambda_source
 
 
-__all__ = ['Constraint', 'EqualVariablesConstraint', 'CustomConstraint', 'FreeQ']
+__all__ = ['Constraint', 'EqualVariablesConstraint', 'CustomConstraint', 'FreeOf']
 
 _CO_VARARGS = 0x04       # CO_VARARGS  (*args)
 _CO_VARKEYWORDS = 0x08   # CO_VARKEYWORDS (**kwargs)
@@ -254,13 +254,13 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
         return cc
 
 
-class FreeQ(Constraint):
+class FreeOf(Constraint):
     """Constraint that checks an expression is free of a given symbol.
 
-    FreeQ(variable, symbol_name) succeeds when the expression bound to `variable`
-    does NOT contain a Symbol with name `symbol_name` anywhere in its tree.
+    FreeOf(variable, symbol_name) succeeds when the expression bound to `variable`
+    does NOT contain a NamedAtom with name `symbol_name` anywhere in its tree.
 
-    This is analogous to Mathematica's FreeQ[expr, x].
+    This is analogous to Mathematica's FreeOf[expr, x].
 
     Optimized over a CustomConstraint because:
     - Uses a dedicated iterative traversal with early exit (no generator overhead)
@@ -274,10 +274,10 @@ class FreeQ(Constraint):
         >>> y_ = Wildcard.dot('y')
         >>> f = Operation.new('f', Arity.binary)
         >>> # y must not contain symbol 'x'
-        >>> pattern = Pattern(f(x_, y_), FreeQ('y', 'x'))
-        >>> is_match(f(Symbol('x'), Symbol('a')), pattern)
+        >>> pattern = Pattern(f(x_, y_), FreeOf('y', 'x'))
+        >>> is_match(f(NamedAtom('x'), NamedAtom('a')), pattern)
         True
-        >>> is_match(f(Symbol('x'), Symbol('x')), pattern)
+        >>> is_match(f(NamedAtom('x'), NamedAtom('x')), pattern)
         False
     """
 
@@ -311,9 +311,9 @@ class FreeQ(Constraint):
 
         Uses an explicit stack for tree traversal (no recursion limit issues,
         no generator overhead) and exits immediately upon finding the symbol.
-        Checks both Symbol (by name) and SymbolWrapper (by str(value)).
+        Checks both NamedAtom (by name) and SymbolWrapper (by str(value)).
         """
-        from .expressions import Symbol, SymbolWrapper, Operation
+        from .expressions import NamedAtom, SymbolWrapper, Operation
 
         # Handle sequence variable values (tuples, lists, Multisets)
         if isinstance(expr, (tuple, list)):
@@ -323,7 +323,7 @@ class FreeQ(Constraint):
 
         while stack:
             node = stack.pop()
-            if isinstance(node, Symbol):
+            if isinstance(node, NamedAtom):
                 if node.name == self.symbol_name:
                     return False
             elif isinstance(node, SymbolWrapper):
@@ -336,21 +336,21 @@ class FreeQ(Constraint):
         return True
 
     def __str__(self):
-        return 'FreeQ({}, {})'.format(self.variable, self.symbol_name)
+        return 'FreeOf({}, {})'.format(self.variable, self.symbol_name)
 
     def __repr__(self):
-        return 'FreeQ({!r}, {!r})'.format(self.variable, self.symbol_name)
+        return 'FreeOf({!r}, {!r})'.format(self.variable, self.symbol_name)
 
     def __eq__(self, other):
         return (
-            isinstance(other, FreeQ) and
+            isinstance(other, FreeOf) and
             self.variable == other.variable and
             self.symbol_name == other.symbol_name
         )
 
     def __hash__(self):
-        return hash(('FreeQ', self.variable, self.symbol_name))
+        return hash(('FreeOf', self.variable, self.symbol_name))
 
-    def with_renamed_vars(self, renaming: Dict[str, str]) -> 'FreeQ':
+    def with_renamed_vars(self, renaming: Dict[str, str]) -> 'FreeOf':
         new_variable = renaming.get(self.variable, self.variable)
-        return FreeQ(new_variable, self.symbol_name)
+        return FreeOf(new_variable, self.symbol_name)
