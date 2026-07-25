@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -285,7 +287,7 @@ RULES = [
     # Rule 23
     RubiRulePattern(
         pattern=Int((_a_ + _b_*asin(x*_c_))**_n_*(x*_g_ + f_)**_m_*(x**2*_e_ + d_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), IntegerQ(p_ + sympy.S.Half), GtQ(d_, 0), IGtQ(_n_, 0), Or(sympy.Eq(_m_, Integer(1)), sympy.Gt(p_, Integer(0)), And(sympy.Eq(_n_, Integer(1)), sympy.Gt(p_, Integer(-1))), And(sympy.Eq(_m_, Integer(2)), sympy.Lt(p_, Integer(-2)))),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), IntegerQ(p_ + sympy.S.Half), GtQ(d_, 0), IGtQ(_n_, 0), Or(Eq(_m_, 1), p_ > 0, And(Eq(_n_, 1), p_ > -1), And(Eq(_m_, 2), p_ < -2)),),
         replacement=Int(ExpandIntegrand((_a_ + _b_*asin(x*_c_))**_n_*(x**2*_e_ + d_)**p_, (x*_g_ + f_)**_m_, x), x),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=23,
@@ -293,7 +295,7 @@ RULES = [
     # Rule 24
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acos(x*_c_))**_n_*(x*_g_ + f_)**_m_*(x**2*_e_ + d_)**p_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), IntegerQ(p_ + sympy.S.Half), GtQ(d_, 0), IGtQ(_n_, 0), Or(sympy.Eq(_m_, Integer(1)), sympy.Gt(p_, Integer(0)), And(sympy.Eq(_n_, Integer(1)), sympy.Gt(p_, Integer(-1))), And(sympy.Eq(_m_, Integer(2)), sympy.Lt(p_, Integer(-2)))),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, f_, _g_], x), EqQ(_c_**2*d_ + _e_, 0), IGtQ(_m_, 0), IntegerQ(p_ + sympy.S.Half), GtQ(d_, 0), IGtQ(_n_, 0), Or(Eq(_m_, 1), p_ > 0, And(Eq(_n_, 1), p_ > -1), And(Eq(_m_, 2), p_ < -2)),),
         replacement=Int(ExpandIntegrand((_a_ + _b_*acos(x*_c_))**_n_*(x**2*_e_ + d_)**p_, (x*_g_ + f_)**_m_, x), x),
         module_name='5.1.5 u (a+b arcsin(c x))^n',
         rule_number=24,

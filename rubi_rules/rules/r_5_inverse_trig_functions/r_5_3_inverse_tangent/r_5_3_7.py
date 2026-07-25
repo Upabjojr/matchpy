@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -137,7 +139,7 @@ RULES = [
     # Rule 5
     RubiRulePattern(
         pattern=Int(x**_m_*atan(x**n_*_b_ + a_), x),
-        constraints=(FreeQ([a_, _b_], x), RationalQ(_m_, n_), sympy.Ne((_m_ + Integer(1)), Integer(0)), sympy.Ne((_m_ + Integer(1)), n_),),
+        constraints=(FreeQ([a_, _b_], x), RationalQ(_m_, n_), Ne(_m_ + 1, 0), Ne(_m_ + 1, n_),),
         replacement=x**(_m_ + 1)*atan(x**n_*_b_ + a_)/(_m_ + 1) - _b_*n_*Int(x**(_m_ + n_)/(x**(2*n_)*_b_**2 + 2*x**n_*a_*_b_ + a_**2 + 1), x)/(_m_ + 1),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=5,
@@ -145,7 +147,7 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int(x**_m_*acot(x**n_*_b_ + a_), x),
-        constraints=(FreeQ([a_, _b_], x), RationalQ(_m_, n_), sympy.Ne((_m_ + Integer(1)), Integer(0)), sympy.Ne((_m_ + Integer(1)), n_),),
+        constraints=(FreeQ([a_, _b_], x), RationalQ(_m_, n_), Ne(_m_ + 1, 0), Ne(_m_ + 1, n_),),
         replacement=x**(_m_ + 1)*acot(x**n_*_b_ + a_)/(_m_ + 1) + _b_*n_*Int(x**(_m_ + n_)/(x**(2*n_)*_b_**2 + 2*x**n_*a_*_b_ + a_**2 + 1), x)/(_m_ + 1),
         module_name='5.3.7 Miscellaneous inverse tangent',
         rule_number=6,

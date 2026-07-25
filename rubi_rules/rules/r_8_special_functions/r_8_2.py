@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -94,417 +96,417 @@ n_ = WildSymbol('n')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.fresnels((_a_ + (_b_ * x))), x),
+        pattern=Int(fresnels(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=(((_a_ + (_b_ * x)) * sympy.fresnels((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2)))) * ((_b_ * sympy.pi))**(Integer(-1)))),
+        replacement=(x*_b_ + _a_)*fresnels(x*_b_ + _a_)/_b_ + cos(pi*(x*_b_ + _a_)**2/2)/(pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=1,
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.fresnelc((_a_ + (_b_ * x))), x),
+        pattern=Int(fresnelc(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=(((_a_ + (_b_ * x)) * sympy.fresnelc((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2)))) * ((_b_ * sympy.pi))**(Integer(-1))))),
+        replacement=(x*_b_ + _a_)*fresnelc(x*_b_ + _a_)/_b_ - sin(pi*(x*_b_ + _a_)**2/2)/(pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=2,
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((sympy.fresnels((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int(fresnels(x*_b_ + _a_)**2, x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=(((_a_ + (_b_ * x)) * (sympy.fresnels((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(2) * Int(((_a_ + (_b_ * x)) * sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2)))) * sympy.fresnels((_a_ + (_b_ * x)))), x)))),
+        replacement=-2*Int((x*_b_ + _a_)*sin(pi*(x*_b_ + _a_)**2/2)*fresnels(x*_b_ + _a_), x) + (x*_b_ + _a_)*fresnels(x*_b_ + _a_)**2/_b_,
         module_name='8.2 Fresnel integral functions',
         rule_number=3,
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((sympy.fresnelc((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int(fresnelc(x*_b_ + _a_)**2, x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=(((_a_ + (_b_ * x)) * (sympy.fresnelc((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(2) * Int(((_a_ + (_b_ * x)) * sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2)))) * sympy.fresnelc((_a_ + (_b_ * x)))), x)))),
+        replacement=-2*Int((x*_b_ + _a_)*cos(pi*(x*_b_ + _a_)**2/2)*fresnelc(x*_b_ + _a_), x) + (x*_b_ + _a_)*fresnelc(x*_b_ + _a_)**2/_b_,
         module_name='8.2 Fresnel integral functions',
         rule_number=4,
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((sympy.fresnels((_a_ + (_b_ * x))))**(n_), x),
+        pattern=Int(fresnels(x*_b_ + _a_)**n_, x),
         constraints=(FreeQ([_a_, _b_, n_], x), NeQ(n_, 1), NeQ(n_, 2),),
-        replacement=Unintegrable((sympy.fresnels((_a_ + (_b_ * x))))**(n_), x),
+        replacement=Unintegrable(fresnels(x*_b_ + _a_)**n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=5,
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int((sympy.fresnelc((_a_ + (_b_ * x))))**(n_), x),
+        pattern=Int(fresnelc(x*_b_ + _a_)**n_, x),
         constraints=(FreeQ([_a_, _b_, n_], x), NeQ(n_, 1), NeQ(n_, 2),),
-        replacement=Unintegrable((sympy.fresnelc((_a_ + (_b_ * x))))**(n_), x),
+        replacement=Unintegrable(fresnelc(x*_b_ + _a_)**n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=6,
     ),
     # Rule 7
     RubiRulePattern(
-        pattern=Int((sympy.fresnels((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(fresnels(x*_b_)/x, x),
         constraints=(FreeQ(_b_, x),),
-        replacement=(((Integer(1) + sympy.I) * (Integer(4))**(Integer(-1)) * Int((sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + sympy.I) * _b_ * x)) * (x)**(Integer(-1))), x)) + ((Integer(1) + (Integer(-1) * sympy.I)) * (Integer(4))**(Integer(-1)) * Int((sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + (Integer(-1) * sympy.I)) * _b_ * x)) * (x)**(Integer(-1))), x))),
+        replacement=(sympy.S(1)/4 - I/4)*Int(erf(sqrt(pi)*x*_b_*(1 - I)/2)/x, x) + (sympy.S(1)/4 + I/4)*Int(erf(sqrt(pi)*x*_b_*(1 + I)/2)/x, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=7,
     ),
     # Rule 8
     RubiRulePattern(
-        pattern=Int((sympy.fresnelc((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int(fresnelc(x*_b_)/x, x),
         constraints=(FreeQ(_b_, x),),
-        replacement=(((Integer(1) + (Integer(-1) * sympy.I)) * (Integer(4))**(Integer(-1)) * Int((sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + sympy.I) * _b_ * x)) * (x)**(Integer(-1))), x)) + ((Integer(1) + sympy.I) * (Integer(4))**(Integer(-1)) * Int((sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + (Integer(-1) * sympy.I)) * _b_ * x)) * (x)**(Integer(-1))), x))),
+        replacement=(sympy.S(1)/4 + I/4)*Int(erf(sqrt(pi)*x*_b_*(1 - I)/2)/x, x) + (sympy.S(1)/4 - I/4)*Int(erf(sqrt(pi)*x*_b_*(1 + I)/2)/x, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=8,
     ),
     # Rule 9
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int((x*_d_)**_m_*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_, _m_], x), NeQ(_m_, -1),),
-        replacement=((((_d_ * x))**((_m_ + Integer(1))) * sympy.fresnels((_b_ * x)) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_d_ * x))**((_m_ + Integer(1))) * sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * (_b_)**(Integer(2)) * (x)**(Integer(2))))), x)))),
+        replacement=-_b_*Int((x*_d_)**(_m_ + 1)*sin(pi*x**2*_b_**2/2), x)/(_d_*(_m_ + 1)) + (x*_d_)**(_m_ + 1)*fresnels(x*_b_)/(_d_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=9,
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int((x*_d_)**_m_*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_, _m_], x), NeQ(_m_, -1),),
-        replacement=((((_d_ * x))**((_m_ + Integer(1))) * sympy.fresnelc((_b_ * x)) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_d_ * x))**((_m_ + Integer(1))) * sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * (_b_)**(Integer(2)) * (x)**(Integer(2))))), x)))),
+        replacement=-_b_*Int((x*_d_)**(_m_ + 1)*cos(pi*x**2*_b_**2/2), x)/(_d_*(_m_ + 1)) + (x*_d_)**(_m_ + 1)*fresnelc(x*_b_)/(_d_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=10,
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.fresnels((_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnels(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
-        replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.fresnels((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2))))), x)))),
+        replacement=-_b_*Int((x*_d_ + _c_)**(_m_ + 1)*sin(pi*(x*_b_ + _a_)**2/2), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*fresnels(x*_b_ + _a_)/(_d_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=11,
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.fresnelc((_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnelc(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
-        replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.fresnelc((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * ((_a_ + (_b_ * x)))**(Integer(2))))), x)))),
+        replacement=-_b_*Int((x*_d_ + _c_)**(_m_ + 1)*cos(pi*(x*_b_ + _a_)**2/2), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*fresnelc(x*_b_ + _a_)/(_d_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=12,
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.fresnels((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(x**_m_*fresnels(x*_b_)**2, x),
         constraints=(FreeQ(_b_, x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=(((x)**((_m_ + Integer(1))) * (sympy.fresnels((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((_m_ + Integer(1))) * sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * (_b_)**(Integer(2)) * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)))),
+        replacement=x**(_m_ + 1)*fresnels(x*_b_)**2/(_m_ + 1) - 2*_b_*Int(x**(_m_ + 1)*sin(pi*x**2*_b_**2/2)*fresnels(x*_b_), x)/(_m_ + 1),
         module_name='8.2 Fresnel integral functions',
         rule_number=13,
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.fresnelc((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(x**_m_*fresnelc(x*_b_)**2, x),
         constraints=(FreeQ(_b_, x), IntegerQ(_m_), NeQ(_m_, -1),),
-        replacement=(((x)**((_m_ + Integer(1))) * (sympy.fresnelc((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * _b_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((_m_ + Integer(1))) * sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * (_b_)**(Integer(2)) * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)))),
+        replacement=x**(_m_ + 1)*fresnelc(x*_b_)**2/(_m_ + 1) - 2*_b_*Int(x**(_m_ + 1)*cos(pi*x**2*_b_**2/2)*fresnelc(x*_b_), x)/(_m_ + 1),
         module_name='8.2 Fresnel integral functions',
         rule_number=14,
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnels((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnels(x*_b_ + a_)**2, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
-        replacement=(((_b_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand((sympy.fresnels(x))**(Integer(2)), (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * x)))**(_m_), x), x), x, (a_ + (_b_ * x)))),
+        replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand(fresnels(x)**2, (x*_d_ - a_*_d_ + _b_*_c_)**_m_, x), x), x, x*_b_ + a_),
         module_name='8.2 Fresnel integral functions',
         rule_number=15,
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnelc((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnelc(x*_b_ + a_)**2, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
-        replacement=(((_b_)**((_m_ + Integer(1))))**(Integer(-1)) * Subst(Int(ExpandIntegrand((sympy.fresnelc(x))**(Integer(2)), (((_b_ * _c_) + (Integer(-1) * (a_ * _d_)) + (_d_ * x)))**(_m_), x), x), x, (a_ + (_b_ * x)))),
+        replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand(fresnelc(x)**2, (x*_d_ - a_*_d_ + _b_*_c_)**_m_, x), x), x, x*_b_ + a_),
         module_name='8.2 Fresnel integral functions',
         rule_number=16,
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x),),
-        replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_d_ + _c_)**_m_*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=17,
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_d_ + _c_)**_m_*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, _n_], x),),
-        replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_d_ + _c_)**_m_*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=18,
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(exp(x**2*_d_ + _c_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -pi**2*_b_**4/4),),
-        replacement=(((Integer(1) + sympy.I) * (Integer(4))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + sympy.I) * _b_ * x))), x)) + ((Integer(1) + (Integer(-1) * sympy.I)) * (Integer(4))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + (Integer(-1) * sympy.I)) * _b_ * x))), x))),
+        replacement=(sympy.S(1)/4 - I/4)*Int(exp(x**2*_d_ + _c_)*erf(sqrt(pi)*x*_b_*(1 - I)/2), x) + (sympy.S(1)/4 + I/4)*Int(exp(x**2*_d_ + _c_)*erf(sqrt(pi)*x*_b_*(1 + I)/2), x),
         module_name='8.2 Fresnel integral functions',
         rule_number=19,
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(exp(x**2*_d_ + _c_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _c_, _d_], x), EqQ(_d_**2, -pi**2*_b_**4/4),),
-        replacement=(((Integer(1) + (Integer(-1) * sympy.I)) * (Integer(4))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + sympy.I) * _b_ * x))), x)) + ((Integer(1) + sympy.I) * (Integer(4))**(Integer(-1)) * Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * sympy.erf((sympy.sqrt(sympy.pi) * (Integer(2))**(Integer(-1)) * (Integer(1) + (Integer(-1) * sympy.I)) * _b_ * x))), x))),
+        replacement=(sympy.S(1)/4 + I/4)*Int(exp(x**2*_d_ + _c_)*erf(sqrt(pi)*x*_b_*(1 - I)/2), x) + (sympy.S(1)/4 - I/4)*Int(exp(x**2*_d_ + _c_)*erf(sqrt(pi)*x*_b_*(1 + I)/2), x),
         module_name='8.2 Fresnel integral functions',
         rule_number=20,
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(exp(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(exp(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=21,
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(exp(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable(((sympy.E)**((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(exp(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=22,
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int((sympy.sin((_d_ * (x)**(Integer(2)))) * (sympy.fresnels((_b_ * x)))**(_n_)), x),
+        pattern=Int(sin(x**2*_d_)*fresnels(x*_b_)**_n_, x),
         constraints=(FreeQ([_b_, _d_, _n_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=(sympy.pi * _b_ * ((Integer(2) * _d_))**(Integer(-1)) * Subst(Int((x)**(_n_), x), x, sympy.fresnels((_b_ * x)))),
+        replacement=pi*_b_*Subst(Int(x**_n_, x), x, fresnels(x*_b_))/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=23,
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((sympy.cos((_d_ * (x)**(Integer(2)))) * (sympy.fresnelc((_b_ * x)))**(_n_)), x),
+        pattern=Int(cos(x**2*_d_)*fresnelc(x*_b_)**_n_, x),
         constraints=(FreeQ([_b_, _d_, _n_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=(sympy.pi * _b_ * ((Integer(2) * _d_))**(Integer(-1)) * Subst(Int((x)**(_n_), x), x, sympy.fresnelc((_b_ * x)))),
+        replacement=pi*_b_*Subst(Int(x**_n_, x), x, fresnelc(x*_b_))/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=24,
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int((sympy.sin((c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(sin(x**2*_d_ + c_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, c_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.sin(c_) * Int((sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)) + (sympy.cos(c_) * Int((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x))),
+        replacement=Int(sin(x**2*_d_)*fresnels(x*_b_), x)*cos(c_) + Int(cos(x**2*_d_)*fresnels(x*_b_), x)*sin(c_),
         module_name='8.2 Fresnel integral functions',
         rule_number=25,
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int((sympy.cos((c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(cos(x**2*_d_ + c_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, c_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.cos(c_) * Int((sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)) + (Integer(-1) * (sympy.sin(c_) * Int((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)))),
+        replacement=-Int(sin(x**2*_d_)*fresnelc(x*_b_), x)*sin(c_) + Int(cos(x**2*_d_)*fresnelc(x*_b_), x)*cos(c_),
         module_name='8.2 Fresnel integral functions',
         rule_number=26,
     ),
     # Rule 27
     RubiRulePattern(
-        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(sin(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(sin(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=27,
     ),
     # Rule 28
     RubiRulePattern(
-        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(cos(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(cos(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=28,
     ),
     # Rule 29
     RubiRulePattern(
-        pattern=Int((sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(cos(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.fresnelc((_b_ * x)) * sympy.fresnels((_b_ * x)) * ((Integer(2) * _b_))**(Integer(-1))) + (Integer(-1) * ((Integer(8))**(Integer(-1)) * sympy.I * _b_ * (x)**(Integer(2)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), (Integer(-1) * (Integer(2))**(Integer(-1)) * sympy.I * (_b_)**(Integer(2)) * sympy.pi * (x)**(Integer(2)))))) + ((Integer(8))**(Integer(-1)) * sympy.I * _b_ * (x)**(Integer(2)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), ((Integer(2))**(Integer(-1)) * sympy.I * (_b_)**(Integer(2)) * sympy.pi * (x)**(Integer(2)))))),
+        replacement=-I*x**2*_b_*hyper((1, 1), (sympy.S(3)/2, 2), -I*pi*x**2*_b_**2/2)/8 + I*x**2*_b_*hyper((1, 1), (sympy.S(3)/2, 2), I*pi*x**2*_b_**2/2)/8 + fresnelc(x*_b_)*fresnels(x*_b_)/(2*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=29,
     ),
     # Rule 30
     RubiRulePattern(
-        pattern=Int((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(sin(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((_b_ * sympy.pi * sympy.fresnelc((_b_ * x)) * sympy.fresnels((_b_ * x)) * ((Integer(4) * _d_))**(Integer(-1))) + ((Integer(8))**(Integer(-1)) * sympy.I * _b_ * (x)**(Integer(2)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), ((Integer(-1) * sympy.I) * _d_ * (x)**(Integer(2))))) + (Integer(-1) * ((Integer(8))**(Integer(-1)) * sympy.I * _b_ * (x)**(Integer(2)) * sympy.hyper(List(Integer(1), Integer(1)), List((Integer(3) * (Integer(2))**(Integer(-1))), Integer(2)), (sympy.I * _d_ * (x)**(Integer(2))))))),
+        replacement=I*x**2*_b_*hyper((1, 1), (sympy.S(3)/2, 2), -I*x**2*_d_)/8 - I*x**2*_b_*hyper((1, 1), (sympy.S(3)/2, 2), I*x**2*_d_)/8 + pi*_b_*fresnelc(x*_b_)*fresnels(x*_b_)/(4*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=30,
     ),
     # Rule 31
     RubiRulePattern(
-        pattern=Int((sympy.cos((c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(cos(x**2*_d_ + c_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, c_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.cos(c_) * Int((sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)) + (Integer(-1) * (sympy.sin(c_) * Int((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)))),
+        replacement=-Int(sin(x**2*_d_)*fresnels(x*_b_), x)*sin(c_) + Int(cos(x**2*_d_)*fresnels(x*_b_), x)*cos(c_),
         module_name='8.2 Fresnel integral functions',
         rule_number=31,
     ),
     # Rule 32
     RubiRulePattern(
-        pattern=Int((sympy.sin((c_ + (_d_ * (x)**(Integer(2))))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(sin(x**2*_d_ + c_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, c_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.sin(c_) * Int((sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)) + (sympy.cos(c_) * Int((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x))),
+        replacement=Int(sin(x**2*_d_)*fresnelc(x*_b_), x)*cos(c_) + Int(cos(x**2*_d_)*fresnelc(x*_b_), x)*sin(c_),
         module_name='8.2 Fresnel integral functions',
         rule_number=32,
     ),
     # Rule 33
     RubiRulePattern(
-        pattern=Int((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(cos(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable((sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(cos(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=33,
     ),
     # Rule 34
     RubiRulePattern(
-        pattern=Int((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int(sin(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=Unintegrable((sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable(sin(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=34,
     ),
     # Rule 35
     RubiRulePattern(
-        pattern=Int((x * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x*sin(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=(((Integer(-1) * sympy.cos((_d_ * (x)**(Integer(2))))) * sympy.fresnels((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (((Integer(2) * _b_ * sympy.pi))**(Integer(-1)) * Int(sympy.sin((Integer(2) * _d_ * (x)**(Integer(2)))), x))),
+        replacement=-cos(x**2*_d_)*fresnels(x*_b_)/(2*_d_) + Int(sin(2*x**2*_d_), x)/(2*pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=35,
     ),
     # Rule 36
     RubiRulePattern(
-        pattern=Int((x * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x*cos(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((Integer(4) * _d_))**(Integer(-1)) * Int(sympy.sin((Integer(2) * _d_ * (x)**(Integer(2)))), x)))),
+        replacement=-_b_*Int(sin(2*x**2*_d_), x)/(4*_d_) + sin(x**2*_d_)*fresnelc(x*_b_)/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=36,
     ),
     # Rule 37
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x**m_*sin(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), IGtQ(m_, 1),),
-        replacement=(((Integer(-1) * (x)**((m_ + Integer(-1)))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (((Integer(2) * _b_ * sympy.pi))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * sympy.sin((Integer(2) * _d_ * (x)**(Integer(2))))), x)) + ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x))),
+        replacement=-x**(m_ - 1)*cos(x**2*_d_)*fresnels(x*_b_)/(2*_d_) + (m_ - 1)*Int(x**(m_ - 2)*cos(x**2*_d_)*fresnels(x*_b_), x)/(2*_d_) + Int(x**(m_ - 1)*sin(2*x**2*_d_), x)/(2*pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=37,
     ),
     # Rule 38
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x**m_*cos(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), IGtQ(m_, 1),),
-        replacement=(((x)**((m_ + Integer(-1))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (_b_ * ((Integer(4) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * sympy.sin((Integer(2) * _d_ * (x)**(Integer(2))))), x))) + (Integer(-1) * ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)))),
+        replacement=x**(m_ - 1)*sin(x**2*_d_)*fresnelc(x*_b_)/(2*_d_) - _b_*Int(x**(m_ - 1)*sin(2*x**2*_d_), x)/(4*_d_) - (m_ - 1)*Int(x**(m_ - 2)*sin(x**2*_d_)*fresnelc(x*_b_), x)/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=38,
     ),
     # Rule 39
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x**m_*sin(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), ILtQ(m_, -2),),
-        replacement=(((x)**((m_ + Integer(1))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x)) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (_d_ * (x)**((m_ + Integer(2))) * ((sympy.pi * _b_ * (m_ + Integer(1)) * (m_ + Integer(2))))**(Integer(-1)))) + (_d_ * ((sympy.pi * _b_ * (m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * sympy.cos((Integer(2) * _d_ * (x)**(Integer(2))))), x)) + (Integer(-1) * (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)))),
+        replacement=x**(m_ + 1)*sin(x**2*_d_)*fresnels(x*_b_)/(m_ + 1) - x**(m_ + 2)*_d_/(pi*_b_*(m_ + 1)*(m_ + 2)) - 2*_d_*Int(x**(m_ + 2)*cos(x**2*_d_)*fresnels(x*_b_), x)/(m_ + 1) + _d_*Int(x**(m_ + 1)*cos(2*x**2*_d_), x)/(pi*_b_*(m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=39,
     ),
     # Rule 40
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x**m_*cos(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), ILtQ(m_, -2),),
-        replacement=(((x)**((m_ + Integer(1))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x)) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (_b_ * (x)**((m_ + Integer(2))) * ((Integer(2) * (m_ + Integer(1)) * (m_ + Integer(2))))**(Integer(-1)))) + (Integer(-1) * (_b_ * ((Integer(2) * (m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * sympy.cos((Integer(2) * _d_ * (x)**(Integer(2))))), x))) + (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x))),
+        replacement=x**(m_ + 1)*cos(x**2*_d_)*fresnelc(x*_b_)/(m_ + 1) - x**(m_ + 2)*_b_/((m_ + 2)*(2*m_ + 2)) - _b_*Int(x**(m_ + 1)*cos(2*x**2*_d_), x)/(2*m_ + 2) + 2*_d_*Int(x**(m_ + 2)*sin(x**2*_d_)*fresnelc(x*_b_), x)/(m_ + 1),
         module_name='8.2 Fresnel integral functions',
         rule_number=40,
     ),
     # Rule 41
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_e_)**_m_*sin(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=Unintegrable((((_e_ * x))**(_m_) * sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_e_)**_m_*sin(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=41,
     ),
     # Rule 42
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_e_)**_m_*cos(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=Unintegrable((((_e_ * x))**(_m_) * sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_e_)**_m_*cos(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=42,
     ),
     # Rule 43
     RubiRulePattern(
-        pattern=Int((x * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x*cos(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=((sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (((sympy.pi * _b_))**(Integer(-1)) * Int((sympy.sin((_d_ * (x)**(Integer(2)))))**(Integer(2)), x)))),
+        replacement=sin(x**2*_d_)*fresnels(x*_b_)/(2*_d_) - Int(sin(x**2*_d_)**2, x)/(pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=43,
     ),
     # Rule 44
     RubiRulePattern(
-        pattern=Int((x * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x*sin(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4),),
-        replacement=(((Integer(-1) * sympy.cos((_d_ * (x)**(Integer(2))))) * sympy.fresnelc((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (_b_ * ((Integer(2) * _d_))**(Integer(-1)) * Int((sympy.cos((_d_ * (x)**(Integer(2)))))**(Integer(2)), x))),
+        replacement=_b_*Int(cos(x**2*_d_)**2, x)/(2*_d_) - cos(x**2*_d_)*fresnelc(x*_b_)/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=44,
     ),
     # Rule 45
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x**m_*cos(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), IGtQ(m_, 1),),
-        replacement=(((x)**((m_ + Integer(-1))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (Integer(-1) * (((sympy.pi * _b_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * (sympy.sin((_d_ * (x)**(Integer(2)))))**(Integer(2))), x))) + (Integer(-1) * ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x)))),
+        replacement=x**(m_ - 1)*sin(x**2*_d_)*fresnels(x*_b_)/(2*_d_) - (m_ - 1)*Int(x**(m_ - 2)*sin(x**2*_d_)*fresnels(x*_b_), x)/(2*_d_) - Int(x**(m_ - 1)*sin(x**2*_d_)**2, x)/(pi*_b_),
         module_name='8.2 Fresnel integral functions',
         rule_number=45,
     ),
     # Rule 46
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x**m_*sin(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), IGtQ(m_, 1),),
-        replacement=(((Integer(-1) * (x)**((m_ + Integer(-1)))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x)) * ((Integer(2) * _d_))**(Integer(-1))) + (_b_ * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-1))) * (sympy.cos((_d_ * (x)**(Integer(2)))))**(Integer(2))), x)) + ((m_ + Integer(-1)) * ((Integer(2) * _d_))**(Integer(-1)) * Int(((x)**((m_ + Integer(-2))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x))),
+        replacement=-x**(m_ - 1)*cos(x**2*_d_)*fresnelc(x*_b_)/(2*_d_) + _b_*Int(x**(m_ - 1)*cos(x**2*_d_)**2, x)/(2*_d_) + (m_ - 1)*Int(x**(m_ - 2)*cos(x**2*_d_)*fresnelc(x*_b_), x)/(2*_d_),
         module_name='8.2 Fresnel integral functions',
         rule_number=46,
     ),
     # Rule 47
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x),
+        pattern=Int(x**m_*cos(x**2*_d_)*fresnels(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), ILtQ(m_, -1),),
-        replacement=(((x)**((m_ + Integer(1))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x)) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (_d_ * ((sympy.pi * _b_ * (m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * sympy.sin((Integer(2) * _d_ * (x)**(Integer(2))))), x))) + (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnels((_b_ * x))), x))),
+        replacement=x**(m_ + 1)*cos(x**2*_d_)*fresnels(x*_b_)/(m_ + 1) + 2*_d_*Int(x**(m_ + 2)*sin(x**2*_d_)*fresnels(x*_b_), x)/(m_ + 1) - _d_*Int(x**(m_ + 1)*sin(2*x**2*_d_), x)/(pi*_b_*(m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=47,
     ),
     # Rule 48
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x),
+        pattern=Int(x**m_*sin(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), ILtQ(m_, -1),),
-        replacement=(((x)**((m_ + Integer(1))) * sympy.sin((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x)) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (_b_ * ((Integer(2) * (m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * sympy.sin((Integer(2) * _d_ * (x)**(Integer(2))))), x))) + (Integer(-1) * (Integer(2) * _d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(2))) * sympy.cos((_d_ * (x)**(Integer(2)))) * sympy.fresnelc((_b_ * x))), x)))),
+        replacement=x**(m_ + 1)*sin(x**2*_d_)*fresnelc(x*_b_)/(m_ + 1) - _b_*Int(x**(m_ + 1)*sin(2*x**2*_d_), x)/(2*m_ + 2) - 2*_d_*Int(x**(m_ + 2)*cos(x**2*_d_)*fresnelc(x*_b_), x)/(m_ + 1),
         module_name='8.2 Fresnel integral functions',
         rule_number=48,
     ),
     # Rule 49
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_e_)**_m_*cos(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=Unintegrable((((_e_ * x))**(_m_) * sympy.cos((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnels((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_e_)**_m_*cos(x**2*_d_ + _c_)*fresnels(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=49,
     ),
     # Rule 50
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        pattern=Int((x*_e_)**_m_*sin(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=Unintegrable((((_e_ * x))**(_m_) * sympy.sin((_c_ + (_d_ * (x)**(Integer(2))))) * (sympy.fresnelc((_a_ + (_b_ * x))))**(_n_)), x),
+        replacement=Unintegrable((x*_e_)**_m_*sin(x**2*_d_ + _c_)*fresnelc(x*_b_ + _a_)**_n_, x),
         module_name='8.2 Fresnel integral functions',
         rule_number=50,
     ),
     # Rule 51
     RubiRulePattern(
-        pattern=Int(sympy.fresnels((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(fresnels(_d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=((x * sympy.fresnels((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (_b_ * _d_ * _n_ * Int(sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2)))), x)))),
+        replacement=x*fresnels(_d_*(_a_ + _b_*log(x**_n_*_c_))) - _b_*_d_*_n_*Int(sin(pi*_d_**2*(_a_ + _b_*log(x**_n_*_c_))**2/2), x),
         module_name='8.2 Fresnel integral functions',
         rule_number=51,
     ),
     # Rule 52
     RubiRulePattern(
-        pattern=Int(sympy.fresnelc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(fresnelc(_d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
-        replacement=((x * sympy.fresnelc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (_b_ * _d_ * _n_ * Int(sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2)))), x)))),
+        replacement=x*fresnelc(_d_*(_a_ + _b_*log(x**_n_*_c_))) - _b_*_d_*_n_*Int(cos(pi*_d_**2*(_a_ + _b_*log(x**_n_*_c_))**2/2), x),
         module_name='8.2 Fresnel integral functions',
         rule_number=52,
     ),
@@ -518,17 +520,17 @@ RULES = [
     ),
     # Rule 54
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.fresnels((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((x*_e_)**_m_*fresnels(_d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
-        replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.fresnels((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * _d_ * _n_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * sympy.sin((sympy.pi * (Integer(2))**(Integer(-1)) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))), x)))),
+        replacement=-_b_*_d_*_n_*Int((x*_e_)**_m_*sin(pi*_d_**2*(_a_ + _b_*log(x**_n_*_c_))**2/2), x)/(_m_ + 1) + (x*_e_)**(_m_ + 1)*fresnels(_d_*(_a_ + _b_*log(x**_n_*_c_)))/(_e_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=54,
     ),
     # Rule 55
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.fresnelc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((x*_e_)**_m_*fresnelc(_d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
-        replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.fresnelc((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * _d_ * _n_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * sympy.cos((sympy.pi * (Integer(2))**(Integer(-1)) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(2))))), x)))),
+        replacement=-_b_*_d_*_n_*Int((x*_e_)**_m_*cos(pi*_d_**2*(_a_ + _b_*log(x**_n_*_c_))**2/2), x)/(_m_ + 1) + (x*_e_)**(_m_ + 1)*fresnelc(_d_*(_a_ + _b_*log(x**_n_*_c_)))/(_e_*(_m_ + 1)),
         module_name='8.2 Fresnel integral functions',
         rule_number=55,
     ),

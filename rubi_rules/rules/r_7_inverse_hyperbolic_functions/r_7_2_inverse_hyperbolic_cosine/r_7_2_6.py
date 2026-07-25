@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -142,7 +144,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*acosh(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(2) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sinh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))))**(Integer(2)) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt(_b_) * sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.sinh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * sympy.erfi(((sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))) + (sympy.sqrt(_b_) * sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.sinh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * sympy.erf(((sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))),
+        replacement=-sqrt(2)*sqrt(pi)*sqrt(_b_)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*_d_) + sqrt(2)*sqrt(pi)*sqrt(_b_)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*_d_) + 2*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))*sinh(acosh(x**2*_d_ + 1)/2)**2/(x*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=5,
     ),
@@ -150,7 +152,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*acosh(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(2) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.cosh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))))**(Integer(2)) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt(_b_) * sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.cosh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * sympy.erfi(((sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))) + (Integer(-1) * (sympy.sqrt(_b_) * sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.cosh(((Integer(2))**(Integer(-1)) * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * sympy.erf(((sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))))),
+        replacement=-sqrt(2)*sqrt(pi)*sqrt(_b_)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*_d_) - sqrt(2)*sqrt(pi)*sqrt(_b_)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*_d_) + 2*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))*cosh(acosh(x**2*_d_ - 1)/2)**2/(x*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=6,
     ),
@@ -166,7 +168,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*acosh(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((x * sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Chi(((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Shi(((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))))),
+        replacement=-sqrt(2)*x*sinh(_a_/(2*_b_))*Shi((_a_ + _b_*acosh(x**2*_d_ + 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)) + sqrt(2)*x*cosh(_a_/(2*_b_))*Chi((_a_ + _b_*acosh(x**2*_d_ + 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=8,
     ),
@@ -174,7 +176,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*acosh(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=(((Integer(-1) * x) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Chi(((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))) + (x * sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Shi(((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1)))),
+        replacement=-sqrt(2)*x*sinh(_a_/(2*_b_))*Chi((_a_ + _b_*acosh(x**2*_d_ - 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)) + sqrt(2)*x*cosh(_a_/(2*_b_))*Shi((_a_ + _b_*acosh(x**2*_d_ - 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=9,
     ),
@@ -182,7 +184,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/sqrt(_a_ + _b_*acosh(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.sinh((sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erfi((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * ((sympy.sqrt(_b_) * _d_ * x))**(Integer(-1))) + (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.sinh((sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erf((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * ((sympy.sqrt(_b_) * _d_ * x))**(Integer(-1)))),
+        replacement=sqrt(2)*sqrt(pi)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*sqrt(_b_)*_d_) + sqrt(2)*sqrt(pi)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*sqrt(_b_)*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=10,
     ),
@@ -190,7 +192,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/sqrt(_a_ + _b_*acosh(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.cosh((sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erfi((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * ((sympy.sqrt(_b_) * _d_ * x))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.cosh((sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erf((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * ((sympy.sqrt(_b_) * _d_ * x))**(Integer(-1))))),
+        replacement=sqrt(2)*sqrt(pi)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*sqrt(_b_)*_d_) - sqrt(2)*sqrt(pi)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*sqrt(_b_)*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=11,
     ),
@@ -198,7 +200,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acosh(x**2*_d_ + 1))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=(((Integer(-1) * sympy.sqrt((_d_ * (x)**(Integer(2))))) * sympy.sqrt((Integer(2) + (_d_ * (x)**(Integer(2))))) * ((_b_ * _d_ * x * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))))))**(Integer(-1))) + (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.sinh((sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erfi((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * (((_b_)**((Integer(3) * (Integer(2))**(Integer(-1)))) * _d_ * x))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.sinh((sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erf((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * (((_b_)**((Integer(3) * (Integer(2))**(Integer(-1)))) * _d_ * x))**(Integer(-1))))),
+        replacement=-sqrt(x**2*_d_)*sqrt(x**2*_d_ + 2)/(x*_b_*_d_*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))) + sqrt(2)*sqrt(pi)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*_b_**(sympy.S(3)/2)*_d_) - sqrt(2)*sqrt(pi)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*sinh(acosh(x**2*_d_ + 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ + 1))/(2*sqrt(_b_)))/(2*x*_b_**(sympy.S(3)/2)*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=12,
     ),
@@ -206,7 +208,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acosh(x**2*_d_ - 1))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=(((Integer(-1) * sympy.sqrt((_d_ * (x)**(Integer(2))))) * sympy.sqrt((Integer(-2) + (_d_ * (x)**(Integer(2))))) * ((_b_ * _d_ * x * sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))))))**(Integer(-1))) + (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.cosh((sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erfi((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * (((_b_)**((Integer(3) * (Integer(2))**(Integer(-1)))) * _d_ * x))**(Integer(-1))) + (sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * (sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.cosh((sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.erf((sympy.sqrt((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sqrt((Integer(2) * _b_)))**(Integer(-1)))) * (((_b_)**((Integer(3) * (Integer(2))**(Integer(-1)))) * _d_ * x))**(Integer(-1)))),
+        replacement=-sqrt(x**2*_d_)*sqrt(x**2*_d_ - 2)/(x*_b_*_d_*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))) + sqrt(2)*sqrt(pi)*(-sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erfi(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*_b_**(sympy.S(3)/2)*_d_) + sqrt(2)*sqrt(pi)*(sinh(_a_/(2*_b_)) + cosh(_a_/(2*_b_)))*cosh(acosh(x**2*_d_ - 1)/2)*erf(sqrt(2)*sqrt(_a_ + _b_*acosh(x**2*_d_ - 1))/(2*sqrt(_b_)))/(2*x*_b_**(sympy.S(3)/2)*_d_),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=13,
     ),
@@ -214,7 +216,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acosh(x**2*_d_ + 1))**(-2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=(((Integer(-1) * sympy.sqrt((_d_ * (x)**(Integer(2))))) * sympy.sqrt((Integer(2) + (_d_ * (x)**(Integer(2))))) * ((Integer(2) * _b_ * _d_ * x * (_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2)))))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Chi(((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1)))) + (x * sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Shi(((_a_ + (_b_ * sympy.acosh((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1)))),
+        replacement=-sqrt(2)*x*sinh(_a_/(2*_b_))*Chi((_a_ + _b_*acosh(x**2*_d_ + 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) + sqrt(2)*x*cosh(_a_/(2*_b_))*Shi((_a_ + _b_*acosh(x**2*_d_ + 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) - sqrt(x**2*_d_)*sqrt(x**2*_d_ + 2)/(2*x*_b_*_d_*(_a_ + _b_*acosh(x**2*_d_ + 1))),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=14,
     ),
@@ -222,7 +224,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acosh(x**2*_d_ - 1))**(-2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=(((Integer(-1) * sympy.sqrt((_d_ * (x)**(Integer(2))))) * sympy.sqrt((Integer(-2) + (_d_ * (x)**(Integer(2))))) * ((Integer(2) * _b_ * _d_ * x * (_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))**(Integer(-1))) + (x * sympy.cosh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Chi(((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.sinh((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Shi(((_a_ + (_b_ * sympy.acosh((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))))),
+        replacement=-sqrt(2)*x*sinh(_a_/(2*_b_))*Shi((_a_ + _b_*acosh(x**2*_d_ - 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) + sqrt(2)*x*cosh(_a_/(2*_b_))*Chi((_a_ + _b_*acosh(x**2*_d_ - 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) - sqrt(x**2*_d_)*sqrt(x**2*_d_ - 2)/(2*x*_b_*_d_*(_a_ + _b_*acosh(x**2*_d_ - 1))),
         module_name='7.2.6 Miscellaneous inverse hyperbolic cosine',
         rule_number=15,
     ),

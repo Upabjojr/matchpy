@@ -35,6 +35,23 @@ from sympy_wolfram.interpreter import ffl_to_sympy_short_code
 # Rubi-specific FFL helpers (operate on Int[integrand, x_Symbol] structure)
 # =============================================================================
 
+def _sympy_import_line() -> str:
+    """The generated-module ``from sympy import (...)`` line for every SymPy name that
+    may appear UNQUALIFIED in emitted rule code.
+
+    Built from the SAME single source as the shortening eval namespace
+    (:meth:`FFLConverter.generated_code_sympy_names`), so a name is importable in the
+    generated file IFF it is evaluable during shortening. This is what keeps the two in
+    lock-step: adding a function to ``SYMPY_FUNC_MAP`` makes it both importable here and
+    resolvable in the round-trip, with no second list to update.
+    """
+    import textwrap
+    names = sorted(FFLConverter.generated_code_sympy_names())
+    body = textwrap.fill(', '.join(names), width=100,
+                         initial_indent='    ', subsequent_indent='    ')
+    return f"from sympy import (\n{body},\n)"
+
+
 def _integration_variable(lhs) -> str:
     """Name of the integration variable in an ``Int[integrand, x_Symbol]`` LHS.
 
@@ -808,13 +825,10 @@ class RubiRuleTranslator:
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+{_sympy_import_line()}
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern

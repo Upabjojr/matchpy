@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -174,7 +176,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*asin(x**2*_d_ + c_)), x),
         constraints=(FreeQ([_a_, _b_, c_, _d_], x), EqQ(c_**2, 1),),
-        replacement=((x * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))) + (Integer(-1) * (sympy.sqrt(sympy.pi) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.fresnelc((sympy.sqrt((c_ * ((sympy.pi * _b_))**(Integer(-1)))) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((c_ * (_b_)**(Integer(-1)))) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1)))) + (sympy.sqrt(sympy.pi) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1))))))) * sympy.fresnels((sympy.sqrt((c_ * ((sympy.pi * _b_))**(Integer(-1)))) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((c_ * (_b_)**(Integer(-1)))) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1)))),
+        replacement=x*sqrt(_a_ + _b_*asin(x**2*_d_ + c_)) + sqrt(pi)*x*(-c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnels(sqrt(c_/_b_)*sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/sqrt(pi))/(sqrt(c_/_b_)*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))) - sqrt(pi)*x*(c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnelc(sqrt(c_/_b_)*sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/sqrt(pi))/(sqrt(c_/_b_)*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=9,
     ),
@@ -182,7 +184,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*acos(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(-2) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))**(Integer(2)) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (Integer(2) * sympy.sqrt(sympy.pi) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_)**(Integer(-1))) * _d_ * x))**(Integer(-1)))) + (Integer(2) * sympy.sqrt(sympy.pi) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_)**(Integer(-1))) * _d_ * x))**(Integer(-1)))),
+        replacement=-2*sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sin(acos(x**2*_d_ + 1)/2)**2/(x*_d_) - 2*sqrt(pi)*sin(_a_/(2*_b_))*sin(acos(x**2*_d_ + 1)/2)*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_*sqrt(1/_b_)) + 2*sqrt(pi)*sin(acos(x**2*_d_ + 1)/2)*cos(_a_/(2*_b_))*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_*sqrt(1/_b_)),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=10,
     ),
@@ -190,7 +192,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*acos(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(2) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))) * (sympy.cos(((Integer(2))**(Integer(-1)) * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))))**(Integer(2)) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (Integer(2) * sympy.sqrt(sympy.pi) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_)**(Integer(-1))) * _d_ * x))**(Integer(-1)))) + (Integer(-1) * (Integer(2) * sympy.sqrt(sympy.pi) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_)**(Integer(-1))) * _d_ * x))**(Integer(-1))))),
+        replacement=2*sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*cos(acos(x**2*_d_ - 1)/2)**2/(x*_d_) - 2*sqrt(pi)*sin(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_*sqrt(1/_b_)) - 2*sqrt(pi)*cos(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_*sqrt(1/_b_)),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=11,
     ),
@@ -214,7 +216,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*asin(x**2*_d_ + c_)), x),
         constraints=(FreeQ([_a_, _b_, c_, _d_], x), EqQ(c_**2, 1),),
-        replacement=(((Integer(-1) * x) * ((c_ * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) + (Integer(-1) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.Ci(((c_ * ((Integer(2) * _b_))**(Integer(-1))) * (_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))) * ((Integer(2) * _b_ * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1))) + (Integer(-1) * (x * ((c_ * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) + sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1))))) * sympy.Si(((c_ * ((Integer(2) * _b_))**(Integer(-1))) * (_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))) * ((Integer(2) * _b_ * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1))))),
+        replacement=-x*(c_*cos(_a_/(2*_b_)) - sin(_a_/(2*_b_)))*Ci(c_*(_a_ + _b_*asin(x**2*_d_ + c_))/(2*_b_))/(2*_b_*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))) - x*(c_*cos(_a_/(2*_b_)) + sin(_a_/(2*_b_)))*Si(c_*(_a_ + _b_*asin(x**2*_d_ + c_))/(2*_b_))/(2*_b_*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=14,
     ),
@@ -222,7 +224,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*acos(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((x * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Ci(((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt(((Integer(-1) * _d_) * (x)**(Integer(2))))))**(Integer(-1))) + (x * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Si(((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt(((Integer(-1) * _d_) * (x)**(Integer(2))))))**(Integer(-1)))),
+        replacement=sqrt(2)*x*sin(_a_/(2*_b_))*Si((_a_ + _b_*acos(x**2*_d_ + 1))/(2*_b_))/(2*_b_*sqrt(-x**2*_d_)) + sqrt(2)*x*cos(_a_/(2*_b_))*Ci((_a_ + _b_*acos(x**2*_d_ + 1))/(2*_b_))/(2*_b_*sqrt(-x**2*_d_)),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=15,
     ),
@@ -230,7 +232,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*acos(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((x * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Ci(((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Si(((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((sympy.sqrt(Integer(2)) * _b_ * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))))),
+        replacement=sqrt(2)*x*sin(_a_/(2*_b_))*Ci((_a_ + _b_*acos(x**2*_d_ - 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)) - sqrt(2)*x*cos(_a_/(2*_b_))*Si((_a_ + _b_*acos(x**2*_d_ - 1))/(2*_b_))/(2*_b_*sqrt(x**2*_d_)),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=16,
     ),
@@ -238,7 +240,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/sqrt(_a_ + _b_*asin(x**2*_d_ + c_)), x),
         constraints=(FreeQ([_a_, _b_, c_, _d_], x), EqQ(c_**2, 1),),
-        replacement=(((Integer(-1) * sympy.sqrt(sympy.pi)) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1))))))) * sympy.fresnelc((((sympy.sqrt((_b_ * c_)) * sympy.sqrt(sympy.pi)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_ * c_)) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt(sympy.pi) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.fresnels((((sympy.sqrt((_b_ * c_)) * sympy.sqrt(sympy.pi)))**(Integer(-1)) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.sqrt((_b_ * c_)) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1))))),
+        replacement=-sqrt(pi)*x*(-c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnelc(sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/(sqrt(pi)*sqrt(_b_*c_)))/(sqrt(_b_*c_)*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))) - sqrt(pi)*x*(c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnels(sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/(sqrt(pi)*sqrt(_b_*c_)))/(sqrt(_b_*c_)*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=17,
     ),
@@ -246,7 +248,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/sqrt(_a_ + _b_*acos(x**2*_d_ + 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(-2) * sympy.sqrt((sympy.pi * (_b_)**(Integer(-1)))) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (Integer(2) * sympy.sqrt((sympy.pi * (_b_)**(Integer(-1)))) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))))),
+        replacement=-2*sqrt(pi)*sqrt(1/_b_)*sin(_a_/(2*_b_))*sin(acos(x**2*_d_ + 1)/2)*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) - 2*sqrt(pi)*sqrt(1/_b_)*sin(acos(x**2*_d_ + 1)/2)*cos(_a_/(2*_b_))*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=18,
     ),
@@ -254,7 +256,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/sqrt(_a_ + _b_*acos(x**2*_d_ - 1)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((Integer(2) * sympy.sqrt((sympy.pi * (_b_)**(Integer(-1)))) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))) + (Integer(-1) * (Integer(2) * sympy.sqrt((sympy.pi * (_b_)**(Integer(-1)))) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))))),
+        replacement=2*sqrt(pi)*sqrt(1/_b_)*sin(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) - 2*sqrt(pi)*sqrt(1/_b_)*cos(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=19,
     ),
@@ -262,7 +264,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*asin(x**2*_d_ + c_))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([_a_, _b_, c_, _d_], x), EqQ(c_**2, 1),),
-        replacement=(((Integer(-1) * sympy.sqrt(((Integer(-2) * c_ * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4))))))) * ((_b_ * _d_ * x * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))))**(Integer(-1))) + (Integer(-1) * (((c_ * (_b_)**(Integer(-1))))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.fresnelc((sympy.sqrt((c_ * ((sympy.pi * _b_))**(Integer(-1)))) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.cos(((Integer(2))**(Integer(-1)) * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1))))))))**(Integer(-1)))) + (((c_ * (_b_)**(Integer(-1))))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1))))))) * sympy.fresnels((sympy.sqrt((c_ * ((sympy.pi * _b_))**(Integer(-1)))) * sympy.sqrt((_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))) * ((sympy.cos(((Integer(2))**(Integer(-1)) * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1))))))))**(Integer(-1)))),
+        replacement=sqrt(pi)*x*(c_/_b_)**(sympy.S(3)/2)*(-c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnels(sqrt(c_/_b_)*sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/sqrt(pi))/(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2)) - sqrt(pi)*x*(c_/_b_)**(sympy.S(3)/2)*(c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*fresnelc(sqrt(c_/_b_)*sqrt(_a_ + _b_*asin(x**2*_d_ + c_))/sqrt(pi))/(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2)) - sqrt(-x**4*_d_**2 - 2*x**2*c_*_d_)/(x*_b_*_d_*sqrt(_a_ + _b_*asin(x**2*_d_ + c_))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=20,
     ),
@@ -270,7 +272,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acos(x**2*_d_ + 1))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt(((Integer(-2) * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4)))))) * ((_b_ * _d_ * x * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))))))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_b_)**(Integer(-1)))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))) + (Integer(2) * ((_b_)**(Integer(-1)))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.sin((sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))),
+        replacement=-2*sqrt(pi)*(1/_b_)**(sympy.S(3)/2)*sin(_a_/(2*_b_))*sin(acos(x**2*_d_ + 1)/2)*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) + 2*sqrt(pi)*(1/_b_)**(sympy.S(3)/2)*sin(acos(x**2*_d_ + 1)/2)*cos(_a_/(2*_b_))*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ + 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) + sqrt(-x**4*_d_**2 - 2*x**2*_d_)/(x*_b_*_d_*sqrt(_a_ + _b_*acos(x**2*_d_ + 1))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=21,
     ),
@@ -278,7 +280,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acos(x**2*_d_ - 1))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt(((Integer(2) * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4)))))) * ((_b_ * _d_ * x * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_b_)**(Integer(-1)))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnelc((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1)))) + (Integer(-1) * (Integer(2) * ((_b_)**(Integer(-1)))**((Integer(3) * (Integer(2))**(Integer(-1)))) * sympy.sqrt(sympy.pi) * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.cos((sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) * sympy.fresnels((sympy.sqrt(((sympy.pi * _b_))**(Integer(-1))) * sympy.sqrt((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))) * ((_d_ * x))**(Integer(-1))))),
+        replacement=-2*sqrt(pi)*(1/_b_)**(sympy.S(3)/2)*sin(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnels(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) - 2*sqrt(pi)*(1/_b_)**(sympy.S(3)/2)*cos(_a_/(2*_b_))*cos(acos(x**2*_d_ - 1)/2)*fresnelc(sqrt(_a_ + _b_*acos(x**2*_d_ - 1))*sqrt(1/_b_)/sqrt(pi))/(x*_d_) + sqrt(-x**4*_d_**2 + 2*x**2*_d_)/(x*_b_*_d_*sqrt(_a_ + _b_*acos(x**2*_d_ - 1))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=22,
     ),
@@ -286,7 +288,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*asin(x**2*_d_ + c_))**(-2), x),
         constraints=(FreeQ([_a_, _b_, c_, _d_], x), EqQ(c_**2, 1),),
-        replacement=(((Integer(-1) * sympy.sqrt(((Integer(-2) * c_ * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4))))))) * ((Integer(2) * _b_ * _d_ * x * (_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2)))))))))**(Integer(-1))) + (Integer(-1) * (x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))))) * sympy.Ci(((c_ * ((Integer(2) * _b_))**(Integer(-1))) * (_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))) * ((Integer(4) * (_b_)**(Integer(2)) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1)))) + (x * (sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1))))))) * sympy.Si(((c_ * ((Integer(2) * _b_))**(Integer(-1))) * (_a_ + (_b_ * sympy.asin((c_ + (_d_ * (x)**(Integer(2))))))))) * ((Integer(4) * (_b_)**(Integer(2)) * (sympy.cos((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))) + (Integer(-1) * (c_ * sympy.sin((sympy.asin((c_ + (_d_ * (x)**(Integer(2))))) * (Integer(2))**(Integer(-1)))))))))**(Integer(-1)))),
+        replacement=x*(-c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*Si(c_*(_a_ + _b_*asin(x**2*_d_ + c_))/(2*_b_))/(4*_b_**2*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))) - x*(c_*sin(_a_/(2*_b_)) + cos(_a_/(2*_b_)))*Ci(c_*(_a_ + _b_*asin(x**2*_d_ + c_))/(2*_b_))/(4*_b_**2*(-c_*sin(asin(x**2*_d_ + c_)/2) + cos(asin(x**2*_d_ + c_)/2))) - sqrt(-x**4*_d_**2 - 2*x**2*c_*_d_)/(2*x*_b_*_d_*(_a_ + _b_*asin(x**2*_d_ + c_))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=23,
     ),
@@ -294,7 +296,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acos(x**2*_d_ + 1))**(-2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt(((Integer(-2) * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4)))))) * ((Integer(2) * _b_ * _d_ * x * (_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2)))))))))**(Integer(-1))) + (x * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Ci(((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt(((Integer(-1) * _d_) * (x)**(Integer(2))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Si(((_a_ + (_b_ * sympy.acos((Integer(1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt(((Integer(-1) * _d_) * (x)**(Integer(2))))))**(Integer(-1))))),
+        replacement=sqrt(2)*x*sin(_a_/(2*_b_))*Ci((_a_ + _b_*acos(x**2*_d_ + 1))/(2*_b_))/(4*_b_**2*sqrt(-x**2*_d_)) - sqrt(2)*x*cos(_a_/(2*_b_))*Si((_a_ + _b_*acos(x**2*_d_ + 1))/(2*_b_))/(4*_b_**2*sqrt(-x**2*_d_)) + sqrt(-x**4*_d_**2 - 2*x**2*_d_)/(2*x*_b_*_d_*(_a_ + _b_*acos(x**2*_d_ + 1))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=24,
     ),
@@ -302,7 +304,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*acos(x**2*_d_ - 1))**(-2), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
-        replacement=((sympy.sqrt(((Integer(2) * _d_ * (x)**(Integer(2))) + (Integer(-1) * ((_d_)**(Integer(2)) * (x)**(Integer(4)))))) * ((Integer(2) * _b_ * _d_ * x * (_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2)))))))))**(Integer(-1))) + (Integer(-1) * (x * sympy.cos((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Ci(((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1)))) + (Integer(-1) * (x * sympy.sin((_a_ * ((Integer(2) * _b_))**(Integer(-1)))) * sympy.Si(((_a_ + (_b_ * sympy.acos((Integer(-1) + (_d_ * (x)**(Integer(2))))))) * ((Integer(2) * _b_))**(Integer(-1)))) * ((Integer(2) * sympy.sqrt(Integer(2)) * (_b_)**(Integer(2)) * sympy.sqrt((_d_ * (x)**(Integer(2))))))**(Integer(-1))))),
+        replacement=-sqrt(2)*x*sin(_a_/(2*_b_))*Si((_a_ + _b_*acos(x**2*_d_ - 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) - sqrt(2)*x*cos(_a_/(2*_b_))*Ci((_a_ + _b_*acos(x**2*_d_ - 1))/(2*_b_))/(4*_b_**2*sqrt(x**2*_d_)) + sqrt(-x**4*_d_**2 + 2*x**2*_d_)/(2*x*_b_*_d_*(_a_ + _b_*acos(x**2*_d_ - 1))),
         module_name='5.1.6 Miscellaneous inverse sine',
         rule_number=25,
     ),

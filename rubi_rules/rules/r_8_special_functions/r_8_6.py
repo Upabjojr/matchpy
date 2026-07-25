@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -179,7 +181,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int(sympy.loggamma((_a_ + (_b_ * x))), x),
+        pattern=Int(loggamma(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(sympy.polygamma(Integer(-2), (_a_ + (_b_ * x))) * (_b_)**(Integer(-1))),
         module_name='8.6 Gamma functions',
@@ -187,7 +189,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*loggamma(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=((((_c_ + (_d_ * x)))**(_m_) * sympy.polygamma(Integer(-2), (_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * _m_ * (_b_)**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * sympy.polygamma(Integer(-2), (_a_ + (_b_ * x)))), x)))),
         module_name='8.6 Gamma functions',
@@ -195,9 +197,9 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*loggamma(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x),),
-        replacement=Unintegrable((((_c_ + (_d_ * x)))**(_m_) * sympy.loggamma((_a_ + (_b_ * x)))), x),
+        replacement=Unintegrable((x*_d_ + _c_)**_m_*loggamma(x*_b_ + _a_), x),
         module_name='8.6 Gamma functions',
         rule_number=13,
     ),

@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -226,7 +228,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**2), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_], x), PosQ(_b_),),
-        replacement=((F_)**(_a_) * sympy.sqrt(sympy.pi) * sympy.erfi(((_c_ + (_d_ * x)) * Rt((_b_ * sympy.log(F_)), Integer(2)))) * ((Integer(2) * _d_ * Rt((_b_ * sympy.log(F_)), Integer(2))))**(Integer(-1))),
+        replacement=sqrt(pi)*F_**_a_*erfi((x*_d_ + _c_)*Rt(_b_*log(F_), 2))/(2*_d_*Rt(_b_*log(F_), 2)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=11,
     ),
@@ -234,7 +236,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**2), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_], x), NegQ(_b_),),
-        replacement=((F_)**(_a_) * sympy.sqrt(sympy.pi) * sympy.erf(((_c_ + (_d_ * x)) * Rt(((Integer(-1) * _b_) * sympy.log(F_)), Integer(2)))) * ((Integer(2) * _d_ * Rt(((Integer(-1) * _b_) * sympy.log(F_)), Integer(2))))**(Integer(-1))),
+        replacement=sqrt(pi)*F_**_a_*erf((x*_d_ + _c_)*Rt(-_b_*log(F_), 2))/(2*_d_*Rt(-_b_*log(F_), 2)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=12,
     ),
@@ -274,7 +276,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)/(x*_f_ + _e_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0),),
-        replacement=((F_)**(_a_) * sympy.Ei((_b_ * ((_c_ + (_d_ * x)))**(n_) * sympy.log(F_))) * ((_f_ * n_))**(Integer(-1))),
+        replacement=F_**_a_*Ei(_b_*(x*_d_ + _c_)**n_*log(F_))/(_f_*n_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=17,
     ),
@@ -506,7 +508,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(x**2*_c_ + x*_b_ + _a_)/(x*_e_ + _d_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_], x), EqQ(_b_*_e_ - 2*_c_*_d_, 0),),
-        replacement=(((Integer(2) * _e_))**(Integer(-1)) * (F_)**((_a_ + (Integer(-1) * ((_b_)**(Integer(2)) * ((Integer(4) * _c_))**(Integer(-1)))))) * sympy.Ei((((_b_ + (Integer(2) * _c_ * x)))**(Integer(2)) * sympy.log(F_) * ((Integer(4) * _c_))**(Integer(-1))))),
+        replacement=F_**(_a_ - _b_**2/(4*_c_))*Ei((2*x*_c_ + _b_)**2*log(F_)/(4*_c_))/(2*_e_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=46,
     ),
@@ -778,7 +780,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**((x**4*_b_ + _a_)/x**2), x),
         constraints=(FreeQ([F_, _a_, _b_], x),),
-        replacement=((sympy.sqrt(sympy.pi) * sympy.exp((Integer(2) * sympy.sqrt(((Integer(-1) * _a_) * sympy.log(F_))) * sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_))))) * sympy.erf(((sympy.sqrt(((Integer(-1) * _a_) * sympy.log(F_))) + (sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_))) * (x)**(Integer(2)))) * (x)**(Integer(-1)))) * ((Integer(4) * sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_)))))**(Integer(-1))) + (Integer(-1) * (sympy.sqrt(sympy.pi) * sympy.exp((Integer(-2) * sympy.sqrt(((Integer(-1) * _a_) * sympy.log(F_))) * sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_))))) * sympy.erf(((sympy.sqrt(((Integer(-1) * _a_) * sympy.log(F_))) + (Integer(-1) * (sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_))) * (x)**(Integer(2))))) * (x)**(Integer(-1)))) * ((Integer(4) * sympy.sqrt(((Integer(-1) * _b_) * sympy.log(F_)))))**(Integer(-1))))),
+        replacement=sqrt(pi)*exp(2*sqrt(-_a_*log(F_))*sqrt(-_b_*log(F_)))*erf((x**2*sqrt(-_b_*log(F_)) + sqrt(-_a_*log(F_)))/x)/(4*sqrt(-_b_*log(F_))) - sqrt(pi)*exp(-2*sqrt(-_a_*log(F_))*sqrt(-_b_*log(F_)))*erf((-x**2*sqrt(-_b_*log(F_)) + sqrt(-_a_*log(F_)))/x)/(4*sqrt(-_b_*log(F_))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=80,
     ),

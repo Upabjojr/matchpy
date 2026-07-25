@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -120,7 +122,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*log(v_), x),
         constraints=(Not(FalseQ(DerivativeDivides(v_, u_*(1 - v_), x))),),
-        replacement=With({w: DerivativeDivides(v_, (u_ * (Integer(1) + (Integer(-1) * v_))), x)}, (w * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))))),
+        replacement=With({w: DerivativeDivides(v_, u_*(1 - v_), x)}, w*polylog(2, 1 - v_)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=1,
     ),
@@ -128,7 +130,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(w_*(_a_ + _b_*log(u_))*log(v_), x),
         constraints=(FreeQ([_a_, _b_], x), InverseFunctionFreeQ(u_, x), Not(FalseQ(DerivativeDivides(v_, w_*(1 - v_), x))),),
-        replacement=With({z: DerivativeDivides(v_, (w_ * (Integer(1) + (Integer(-1) * v_))), x)}, ((z * (_a_ + (_b_ * sympy.log(u_))) * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_)))) + (Integer(-1) * (_b_ * Int(SimplifyIntegrand((z * sympy.polylog(Integer(2), (Integer(1) + (Integer(-1) * v_))) * D(u_, x) * (u_)**(Integer(-1))), x), x))))),
+        replacement=With({z: DerivativeDivides(v_, w_*(1 - v_), x)}, z*(_a_ + _b_*log(u_))*polylog(2, 1 - v_) - _b_*Int(SimplifyIntegrand(z*D(u_, x)*polylog(2, 1 - v_)/u_, x), x)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=2,
     ),
@@ -224,7 +226,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_g_ + _f_)**_m_*log(_e_*(F_**(_c_*(x*_b_ + _a_)))**_n_ + 1), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _e_, _f_, _g_, _n_], x), GtQ(_m_, 0),),
-        replacement=(((Integer(-1) * ((_f_ + (_g_ * x)))**(_m_)) * sympy.polylog(Integer(2), ((Integer(-1) * _e_) * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_n_))) * ((_b_ * _c_ * _n_ * sympy.log(F_)))**(Integer(-1))) + (_g_ * _m_ * ((_b_ * _c_ * _n_ * sympy.log(F_)))**(Integer(-1)) * Int((((_f_ + (_g_ * x)))**((_m_ + Integer(-1))) * sympy.polylog(Integer(2), ((Integer(-1) * _e_) * ((F_)**((_c_ * (_a_ + (_b_ * x)))))**(_n_)))), x))),
+        replacement=_g_*_m_*Int((x*_g_ + _f_)**(_m_ - 1)*polylog(2, -_e_*(F_**(_c_*(x*_b_ + _a_)))**_n_), x)/(_b_*_c_*_n_*log(F_)) - (x*_g_ + _f_)**_m_*polylog(2, -_e_*(F_**(_c_*(x*_b_ + _a_)))**_n_)/(_b_*_c_*_n_*log(F_)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=14,
     ),
@@ -448,7 +450,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_u_ * sympy.log(Gamma(v_))), x),
         constraints=(),
-        replacement=(((sympy.log(Gamma(v_)) + (Integer(-1) * sympy.loggamma(v_))) * Int(_u_, x)) + Int((_u_ * sympy.loggamma(v_)), x)),
+        replacement=(log(Gamma(v_)) - loggamma(v_))*Int(_u_, x) + Int(_u_*loggamma(v_), x),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=42,
     ),

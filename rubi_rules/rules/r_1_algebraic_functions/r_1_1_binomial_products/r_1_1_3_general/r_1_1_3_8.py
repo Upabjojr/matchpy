@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -243,7 +245,7 @@ RULES = [
     # Rule 15
     RubiRulePattern(
         pattern=Int(x**_m_*Pq_*(x**n_*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, p_], x), PolyQ(Pq_, x**n_), IGtQ(n_, 0), IntegerQ(_m_), sympy.Ne(GCD((_m_ + Integer(1)), n_), Integer(1)),),
+        constraints=(FreeQ([a_, _b_, p_], x), PolyQ(Pq_, x**n_), IGtQ(n_, 0), IntegerQ(_m_), Ne(GCD(_m_ + 1, n_), 1),),
         replacement=With({g: GCD(_m_ + 1, n_)}, Subst(Int(x**(-1 + (_m_ + 1)/g)*(x**(n_/g)*_b_ + a_)**p_*ReplaceAll(Pq_, Rule(x, x**(1/g))), x), x, x**g)/g),
         module_name='1.1.3.8 P(x) (c x)^m (a+b x^n)^p',
         rule_number=15,

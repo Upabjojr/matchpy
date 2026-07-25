@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -238,7 +240,7 @@ RULES = [
     # Rule 17
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, p_], x), IGtQ(n_, 0), IntegerQ(_m_), sympy.Ne(GCD((_m_ + Integer(1)), n_), Integer(1)),),
+        constraints=(FreeQ([a_, _b_, p_], x), IGtQ(n_, 0), IntegerQ(_m_), Ne(GCD(_m_ + 1, n_), 1),),
         replacement=With({k: GCD(_m_ + 1, n_)}, Subst(Int(x**(-1 + (_m_ + 1)/k)*(x**(n_/k)*_b_ + a_)**p_, x), x, x**k)/k),
         module_name='1.1.3.2 (c x)^m (a+b x^n)^p',
         rule_number=17,
@@ -246,7 +248,7 @@ RULES = [
     # Rule 18
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_b1_ + a1_)**p_*(x**n_*_b2_ + a2_)**p_, x),
-        constraints=(FreeQ([a1_, _b1_, a2_, _b2_, p_], x), EqQ(a1_*_b2_ + a2_*_b1_, 0), IGtQ(2*n_, 0), IntegerQ(_m_), sympy.Ne(GCD((_m_ + Integer(1)), (Integer(2) * n_)), Integer(1)),),
+        constraints=(FreeQ([a1_, _b1_, a2_, _b2_, p_], x), EqQ(a1_*_b2_ + a2_*_b1_, 0), IGtQ(2*n_, 0), IntegerQ(_m_), Ne(GCD(_m_ + 1, 2*n_), 1),),
         replacement=With({k: GCD(_m_ + 1, 2*n_)}, Subst(Int(x**(-1 + (_m_ + 1)/k)*(x**(n_/k)*_b1_ + a1_)**p_*(x**(n_/k)*_b2_ + a2_)**p_, x), x, x**k)/k),
         module_name='1.1.3.2 (c x)^m (a+b x^n)^p',
         rule_number=18,

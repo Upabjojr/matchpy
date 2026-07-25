@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -118,7 +120,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*_e_, 0),),
-        replacement=(sympy.I * sympy.Shi(((_c_ * _f_ * fz_ * (_d_)**(Integer(-1))) + (_f_ * fz_ * x))) * (_d_)**(Integer(-1))),
+        replacement=I*Shi(x*_f_*fz_ + _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=3,
     ),
@@ -126,7 +128,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(InertSin(x*_f_ + _e_)/(x*_d_ + _c_), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_], x), EqQ(-_c_*_f_ + _d_*_e_, 0),),
-        replacement=(sympy.Si((_e_ + (_f_ * x))) * (_d_)**(Integer(-1))),
+        replacement=Si(x*_f_ + _e_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=4,
     ),
@@ -134,7 +136,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*(_e_ - pi/2), 0), NegQ(_c_*_f_*fz_/_d_, 0),),
-        replacement=(sympy.Chi((((Integer(-1) * _c_) * _f_ * fz_ * (_d_)**(Integer(-1))) + (Integer(-1) * (_f_ * fz_ * x)))) * (_d_)**(Integer(-1))),
+        replacement=Chi(-x*_f_*fz_ - _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=5,
     ),
@@ -142,7 +144,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*(_e_ - pi/2), 0),),
-        replacement=(sympy.Chi(((_c_ * _f_ * fz_ * (_d_)**(Integer(-1))) + (_f_ * fz_ * x))) * (_d_)**(Integer(-1))),
+        replacement=Chi(x*_f_*fz_ + _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=6,
     ),
@@ -150,7 +152,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(InertSin(x*_f_ + _e_)/(x*_d_ + _c_), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_], x), EqQ(-_c_*_f_ + _d_*(_e_ - pi/2), 0),),
-        replacement=(sympy.Ci((_e_ + (Integer(-1) * (sympy.pi * (Integer(2))**(Integer(-1)))) + (_f_ * x))) * (_d_)**(Integer(-1))),
+        replacement=Ci(x*_f_ + _e_ - pi/2)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=7,
     ),

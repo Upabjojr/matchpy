@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -330,7 +332,7 @@ RULES = [
     # Rule 29
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), GtQ(_p_, 0), LtQ(_m_, -1), sympy.Ne((_m_ + (Integer(4) * _p_) + Integer(3)), Integer(0)), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), GtQ(_p_, 0), LtQ(_m_, -1), Ne(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=(x*_f_)**(_m_ + 1)*(x**2*_e_*(_m_ + 1) + d_*(_m_ + 4*_p_ + 3))*(x**4*_c_ + x**2*_b_ + a_)**_p_/(_f_*(_m_ + 1)*(_m_ + 4*_p_ + 3)) + 2*_p_*Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + x**2*_b_ + a_)**(_p_ - 1)*Simp(x**2*(_b_*_e_*(_m_ + 1) - 2*_c_*d_*(_m_ + 4*_p_ + 3)) + 2*a_*_e_*(_m_ + 1) - _b_*d_*(_m_ + 4*_p_ + 3), x), x)/(_f_**2*(_m_ + 1)*(_m_ + 4*_p_ + 3)),
         module_name='1.2.2.4 (f x)^m (d+e x^2)^q (a+b x^2+c x^4)^p',
         rule_number=29,
@@ -338,7 +340,7 @@ RULES = [
     # Rule 30
     RubiRulePattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(_m_, -1), sympy.Ne((_m_ + (Integer(4) * _p_) + Integer(3)), Integer(0)), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
+        constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(_m_, -1), Ne(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=(x*_f_)**(_m_ + 1)*(x**4*_c_ + a_)**_p_*(x**2*_e_*(_m_ + 1) + d_*(_m_ + 4*_p_ + 3))/(_f_*(_m_ + 1)*(_m_ + 4*_p_ + 3)) + 4*_p_*Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + a_)**(_p_ - 1)*(-x**2*_c_*d_*(_m_ + 4*_p_ + 3) + a_*_e_*(_m_ + 1)), x)/(_f_**2*(_m_ + 1)*(_m_ + 4*_p_ + 3)),
         module_name='1.2.2.4 (f x)^m (d+e x^2)^q (a+b x^2+c x^4)^p',
         rule_number=30,

@@ -203,6 +203,72 @@ class TestRuleTranslation:
         assert "replacement=With({q: DerivativeDivides(ActivateTrig(y_), ActivateTrig(u_), x)}, q*ActivateTrig(y_**(_m_ + 1))/(_m_ + 1))" in code
 
 
+class TestHeaderNamespaceSync:
+    """The generated-file import header and the shortening eval namespace MUST stay in
+    lock-step: both are built from the single source
+    ``FFLConverter.generated_code_sympy_names()``. If they drift, the shortener can emit
+    a bare call that is invalid in the generated module (the load probe then silently
+    skips the rule), or leave rules needlessly verbose. These tests fail if a future
+    change breaks the single-source wiring."""
+
+    def _header_namespace(self):
+        import sympy  # noqa: F401 - used by exec'd header
+        header = RubiRuleTranslator()._generate_header('test.module', 'test.src')
+        ns = {}
+        exec(header, ns)
+        return ns
+
+    def test_every_generated_sympy_name_is_importable_in_the_header(self):
+        from sympy_wolfram.interpreter import FFLConverter
+        ns = self._header_namespace()
+        names = FFLConverter.generated_code_sympy_names()
+        missing = [n for n in names if n not in ns]
+        assert not missing, f"header is missing bare imports for: {missing}"
+        # and they are the SAME objects the shortener evaluates against
+        for name, obj in names.items():
+            assert ns[name] is obj, f"header binds {name} to a different object"
+
+    def test_eval_namespace_contains_every_generated_sympy_name(self):
+        from sympy_wolfram.interpreter import FFLConverter
+        eval_ns = FFLConverter().eval_ns
+        names = FFLConverter.generated_code_sympy_names()
+        missing = [n for n in names if eval_ns.get(n) is not names[n]]
+        assert not missing, f"eval namespace out of sync with the single source: {missing}"
+
+    def test_special_functions_are_synced(self):
+        """Regression for the verbose-fresnels bug: the special functions must be BOTH
+        importable in the file AND in the shortening namespace (else their rules never
+        shorten)."""
+        from sympy_wolfram.interpreter import FFLConverter
+        import sympy
+        ns = self._header_namespace()
+        eval_ns = FFLConverter().eval_ns
+        for name in ('fresnels', 'fresnelc', 'erf', 'erfi', 'erfc',
+                     'Ei', 'li', 'Si', 'Ci', 'Shi', 'Chi'):
+            assert ns.get(name) is getattr(sympy, name)
+            assert eval_ns.get(name) is getattr(sympy, name)
+
+    def test_and_or_not_stay_placeholders(self):
+        """And/Or/Not are NOT part of the single source: they remain unevaluated Function
+        heads in the eval namespace so shortening preserves their call-form (and arg
+        order) instead of rewriting to &/|/~."""
+        from sympy_wolfram.interpreter import FFLConverter
+        import sympy
+        eval_ns = FFLConverter().eval_ns
+        for name in ('And', 'Or', 'Not'):
+            assert isinstance(eval_ns[name], sympy.core.function.UndefinedFunction)
+        assert 'And' not in FFLConverter.generated_code_sympy_names()
+
+    def test_E_stays_qualified(self):
+        """E is deliberately excluded from the bare set (it can be a coefficient letter
+        and would collide); it must stay ``sympy.E`` and not be imported bare."""
+        from sympy_wolfram.interpreter import FFLConverter
+        names = FFLConverter.generated_code_sympy_names()
+        assert 'E' not in names and 'EulerGamma' not in names
+        ns = self._header_namespace()
+        assert ns.get('E') is None or 'E' not in ns
+
+
 # =============================================================================
 # Test: Module generation syntax
 # =============================================================================

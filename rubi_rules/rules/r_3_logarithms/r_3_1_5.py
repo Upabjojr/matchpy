@@ -10,13 +10,15 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple, Eq, Ne, Lt, Gt, Le, Ge, log, sqrt, pi, I, oo
+from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
-from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, acsc, acot,
-                   sinh, cosh, tanh, sech, csch, coth, asinh, acosh, atanh, asech, acsch, acoth,
-                   exp, Abs, diff, denom, frac, floor, root, simplify,
-                   elliptic_e, elliptic_f, hyper, appellf1)
+from sympy import (
+    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
+    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
+    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+)
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -481,7 +483,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))**_p_*log(_d_*(x**_m_*_f_ + e_))/x, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, e_, _f_, _m_, _n_], x), IGtQ(_p_, 0), EqQ(_d_*e_, 1),),
-        replacement=(((Integer(-1) * sympy.polylog(Integer(2), ((Integer(-1) * _d_) * _f_ * (x)**(_m_)))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_) * (_m_)**(Integer(-1))) + (_b_ * _n_ * _p_ * (_m_)**(Integer(-1)) * Int((sympy.polylog(Integer(2), ((Integer(-1) * _d_) * _f_ * (x)**(_m_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**((_p_ + Integer(-1))) * (x)**(Integer(-1))), x))),
+        replacement=_b_*_n_*_p_*Int((_a_ + _b_*log(x**_n_*_c_))**(_p_ - 1)*polylog(2, -x**_m_*_d_*_f_)/x, x)/_m_ - (_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(2, -x**_m_*_d_*_f_)/_m_,
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=45,
     ),
@@ -535,49 +537,49 @@ RULES = [
     ),
     # Rule 52
     RubiRulePattern(
-        pattern=Int((sympy.polylog(k_, (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))), x),
+        pattern=Int((_a_ + _b_*log(x**_n_*_c_))*polylog(k_, x**_q_*_e_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _e_, _n_, _q_], x), IGtQ(k_, 0),),
-        replacement=(((Integer(-1) * _b_) * _n_ * x * sympy.polylog(k_, (_e_ * (x)**(_q_)))) + (x * sympy.polylog(k_, (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))) + (_b_ * _n_ * _q_ * Int(sympy.polylog((k_ + Integer(-1)), (_e_ * (x)**(_q_))), x)) + (Integer(-1) * (_q_ * Int((sympy.polylog((k_ + Integer(-1)), (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))), x)))),
+        replacement=-x*_b_*_n_*polylog(k_, x**_q_*_e_) + x*(_a_ + _b_*log(x**_n_*_c_))*polylog(k_, x**_q_*_e_) + _b_*_n_*_q_*Int(polylog(k_ - 1, x**_q_*_e_), x) - _q_*Int((_a_ + _b_*log(x**_n_*_c_))*polylog(k_ - 1, x**_q_*_e_), x),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=52,
     ),
     # Rule 53
     RubiRulePattern(
-        pattern=Int((sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x),
+        pattern=Int((_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _e_, _n_, _p_, _q_], x),),
-        replacement=Unintegrable((sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x),
+        replacement=Unintegrable((_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_), x),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=53,
     ),
     # Rule 54
     RubiRulePattern(
-        pattern=Int((sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_) * (x)**(Integer(-1))), x),
+        pattern=Int((_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_)/x, x),
         constraints=(FreeQ([_a_, _b_, _c_, _e_, k_, _n_, _q_], x), GtQ(_p_, 0),),
-        replacement=((sympy.polylog((k_ + Integer(1)), (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_) * (_q_)**(Integer(-1))) + (Integer(-1) * (_b_ * _n_ * _p_ * (_q_)**(Integer(-1)) * Int((sympy.polylog((k_ + Integer(1)), (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**((_p_ + Integer(-1))) * (x)**(Integer(-1))), x)))),
+        replacement=-_b_*_n_*_p_*Int((_a_ + _b_*log(x**_n_*_c_))**(_p_ - 1)*polylog(k_ + 1, x**_q_*_e_)/x, x)/_q_ + (_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_ + 1, x**_q_*_e_)/_q_,
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=54,
     ),
     # Rule 55
     RubiRulePattern(
-        pattern=Int((sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_) * (x)**(Integer(-1))), x),
+        pattern=Int((_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_)/x, x),
         constraints=(FreeQ([_a_, _b_, _c_, _e_, k_, _n_, _q_], x), LtQ(_p_, -1),),
-        replacement=((sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**((_p_ + Integer(1))) * ((_b_ * _n_ * (_p_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_q_ * ((_b_ * _n_ * (_p_ + Integer(1))))**(Integer(-1)) * Int((sympy.polylog((k_ + Integer(-1)), (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**((_p_ + Integer(1))) * (x)**(Integer(-1))), x)))),
+        replacement=-_q_*Int((_a_ + _b_*log(x**_n_*_c_))**(_p_ + 1)*polylog(k_ - 1, x**_q_*_e_)/x, x)/(_b_*_n_*(_p_ + 1)) + (_a_ + _b_*log(x**_n_*_c_))**(_p_ + 1)*polylog(k_, x**_q_*_e_)/(_b_*_n_*(_p_ + 1)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=55,
     ),
     # Rule 56
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.polylog(k_, (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))), x),
+        pattern=Int((x*_d_)**_m_*(_a_ + _b_*log(x**_n_*_c_))*polylog(k_, x**_q_*_e_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_, _q_], x), IGtQ(k_, 0),),
-        replacement=(((Integer(-1) * _b_) * _n_ * ((_d_ * x))**((_m_ + Integer(1))) * sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_d_ * ((_m_ + Integer(1)))**(Integer(2))))**(Integer(-1))) + (((_d_ * x))**((_m_ + Integer(1))) * sympy.polylog(k_, (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (_b_ * _n_ * _q_ * (((_m_ + Integer(1)))**(Integer(2)))**(Integer(-1)) * Int((((_d_ * x))**(_m_) * sympy.polylog((k_ + Integer(-1)), (_e_ * (x)**(_q_)))), x)) + (Integer(-1) * (_q_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_d_ * x))**(_m_) * sympy.polylog((k_ + Integer(-1)), (_e_ * (x)**(_q_))) * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))), x)))),
+        replacement=_b_*_n_*_q_*Int((x*_d_)**_m_*polylog(k_ - 1, x**_q_*_e_), x)/(_m_ + 1)**2 - _b_*_n_*(x*_d_)**(_m_ + 1)*polylog(k_, x**_q_*_e_)/(_d_*(_m_ + 1)**2) - _q_*Int((x*_d_)**_m_*(_a_ + _b_*log(x**_n_*_c_))*polylog(k_ - 1, x**_q_*_e_), x)/(_m_ + 1) + (x*_d_)**(_m_ + 1)*(_a_ + _b_*log(x**_n_*_c_))*polylog(k_, x**_q_*_e_)/(_d_*(_m_ + 1)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=56,
     ),
     # Rule 57
     RubiRulePattern(
-        pattern=Int((((_d_ * x))**(_m_) * sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x),
+        pattern=Int((x*_d_)**_m_*(_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_, _p_, _q_], x),),
-        replacement=Unintegrable((((_d_ * x))**(_m_) * sympy.polylog(k_, (_e_ * (x)**(_q_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(_p_)), x),
+        replacement=Unintegrable((x*_d_)**_m_*(_a_ + _b_*log(x**_n_*_c_))**_p_*polylog(k_, x**_q_*_e_), x),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=57,
     ),

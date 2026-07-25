@@ -163,6 +163,60 @@ class FFLConverter:
         'EulerGamma': 'sympy.EulerGamma',
     }
 
+    # SymPy names that the shortening printer may emit UNQUALIFIED (e.g. ``sqrt``,
+    # ``fresnels``, ``Eq``) rather than as ``sympy.sqrt``. A few structural helpers the
+    # emitter always relies on but that are not reachable through the translation maps.
+    _GENERATED_SYMPY_EXTRAS: Tuple[str, ...] = (
+        'sqrt', 'exp', 'log', 'Abs', 'pi', 'I', 'oo',
+        'root', 'diff', 'simplify', 'hyper', 'atan2',
+    )
+
+    # Map targets that must NOT be exposed as bare names: the generated header binds
+    # ``Min``/``Max`` to ``Symbol('Min')``/``Symbol('Max')`` (Rubi passes them as bare
+    # ordering flags, e.g. ``Expon[Px, x, Min]``; a genuine ``Min[a, b]`` call is emitted
+    # qualified as ``sympy.Min(...)``). So bare ``Min`` is a Symbol in the file, never the
+    # SymPy function -- keep it out of the shortening namespace to match.
+    _GENERATED_SYMPY_EXCLUDE: frozenset = frozenset({'Min', 'Max'})
+
+    @classmethod
+    def generated_code_sympy_names(cls) -> Dict[str, Any]:
+        """SINGLE SOURCE OF TRUTH for the bare SymPy names available in generated rule
+        code -- and therefore in the shortening eval namespace.
+
+        Both :attr:`_eval_ns` (used to verify a shortened form re-evaluates equal) AND
+        the generated-file ``from sympy import (...)`` header (see
+        ``rubi_rules.codegen.generate._sympy_import_line``) are built from this dict, so
+        the two can never drift: a function reachable through the translation maps is
+        importable in the generated module IFF it is evaluable during shortening. (If
+        the shortening namespace had a name the header lacked, the shortener would emit a
+        bare call the per-rule load probe -- which uses the header -- then rejects,
+        silently skipping the rule; the reverse just leaves rules needlessly verbose.)
+
+        Rubi utilities and constraint predicates are deliberately NOT here: they are
+        registered per call as unevaluated ``Function`` placeholders so shortening keeps
+        their call-form (``FreeQ([a, b], x)``, ``And(...)``) instead of letting the real
+        classes rewrite them (list->tuple, ``And``->``&``).
+        """
+        names: Dict[str, Any] = {}
+        # Functions and relational heads reachable through the translation maps. The
+        # CONSTANT_MAP is deliberately NOT included: pi/I/oo are covered by the extras
+        # below, while E / EulerGamma stay qualified (``sympy.E``) -- a bare ``E`` would
+        # both be dead weight and risk colliding with a coefficient symbol named E.
+        for target in list(cls.SYMPY_FUNC_MAP.values()) + list(cls.SYMPY_LOGIC_MAP.values()):
+            if not target.startswith('sympy.'):
+                continue
+            bare = target.split('.', 1)[1]
+            if bare in cls._GENERATED_SYMPY_EXCLUDE:
+                continue
+            obj = getattr(sympy, bare, None)
+            if obj is not None:
+                names[bare] = obj
+        for bare in cls._GENERATED_SYMPY_EXTRAS:
+            obj = getattr(sympy, bare, None)
+            if obj is not None:
+                names[bare] = obj
+        return names
+
     # Function heads that may appear as a BARE atom — i.e. as a *value* rather than an
     # application — in a head test such as MemberQ[{ArcSin, ArcCos, ...}, F] or
     # EqQ[F, Sin], where F is a function-head wildcard bound to a real function. Emitting
@@ -220,26 +274,10 @@ class FFLConverter:
             'HeadRef': HeadRef,
             'IDENTITY_ELEMENT': IDENTITY_ELEMENT,
             'x': Symbol('x'),
-            'log': sympy.log, 'sqrt': sympy.sqrt,
-            'pi': sympy.pi, 'I': sympy.I, 'oo': sympy.oo,
-            # Trig
-            'sin': sympy.sin, 'cos': sympy.cos, 'tan': sympy.tan,
-            'sec': sympy.sec, 'csc': sympy.csc, 'cot': sympy.cot,
-            'asin': sympy.asin, 'acos': sympy.acos, 'atan': sympy.atan,
-            'atan2': sympy.atan2,
-            'asec': sympy.asec, 'acsc': sympy.acsc, 'acot': sympy.acot,
-            # Hyperbolic
-            'sinh': sympy.sinh, 'cosh': sympy.cosh, 'tanh': sympy.tanh,
-            'sech': sympy.sech, 'csch': sympy.csch, 'coth': sympy.coth,
-            'asinh': sympy.asinh, 'acosh': sympy.acosh, 'atanh': sympy.atanh,
-            'asech': sympy.asech, 'acsch': sympy.acsch, 'acoth': sympy.acoth,
-            # Other
-            'exp': sympy.exp, 'Abs': sympy.Abs,
-            'elliptic_e': sympy.elliptic_e, 'elliptic_f': sympy.elliptic_f,
-            'appellf1': sympy.appellf1,
-            'root': sympy.root, 'diff': sympy.diff,
-            'denom': sympy.denom, 'frac': sympy.frac, 'floor': sympy.floor,
-            'simplify': sympy.simplify, 'hyper': sympy.hyper,
+            # Every SymPy function/constant the generated code may reference unqualified,
+            # from the SINGLE SOURCE shared with the generated-file import header, so the
+            # two never drift (see generated_code_sympy_names).
+            **self.generated_code_sympy_names(),
             # Logical operators — use unevaluated wrappers so simplify_code
             # round-trip preserves And(...)/Or(...)/Not(...) form rather than
             # the &/|/~ infix operators that sympy.And/Or/Not would produce.
