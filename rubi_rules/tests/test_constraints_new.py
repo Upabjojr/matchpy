@@ -58,72 +58,9 @@ a, b, c, d, e, m, n, p, q = sympy.symbols('a b c d e m n p q')
 # =============================================================================
 
 
-class TestMathematicaConstraintBoolean:
-    """Verify MathematicaConstraint inherits from SymPy Boolean and MathematicaExpr."""
-
-    def test_inheritance(self):
-        assert issubclass(MathematicaConstraint, Boolean)
-
-    def test_inherits_mathematica_expr(self):
-        assert issubclass(MathematicaConstraint, MathematicaExpr)
-        assert isinstance(FreeQ('a', x), MathematicaExpr)
-
-    def test_instance_is_boolean(self):
-        fq = FreeQ('a', x)
-        assert isinstance(fq, Boolean)
-
-    def test_not_composition(self):
-        fq = FreeQ('a', x)
-        neg = Not(fq)
-        assert isinstance(neg, Boolean)
-
-
-# =============================================================================
-# FreeQ list form tests
-# =============================================================================
-
-
-class TestFreeQListForm:
-    """Tests for FreeQ accepting list of variable names."""
-
-    def test_single_variable(self):
-        # variables auto-computed from WildSymbol instances
-        a_ = WildSymbol('a')
-        fq = FreeQ(a_, x)
-        assert fq.variables == ('a',)
-        assert fq.check(a=Symbol('a')) == True
-        assert fq.check(a=x + 1) == False
-
-    def test_list_all_free(self):
-        a_, b_, c_ = WildSymbol('a'), WildSymbol('b'), WildSymbol('c')
-        fq = FreeQ([a_, b_, c_], x)
-        assert fq.variables == ('a', 'b', 'c')
-        assert fq.check(a=Symbol('a'), b=Symbol('b'), c=Symbol('c')) == True
-
-    def test_list_one_not_free(self):
-        fq = FreeQ(['a', 'b', 'c'], x)
-        assert fq.check(a=Symbol('a'), b=x + 1, c=Symbol('c')) == False
-
-    def test_list_all_not_free(self):
-        fq = FreeQ(['a', 'b'], x)
-        assert fq.check(a=x, b=x**2) == False
-
-    def test_tuple_form(self):
-        a_, b_ = WildSymbol('a'), WildSymbol('b')
-        fq = FreeQ((a_, b_), x)
-        assert fq.variables == ('a', 'b')
-        assert fq.check(a=Integer(1), b=Integer(2)) == True
-
-    def test_repr_single(self):
-        fq = FreeQ('a', x)
-        assert 'FreeQ' in repr(fq)
-        assert 'a' in repr(fq)
-
-    def test_repr_list(self):
-        fq = FreeQ(['a', 'b'], x)
-        r = repr(fq)
-        assert 'FreeQ' in r
-        assert 'a' in r and 'b' in r
+# TestMathematicaConstraintBoolean and TestFreeQListForm moved to
+# sympy_wolfram/tests/test_constraints_wolfram.py (FreeQ now lives in
+# sympy_wolfram.constraints_wolfram).
 
 
 # =============================================================================

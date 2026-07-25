@@ -53,40 +53,9 @@ a, b, c, m, n, p = sympy.symbols('a b c m n p')
 # =============================================================================
 
 
-class TestFreeQ:
-    """Tests for FreeQ constraint."""
-
-    def test_free_of_x(self):
-        c = FreeQ('a', x)
-        assert c.check(a=Integer(5)) == True
-        assert c.check(a=Symbol('y')) == True
-        assert c.check(a=x) == False
-        assert c.check(a=x + 1) == False
-
-    def test_free_of_x_expression(self):
-        c = FreeQ('a', x)
-        assert c.check(a=sin(Symbol('y'))) == True
-        assert c.check(a=sin(x)) == False
-
-    def test_repr(self):
-        c = FreeQ('a', x)
-        assert 'FreeQ' in repr(c)
-
-
-class TestIntegerQ:
-    """Tests for IntegerQ constraint."""
-
-    def test_integer(self):
-        c = IntegerQ('n')
-        assert c.check(n=Integer(5)) == True
-        assert c.check(n=Integer(-3)) == True
-        assert c.check(n=Integer(0)) == True
-
-    def test_not_integer(self):
-        c = IntegerQ('n')
-        assert c.check(n=Rational(1, 2)) == False
-        assert c.check(n=Float(3.14)) == False
-        assert c.check(n=x) == False
+# TestFreeQ / TestIntegerQ / TestPositiveQ moved to
+# sympy_wolfram/tests/test_constraints_wolfram.py (these constraint classes now
+# live in sympy_wolfram.constraints_wolfram).
 
 
 class TestOddQ:
@@ -150,21 +119,6 @@ class TestAtomQ:
         assert c.check(a=x + 1) == False
         assert c.check(a=x * 2) == False
         assert c.check(a=sin(x)) == False
-
-
-class TestPositiveQ:
-    """Tests for PositiveQ constraint."""
-
-    def test_positive(self):
-        c = PositiveQ('n')
-        assert c.check(n=Integer(5)) == True
-        assert c.check(n=Rational(1, 2)) == True
-        assert c.check(n=pi) == True
-
-    def test_not_positive(self):
-        c = PositiveQ('n')
-        assert c.check(n=Integer(-5)) == False
-        assert c.check(n=Integer(0)) == False
 
 
 class TestNegativeQ:

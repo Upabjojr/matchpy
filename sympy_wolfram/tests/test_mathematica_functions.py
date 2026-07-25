@@ -174,6 +174,61 @@ def test_freeq_lifted_and_reexported():
     assert uf._ensure_sympy is fe._ensure_sympy
 
 
+def test_eager_IntegerQ():
+    """IntegerQ is a standard Wolfram predicate lifted here; True iff an explicit integer."""
+    assert fe.IntegerQ(S(1)) is True
+    assert fe.IntegerQ(S(-1)) is True
+    assert fe.IntegerQ(S(-1.9)) is False
+    assert fe.IntegerQ(S(0.0)) is False
+
+
+def test_eager_PositiveQ():
+    """PositiveQ is a standard Wolfram predicate lifted here; truthy iff a positive real.
+
+    (A comparable value returns SymPy's ``BooleanTrue``/``BooleanFalse``, not a Python
+    bool, so these use plain truthiness.)"""
+    assert fe.PositiveQ(S(1))
+    assert not fe.PositiveQ(S(-3))
+    assert not fe.PositiveQ(S(0))
+    assert not fe.PositiveQ(sympy.zoo)
+    assert not fe.PositiveQ(I)        # not comparable -> not positive
+    d = sympy.Symbol('d')
+    assert fe.PositiveQ(b / (b * (b * c / (-a * d + b * c)) - a * (b * d / (-a * d + b * c))))
+
+
+def test_eager_MemberQ():
+    """MemberQ is a standard Wolfram predicate lifted here (plain membership)."""
+    assert fe.MemberQ([a, b, c], b) is True
+    assert fe.MemberQ([sin, cos, sympy.log, sympy.tan], sin(x).func) is True
+    assert fe.MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, cos]) is True
+    assert fe.MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, sympy.tan]) is False
+
+
+def test_eager_MemberQ_head_wildcard_matches_by_class():
+    """A function-head wildcard F_[...] binds its head to a HeadRef; MemberQ must fire
+    against the head's class whether the list holds HeadRef literals (codegen form) or
+    bare classes. Regression: these head-checks otherwise silently failed and the FHW
+    rule never fired. (TrigQ/InverseTrigQ routing through this stays covered in the
+    rubi_rules utility-function tests.)"""
+    from sympy_matching.wild import HeadRef
+    from sympy import asin, acos, atan, erf, fresnels
+    # codegen form: HeadRef literals in the list
+    assert fe.MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(asin)) is True
+    assert fe.MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(atan)) is False
+    assert fe.MemberQ([HeadRef(erf), HeadRef(fresnels)], HeadRef(fresnels)) is True
+    # bare-class list, HeadRef subject
+    assert fe.MemberQ([sin, cos], HeadRef(sin)) is True
+
+
+def test_predicates_reexported_by_rubi():
+    """rubi_rules re-exports the SAME eager predicate objects from this layer."""
+    import importlib
+    uf = importlib.import_module('rubi_rules.utils.utility_functions')
+    assert uf.IntegerQ is fe.IntegerQ
+    assert uf.PositiveQ is fe.PositiveQ
+    assert uf.MemberQ is fe.MemberQ
+
+
 def test_head_to_class_unwraps_headref_and_class():
     """head_to_class is the structural bridge that lets a wildcard function head
     (bound as a HeadRef carrying its SymPy class) compare against a list of function

@@ -187,12 +187,9 @@ def test_ZeroQ_numeric_pretest_is_sound():
     assert ZeroQ(S(0)) is True
     assert ZeroQ(S(5)) is False
 
-def test_FreeQ():
-    l = [a*b, x, a + b]
-    assert FreeQ(l, x) == False
-
-    l = [a*b, a + b]
-    assert FreeQ(l, x) == True
+# FreeQ, PositiveQ, IntegerQ, MemberQ moved to sympy_wolfram (standard Wolfram
+# predicates); their eager unit tests live in
+# sympy_wolfram/tests/test_mathematica_functions.py.
 
 def test_List():
     assert List(a, b, c) == [a, b, c]
@@ -207,20 +204,6 @@ def test_NegativeIntegerQ():
     assert not NegativeIntegerQ(S(1))
     assert NegativeIntegerQ(S(-3))
     assert not NegativeIntegerQ(S(0))
-
-def test_PositiveQ():
-    assert PositiveQ(S(1))
-    assert not PositiveQ(S(-3))
-    assert not PositiveQ(S(0))
-    assert not PositiveQ(zoo)
-    assert not PositiveQ(I)
-    assert PositiveQ(b/(b*(b*c/(-a*d + b*c)) - a*(b*d/(-a*d + b*c))))
-
-def test_IntegerQ():
-    assert IntegerQ(S(1))
-    assert not IntegerQ(S(-1.9))
-    assert not IntegerQ(S(0.0))
-    assert IntegerQ(S(-1))
 
 def test_IntegersQ():
     assert IntegersQ(S(1), S(0))
@@ -450,27 +433,17 @@ def test_Head():
     assert Head(sin(x)) == sin
     assert Head(log(x**3 + 3)) == log
 
-def test_MemberQ():
-    assert MemberQ([a, b, c], b)
-    assert MemberQ([sin, cos, log, tan], Head(sin(x)))
-    assert MemberQ([[sin, cos], [tan, cot]], [sin, cos])
-    assert not MemberQ([[sin, cos], [tan, cot]], [sin, tan])
+# test_MemberQ (plain membership) and the MemberQ head-wildcard assertions moved to
+# sympy_wolfram/tests/test_mathematica_functions.py (MemberQ now lives in that layer).
 
 
-def test_MemberQ_head_wildcard_matches_by_class():
-    """A function-head wildcard F_[...] binds its head to a HeadRef; a membership test
-    must fire against the head's class. The codegen emits such lists as HeadRef literals
-    (HeadRef(sympy.asin)); TrigQ/HyperbolicQ/InverseTrigQ instead pass bare classes. Both
-    forms compare by the underlying class. Regression: these head-checks otherwise
-    silently failed and the FHW rule never fired."""
+def test_TrigQ_InverseTrigQ_head_wildcard_matches_by_class():
+    """A function-head wildcard F_[...] binds its head to a HeadRef; the Rubi trig
+    classifiers (which pass bare function classes to MemberQ) must still fire on such a
+    head. Regression: these head-checks otherwise silently failed and the FHW rule
+    never fired. Plain MemberQ head-matching is covered in the sympy_wolfram tests."""
     from sympy_matching.wild import HeadRef
-    from sympy import asin, acos, atan, sin, cos, erf, fresnels
-    # codegen form: HeadRef literals in the list
-    assert MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(asin))
-    assert not MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(atan))
-    assert MemberQ([HeadRef(erf), HeadRef(fresnels)], HeadRef(fresnels))
-    # TrigQ-family form: bare classes in the list, HeadRef subject
-    assert MemberQ([sin, cos], HeadRef(sin))
+    from sympy import asin
     assert TrigQ(HeadRef(sin))
     assert InverseTrigQ(HeadRef(asin))
 

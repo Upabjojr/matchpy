@@ -82,6 +82,9 @@ from sympy_wolfram.functions_eager import (
     LeafCount, Length, Complex, Not, Exponent,
     Simplify, First, Rest, Numerator, Denominator, Part, Util_Part, Apart,
     FreeQ, _ensure_sympy,
+    # Standard Wolfram predicates (bodies depend only on SymPy + Simplify/_ensure_sympy);
+    # relocated here from utility_functions.
+    IntegerQ, MemberQ, PositiveQ,
 )
 
 
@@ -293,28 +296,14 @@ def NonzeroQ(expr):
 def List(*var):
     return list(var)
 
-def PositiveQ(var):
-    var = Simplify(_ensure_sympy(var))
-    if var in (zoo, oo):
-        return False
-    if var.is_comparable:
-        res = var > 0
-        if not res.is_Relational:
-            return res
-    return False
-
 def PositiveIntegerQ(*args):
     return all(var.is_Integer and PositiveQ(var) for var in args)
 
 def NegativeIntegerQ(*args):
     return all(var.is_Integer and NegativeQ(var) for var in args)
 
-def IntegerQ(var):
-    var = Simplify(_ensure_sympy(var))
-    if isinstance(var, (int, Integer)):
-        return True
-    else:
-        return var.is_Integer
+# PositiveQ, IntegerQ and MemberQ moved to sympy_wolfram.functions_eager
+# (standard Wolfram predicates); imported at the top of this module.
 
 def IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
@@ -714,19 +703,6 @@ def LogQ(u):
 
 def Head(u):
     return u.func
-
-def MemberQ(l, u):
-    members = list(l) if isinstance(l, (tuple, list)) else list(l.args)
-    # Head-membership: a function-head wildcard F_[...] binds its head to a HeadRef
-    # carrying the SymPy class, while the membership list is written in Mathematica
-    # names (Symbol('ArcSin'), ...). Compare by the underlying class so the two spellings
-    # reconcile -- MemberQ[{ArcSin, ArcCos, ...}, F] fires when F bound to asin/acos.
-    from sympy_matching.wild import HeadRef
-    if isinstance(u, HeadRef):
-        from sympy_wolfram.functions_eager import head_to_class
-        uc = head_to_class(u)
-        return uc is not None and any(head_to_class(m) == uc for m in members)
-    return u in members
 
 def TrigQ(u):
     if AtomQ(u):

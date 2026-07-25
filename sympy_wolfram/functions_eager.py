@@ -20,7 +20,7 @@ so the coupling was spurious.  They are inlined below and the functions live her
 import sympy
 from sympy import (
     Add, Basic, I, Integer, Mul, Pow, S, Symbol, Tuple,
-    expand, postorder_traversal, sympify, together,
+    expand, oo, postorder_traversal, sympify, together, zoo,
 )
 from sympy.core.function import Function
 from sympy.polys.partfrac import apart
@@ -261,6 +261,50 @@ def Apart(u, x):
     if u.is_rational_function(x):
         return apart(u, x)
     return u
+
+
+def PositiveQ(var):
+    """Mathematica ``PositiveQ[expr]`` — True iff ``expr`` is a positive real number.
+
+    Standard Wolfram predicate: after :func:`Simplify`, a comparable value is tested
+    ``> 0``; ``ComplexInfinity``/``Infinity`` and non-comparable (e.g. complex) values
+    are not positive.
+    """
+    var = Simplify(_ensure_sympy(var))
+    if var in (zoo, oo):
+        return False
+    if var.is_comparable:
+        res = var > 0
+        if not res.is_Relational:
+            return res
+    return False
+
+
+def IntegerQ(var):
+    """Mathematica ``IntegerQ[expr]`` — True iff ``expr`` is an explicit integer."""
+    var = Simplify(_ensure_sympy(var))
+    if isinstance(var, (int, Integer)):
+        return True
+    else:
+        return var.is_Integer
+
+
+def MemberQ(l, u):
+    """Mathematica ``MemberQ[list, form]`` — True iff ``form`` occurs in ``list``.
+
+    Head-membership: a function-head wildcard ``F_[...]`` binds its head to a
+    :class:`~sympy_matching.wild.HeadRef` carrying the SymPy class, while the
+    membership list may be written either as ``HeadRef`` literals (emitted by the
+    codegen) or as bare function classes (``TrigQ``/``HyperbolicQ``/``InverseTrigQ``
+    pass ``[sin, cos, ...]``). Both spellings are reconciled via :func:`head_to_class`
+    so ``MemberQ[{ArcSin, ArcCos, ...}, F]`` fires when ``F`` bound to ``asin``/``acos``.
+    """
+    members = list(l) if isinstance(l, (tuple, list)) else list(l.args)
+    from sympy_matching.wild import HeadRef
+    if isinstance(u, HeadRef):
+        uc = head_to_class(u)
+        return uc is not None and any(head_to_class(m) == uc for m in members)
+    return u in members
 
 
 def Not(var):

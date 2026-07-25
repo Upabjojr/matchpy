@@ -13,61 +13,16 @@ from sympy import Symbol
 from sympy_matching.conversion import matchpy_to_sympy
 from sympy_wolfram.constraints import MathematicaConstraint
 
-
-# =============================================================================
-# FreeQ — expression is free of a symbol
-# =============================================================================
-
-class FreeQ(MathematicaConstraint):
-    """Constraint: matched value(s) are free of a given symbol.
-
-    Mathematica: FreeQ[expr, form] — True if no subexpression matches form.
-    In Rubi context:
-        FreeQ[a, x]          — checks that 'a' does not contain 'x'.
-        FreeQ[{a, b, c}, x]  — checks that ALL of a, b, c are free of 'x'.
-    """
-
-    def __init__(self, expr_vars, free_of):
-        self._expr_vars = self.args[0]  # tuple or single Symbol
-        self._free_of = self.args[1]
-
-    def check(self, **kwargs):
-        from sympy_wolfram.functions_eager import FreeQ as _FreeQ
-        sk = self._resolve_all(kwargs)
-        free_of = self._free_of  # integration variable, not resolved
-        if isinstance(self._expr_vars, (list, tuple, sympy.Tuple)):
-            for v in self._expr_vars:
-                resolved = self._resolve(v, sk)
-                if not _FreeQ(resolved, free_of):
-                    return False
-            return True
-        else:
-            resolved = self._resolve(self._expr_vars, sk)
-            return _FreeQ(resolved, free_of)
-
-    def __repr__(self):
-        if isinstance(self._expr_vars, (list, tuple, sympy.Tuple)):
-            inner = ", ".join(str(v) for v in self._expr_vars)
-            return f"FreeQ([{inner}], {self._free_of})"
-        return f"FreeQ({self._expr_vars}, {self._free_of})"
+# FreeQ, IntegerQ, PositiveQ and MemberQ are standard Wolfram-library constraints
+# (not Rubi-specific), so they now live in sympy_wolfram; re-exported here so
+# rubi_rules.utils and the generated rules keep importing them from this module
+# unchanged.
+from sympy_wolfram.constraints_wolfram import FreeQ, IntegerQ, PositiveQ, MemberQ
 
 
 # =============================================================================
 # Single-argument predicates
 # =============================================================================
-
-class IntegerQ(MathematicaConstraint):
-    """Constraint: matched value is an explicit integer."""
-    def __init__(self, u):
-        self._u = self.args[0]
-    def check(self, **kwargs):
-        from .utility_functions import IntegerQ as _IntegerQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        return _IntegerQ(u)
-    def __repr__(self):
-        return f"IntegerQ({self._u})"
-
 
 class OddQ(MathematicaConstraint):
     """Constraint: matched value is an odd integer."""
@@ -134,19 +89,6 @@ class AtomQ(MathematicaConstraint):
         return f"AtomQ({self._u})"
 
 
-class PositiveQ(MathematicaConstraint):
-    """Constraint: matched value is positive."""
-    def __init__(self, u):
-        self._u = self.args[0]
-    def check(self, **kwargs):
-        from .utility_functions import PositiveQ as _PositiveQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        return _PositiveQ(u)
-    def __repr__(self):
-        return f"PositiveQ({self._u})"
-
-
 class NegativeQ(MathematicaConstraint):
     """Constraint: matched value is negative."""
     def __init__(self, u):
@@ -175,21 +117,6 @@ class PrimeQ(MathematicaConstraint):
 # =============================================================================
 # Two-argument predicates
 # =============================================================================
-
-class MemberQ(MathematicaConstraint):
-    """Constraint: matched value is a member of a given list."""
-    def __init__(self, u, members):
-        self._u = self.args[0]
-        self._members = self.args[1]
-    def check(self, **kwargs):
-        from .utility_functions import MemberQ as _MemberQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        members = self._members if isinstance(self._members, (list, tuple)) else [self._members]
-        return _MemberQ(list(members), u)
-    def __repr__(self):
-        return f"MemberQ({self._u}, {self._members})"
-
 
 class PolynomialQ(MathematicaConstraint):
     """Constraint: matched value is a polynomial in the integration variable."""
