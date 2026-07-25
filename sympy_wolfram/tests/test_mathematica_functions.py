@@ -16,6 +16,7 @@ import ast
 import importlib
 
 import pytest
+import sympy
 from sympy import Symbol, Integer, I, sin
 
 from sympy_wolfram import mathematica_functions as mf
@@ -36,6 +37,9 @@ MOVED_NODES = [
     'Quotient', 'EllipticPi', 'Apply', 'FullSimplify', 'Simplify',
     'FunctionExpand', 'Binomial', 'ProductLog', 'Floor', 'Hypergeometric2F1',
     'LeafCount', 'Length', 'Not',
+    # Relocated out of rubi_rules (their Rubi bodies only ever called generic
+    # SymPy operations — is_Add/is_Mul/sort_key/is_rational_function/part-extract).
+    'First', 'Rest', 'Part', 'Apart', 'Denominator', 'Exponent',
 ]
 
 
@@ -86,6 +90,41 @@ def test_eager_helpers_are_self_contained():
     assert fe.Length(x + Integer(1)) == 2
     assert fe.Complex(Integer(0), Integer(1)) == I
     assert fe.Not(False) is True
+
+
+# ---------------------------------------------------------------------------
+# 2b. Relocated First/Rest/Part/Apart/Numerator/Denominator (behaviour + coupling)
+# ---------------------------------------------------------------------------
+
+def test_relocated_nodes_behaviour():
+    a, b = Symbol('a'), Symbol('b')
+    assert mf.First(a + b + x).doit() == a          # canonical sort_key order
+    assert mf.Rest(a * b * x).doit() == b * x
+    assert mf.Part(sympy.Tuple(a, b, x), Integer(2)).doit() == b
+    assert mf.Numerator((a + 1) / (b * x)).doit() == a + 1
+    assert mf.Denominator((a + 1) / (b * x)).doit() == b * x
+    assert mf.Apart(1 / (x * (x + 1)), x).doit() == 1 / x - 1 / (x + 1)
+    assert mf.Apart(x + sympy.sqrt(x), x).doit() == x + sympy.sqrt(x)  # non-rational: unchanged
+    assert mf.Exponent(a + b * x ** 3, x).doit() == 3
+
+
+def test_eager_relocated_are_self_contained():
+    a, b = Symbol('a'), Symbol('b')
+    assert fe.First(a + b + x) == a
+    assert fe.Rest(a * b * x) == b * x
+    assert fe.Part([a, b, x], 2) == b
+    assert fe.Numerator((a + 1) / (b * x)) == a + 1
+    assert fe.Denominator((a + 1) / (b * x)) == b * x
+
+
+def test_apart_matches_rational_function_test():
+    """Apart's guard is SymPy's is_rational_function — the generic equivalent of
+    Rubi's RationalFunctionQ (they agree, so relocating did not change behaviour)."""
+    from rubi_rules.utils.utility_functions import RationalFunctionQ
+    cases = [1 / (x * (x + 1)), x + sympy.sqrt(x), sin(x) / (x + 1),
+             x ** 3 / (Symbol('a') + Symbol('b') * x), 1 / x + x]
+    for u in cases:
+        assert bool(RationalFunctionQ(u, x)) == bool(u.is_rational_function(x))
 
 
 # ---------------------------------------------------------------------------

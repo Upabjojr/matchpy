@@ -57,11 +57,15 @@ from sympy_wolfram.objects import (
 # Rubi-specific). Re-exported here so generated rules (which do
 # `from ...rubi_utils import *`) keep resolving them unchanged.
 from sympy_wolfram.mathematica_functions import (
+    Apart,
     Apply,
     Binomial,
     Coefficient,
     Complex,
+    Denominator,
     EllipticPi,
+    Exponent,
+    First,
     Floor,
     FullSimplify,
     FunctionExpand,
@@ -71,11 +75,13 @@ from sympy_wolfram.mathematica_functions import (
     Length,
     Not,
     Numerator,
+    Part,
     PolynomialQuotient,
     PolynomialRemainder,
     ProductLog,
     Quotient,
     ReplaceAll,
+    Rest,
     Rule,
     Sign,
     Simplify,
@@ -273,17 +279,15 @@ class Expon(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
+        # Rubi: Expon[u, x] := Exponent[Together[u], x] (and the 3-arg Min/Max form).
+        # Delegate to the Mathematica-faithful Exponent (Together already folded in),
+        # which -- unlike the old Poly-based code that returned 0 on any non-polynomial
+        # (Sqrt[x]+x, 1/x+x, Sin[x] x^2, ...) -- gives the true max/min power of x.
+        from sympy_wolfram.functions_eager import Exponent as _Exponent
         args = self.args
         u, x = args[0], args[1]
         order_func = args[2] if len(args) >= 3 else None
-        try:
-            p = Poly(u, x)
-            monoms = [m[0] for m in p.monoms()]
-            if order_func is not None and str(order_func) == 'Min':
-                return Integer(min(monoms))
-            return Integer(max(monoms))
-        except Exception:
-            return S.Zero
+        return _Exponent(u, x, order_func)
 
 
 # =============================================================================
@@ -690,33 +694,8 @@ class TrinomialDegree(MathematicaExpr):
         return _TrinomialDegree(*self.args)
 
 
-class Part(MathematicaExpr):
-    """Mathematica Part[expr, n] — extract nth part."""
-    def __new__(cls, expr, *indices):
-        return Expr.__new__(cls, expr, *indices)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Part as _Part
-        return _Part(*self.args)
-
-
-class First(MathematicaExpr):
-    """Mathematica First[expr] — first element."""
-    def __new__(cls, expr, d=None):
-        if d is None:
-            return Expr.__new__(cls, expr)
-        return Expr.__new__(cls, expr, d)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import First as _First
-        return _First(*self.args)
-
-
-class Rest(MathematicaExpr):
-    """Mathematica Rest[expr] — all but first element."""
-    def __new__(cls, expr):
-        return Expr.__new__(cls, expr)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Rest as _Rest
-        return _Rest(self.args[0])
+# Part, First, Rest are standard Wolfram functions — their deferred nodes now live in
+# sympy_wolfram.mathematica_functions and are re-exported at the top of this module.
 
 
 class Numer(MathematicaExpr):
@@ -765,14 +744,8 @@ class NormalizeIntegrand(MathematicaExpr):
         return _NormalizeIntegrand(*self.args)
 
 
-class Exponent(MathematicaExpr):
-    """Mathematica Exponent[expr, form]."""
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Exponent as _Exponent
-        return _Exponent(*self.args)
+# Exponent is a standard Wolfram function — its deferred node now lives in
+# sympy_wolfram.mathematica_functions and is re-exported at the top of this module.
 
 
 class ExpandLinearProduct(MathematicaExpr):
@@ -892,14 +865,8 @@ class Distrib(MathematicaExpr):
         return _f(*self.args)
 
 
-class Apart(MathematicaExpr):
-    """Rubi Apart[u, x] — partial fraction decomposition."""
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Apart as _f
-        return _f(*self.args)
+# Apart is a standard Wolfram function — its deferred node now lives in
+# sympy_wolfram.mathematica_functions and is re-exported at the top of this module.
 
 
 class ExpandExpression(MathematicaExpr):
@@ -972,14 +939,8 @@ class RationalFunctionExponents(MathematicaExpr):
         return _f(*self.args)
 
 
-class Denominator(MathematicaExpr):
-    """Rubi Denominator[expr] — denominator of expression (lazy, not eagerly evaluated)."""
-    def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
-    def _evaluate(self, **kwargs):
-        from .utility_functions import Denominator as _f
-        return _f(*self.args)
+# Denominator is a standard Wolfram function — its deferred node now lives in
+# sympy_wolfram.mathematica_functions and is re-exported at the top of this module.
 
 
 # NOTE: Gamma[z] / Gamma[a, z] is a standard Wolfram function and lives in

@@ -78,7 +78,10 @@ from sympy_matching.conversion import matchpy_to_sympy
 # Self-contained Wolfram-standard eager helpers now live in sympy_wolfram (the
 # correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
 # in-module callers keep resolving these names; the local defs were removed.
-from sympy_wolfram.functions_eager import LeafCount, Length, Complex, Not
+from sympy_wolfram.functions_eager import (
+    LeafCount, Length, Complex, Not, Exponent,
+    Simplify, First, Rest, Numerator, Denominator, Part, Util_Part, Apart,
+)
 
 
 from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_expression, \
@@ -174,31 +177,9 @@ def exception_means_false(f):
 # has to avoid re-deriving the same simplification in the first place (a cheaper
 # equivalence test before falling back to full simplify, or hoisting the call out of
 # the backtracking loop), not cache after the fact.
-def Simplify(expr):
-
-    # Resolve any unevaluated deferred MathematicaExpr nodes (e.g. Coeff, D) before
-    # handing the expression to sympy.simplify: a product of unevaluated nodes such
-    # as Coeff(v,x,0)*Coeff(v,x,4) drives sympy's nc_simplify into unbounded
-    # recursion (RecursionError). Doing this only when such nodes are present leaves
-    # ordinary expressions untouched.
-    from sympy_wolfram.objects import MathematicaExpr
-    if isinstance(expr, Basic) and expr.has(MathematicaExpr):
-        try:
-            expr = expr.doit()
-        except (AttributeError, TypeError):
-            # See below: a deferred predicate (BinomialDegree/TrinomialDegree/...)
-            # evaluated to a Boolean inside an arithmetic node during doit.
-            return expr
-    # A Boolean (e.g. BinomialDegree/TrinomialDegree returning False on a
-    # non-binomial/-trinomial) sitting inside an arithmetic node cannot be combined
-    # or simplified numerically -- sympy raises 'BooleanFalse has no as_coeff_Mul'.
-    # Such an expression has no numeric value; return it unevaluated so a downstream
-    # `== 0` (in ZeroQ/EqQ) is simply False -- matching Mathematica, which leaves a
-    # False-vs-number comparison unequal rather than erroring.
-    try:
-        return simplify(expr)
-    except (AttributeError, TypeError):
-        return expr
+# Simplify moved to sympy_wolfram.functions_eager (imported above) — it is a standard
+# Wolfram function whose body depends only on SymPy (+ MathematicaExpr for the deferred-
+# node doit), so it lives in the generic Wolfram layer.
 
 def Set(expr, value):
     return {expr: value}
@@ -453,55 +434,9 @@ def Subst(a, x, y):
     return a.subs(x, y)
     # return a.xreplace({x: y})
 
-def First(expr, d=None):
-    """
-    Gives the first element if it exists, or d otherwise.
-
-    Examples
-    ========
-
-    >>> from rubi_rules.utils.utility_functions import First
-    >>> from sympy.abc import a, b, c
-    >>> First(a + b + c)
-    a
-    >>> First(a*b*c)
-    a
-
-    """
-    if isinstance(expr, (tuple, list, Tuple)):
-        return expr[0]
-    if isinstance(expr, Symbol):
-        return expr
-    else:
-        if SumQ(expr) or ProductQ(expr):
-            l = Sort(expr.args)
-            return l[0]
-        else:
-            return expr.args[0]
-
-def Rest(expr):
-    """
-    Gives rest of the elements if it exists
-
-    Examples
-    ========
-
-    >>> from rubi_rules.utils.utility_functions import Rest
-    >>> from sympy.abc import a, b, c
-    >>> Rest(a + b + c)
-    b + c
-    >>> Rest(a*b*c)
-    b*c
-
-    """
-    if isinstance(expr, (tuple, list, Tuple)):
-        return expr[1:]
-    else:
-        if SumQ(expr) or ProductQ(expr):
-            l = Sort(expr.args)
-            return expr.func(*l[1:])
-        else:
-            return expr.args[1]
+# First and Rest moved to sympy_wolfram.functions_eager (imported above). Their bodies
+# used SumQ/ProductQ/Sort, all generic SymPy operations (is_Add/is_Mul/sort_key), so the
+# functions belong to the generic Wolfram layer.
 
 def SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
@@ -600,17 +535,8 @@ def Coefficient(expr, var, n=1):
 
     return Util_Coefficient(expr, var, n)
 
-def Denominator(var):
-    var = Simplify(var)
-    if isinstance(var, Pow):
-        if isinstance(var.exp, Integer):
-            if var.exp > 0:
-                return Pow(Denominator(var.base), var.exp)
-            elif var.exp < 0:
-                return Pow(Numerator(var.base), -1*var.exp)
-    elif isinstance(var, Add):
-        var = sym_together(var)
-    return fraction(var)[1]
+# Denominator moved to sympy_wolfram.functions_eager (imported above), paired with the
+# recursive Numerator; both bodies are pure SymPy (Simplify/together/fraction).
 
 def Hypergeometric2F1(a, b, c, z):
     return hyper([a, b], [c], z)
@@ -886,17 +812,7 @@ def InverseTrigQ(u):
 def SinhCoshQ(f):
     return MemberQ([sinh, cosh, sech, csch], Head(f))
 
-def Numerator(u):
-    u = Simplify(u)
-    if isinstance(u, Pow):
-        if isinstance(u.exp, Integer):
-            if u.exp > 0:
-                return Pow(Numerator(u.base), u.exp)
-            elif u.exp < 0:
-                return Pow(Denominator(u.base), -1*u.exp)
-    elif isinstance(u, Add):
-        u = sym_together(u)
-    return fraction(u)[0]
+# Numerator moved to sympy_wolfram.functions_eager (imported above); see Denominator.
 
 def NumberQ(u):
     if isinstance(u, (int, float)):
@@ -1062,16 +978,11 @@ def PowerOfLinearQ(expr, x):
     else:
         return False
 
-def Exponent(expr, x):
-    expr = Expand(S(expr))
-    if S(expr).is_number or (not expr.has(x)):
-        return Integer(0)
-    if PolynomialQ(expr, x):
-        if isinstance(x, Rational):
-            return Integer(degree(Poly(expr, x), x))
-        return Integer(degree(expr, gen=x))
-    else:
-        return Integer(0)
+# NOTE: Exponent is imported from sympy_wolfram.functions_eager (Mathematica-faithful:
+# deg(numerator) - deg(denominator), correct for non-polynomials). The former local
+# definition wrongly returned 0 for any non-polynomial (e.g. Exponent(sqrt(x)+x, x)
+# gave 0 instead of 1); see the Expon fix. ``Expand``/``PolynomialQ`` are no longer
+# needed by it.
 
 def ExponentList(expr, x):
     expr = Expand(S(expr))
@@ -1628,11 +1539,8 @@ def ExpandExpression(u, x):
         return ExpandCleanup(v, x)
     return SimplifyTerm(u, x)
 
-def Apart(u, x):
-    if RationalFunctionQ(u, x):
-        return apart(u, x)
-
-    return u
+# Apart moved to sympy_wolfram.functions_eager (imported above). Its RationalFunctionQ
+# guard is exactly SymPy's is_rational_function, so the function is not Rubi-specific.
 
 def SmartApart(*args):
     if len(args) == 2:
@@ -7203,26 +7111,8 @@ def TrigSimplifyAux(expr):
 def Cancel(expr):
     return cancel(expr)
 
-class Util_Part(Function):
-    def doit(self):
-        i = Simplify(self.args[0])
-        if len(self.args) > 2 :
-            lst = list(self.args[1:])
-        else:
-            lst = self.args[1]
-        if isinstance(i, (int, Integer)):
-            if isinstance(lst, (tuple, list)):
-                return lst[i - 1]
-            elif AtomQ(lst):
-                return lst
-            return lst.args[i - 1]
-        else:
-            return self
-
-def Part(lst, i): #see i = -1
-    if isinstance(lst, (tuple, list)):
-        return Util_Part(i, *lst).doit()
-    return Util_Part(i, lst).doit()
+# Util_Part and Part moved to sympy_wolfram.functions_eager (imported above): generic
+# 1-based part extraction, no Rubi-specific logic.
 
 def PolyLog(n, p, z=None):
     return polylog(n, p)

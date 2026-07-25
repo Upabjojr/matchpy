@@ -135,14 +135,17 @@ Sum = SumWolfram
 
 
 class Numerator(MathematicaExpr):
-    """Mathematica Numerator[expr] -> numerator of rational expression."""
+    """Mathematica Numerator[expr] -> numerator of rational expression.
+
+    Delegates to the eager helper (which recurses through integer powers, pairing
+    with :class:`Denominator`) rather than a bare ``sympy.numer``.
+    """
 
     def __new__(cls, expr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        expr, = self.args
-        return sympy.numer(expr)
+        return _eager.Numerator(self.args[0])
 
 
 class Together(MathematicaExpr):
@@ -368,3 +371,68 @@ class Complex(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return self
+
+
+class Denominator(MathematicaExpr):
+    """Mathematica Denominator[expr] — denominator of a rational expression."""
+
+    def __new__(cls, *args):
+        safe = [sympy.sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+
+    def _evaluate(self, **kwargs):
+        return _eager.Denominator(*self.args)
+
+
+class First(MathematicaExpr):
+    """Mathematica First[expr] — first element."""
+
+    def __new__(cls, expr, d=None):
+        if d is None:
+            return Expr.__new__(cls, expr)
+        return Expr.__new__(cls, expr, d)
+
+    def _evaluate(self, **kwargs):
+        return _eager.First(*self.args)
+
+
+class Rest(MathematicaExpr):
+    """Mathematica Rest[expr] — all elements but the first."""
+
+    def __new__(cls, expr):
+        return Expr.__new__(cls, expr)
+
+    def _evaluate(self, **kwargs):
+        return _eager.Rest(self.args[0])
+
+
+class Part(MathematicaExpr):
+    """Mathematica Part[expr, n] — extract the n-th part (1-based)."""
+
+    def __new__(cls, expr, *indices):
+        return Expr.__new__(cls, expr, *indices)
+
+    def _evaluate(self, **kwargs):
+        return _eager.Part(*self.args)
+
+
+class Exponent(MathematicaExpr):
+    """Mathematica Exponent[expr, form] / Exponent[expr, form, h]."""
+
+    def __new__(cls, *args):
+        safe = [sympy.sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+
+    def _evaluate(self, **kwargs):
+        return _eager.Exponent(*self.args)
+
+
+class Apart(MathematicaExpr):
+    """Mathematica Apart[expr, x] — partial-fraction decomposition in x."""
+
+    def __new__(cls, *args):
+        safe = [sympy.sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+
+    def _evaluate(self, **kwargs):
+        return _eager.Apart(*self.args)

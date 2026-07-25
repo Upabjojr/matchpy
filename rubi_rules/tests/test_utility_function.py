@@ -607,7 +607,9 @@ def test_Exponent():
     assert Exponent(x**2 + 2*x + 1, x) == 2
     assert ExponentList(x**3, x) == [3]
     assert Exponent(S(1), x) == 0
-    assert Exponent(x**(-3), x) == 0
+    # Mathematica's Exponent treats its argument as a rational function, so
+    # Exponent[x^-3, x] == -3 (not 0 as a polynomial-only implementation returns).
+    assert Exponent(x**(-3), x) == -3
 
 def test_Expon():
     assert Expon(x**2+2*x+1, x) == 2

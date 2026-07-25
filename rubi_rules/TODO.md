@@ -105,7 +105,9 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] remove not used variables from generated rules.
 - [ ] RubiConstraint ==> rename and make it a subtype of MathematicaExpr?
 - [ ] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even RubiRulePattern should be renamed and moved to sympy_matching/ ?
-
+- [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ.
+- [ ] rename MatchPy classes that have a naming conflict with SymPy classes.
+- [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
 
 Strange warning:
 
