@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -142,7 +142,7 @@ RULES = [
     # Rule 6
     RubiRulePattern(
         pattern=Int(_u_*(_b_*InertSec(x*_f_ + _e_)**n_)**p_, x),
-        constraints=(FreeQ([_b_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), IntegerQ(n_), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([Symbol('sin'), Symbol('cos'), Symbol('tan'), Symbol('cot'), Symbol('sec'), Symbol('csc')], trig_))))),),
+        constraints=(FreeQ([_b_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), IntegerQ(n_), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([HeadRef(sympy.sin), HeadRef(sympy.cos), HeadRef(sympy.tan), HeadRef(sympy.cot), HeadRef(sympy.sec), HeadRef(sympy.csc)], trig_))))),),
         replacement=With({ff: FreeFactors(sec(x*_f_ + _e_), x)}, (ff**n_*_b_)**IntPart(p_)*(_b_*sec(x*_f_ + _e_)**n_)**FracPart(p_)*Int((sec(x*_f_ + _e_)/ff)**(n_*p_)*ActivateTrig(_u_), x)/(sec(x*_f_ + _e_)/ff)**(n_*FracPart(p_))),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=6,
@@ -150,7 +150,7 @@ RULES = [
     # Rule 7
     RubiRulePattern(
         pattern=Int(_u_*(_b_*(_c_*InertSec(x*_f_ + _e_))**n_)**p_, x),
-        constraints=(FreeQ([_b_, _c_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), Not(IntegerQ(n_)), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([Symbol('sin'), Symbol('cos'), Symbol('tan'), Symbol('cot'), Symbol('sec'), Symbol('csc')], trig_))))),),
+        constraints=(FreeQ([_b_, _c_, _e_, _f_, n_, p_], x), Not(IntegerQ(p_)), Not(IntegerQ(n_)), Or(EqQ(_u_, Integer(1)), MatchQ(_u_, Condition(((_d_ * WildHeadApp(trig_, (_e_ + (_f_ * x)))))**(_m_), And(FreeQ([_d_, _m_], x), MemberQ([HeadRef(sympy.sin), HeadRef(sympy.cos), HeadRef(sympy.tan), HeadRef(sympy.cot), HeadRef(sympy.sec), HeadRef(sympy.csc)], trig_))))),),
         replacement=_b_**IntPart(p_)*(_b_*(_c_*sec(x*_f_ + _e_))**n_)**FracPart(p_)*Int((_c_*sec(x*_f_ + _e_))**(n_*p_)*ActivateTrig(_u_), x)/(_c_*sec(x*_f_ + _e_))**(n_*FracPart(p_)),
         module_name='4.5.7 (d trig)^m (a+b (c sec)^n)^p',
         rule_number=7,

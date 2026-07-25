@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -136,7 +136,7 @@ RULES = [
     # Rule 3
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.cos)), EqQ(F_, HeadRef(sympy.cos))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, d*Subst(Int(SubstFor(1, sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=3,
@@ -144,7 +144,7 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.sin))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -d*Subst(Int(SubstFor(1, cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=4,
@@ -168,7 +168,7 @@ RULES = [
     # Rule 7
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.cot)), EqQ(F_, HeadRef(sympy.cot))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, Subst(Int(SubstFor(1/x, sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=7,
@@ -176,7 +176,7 @@ RULES = [
     # Rule 8
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.tan)), EqQ(F_, HeadRef(sympy.tan))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -Subst(Int(SubstFor(1/x, cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=8,
@@ -200,7 +200,7 @@ RULES = [
     # Rule 11
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, Symbol('Sec')), EqQ(F_, Symbol('sec'))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.sec)), EqQ(F_, HeadRef(sympy.sec))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(tan(_c_*(x*_b_ + _a_)), x)}, d*Subst(Int(SubstFor(1, tan(_c_*(x*_b_ + _a_))/d, u_, x), x), x, tan(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=11,
@@ -216,7 +216,7 @@ RULES = [
     # Rule 13
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**2, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, Symbol('Csc')), EqQ(F_, Symbol('csc'))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.csc)), EqQ(F_, HeadRef(sympy.csc))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True),),
         replacement=With({d: FreeFactors(cot(_c_*(x*_b_ + _a_)), x)}, -d*Subst(Int(SubstFor(1, cot(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cot(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=13,
@@ -248,7 +248,7 @@ RULES = [
     # Rule 17
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*cot(_c_*(x*_b_ + _a_))**_n_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, HeadRef(sympy.cot)), EqQ(F_, HeadRef(sympy.cot))), FunctionOfQ(tan(_c_*(x*_b_ + _a_))/FreeFactors(tan(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*cot(_c_*(x*_b_ + _a_))**_n_, x),),
         replacement=With({d: FreeFactors(tan(_c_*(x*_b_ + _a_)), x)}, d**(1 - _n_)*Subst(Int(SubstFor(1/(x**_n_*(d**2*x**2 + 1)), tan(_c_*(x*_b_ + _a_))/d, u_, x), x), x, tan(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=17,
@@ -256,7 +256,7 @@ RULES = [
     # Rule 18
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*tan(_c_*(x*_b_ + _a_))**_n_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(_n_), Or(EqQ(F_, HeadRef(sympy.tan)), EqQ(F_, HeadRef(sympy.tan))), FunctionOfQ(cot(_c_*(x*_b_ + _a_))/FreeFactors(cot(_c_*(x*_b_ + _a_)), x), u_, x, True), TryPureTanSubst(ActivateTrig(u_)*tan(_c_*(x*_b_ + _a_))**_n_, x),),
         replacement=With({d: FreeFactors(cot(_c_*(x*_b_ + _a_)), x)}, -d**(1 - _n_)*Subst(Int(SubstFor(1/(x**_n_*(d**2*x**2 + 1)), cot(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cot(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=18,
@@ -280,7 +280,7 @@ RULES = [
     # Rule 21
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Or(EqQ(F_, Symbol('sin')), EqQ(F_, Symbol('cos'))), Or(EqQ(G_, Symbol('sin')), EqQ(G_, Symbol('cos'))), IGtQ(_p_, 0), IGtQ(_q_, 0),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.cos))), Or(EqQ(G_, HeadRef(sympy.sin)), EqQ(G_, HeadRef(sympy.cos))), IGtQ(_p_, 0), IGtQ(_q_, 0),),
         replacement=Int(ExpandTrigReduce(ActivateTrig(WFApply(F_, x*_b_ + _a_)**_p_*WFApply(G_, x*_d_ + _c_)**_q_), x), x),
         module_name='4.7.5 Inert trig functions',
         rule_number=21,
@@ -288,7 +288,7 @@ RULES = [
     # Rule 22
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_*WildHeadApp(H_, x*_f_ + _e_)**_r_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), Or(EqQ(F_, Symbol('sin')), EqQ(F_, Symbol('cos'))), Or(EqQ(G_, Symbol('sin')), EqQ(G_, Symbol('cos'))), Or(EqQ(H_, Symbol('sin')), EqQ(H_, Symbol('cos'))), IGtQ(_p_, 0), IGtQ(_q_, 0), IGtQ(_r_, 0),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.cos))), Or(EqQ(G_, HeadRef(sympy.sin)), EqQ(G_, HeadRef(sympy.cos))), Or(EqQ(H_, HeadRef(sympy.sin)), EqQ(H_, HeadRef(sympy.cos))), IGtQ(_p_, 0), IGtQ(_q_, 0), IGtQ(_r_, 0),),
         replacement=Int(ExpandTrigReduce(ActivateTrig(WFApply(F_, x*_b_ + _a_)**_p_*WFApply(G_, x*_d_ + _c_)**_q_*WFApply(H_, x*_f_ + _e_)**_r_), x), x),
         module_name='4.7.5 Inert trig functions',
         rule_number=22,
@@ -296,7 +296,7 @@ RULES = [
     # Rule 23
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.cos)), EqQ(F_, HeadRef(sympy.cos))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, d*Subst(Int(SubstFor(1, sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=23,
@@ -304,7 +304,7 @@ RULES = [
     # Rule 24
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.sin))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -d*Subst(Int(SubstFor(1, cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=24,
@@ -328,7 +328,7 @@ RULES = [
     # Rule 27
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.cot)), EqQ(F_, HeadRef(sympy.cot))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, Subst(Int(SubstFor(1/x, sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=27,
@@ -336,7 +336,7 @@ RULES = [
     # Rule 28
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), Or(EqQ(F_, HeadRef(sympy.tan)), EqQ(F_, HeadRef(sympy.tan))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -Subst(Int(SubstFor(1/x, cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=28,
@@ -360,7 +360,7 @@ RULES = [
     # Rule 31
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.cos)), EqQ(F_, HeadRef(sympy.cos))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, d*Subst(Int(SubstFor((-d**2*x**2 + 1)**(n_/2 + sympy.S(-1)/2), sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=31,
@@ -368,7 +368,7 @@ RULES = [
     # Rule 32
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sec')), EqQ(F_, Symbol('sec'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.sec)), EqQ(F_, HeadRef(sympy.sec))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, d*Subst(Int(SubstFor((-d**2*x**2 + 1)**(-n_/2 + sympy.S(-1)/2), sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=32,
@@ -376,7 +376,7 @@ RULES = [
     # Rule 33
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.sin))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -d*Subst(Int(SubstFor((-d**2*x**2 + 1)**(n_/2 + sympy.S(-1)/2), cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=33,
@@ -384,7 +384,7 @@ RULES = [
     # Rule 34
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Csc')), EqQ(F_, Symbol('csc'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.csc)), EqQ(F_, HeadRef(sympy.csc))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -d*Subst(Int(SubstFor((-d**2*x**2 + 1)**(-n_/2 + sympy.S(-1)/2), cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=34,
@@ -424,7 +424,7 @@ RULES = [
     # Rule 39
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cot')), EqQ(F_, Symbol('cot'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.cot)), EqQ(F_, HeadRef(sympy.cot))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, d**(1 - n_)*Subst(Int(SubstFor((-d**2*x**2 + 1)**(n_/2 + sympy.S(-1)/2)/x**n_, sin(_c_*(x*_b_ + _a_))/d, u_, x), x), x, sin(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=39,
@@ -432,7 +432,7 @@ RULES = [
     # Rule 40
     RubiRulePattern(
         pattern=Int(u_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**n_, x),
-        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Tan')), EqQ(F_, Symbol('tan'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_], x), IntegerQ(n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.tan)), EqQ(F_, HeadRef(sympy.tan))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({d: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, -d**(1 - n_)*Subst(Int(SubstFor((-d**2*x**2 + 1)**(n_/2 + sympy.S(-1)/2)/x**n_, cos(_c_*(x*_b_ + _a_))/d, u_, x), x), x, cos(_c_*(x*_b_ + _a_))/d)/(_b_*_c_)),
         module_name='4.7.5 Inert trig functions',
         rule_number=40,
@@ -456,7 +456,7 @@ RULES = [
     # Rule 43
     RubiRulePattern(
         pattern=Int(u_*(_d_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_ + v_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Cos')), EqQ(F_, Symbol('cos'))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.cos)), EqQ(F_, HeadRef(sympy.cos))), FunctionOfQ(sin(_c_*(x*_b_ + _a_))/FreeFactors(sin(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({e: FreeFactors(sin(_c_*(x*_b_ + _a_)), x)}, _d_*Int(ActivateTrig(u_)*cos(_c_*(x*_b_ + _a_))**_n_, x) + Int(ActivateTrig(u_*v_), x)),
         module_name='4.7.5 Inert trig functions',
         rule_number=43,
@@ -464,7 +464,7 @@ RULES = [
     # Rule 44
     RubiRulePattern(
         pattern=Int(u_*(_d_*WildHeadApp(F_, _c_*(x*_b_ + _a_))**_n_ + v_), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, Symbol('Sin')), EqQ(F_, Symbol('sin'))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_], x), Not(FreeQ(v_, x)), IntegerQ(_n_/2 + sympy.S(-1)/2), NonsumQ(u_), Or(EqQ(F_, HeadRef(sympy.sin)), EqQ(F_, HeadRef(sympy.sin))), FunctionOfQ(cos(_c_*(x*_b_ + _a_))/FreeFactors(cos(_c_*(x*_b_ + _a_)), x), u_, x),),
         replacement=With({e: FreeFactors(cos(_c_*(x*_b_ + _a_)), x)}, _d_*Int(ActivateTrig(u_)*sin(_c_*(x*_b_ + _a_))**_n_, x) + Int(ActivateTrig(u_*v_), x)),
         module_name='4.7.5 Inert trig functions',
         rule_number=44,

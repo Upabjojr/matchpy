@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -588,7 +588,7 @@ RULES = [
     # Rule 58
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))*WildHeadApp(F_, _f_*(x*_h_ + _g_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_, _h_, _n_], x), PolynomialQ(_Px_, x), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcTan'), Symbol('ArcCot'), Symbol('ArcSinh'), Symbol('ArcCosh'), Symbol('ArcTanh'), Symbol('ArcCoth')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _g_, _h_, _n_], x), PolynomialQ(_Px_, x), MemberQ([HeadRef(sympy.asin), HeadRef(sympy.acos), HeadRef(sympy.atan), HeadRef(sympy.acot), HeadRef(sympy.asinh), HeadRef(sympy.acosh), HeadRef(sympy.atanh), HeadRef(sympy.acoth)], F_),),
         replacement=With({u: IntHide(_Px_*WFApply(F_, _f_*(x*_h_ + _g_)), x)}, -_b_*_e_*_n_*Int(SimplifyIntegrand(u/(x*_e_ + d_), x), x) + Dist(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_), u, x)),
         module_name='3.3 u (a+b log(c (d+e x)^n))^p',
         rule_number=58,

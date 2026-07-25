@@ -81,6 +81,24 @@ class TestTranslatorExpressions:
         result = self.c.convert(ffl)
         assert 'sympy.sin' in result
 
+    def test_bare_function_head_becomes_headref(self):
+        # A function head used as a VALUE (e.g. in MemberQ[{ArcSin, ...}, F] or EqQ[F, Sin])
+        # emits HeadRef(sympy.<class>), which is what a wildcard head binds to -- NOT
+        # Symbol('ArcSin'), which would never compare equal to the bound head.
+        assert self.c.convert('ArcSin') == 'HeadRef(sympy.asin)'
+        assert self.c.convert('ArcTan') == 'HeadRef(sympy.atan)'   # was missing from func_map
+        assert self.c.convert('Sin') == 'HeadRef(sympy.sin)'
+        assert self.c.convert('sin') == 'HeadRef(sympy.sin)'
+        assert self.c.convert('FresnelS') == 'HeadRef(sympy.fresnels)'
+        assert self.c.convert('SinIntegral') == 'HeadRef(sympy.Si)'
+
+    def test_min_max_stay_plain_symbols(self):
+        # Min/Max are NOT function-head values here -- they are the ordering sentinel of
+        # Exponent[u, x, Min], which the deferred Exponent node detects by name. They must
+        # stay Symbol('Min')/Symbol('Max'), not become a class/HeadRef.
+        assert self.c.convert('Min') == "Symbol('Min')"
+        assert self.c.convert('Max') == "Symbol('Max')"
+
     def test_pattern_creates_wildcard(self):
         ffl = ['Pattern', 'm', ['Blank']]
         result = self.c.convert(ffl, is_pattern=True)

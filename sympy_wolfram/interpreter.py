@@ -28,7 +28,7 @@ import sympy
 from sympy import Integer, Rational, Symbol
 from sympy.printing.str import StrPrinter
 
-from sympy_matching.wild import (IDENTITY_ELEMENT, WildHeadApp, WildHeadDeriv,
+from sympy_matching.wild import (HeadRef, IDENTITY_ELEMENT, WildHeadApp, WildHeadDeriv,
                                  WildSymbol)
 
 from .parser import mathematica_to_ffl
@@ -109,7 +109,7 @@ class FFLConverter:
         # Trigonometric
         'Sin': 'sympy.sin', 'Cos': 'sympy.cos', 'Tan': 'sympy.tan',
         'Sec': 'sympy.sec', 'Csc': 'sympy.csc', 'Cot': 'sympy.cot',
-        'ArcSin': 'sympy.asin', 'ArcCos': 'sympy.acos',
+        'ArcSin': 'sympy.asin', 'ArcCos': 'sympy.acos', 'ArcTan': 'sympy.atan',
         'ArcSec': 'sympy.asec', 'ArcCsc': 'sympy.acsc', 'ArcCot': 'sympy.acot',
         # Lowercase trig (some FFL use them)
         'sin': 'sympy.sin', 'cos': 'sympy.cos', 'tan': 'sympy.tan',
@@ -130,6 +130,10 @@ class FFLConverter:
         'Gamma': 'Gamma', 'LogGamma': 'sympy.loggamma',
         'Erf': 'sympy.erf',
         'Erfi': 'sympy.erfi', 'Erfc': 'sympy.erfc',
+        'FresnelS': 'sympy.fresnels', 'FresnelC': 'sympy.fresnelc',
+        'ExpIntegralEi': 'sympy.Ei', 'LogIntegral': 'sympy.li',
+        'SinIntegral': 'sympy.Si', 'CosIntegral': 'sympy.Ci',
+        'SinhIntegral': 'sympy.Shi', 'CoshIntegral': 'sympy.Chi',
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra
         'D': 'D', 'Denominator': 'sympy.denom',
@@ -155,6 +159,25 @@ class FFLConverter:
         'True': 'sympy.true', 'False': 'sympy.false',
         'EulerGamma': 'sympy.EulerGamma',
     }
+
+    # Function heads that may appear as a BARE atom — i.e. as a *value* rather than an
+    # application — in a head test such as MemberQ[{ArcSin, ArcCos, ...}, F] or
+    # EqQ[F, Sin], where F is a function-head wildcard bound to a real function. Emitting
+    # these as the SymPy class (``sympy.asin``) rather than ``Symbol('ArcSin')`` lets the
+    # test compare against the bound head (a HeadRef carrying that class) instead of an
+    # unrelated symbol. Restricted to genuine function heads: NOT Min/Max (used as an
+    # ordering sentinel in Exponent[u, x, Min]) or structural heads (D/Simplify/And/...).
+    _HEAD_FUNCTION_NAMES: frozenset = frozenset({
+        'Sin', 'Cos', 'Tan', 'Cot', 'Sec', 'Csc',
+        'sin', 'cos', 'tan', 'cot', 'sec', 'csc',
+        'Sinh', 'Cosh', 'Tanh', 'Coth', 'Sech', 'Csch',
+        'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch',
+        'ArcSin', 'ArcCos', 'ArcTan', 'ArcCot', 'ArcSec', 'ArcCsc',
+        'ArcSinh', 'ArcCosh', 'ArcTanh', 'ArcCoth', 'ArcSech', 'ArcCsch',
+        'Erf', 'Erfc', 'Erfi', 'FresnelS', 'FresnelC',
+        'ExpIntegralEi', 'LogIntegral',
+        'SinIntegral', 'CosIntegral', 'SinhIntegral', 'CoshIntegral',
+    })
 
     def __init__(
         self,
@@ -191,6 +214,7 @@ class FFLConverter:
             'sympy': sympy, 'Integer': Integer, 'Rational': Rational,
             'Symbol': Symbol, 'WildSymbol': WildSymbol,
             'WildHeadApp': WildHeadApp, 'WildHeadDeriv': WildHeadDeriv,
+            'HeadRef': HeadRef,
             'IDENTITY_ELEMENT': IDENTITY_ELEMENT,
             'x': Symbol('x'),
             'log': sympy.log, 'sqrt': sympy.sqrt,
@@ -541,6 +565,13 @@ class FFLConverter:
         # Externally-bound symbol: emit its Python identifier, not a wildcard.
         if atom in self._reserved_symbols:
             return self._reserved_symbols[atom]
+        # A bare function-head name used as a VALUE (e.g. in MemberQ[{ArcSin, ...}, F] or
+        # EqQ[F, Sin]) -> emit HeadRef(sympy.asin): a HeadRef is the same kind of object a
+        # wildcard function head binds to (a Symbol subclass carrying the SymPy class), so
+        # the test compares against the bound head instead of an unrelated Mathematica-named
+        # Symbol. (The bare class itself is not an Expr and cannot sit in a constraint's args.)
+        if atom in self._HEAD_FUNCTION_NAMES and atom in self.func_map:
+            return f"HeadRef({self.func_map[atom]})"
         # Known wildcard references
         if atom in self._wildcards_optional:
             var_name = f'_{atom}_'

@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -403,7 +403,7 @@ RULES = [
     # Rule 37
     RubiRulePattern(
         pattern=Int((_a_ + _b_*log(_c_*(x**n_*_e_ + d_)**_p_))*WildHeadApp(F_, x*_f_)**_m_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _p_], x), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcSinh'), Symbol('ArcCosh')], F_), IGtQ(_m_, 0), IGtQ(n_, 1),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _p_], x), MemberQ([HeadRef(sympy.asin), HeadRef(sympy.acos), HeadRef(sympy.asinh), HeadRef(sympy.acosh)], F_), IGtQ(_m_, 0), IGtQ(n_, 1),),
         replacement=With({u: IntHide(WFApply(F_, x*_f_)**_m_, x)}, -_b_*_e_*n_*_p_*Int(SimplifyIntegrand(u*x**(n_ - 1)/(x**n_*_e_ + d_), x), x) + Dist(_a_ + _b_*log(_c_*(x**n_*_e_ + d_)**_p_), u, x)),
         module_name='3.4 u (a+b log(c (d+e x^m)^n))^p',
         rule_number=37,

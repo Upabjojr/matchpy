@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -584,7 +584,7 @@ RULES = [
     # Rule 58
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*log(x**_n_*_c_))*WildHeadApp(F_, _d_*(x*_f_ + _e_))**_m_, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), IGtQ(_m_, 0), MemberQ([Symbol('ArcSin'), Symbol('ArcCos'), Symbol('ArcSinh'), Symbol('ArcCosh')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), IGtQ(_m_, 0), MemberQ([HeadRef(sympy.asin), HeadRef(sympy.acos), HeadRef(sympy.asinh), HeadRef(sympy.acosh)], F_),),
         replacement=With({u: IntHide(_Px_*WFApply(F_, _d_*(x*_f_ + _e_))**_m_, x)}, -_b_*_n_*Int(Dist(1/x, u, x), x) + Dist(_a_ + _b_*log(x**_n_*_c_), u, x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=58,
@@ -592,7 +592,7 @@ RULES = [
     # Rule 59
     RubiRulePattern(
         pattern=Int(_Px_*(_a_ + _b_*log(x**_n_*_c_))*WildHeadApp(F_, _d_*(x*_f_ + _e_)), x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), MemberQ([Symbol('ArcTan'), Symbol('ArcCot'), Symbol('ArcTanh'), Symbol('ArcCoth')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _n_], x), PolynomialQ(_Px_, x), MemberQ([HeadRef(sympy.atan), HeadRef(sympy.acot), HeadRef(sympy.atanh), HeadRef(sympy.acoth)], F_),),
         replacement=With({u: IntHide(_Px_*WFApply(F_, _d_*(x*_f_ + _e_)), x)}, -_b_*_n_*Int(Dist(1/x, u, x), x) + Dist(_a_ + _b_*log(x**_n_*_c_), u, x)),
         module_name='3.1.5 u (a+b log(c x^n))^p',
         rule_number=59,

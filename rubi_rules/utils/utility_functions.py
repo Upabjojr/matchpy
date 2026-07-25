@@ -729,10 +729,17 @@ def Head(u):
     return u.func
 
 def MemberQ(l, u):
-    if isinstance(l, (tuple, list)):
-        return u in l
-    else:
-        return u in l.args
+    members = list(l) if isinstance(l, (tuple, list)) else list(l.args)
+    # Head-membership: a function-head wildcard F_[...] binds its head to a HeadRef
+    # carrying the SymPy class, while the membership list is written in Mathematica
+    # names (Symbol('ArcSin'), ...). Compare by the underlying class so the two spellings
+    # reconcile -- MemberQ[{ArcSin, ArcCos, ...}, F] fires when F bound to asin/acos.
+    from sympy_matching.wild import HeadRef
+    if isinstance(u, HeadRef):
+        from sympy_wolfram.functions_eager import head_to_class
+        uc = head_to_class(u)
+        return uc is not None and any(head_to_class(m) == uc for m in members)
+    return u in members
 
 def TrigQ(u):
     if AtomQ(u):
@@ -898,6 +905,17 @@ def RealQ(u):
         return False
 
 def EqQ(u, v):
+    # A function-head wildcard F_[...] binds its head to a HeadRef carrying the SymPy
+    # class; a head-identity test EqQ[F, Sin] is written against a named head
+    # (Symbol('sin')/Symbol('Sin')/a class). Compare by the underlying class so the
+    # HeadRef and the Mathematica/SymPy-spelled name reconcile instead of subtracting
+    # two unequal symbols (which would always be non-zero -> the rule never fires).
+    from sympy_matching.wild import HeadRef
+    if isinstance(u, HeadRef) or isinstance(v, HeadRef):
+        from sympy_wolfram.functions_eager import head_to_class
+        uc, vc = head_to_class(u), head_to_class(v)
+        if uc is not None and vc is not None:
+            return uc == vc
     return ZeroQ(u - v)
 
 def FractionalPowerFreeQ(u):

@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -508,7 +508,7 @@ RULES = [
     # Rule 52
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/x, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi)], F_),),
         replacement=Subst(WFApply(F_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
         module_name='8.1 Error functions',
         rule_number=52,
@@ -636,7 +636,7 @@ RULES = [
     # Rule 68
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi'), Symbol('FresnelS'), Symbol('FresnelC'), Symbol('ExpIntegralEi'), Symbol('SinIntegral'), Symbol('CosIntegral'), Symbol('SinhIntegral'), Symbol('CoshIntegral')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(sympy.Ei), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int(WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=68,
@@ -644,7 +644,7 @@ RULES = [
     # Rule 69
     RubiRulePattern(
         pattern=Int((x*_h_ + g_)**_m_*WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([Symbol('Erf'), Symbol('Erfc'), Symbol('Erfi'), Symbol('FresnelS'), Symbol('FresnelC'), Symbol('ExpIntegralEi'), Symbol('SinIntegral'), Symbol('CosIntegral'), Symbol('SinhIntegral'), Symbol('CoshIntegral')], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(sympy.Ei), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int((x*g_/d_)**_m_*WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=69,

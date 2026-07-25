@@ -27,6 +27,28 @@ from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
 
 
+def head_to_class(obj):
+    """Resolve a function HEAD to its SymPy class, or ``None`` if not resolvable.
+
+    A function-head wildcard ``F_[...]`` binds its head to a
+    :class:`~sympy_matching.wild.HeadRef` (a ``Symbol`` subclass carrying the SymPy
+    class as ``.func_class``); a head-membership/identity test compares it against a
+    list of function *classes* (either literal ``HeadRef``s the codegen emits, or bare
+    classes like ``sin`` used inside ``TrigQ``/``HyperbolicQ``). This unwraps both to
+    the underlying class so they compare, e.g. ``MemberQ[{asin, acos}, F]`` fires when
+    ``F`` bound to ``asin``.
+
+    Mathematica→SymPy *name* translation is done upstream by the code generator (it
+    emits ``HeadRef(sympy.asin)`` for ``ArcSin``), so no name table is needed here.
+    """
+    fc = getattr(obj, 'func_class', None)     # HeadRef -> the class it wraps
+    if fc is not None:
+        return fc
+    if isinstance(obj, type):                 # a bare SymPy function class
+        return obj
+    return None
+
+
 def LeafCount(expr):
     """Mathematica LeafCount[expr] — number of nodes in the expression tree."""
     return len(list(postorder_traversal(expr)))

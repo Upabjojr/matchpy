@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -96,7 +96,7 @@ n_ = WildSymbol('n')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.Function('SinIntegral')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.Si((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.Si((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (sympy.cos((_a_ + (_b_ * x))) * (_b_)**(Integer(-1)))),
         module_name='8.4 Trig integral functions',
@@ -104,7 +104,7 @@ RULES = [
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.Function('CosIntegral')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.Ci((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.Ci((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (sympy.sin((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))))),
         module_name='8.4 Trig integral functions',
@@ -112,7 +112,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((sympy.Function('SinIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.Si((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=x*_b_*hyper((1, 1, 1), (2, 2, 2), -I*x*_b_)/2 + x*_b_*hyper((1, 1, 1), (2, 2, 2), I*x*_b_)/2,
         module_name='8.4 Trig integral functions',
@@ -120,7 +120,7 @@ RULES = [
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((sympy.Function('CosIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.Ci((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=((Integer(-1) * (Integer(2))**(Integer(-1)) * sympy.I * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * sympy.I) * _b_ * x))) + ((Integer(2))**(Integer(-1)) * sympy.I * _b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), (sympy.I * _b_ * x))) + (sympy.EulerGamma * sympy.log(x)) + ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2)))),
         module_name='8.4 Trig integral functions',
@@ -128,7 +128,7 @@ RULES = [
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('SinIntegral')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Si((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.Si((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -136,7 +136,7 @@ RULES = [
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('CosIntegral')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Ci((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.Ci((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -144,7 +144,7 @@ RULES = [
     ),
     # Rule 7
     RubiRulePattern(
-        pattern=Int((sympy.Function('SinIntegral')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.Si((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.Si((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(2) * Int((sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_a_ + (_b_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -152,7 +152,7 @@ RULES = [
     ),
     # Rule 8
     RubiRulePattern(
-        pattern=Int((sympy.Function('CosIntegral')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.Ci((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.Ci((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(2) * Int((sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_a_ + (_b_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -160,7 +160,7 @@ RULES = [
     ),
     # Rule 9
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('SinIntegral')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.Si((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), IGtQ(_m_, 0),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.Si((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**(_m_) * sympy.sin((_b_ * x)) * sympy.Si((_b_ * x))), x)))),
         module_name='8.4 Trig integral functions',
@@ -168,7 +168,7 @@ RULES = [
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('CosIntegral')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.Ci((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), IGtQ(_m_, 0),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.Ci((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**(_m_) * sympy.cos((_b_ * x)) * sympy.Ci((_b_ * x))), x)))),
         module_name='8.4 Trig integral functions',
@@ -176,7 +176,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('SinIntegral')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Si((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((a_ + (_b_ * x)) * ((_c_ + (_d_ * x)))**(_m_) * (sympy.Si((a_ + (_b_ * x))))**(Integer(2)) * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**(_m_) * sympy.sin((a_ + (_b_ * x))) * sympy.Si((a_ + (_b_ * x)))), x))) + (((_b_ * _c_) + (Integer(-1) * (a_ * _d_))) * _m_ * ((_b_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * (sympy.Si((a_ + (_b_ * x))))**(Integer(2))), x))),
         module_name='8.4 Trig integral functions',
@@ -184,7 +184,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Function('CosIntegral')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * (sympy.Ci((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((a_ + (_b_ * x)) * ((_c_ + (_d_ * x)))**(_m_) * (sympy.Ci((a_ + (_b_ * x))))**(Integer(2)) * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**(_m_) * sympy.cos((a_ + (_b_ * x))) * sympy.Ci((a_ + (_b_ * x)))), x))) + (((_b_ * _c_) + (Integer(-1) * (a_ * _d_))) * _m_ * ((_b_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * (sympy.Ci((a_ + (_b_ * x))))**(Integer(2))), x))),
         module_name='8.4 Trig integral functions',
@@ -192,7 +192,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((sympy.sin((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((Integer(-1) * sympy.cos((_a_ + (_b_ * x)))) * sympy.Si((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (_d_ * (_b_)**(Integer(-1)) * Int((sympy.cos((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))),
         module_name='8.4 Trig integral functions',
@@ -200,7 +200,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int((sympy.cos((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=((sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int((sympy.sin((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -208,7 +208,7 @@ RULES = [
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=(((Integer(-1) * ((_e_ + (_f_ * x)))**(_m_)) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (_d_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x)) + (_f_ * _m_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(-1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x))),
         module_name='8.4 Trig integral functions',
@@ -216,7 +216,7 @@ RULES = [
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_f_ * _m_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(-1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -224,7 +224,7 @@ RULES = [
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(m_, -1),),
         replacement=((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x))) * ((_f_ * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_d_ * ((_f_ * (m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_b_ * ((_f_ * (m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -232,7 +232,7 @@ RULES = [
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(_m_, -1),),
         replacement=((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x))) * ((_f_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_d_ * ((_f_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (_b_ * ((_f_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x))),
         module_name='8.4 Trig integral functions',
@@ -240,7 +240,7 @@ RULES = [
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int((sympy.cos((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=((sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int((sympy.sin((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -248,7 +248,7 @@ RULES = [
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int((sympy.sin((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((Integer(-1) * sympy.cos((_a_ + (_b_ * x)))) * sympy.Ci((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (_d_ * (_b_)**(Integer(-1)) * Int((sympy.cos((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))),
         module_name='8.4 Trig integral functions',
@@ -256,7 +256,7 @@ RULES = [
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_f_ * _m_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(-1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -264,7 +264,7 @@ RULES = [
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=(((Integer(-1) * ((_e_ + (_f_ * x)))**(_m_)) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (_d_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x)) + (_f_ * _m_ * (_b_)**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(-1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x))),
         module_name='8.4 Trig integral functions',
@@ -272,7 +272,7 @@ RULES = [
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Function('SinIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(_m_) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(_m_, -1),),
         replacement=((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x))) * ((_f_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_d_ * ((_f_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.sin((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (_b_ * ((_f_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((_m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Si((_c_ + (_d_ * x)))), x))),
         module_name='8.4 Trig integral functions',
@@ -280,7 +280,7 @@ RULES = [
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((((_e_ + (_f_ * x)))**(m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Function('CosIntegral')((_c_ + (_d_ * x)))), x),
+        pattern=Int((((_e_ + (_f_ * x)))**(m_) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), ILtQ(m_, -1),),
         replacement=((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x))) * ((_f_ * (m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_d_ * ((_f_ * (m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.sin((_a_ + (_b_ * x))) * sympy.cos((_c_ + (_d_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_b_ * ((_f_ * (m_ + Integer(1))))**(Integer(-1)) * Int((((_e_ + (_f_ * x)))**((m_ + Integer(1))) * sympy.cos((_a_ + (_b_ * x))) * sympy.Ci((_c_ + (_d_ * x)))), x)))),
         module_name='8.4 Trig integral functions',
@@ -288,7 +288,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int(sympy.Function('SinIntegral')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.Si((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.Si((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (_b_ * _d_ * _n_ * Int((sympy.sin((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -296,7 +296,7 @@ RULES = [
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int(sympy.Function('CosIntegral')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.Ci((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.Ci((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (_b_ * _d_ * _n_ * Int((sympy.cos((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -305,14 +305,14 @@ RULES = [
     # Rule 27
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/x, x),
-        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([Symbol('SinIntegral'), Symbol('CosIntegral')], x),),
+        constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x), MemberQ([HeadRef(sympy.Si), HeadRef(sympy.Ci)], x),),
         replacement=Subst(WFApply(F_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
         module_name='8.4 Trig integral functions',
         rule_number=27,
     ),
     # Rule 28
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('SinIntegral')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.Si((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.Si((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * _d_ * _n_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * sympy.sin((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',
@@ -320,7 +320,7 @@ RULES = [
     ),
     # Rule 29
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('CosIntegral')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.Ci((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.Ci((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * _d_ * _n_ * ((_m_ + Integer(1)))**(Integer(-1)) * Int((((_e_ * x))**(_m_) * sympy.cos((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))**(Integer(-1))), x)))),
         module_name='8.4 Trig integral functions',

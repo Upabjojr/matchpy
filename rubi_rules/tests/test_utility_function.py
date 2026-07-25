@@ -456,6 +456,24 @@ def test_MemberQ():
     assert MemberQ([[sin, cos], [tan, cot]], [sin, cos])
     assert not MemberQ([[sin, cos], [tan, cot]], [sin, tan])
 
+
+def test_MemberQ_head_wildcard_matches_by_class():
+    """A function-head wildcard F_[...] binds its head to a HeadRef; a membership test
+    must fire against the head's class. The codegen emits such lists as HeadRef literals
+    (HeadRef(sympy.asin)); TrigQ/HyperbolicQ/InverseTrigQ instead pass bare classes. Both
+    forms compare by the underlying class. Regression: these head-checks otherwise
+    silently failed and the FHW rule never fired."""
+    from sympy_matching.wild import HeadRef
+    from sympy import asin, acos, atan, sin, cos, erf, fresnels
+    # codegen form: HeadRef literals in the list
+    assert MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(asin))
+    assert not MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(atan))
+    assert MemberQ([HeadRef(erf), HeadRef(fresnels)], HeadRef(fresnels))
+    # TrigQ-family form: bare classes in the list, HeadRef subject
+    assert MemberQ([sin, cos], HeadRef(sin))
+    assert TrigQ(HeadRef(sin))
+    assert InverseTrigQ(HeadRef(asin))
+
 def test_TrigQ():
     assert TrigQ(sin(x))
     assert TrigQ(tan(x**2 + 2))
@@ -550,6 +568,21 @@ def test_InverseFunctionQ():
 def test_EqQ():
     assert EqQ(a, a)
     assert not EqQ(a, b)
+
+
+def test_EqQ_head_wildcard_identity():
+    """EqQ[F, Sin] on a function-head wildcard F (bound to a HeadRef) compares by the
+    underlying class. The codegen emits the head literal as HeadRef(sympy.sin), so both
+    sides are HeadRefs; comparing by class avoids subtracting two unequal symbols.
+    Regression for FHW rules gated on a specific head."""
+    from sympy_matching.wild import HeadRef
+    from sympy import sin, cos, tan
+    assert EqQ(HeadRef(sin), HeadRef(sin))
+    assert EqQ(HeadRef(tan), HeadRef(tan))
+    assert not EqQ(HeadRef(sin), HeadRef(cos))
+    # ordinary EqQ unaffected
+    assert EqQ(a + b, b + a)
+    assert not EqQ(x, 2 * x)
 
 def test_FactorSquareFree():
     assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2

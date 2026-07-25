@@ -152,6 +152,22 @@ def test_eager_Simplify():
     assert fe.Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
 
 
+def test_head_to_class_unwraps_headref_and_class():
+    """head_to_class is the structural bridge that lets a wildcard function head
+    (bound as a HeadRef carrying its SymPy class) compare against a list of function
+    classes. Mathematica->SymPy *name* translation happens in the code generator (it
+    emits ``HeadRef(sympy.asin)``), so this only unwraps HeadRef / classes."""
+    from sympy_matching.wild import HeadRef
+    # HeadRef carries the class directly
+    assert fe.head_to_class(HeadRef(sympy.asin)) is sympy.asin
+    assert fe.head_to_class(HeadRef(sympy.fresnels)) is sympy.fresnels
+    # a bare class round-trips
+    assert fe.head_to_class(sympy.sin) is sympy.sin
+    # not a head -> None
+    assert fe.head_to_class(Symbol('x')) is None
+    assert fe.head_to_class(sympy.Integer(3)) is None
+
+
 def test_deferred_nodes_delegate_to_eager():
     assert mf.First(a + b + c).doit() == a
     assert mf.Rest(a * b * c).doit() == b * c

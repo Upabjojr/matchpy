@@ -18,7 +18,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, asin, acos, atan, atan2, asec, 
                    exp, Abs, diff, denom, frac, floor, root, simplify,
                    elliptic_e, elliptic_f, hyper, appellf1)
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
@@ -165,7 +165,7 @@ RULES = [
     ),
     # Rule 10
     RubiRulePattern(
-        pattern=Int(sympy.Function('ExpIntegralEi')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.Ei((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.Ei((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * ((sympy.E)**((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))))),
         module_name='8.3 Exponential integral functions',
@@ -173,7 +173,7 @@ RULES = [
     ),
     # Rule 11
     RubiRulePattern(
-        pattern=Int((sympy.Function('ExpIntegralEi')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.Ei((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=((sympy.log(x) * (sympy.Ei((_b_ * x)) + sympy.expint(Integer(1), ((Integer(-1) * _b_) * x)))) + (Integer(-1) * Int((sympy.expint(Integer(1), ((Integer(-1) * _b_) * x)) * (x)**(Integer(-1))), x))),
         module_name='8.3 Exponential integral functions',
@@ -181,7 +181,7 @@ RULES = [
     ),
     # Rule 12
     RubiRulePattern(
-        pattern=Int((sympy.Function('ExpIntegralEi')((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.Ei((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=Unintegrable((sympy.Ei((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         module_name='8.3 Exponential integral functions',
@@ -189,7 +189,7 @@ RULES = [
     ),
     # Rule 13
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('ExpIntegralEi')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Ei((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.Ei((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * (sympy.E)**((_a_ + (_b_ * x))) * ((_a_ + (_b_ * x)))**(Integer(-1))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -197,7 +197,7 @@ RULES = [
     ),
     # Rule 14
     RubiRulePattern(
-        pattern=Int((sympy.Function('ExpIntegralEi')((_a_ + (_b_ * x))))**(Integer(2)), x),
+        pattern=Int((sympy.Ei((_a_ + (_b_ * x))))**(Integer(2)), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * (sympy.Ei((_a_ + (_b_ * x))))**(Integer(2)) * (_b_)**(Integer(-1))) + (Integer(-1) * (Integer(2) * Int(((sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_a_ + (_b_ * x)))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -205,7 +205,7 @@ RULES = [
     ),
     # Rule 15
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('ExpIntegralEi')((_b_ * x)))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.Ei((_b_ * x)))**(Integer(2))), x),
         constraints=(FreeQ(_b_, x), IGtQ(_m_, 0),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.Ei((_b_ * x)))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**(_m_) * (sympy.E)**((_b_ * x)) * sympy.Ei((_b_ * x))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -213,7 +213,7 @@ RULES = [
     ),
     # Rule 16
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.Function('ExpIntegralEi')((a_ + (_b_ * x))))**(Integer(2))), x),
+        pattern=Int(((x)**(_m_) * (sympy.Ei((a_ + (_b_ * x))))**(Integer(2))), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(_m_, 0),),
         replacement=(((x)**((_m_ + Integer(1))) * (sympy.Ei((a_ + (_b_ * x))))**(Integer(2)) * ((_m_ + Integer(1)))**(Integer(-1))) + (a_ * (x)**(_m_) * (sympy.Ei((a_ + (_b_ * x))))**(Integer(2)) * ((_b_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (Integer(2) * ((_m_ + Integer(1)))**(Integer(-1)) * Int(((x)**(_m_) * (sympy.E)**((a_ + (_b_ * x))) * sympy.Ei((a_ + (_b_ * x)))), x))) + (Integer(-1) * (a_ * _m_ * ((_b_ * (_m_ + Integer(1))))**(Integer(-1)) * Int(((x)**((_m_ + Integer(-1))) * (sympy.Ei((a_ + (_b_ * x))))**(Integer(2))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -221,7 +221,7 @@ RULES = [
     ),
     # Rule 17
     RubiRulePattern(
-        pattern=Int(((sympy.E)**((_a_ + (_b_ * x))) * sympy.Function('ExpIntegralEi')((_c_ + (_d_ * x)))), x),
+        pattern=Int(((sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=(((sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int(((sympy.E)**((_a_ + _c_ + ((_b_ + _d_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -229,7 +229,7 @@ RULES = [
     ),
     # Rule 18
     RubiRulePattern(
-        pattern=Int(((x)**(_m_) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Function('ExpIntegralEi')((_c_ + (_d_ * x)))), x),
+        pattern=Int(((x)**(_m_) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(_m_, 0),),
         replacement=(((x)**(_m_) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (_d_ * (_b_)**(Integer(-1)) * Int(((x)**(_m_) * (sympy.E)**((_a_ + _c_ + ((_b_ + _d_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_m_ * (_b_)**(Integer(-1)) * Int(((x)**((_m_ + Integer(-1))) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x)))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -237,7 +237,7 @@ RULES = [
     ),
     # Rule 19
     RubiRulePattern(
-        pattern=Int(((x)**(m_) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Function('ExpIntegralEi')((_c_ + (_d_ * x)))), x),
+        pattern=Int(((x)**(m_) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), ILtQ(m_, -1),),
         replacement=(((x)**((m_ + Integer(1))) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x))) * ((m_ + Integer(1)))**(Integer(-1))) + (Integer(-1) * (_d_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * (sympy.E)**((_a_ + _c_ + ((_b_ + _d_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x))) + (Integer(-1) * (_b_ * ((m_ + Integer(1)))**(Integer(-1)) * Int(((x)**((m_ + Integer(1))) * (sympy.E)**((_a_ + (_b_ * x))) * sympy.Ei((_c_ + (_d_ * x)))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -245,7 +245,7 @@ RULES = [
     ),
     # Rule 20
     RubiRulePattern(
-        pattern=Int(sympy.Function('ExpIntegralEi')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
+        pattern=Int(sympy.Ei((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((x * sympy.Ei((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))) + (Integer(-1) * (_b_ * _n_ * (sympy.E)**((_a_ * _d_)) * Int((((_c_ * (x)**(_n_)))**((_b_ * _d_)) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(Integer(-1))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -253,7 +253,7 @@ RULES = [
     ),
     # Rule 21
     RubiRulePattern(
-        pattern=Int((sympy.Function('ExpIntegralEi')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.Ei((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * (x)**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_], x),),
         replacement=((_n_)**(Integer(-1)) * Subst(sympy.Ei((_d_ * (_a_ + (_b_ * x)))), x, sympy.log((_c_ * (x)**(_n_))))),
         module_name='8.3 Exponential integral functions',
@@ -261,7 +261,7 @@ RULES = [
     ),
     # Rule 22
     RubiRulePattern(
-        pattern=Int((((_e_ * x))**(_m_) * sympy.Function('ExpIntegralEi')((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
+        pattern=Int((((_e_ * x))**(_m_) * sympy.Ei((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_)))))))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x), NeQ(_m_, -1),),
         replacement=((((_e_ * x))**((_m_ + Integer(1))) * sympy.Ei((_d_ * (_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))) * ((_e_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * _n_ * (sympy.E)**((_a_ * _d_)) * ((_c_ * (x)**(_n_)))**((_b_ * _d_)) * (((_m_ + Integer(1)) * ((_e_ * x))**((_b_ * _d_ * _n_))))**(Integer(-1)) * Int((((_e_ * x))**((_m_ + (_b_ * _d_ * _n_))) * ((_a_ + (_b_ * sympy.log((_c_ * (x)**(_n_))))))**(Integer(-1))), x)))),
         module_name='8.3 Exponential integral functions',
@@ -269,7 +269,7 @@ RULES = [
     ),
     # Rule 23
     RubiRulePattern(
-        pattern=Int(sympy.Function('LogIntegral')((_a_ + (_b_ * x))), x),
+        pattern=Int(sympy.li((_a_ + (_b_ * x))), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=(((_a_ + (_b_ * x)) * sympy.li((_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + (Integer(-1) * (sympy.Ei((Integer(2) * sympy.log((_a_ + (_b_ * x))))) * (_b_)**(Integer(-1))))),
         module_name='8.3 Exponential integral functions',
@@ -277,7 +277,7 @@ RULES = [
     ),
     # Rule 24
     RubiRulePattern(
-        pattern=Int((sympy.Function('LogIntegral')((_b_ * x)) * (x)**(Integer(-1))), x),
+        pattern=Int((sympy.li((_b_ * x)) * (x)**(Integer(-1))), x),
         constraints=(FreeQ(_b_, x),),
         replacement=(((Integer(-1) * _b_) * x) + (sympy.log((_b_ * x)) * sympy.li((_b_ * x)))),
         module_name='8.3 Exponential integral functions',
@@ -285,7 +285,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int((sympy.Function('LogIntegral')((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
+        pattern=Int((sympy.li((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x),),
         replacement=Unintegrable((sympy.li((_a_ + (_b_ * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         module_name='8.3 Exponential integral functions',
@@ -293,7 +293,7 @@ RULES = [
     ),
     # Rule 26
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('LogIntegral')((_a_ + (_b_ * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.li((_a_ + (_b_ * x)))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_], x), NeQ(_m_, -1),),
         replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.li((_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (Integer(-1) * (_b_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * (sympy.log((_a_ + (_b_ * x))))**(Integer(-1))), x)))),
         module_name='8.3 Exponential integral functions',
