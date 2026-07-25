@@ -522,7 +522,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**2), x),
         constraints=(FreeQ([a_, _b_], x),),
-        replacement=Int(Together(1/(-v_/sqrt(-a_/_b_) + 1)), x)/(2*a_) + Int(Together(1/(v_/sqrt(-a_/_b_) + 1)), x)/(2*a_),
+        replacement=Int(Together(1/(-v_/Rt(-a_/_b_, 2) + 1)), x)/(2*a_) + Int(Together(1/(v_/Rt(-a_/_b_, 2) + 1)), x)/(2*a_),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=50,
     ),
@@ -530,7 +530,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2, 1),),
-        replacement=Dist((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1))))), x),
+        replacement=Dist((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * Rt(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1))))), x),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=51,
     ),
@@ -538,7 +538,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2 + sympy.S(-1)/2, 0),),
-        replacement=Dist(((a_ * n_))**(Integer(-1)), Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_)), x),
+        replacement=Dist(((a_ * n_))**(Integer(-1)), Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * Rt(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_)), x),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=52,
     ),

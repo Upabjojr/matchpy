@@ -1869,11 +1869,68 @@ def test_Rt():
     assert Rt(S(8), S(3)) == 2
     assert Rt(S(16807), S(5)) == 7
 
+
+def test_Rt_matches_mathematica():
+    """Cross-checked against the real Rubi ``Rt`` in Mathematica (ssh pi, Rubi`
+    IntegrationUtilityFunctions`). Generic (assumption-free) symbols so SymPy matches
+    Mathematica's own no-assumptions evaluation."""
+    aa, bb, cc = symbols('aa bb cc')
+    # numeric: simplest nth root, sign handling for odd/even n
+    assert Rt(S(-8), 3) == -2                      # Mathematica: -2
+    assert Rt(S(-27), 3) == -3
+    assert Rt(S(-4), 2) == 2*I                     # even n, negative -> principal complex
+    assert Rt(S(12), 2) == 2*sqrt(3)
+    assert Rt(S(-12), 2) == 2*I*sqrt(3)
+    assert Rt(Rational(1, 4), 2) == Rational(1, 2)
+    # symbolic: pull perfect powers out of products/powers
+    assert Rt(9*aa**2, 2) == 3*aa
+    assert Rt(aa**2*bb**4, 2) == aa*bb**2
+    assert Rt(8*aa**3, 3) == 2*aa
+    assert Rt(-8*aa**3, 3) == -2*aa
+    assert Rt((aa + bb)**2, 2) == aa + bb
+    assert Rt(-aa**3, 3) == -aa
+    assert Rt(bb**2/aa**2, 2) == bb/aa
+    # sign distributed across factors (Mathematica: Sqrt[-a]*Sqrt[b]*Sqrt[c])
+    assert Rt(-aa*bb*cc, 2) == sqrt(-aa)*sqrt(bb)*sqrt(cc)
+
+
 def test_NthRoot():
     assert NthRoot(S(14580), S(3)) == 9*2**(S(2)/S(3))*5**(S(1)/S(3))
     assert NthRoot(9, 2) == 3
     assert NthRoot(81, 2) == 9
     assert NthRoot(81, 4) == 3
+
+
+def test_NthRoot_matches_mathematica():
+    """NthRoot[u,n] := u^(1/n). Cross-checked against Mathematica: a rational radicand
+    is factored into primes with 1/n distributed (14580^(1/3) -> 9*2^(2/3)*5^(1/3)),
+    while a complex radicand stays a plain principal root (NOT expanded to a+b*I)."""
+    aa = symbols('aa')
+    assert NthRoot(S(8), 3) == 2
+    assert NthRoot(S(-8), 3) == 2*(-1)**(S(1)/3)   # principal (complex) cube root
+    assert NthRoot(S(-4), 2) == 2*I
+    assert NthRoot(S(14580), 3) == 9*2**(S(2)/3)*5**(S(1)/3)
+    assert NthRoot(aa, 2) == sqrt(aa)
+    # complex radicand: plain principal root, matching Mathematica's Sqrt[2+3*I]
+    assert NthRoot(S(2 + 3*I), 2) == sqrt(2 + 3*I)
+
+
+def test_Rt_deferred_class():
+    """rubi_utils.Rt is the DEFERRED node emitted into generated rules (codegen maps
+    Rt -> Rt, not sympy.root). Constructing it must NOT evaluate -- the exponent n_
+    is a wildcard at import time -- and .doit() must delegate to the eager Rt at fire
+    time, once n is a concrete integer."""
+    from rubi_rules.utils.rubi_utils import Rt as RtNode
+    from rubi_rules.utils.utility_functions import Rt as RtEager
+    from sympy_wolfram.objects import MathematicaExpr
+    aa, bb = symbols('aa bb')
+    node = RtNode(aa/bb, 2)
+    assert isinstance(node, MathematicaExpr)           # unevaluated node
+    assert node.func is RtNode
+    assert node.doit() == RtEager(aa/bb, 2) == sqrt(aa)/sqrt(bb)
+    # numeric evaluation through the node matches the eager function
+    assert RtNode(S(8), 3).doit() == 2
+    assert RtNode(S(-8), 3).doit() == -2
 
 def test_AtomBaseQ():
     assert not AtomBaseQ(x**2)

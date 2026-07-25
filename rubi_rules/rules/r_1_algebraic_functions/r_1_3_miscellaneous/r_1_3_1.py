@@ -196,7 +196,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**3*_d_ + x*_b_ + _a_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _d_], x), NeQ(27*_a_**2*_d_ + 4*_b_**3, 0), IntegerQ(p_),),
-        replacement=With({r: (-9*_a_*_d_**2 + sqrt(3)*_d_*sqrt(27*_a_**2*_d_**2 + 4*_b_**3*_d_))**(sympy.S(1)/3)}, Int(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_, x)/_d_**(2*p_)),
+        replacement=With({r: Rt(-9*_a_*_d_**2 + sqrt(3)*_d_*sqrt(27*_a_**2*_d_**2 + 4*_b_**3*_d_), 3)}, Int(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_, x)/_d_**(2*p_)),
         module_name='1.3.1 P(x)^p',
         rule_number=12,
     ),
@@ -204,7 +204,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**3*_d_ + x*_b_ + _a_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _d_, p_], x), NeQ(27*_a_**2*_d_ + 4*_b_**3, 0), Not(IntegerQ(p_)),),
-        replacement=With({r: (-9*_a_*_d_**2 + sqrt(3)*_d_*sqrt(27*_a_**2*_d_**2 + 4*_b_**3*_d_))**(sympy.S(1)/3)}, (x**3*_d_ + x*_b_ + _a_)**p_*Int(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_, x)/(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_)),
+        replacement=With({r: Rt(-9*_a_*_d_**2 + sqrt(3)*_d_*sqrt(27*_a_**2*_d_**2 + 4*_b_**3*_d_), 3)}, (x**3*_d_ + x*_b_ + _a_)**p_*Int(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_, x)/(Simp(-12**(sympy.S(1)/3)*r/6 + x*_d_ + 18**(sympy.S(1)/3)*_b_*_d_/(3*r), x)**p_*Simp(18**(sympy.S(1)/3)*r**2/18 + x**2*_d_**2 - x*_d_*(-12**(sympy.S(1)/3)*r/6 + 2**(sympy.S(1)/3)*3**(sympy.S(2)/3)*_b_*_d_/(3*r)) + _b_*_d_/3 + 12**(sympy.S(1)/3)*_b_**2*_d_**2/(3*r**2), x)**p_)),
         module_name='1.3.1 P(x)^p',
         rule_number=13,
     ),
@@ -236,7 +236,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Q6_**p_, x),
         constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(u, x), EqQ(-3*Coeff(Q6_, x, 0)*Coeff(Q6_, x, 4) + Coeff(Q6_, x, 2)**2, 0), EqQ(-27*Coeff(Q6_, x, 0)**2*Coeff(Q6_, x, 6) + Coeff(Q6_, x, 2)**3, 0),),
-        replacement=With({a: Coeff(Q6_, x, 0), b: Coeff(Q6_, x, 2), c: Coeff(Q6_, x, 3), d: Coeff(Q6_, x, 4), e: Coeff(Q6_, x, 6)}, Int(ExpandIntegrand((3*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(-3*(-1)**(sympy.S(1)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(3*(-1)**(sympy.S(2)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_, x), x)/(3**(3*p_)*a**(2*p_))),
+        replacement=With({a: Coeff(Q6_, x, 0), b: Coeff(Q6_, x, 2), c: Coeff(Q6_, x, 3), d: Coeff(Q6_, x, 4), e: Coeff(Q6_, x, 6)}, Int(ExpandIntegrand((3*a + b*x**2 + 3*x*Rt(a, 3)**2*Rt(c, 3))**p_*(3*a + b*x**2 - 3*(-1)**(sympy.S(1)/3)*x*Rt(a, 3)**2*Rt(c, 3))**p_*(3*a + b*x**2 + 3*(-1)**(sympy.S(2)/3)*x*Rt(a, 3)**2*Rt(c, 3))**p_, x), x)/(3**(3*p_)*a**(2*p_))),
         module_name='1.3.1 P(x)^p',
         rule_number=17,
     ),

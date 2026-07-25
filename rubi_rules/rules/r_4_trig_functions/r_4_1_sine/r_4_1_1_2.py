@@ -368,7 +368,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_g_*InertCos(x*_f_ + _e_))/(a_ + _b_*InertSin(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=With({q: sqrt(-a_**2 + _b_**2)}, -a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + _b_*_g_*Subst(Int(sqrt(x)/(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2)), x), x, _g_*cos(x*_f_ + _e_))/_f_),
+        replacement=With({q: Rt(-a_**2 + _b_**2, 2)}, -a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + a_*_g_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*_b_) + _b_*_g_*Subst(Int(sqrt(x)/(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2)), x), x, _g_*cos(x*_f_ + _e_))/_f_),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=35,
     ),
@@ -376,7 +376,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(_g_*InertCos(x*_f_ + _e_))*(a_ + _b_*InertSin(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=With({q: sqrt(-a_**2 + _b_**2)}, _b_*_g_*Subst(Int(1/(sqrt(x)*(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2))), x), x, _g_*cos(x*_f_ + _e_))/_f_ - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*q) - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*q)),
+        replacement=With({q: Rt(-a_**2 + _b_**2, 2)}, _b_*_g_*Subst(Int(1/(sqrt(x)*(x**2*_b_**2 + _g_**2*(a_**2 - _b_**2))), x), x, _g_*cos(x*_f_ + _e_))/_f_ - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q - _b_*cos(x*_f_ + _e_))), x)/(2*q) - a_*Int(1/(sqrt(_g_*cos(x*_f_ + _e_))*(q + _b_*cos(x*_f_ + _e_))), x)/(2*q)),
         module_name='4.1.1.2 (g cos)^p (a+b sin)^m',
         rule_number=36,
     ),

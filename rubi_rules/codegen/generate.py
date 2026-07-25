@@ -426,6 +426,10 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'PowerVariableExpn': 'PowerVariableExpn',
     'FunctionOfLinear': 'FunctionOfLinear',
     'SplitProduct': 'SplitProduct',
+    # Rt[u,n] — simplest nth root. A deferred rubi_utils node (NOT sympy.root): the
+    # exponent n arrives as a wildcard, so it must compute at fire time via Rubi's
+    # RtAux simplest-root algorithm, not eagerly as a bare principal root.
+    'Rt': 'Rt',
     'PolyGCD': 'PolyGCD',
     'GeneralizedTrinomialDegree': 'GeneralizedTrinomialDegree',
     'ExpandTrigToExp': 'ExpandTrigToExp',

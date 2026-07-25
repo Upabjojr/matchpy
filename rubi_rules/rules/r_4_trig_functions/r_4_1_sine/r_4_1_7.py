@@ -445,7 +445,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertSin(x*_f_ + _e_)**n_), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_], x), IntegerQ(n_/2),),
-        replacement=Module({k: None}, Dist((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(((Integer(1) + (Integer(-1) * ((sympy.sin((_e_ + (_f_ * x))))**(Integer(2)) * (((Integer(-1))**((Integer(4) * k * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1)), x), List(k, Integer(1), (n_ * (Integer(2))**(Integer(-1))))), x)),
+        replacement=Module({k: None}, Dist((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(((Integer(1) + (Integer(-1) * ((sympy.sin((_e_ + (_f_ * x))))**(Integer(2)) * (((Integer(-1))**((Integer(4) * k * (n_)**(Integer(-1)))) * Rt(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1)), x), List(k, Integer(1), (n_ * (Integer(2))**(Integer(-1))))), x)),
         module_name='4.1.7 (d trig)^m (a+b (c sin)^n)^p',
         rule_number=43,
     ),

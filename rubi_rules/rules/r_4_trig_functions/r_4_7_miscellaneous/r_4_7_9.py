@@ -148,7 +148,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*cos(x*_d_ + _c_)/(a_ + _b_*sin(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), PosQ(a_**2 - _b_**2),),
-        replacement=Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ - I*_b_*exp(I*(x*_d_ + _c_)) - sqrt(a_**2 - _b_**2)), x) + Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ - I*_b_*exp(I*(x*_d_ + _c_)) + sqrt(a_**2 - _b_**2)), x) - I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ - I*_b_*exp(I*(x*_d_ + _c_)) - Rt(a_**2 - _b_**2, 2)), x) + Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ - I*_b_*exp(I*(x*_d_ + _c_)) + Rt(a_**2 - _b_**2, 2)), x) - I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='4.7.9 Active trig functions',
         rule_number=5,
     ),
@@ -156,7 +156,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*sin(x*_d_ + _c_)/(a_ + _b_*cos(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), PosQ(a_**2 - _b_**2),),
-        replacement=-I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ + _b_*exp(I*(x*_d_ + _c_)) - sqrt(a_**2 - _b_**2)), x) - I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ + _b_*exp(I*(x*_d_ + _c_)) + sqrt(a_**2 - _b_**2)), x) + I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=-I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ + _b_*exp(I*(x*_d_ + _c_)) - Rt(a_**2 - _b_**2, 2)), x) - I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(a_ + _b_*exp(I*(x*_d_ + _c_)) + Rt(a_**2 - _b_**2, 2)), x) + I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='4.7.9 Active trig functions',
         rule_number=6,
     ),
@@ -164,7 +164,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*cos(x*_d_ + _c_)/(a_ + _b_*sin(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NegQ(a_**2 - _b_**2),),
-        replacement=I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + _b_*exp(I*(x*_d_ + _c_)) - sqrt(-a_**2 + _b_**2)), x) + I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + _b_*exp(I*(x*_d_ + _c_)) + sqrt(-a_**2 + _b_**2)), x) - I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + _b_*exp(I*(x*_d_ + _c_)) - Rt(-a_**2 + _b_**2, 2)), x) + I*Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + _b_*exp(I*(x*_d_ + _c_)) + Rt(-a_**2 + _b_**2, 2)), x) - I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='4.7.9 Active trig functions',
         rule_number=7,
     ),
@@ -172,7 +172,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*sin(x*_d_ + _c_)/(a_ + _b_*cos(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NegQ(a_**2 - _b_**2),),
-        replacement=Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + I*_b_*exp(I*(x*_d_ + _c_)) - sqrt(-a_**2 + _b_**2)), x) + Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + I*_b_*exp(I*(x*_d_ + _c_)) + sqrt(-a_**2 + _b_**2)), x) + I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + I*_b_*exp(I*(x*_d_ + _c_)) - Rt(-a_**2 + _b_**2, 2)), x) + Int((x*_f_ + _e_)**_m_*exp(I*(x*_d_ + _c_))/(I*a_ + I*_b_*exp(I*(x*_d_ + _c_)) + Rt(-a_**2 + _b_**2, 2)), x) + I*(x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='4.7.9 Active trig functions',
         rule_number=8,
     ),

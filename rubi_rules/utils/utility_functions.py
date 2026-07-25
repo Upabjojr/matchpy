@@ -5713,7 +5713,31 @@ def Rt(u, n):
     return RtAux(TogetherSimplify(u), n)
 
 def NthRoot(u, n):
-    return nsimplify(u**(S(1)/n))
+    # Mathematica: NthRoot[u_,n_] := u^(1/n) -- the principal nth root.
+    #
+    # Matching Mathematica's *form* needs one adaptation. On a rational radicand
+    # Mathematica factors it into primes and distributes 1/n across them, e.g.
+    # 14580^(1/3) -> 9*2^(2/3)*5^(1/3) and (-4)^(1/2) -> 2*I; SymPy's ** only pulls
+    # out the single perfect nth power (14580^(1/3) -> 9*20^(1/3)). So for a rational
+    # u we factor numerator and denominator and rebuild the product ourselves.
+    #
+    # For everything else (symbolic, irrational, or COMPLEX u) we return the plain
+    # principal power -- which is exactly Mathematica's Sqrt[2+3*I] etc. (An earlier
+    # nsimplify here got the rational case right but mangled complex radicands into
+    # rectangular a+b*I form, so it is not usable.)
+    u = sympify(u)
+    if u.is_Rational:
+        p, q = u.as_numer_denom()          # p signed, q > 0
+        result = S.One
+        if p < 0:
+            result *= S.NegativeOne ** Rational(1, n)   # (-1)^(1/n), as Mathematica
+            p = -p
+        for base, exp in factorint(p).items():
+            result *= Integer(base) ** Rational(exp, n)
+        for base, exp in factorint(q).items():
+            result /= Integer(base) ** Rational(exp, n)
+        return result
+    return u ** (S(1) / n)
 
 def AtomBaseQ(u):
     # If u is an atom or an atom raised to an odd degree,  AtomBaseQ(u) returns True; else it returns False

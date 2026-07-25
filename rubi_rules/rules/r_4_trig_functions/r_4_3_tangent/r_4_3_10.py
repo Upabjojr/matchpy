@@ -259,7 +259,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(a_ + _b_*InertTan(x*_f_ + _e_))*(x*_d_ + _c_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), EqQ(a_**2 + _b_**2, 0),),
-        replacement=sqrt(2)*_b_*_d_*Int(atanh(sqrt(2)*sqrt(a_ + _b_*tan(x*_f_ + _e_))/(2*sqrt(a_))), x)/(sqrt(a_)*_f_) - sqrt(2)*_b_*(x*_d_ + _c_)*atanh(sqrt(2)*sqrt(a_ + _b_*tan(x*_f_ + _e_))/(2*sqrt(a_)))/(sqrt(a_)*_f_),
+        replacement=sqrt(2)*_b_*_d_*Int(atanh(sqrt(2)*sqrt(a_ + _b_*tan(x*_f_ + _e_))/(2*Rt(a_, 2))), x)/(_f_*Rt(a_, 2)) - sqrt(2)*_b_*(x*_d_ + _c_)*atanh(sqrt(2)*sqrt(a_ + _b_*tan(x*_f_ + _e_))/(2*Rt(a_, 2)))/(_f_*Rt(a_, 2)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=20,
     ),
@@ -267,7 +267,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_a_ + _b_*InertTan(x*_f_ + _e_))*(x*_d_ + _c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(_a_**2 + _b_**2, 0),),
-        replacement=I*_d_*sqrt(_a_ - I*_b_)*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ - I*_b_)), x)/_f_ - I*_d_*sqrt(_a_ + I*_b_)*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ + I*_b_)), x)/_f_ - I*sqrt(_a_ - I*_b_)*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ - I*_b_))/_f_ + I*sqrt(_a_ + I*_b_)*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ + I*_b_))/_f_,
+        replacement=I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ - I*_b_, 2)), x)*Rt(_a_ - I*_b_, 2)/_f_ - I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ + I*_b_, 2)), x)*Rt(_a_ + I*_b_, 2)/_f_ - I*(x*_d_ + _c_)*Rt(_a_ - I*_b_, 2)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ - I*_b_, 2))/_f_ + I*(x*_d_ + _c_)*Rt(_a_ + I*_b_, 2)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ + I*_b_, 2))/_f_,
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=21,
     ),
@@ -283,7 +283,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + _c_)/sqrt(_a_ + _b_*InertTan(x*_f_ + _e_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(_a_**2 + _b_**2, 0),),
-        replacement=-I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ + I*_b_)), x)/(_f_*sqrt(_a_ + I*_b_)) + I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ - I*_b_)), x)/(_f_*sqrt(_a_ - I*_b_)) + I*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ + I*_b_))/(_f_*sqrt(_a_ + I*_b_)) - I*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/sqrt(_a_ - I*_b_))/(_f_*sqrt(_a_ - I*_b_)),
+        replacement=I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ - I*_b_, 2)), x)/(_f_*Rt(_a_ - I*_b_, 2)) - I*_d_*Int(atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ + I*_b_, 2)), x)/(_f_*Rt(_a_ + I*_b_, 2)) + I*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ + I*_b_, 2))/(_f_*Rt(_a_ + I*_b_, 2)) - I*(x*_d_ + _c_)*atanh(sqrt(_a_ + _b_*tan(x*_f_ + _e_))/Rt(_a_ - I*_b_, 2))/(_f_*Rt(_a_ - I*_b_, 2)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=23,
     ),

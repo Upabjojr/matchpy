@@ -525,7 +525,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**2), x),
         constraints=(FreeQ([a_, _b_], x),),
-        replacement=Star(1/(2*a_), Int(Together(1/(-v_/sqrt(-a_/_b_) + 1)), x)) + Star(1/(2*a_), Int(Together(1/(v_/sqrt(-a_/_b_) + 1)), x)),
+        replacement=Star(1/(2*a_), Int(Together(1/(-v_/Rt(-a_/_b_, 2) + 1)), x)) + Star(1/(2*a_), Int(Together(1/(v_/Rt(-a_/_b_, 2) + 1)), x)),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=50,
     ),
@@ -533,7 +533,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2, 1),),
-        replacement=Star((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1)))))),
+        replacement=Star((Integer(2) * ((a_ * n_))**(Integer(-1))), Sum(Int(Together(((Integer(1) + (Integer(-1) * ((v_)**(Integer(2)) * (((Integer(-1))**((Integer(4) * Symbol('k') * (n_)**(Integer(-1)))) * Rt(((Integer(-1) * a_) * (_b_)**(Integer(-1))), (n_ * (Integer(2))**(Integer(-1))))))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), (n_ * (Integer(2))**(Integer(-1)))))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=51,
     ),
@@ -541,7 +541,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*v_**n_), x),
         constraints=(FreeQ([a_, _b_], x), IGtQ(n_/2 + sympy.S(-1)/2, 0),),
-        replacement=Star(((a_ * n_))**(Integer(-1)), Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * sympy.root(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_))),
+        replacement=Star(((a_ * n_))**(Integer(-1)), Sum(Int(Together(((Integer(1) + (Integer(-1) * (v_ * (((Integer(-1))**((Integer(2) * Symbol('k') * (n_)**(Integer(-1)))) * Rt(((Integer(-1) * a_) * (_b_)**(Integer(-1))), n_)))**(Integer(-1))))))**(Integer(-1))), x), List(Symbol('k'), Integer(1), n_))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=52,
     ),
@@ -629,7 +629,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/sqrt((-a*v_ + b*u_)/a))/(a*sqrt((-a*v_ + b*u_)/a))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/Rt((-a*v_ + b*u_)/a, 2))/(a*Rt((-a*v_ + b*u_)/a, 2))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=63,
     ),
@@ -637,7 +637,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/sqrt((a*v_ - b*u_)/a))/(a*sqrt((a*v_ - b*u_)/a))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/Rt((a*v_ - b*u_)/a, 2))/(a*Rt((a*v_ - b*u_)/a, 2))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=64,
     ),
@@ -661,7 +661,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*sqrt(a*b)/(a*sqrt(v_)))/sqrt(a*b)),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*Rt(a*b, 2)/(a*sqrt(v_)))/Rt(a*b, 2)),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=67,
     ),
@@ -669,7 +669,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*sqrt(-a*b)/(a*sqrt(v_)))/sqrt(-a*b)),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*Rt(-a*b, 2)/(a*sqrt(v_)))/Rt(-a*b, 2)),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=68,
     ),

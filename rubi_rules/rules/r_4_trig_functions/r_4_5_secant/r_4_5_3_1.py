@@ -165,7 +165,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((A_ + _B_*InertCsc(x*_f_ + _e_))*InertCsc(x*_f_ + _e_)/sqrt(a_ + _b_*InertCsc(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, A_, _B_], x), NeQ(a_**2 - _b_**2, 0), EqQ(A_**2 - _B_**2, 0),),
-        replacement=sqrt(_b_*(1 - csc(x*_f_ + _e_))/(a_ + _b_))*sqrt(-_b_*(csc(x*_f_ + _e_) + 1)/(a_ - _b_))*sqrt(a_ + _B_*_b_/A_)*(-2*A_*_b_ + 2*_B_*a_)*elliptic_e(asin(sqrt(a_ + _b_*csc(x*_f_ + _e_))/sqrt(a_ + _B_*_b_/A_)), (A_*a_ + _B_*_b_)/(A_*a_ - _B_*_b_))/(_b_**2*_f_*cot(x*_f_ + _e_)),
+        replacement=sqrt(_b_*(1 - csc(x*_f_ + _e_))/(a_ + _b_))*sqrt(-_b_*(csc(x*_f_ + _e_) + 1)/(a_ - _b_))*(-2*A_*_b_ + 2*_B_*a_)*Rt(a_ + _B_*_b_/A_, 2)*elliptic_e(asin(sqrt(a_ + _b_*csc(x*_f_ + _e_))/Rt(a_ + _B_*_b_/A_, 2)), (A_*a_ + _B_*_b_)/(A_*a_ - _B_*_b_))/(_b_**2*_f_*cot(x*_f_ + _e_)),
         module_name='4.5.3.1 (a+b sec)^m (d sec)^n (A+B sec)',
         rule_number=9,
     ),

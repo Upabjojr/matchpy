@@ -808,6 +808,34 @@ class SplitProduct(MathematicaExpr):
         return _SplitProduct(*self.args)
 
 
+class Rt(MathematicaExpr):
+    """Rubi ``Rt[u, n]`` — the simplest nth root of ``u``.
+
+    Deferred so that rules using ``Rt[u, n_]`` (n_ a wildcard exponent) build an
+    unevaluated node at import time and only compute the actual root at fire time,
+    once ``n_`` is bound to a concrete integer.  ``_evaluate`` delegates to the eager
+    ``utility_functions.Rt`` (= ``RtAux[TogetherSimplify[u], n]``), which reproduces
+    Mathematica's ``Rt``: pull perfect nth powers out of products/powers, handle sign
+    for odd/even n, and fall back to the principal ``NthRoot[u, n] = u^(1/n)``.
+
+    NOTE: this replaces the previous ``Rt -> sympy.root`` codegen shortcut, which only
+    produced a bare principal root and skipped Rubi's simplest-root simplification.
+    """
+    # Rt is a scalar (an nth root), so it is commutative. Without this the base
+    # MathematicaExpr leaves is_commutative indeterminate (None), which makes SymPy's
+    # Mul/hyper construction recurse to the limit when Rt sits deep inside a large
+    # replacement (e.g. rule 1.2.1.2 #101, Rt inside hyper's argument and several
+    # denominators) -- a plain Sqrt worked there only because it is commutative.
+    is_commutative = True
+
+    def __new__(cls, *args):
+        safe = [sympy.sympify(a) for a in args]
+        return Expr.__new__(cls, *safe)
+    def _evaluate(self, **kwargs):
+        from .utility_functions import Rt as _Rt
+        return _Rt(*self.args)
+
+
 class PolyGCD(MathematicaExpr):
     """Rubi PolyGCD[a, b, x]."""
     def __new__(cls, *args):

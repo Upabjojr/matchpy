@@ -242,7 +242,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x**2*_b_ + a_)*sqrt(x**2*_d_ + c_)*sqrt(x**2*_f_ + e_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), Not(GtQ(_d_/c_, 0)), GtQ(c_, 0), GtQ(e_, 0), Not(And(Not(GtQ(_f_/e_, 0)), SimplerSqrtQ(-_f_/e_, -_d_/c_))),),
-        replacement=EllipticPi(_b_*c_/(a_*_d_), asin(x*sqrt(-_d_/c_)), c_*_f_/(_d_*e_))/(a_*sqrt(c_)*sqrt(e_)*sqrt(-_d_/c_)),
+        replacement=EllipticPi(_b_*c_/(a_*_d_), asin(x*Rt(-_d_/c_, 2)), c_*_f_/(_d_*e_))/(a_*sqrt(c_)*sqrt(e_)*Rt(-_d_/c_, 2)),
         module_name='1.1.3.5 (a+b x^n)^p (c+d x^n)^q (e+f x^n)^r',
         rule_number=17,
     ),
@@ -258,7 +258,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(x**2*_d_ + c_)/((x**2*_b_ + a_)*sqrt(x**2*_f_ + e_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), PosQ(_d_/c_),),
-        replacement=c_*sqrt(x**2*_f_ + e_)*EllipticPi(1 - _b_*c_/(a_*_d_), atan(x*sqrt(_d_/c_)), -c_*_f_/(_d_*e_) + 1)/(a_*e_*sqrt(_d_/c_)*sqrt(c_*(x**2*_f_ + e_)/(e_*(x**2*_d_ + c_)))*sqrt(x**2*_d_ + c_)),
+        replacement=c_*sqrt(x**2*_f_ + e_)*EllipticPi(1 - _b_*c_/(a_*_d_), atan(x*Rt(_d_/c_, 2)), -c_*_f_/(_d_*e_) + 1)/(a_*e_*sqrt(c_*(x**2*_f_ + e_)/(e_*(x**2*_d_ + c_)))*sqrt(x**2*_d_ + c_)*Rt(_d_/c_, 2)),
         module_name='1.1.3.5 (a+b x^n)^p (c+d x^n)^q (e+f x^n)^r',
         rule_number=19,
     ),

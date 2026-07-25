@@ -209,7 +209,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))/sqrt(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), GtQ(d_, 0), PosQ(_e_),),
-        replacement=-_b_*_n_*Int(asinh(x*sqrt(_e_)/sqrt(d_))/x, x)/sqrt(_e_) + (_a_ + _b_*log(x**_n_*_c_))*asinh(x*sqrt(_e_)/sqrt(d_))/sqrt(_e_),
+        replacement=-_b_*_n_*Int(asinh(x*Rt(_e_, 2)/sqrt(d_))/x, x)/Rt(_e_, 2) + (_a_ + _b_*log(x**_n_*_c_))*asinh(x*Rt(_e_, 2)/sqrt(d_))/Rt(_e_, 2),
         module_name='3.1.3 (d+e x^r)^q (a+b log(c x^n))^p',
         rule_number=14,
     ),
@@ -217,7 +217,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))/sqrt(x**2*_e_ + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _n_], x), GtQ(d_, 0), NegQ(_e_),),
-        replacement=-_b_*_n_*Int(asin(x*sqrt(-_e_)/sqrt(d_))/x, x)/sqrt(-_e_) + (_a_ + _b_*log(x**_n_*_c_))*asin(x*sqrt(-_e_)/sqrt(d_))/sqrt(-_e_),
+        replacement=-_b_*_n_*Int(asin(x*Rt(-_e_, 2)/sqrt(d_))/x, x)/Rt(-_e_, 2) + (_a_ + _b_*log(x**_n_*_c_))*asin(x*Rt(-_e_, 2)/sqrt(d_))/Rt(-_e_, 2),
         module_name='3.1.3 (d+e x^r)^q (a+b log(c x^n))^p',
         rule_number=15,
     ),

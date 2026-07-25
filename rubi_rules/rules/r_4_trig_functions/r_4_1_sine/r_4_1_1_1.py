@@ -276,7 +276,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertSin(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), GtQ(a_**2 - _b_**2, 0), PosQ(a_),),
-        replacement=With({q: sqrt(a_**2 - _b_**2)}, x/q + 2*atan(_b_*cos(x*_d_ + _c_)/(q + a_ + _b_*sin(x*_d_ + _c_)))/(q*_d_)),
+        replacement=With({q: Rt(a_**2 - _b_**2, 2)}, x/q + 2*atan(_b_*cos(x*_d_ + _c_)/(q + a_ + _b_*sin(x*_d_ + _c_)))/(q*_d_)),
         module_name='4.1.1.1 (a+b sin)^n',
         rule_number=24,
     ),
@@ -284,7 +284,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(a_ + _b_*InertSin(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), GtQ(a_**2 - _b_**2, 0), NegQ(a_),),
-        replacement=With({q: sqrt(a_**2 - _b_**2)}, -x/q - 2*atan(_b_*cos(x*_d_ + _c_)/(-q + a_ + _b_*sin(x*_d_ + _c_)))/(q*_d_)),
+        replacement=With({q: Rt(a_**2 - _b_**2, 2)}, -x/q - 2*atan(_b_*cos(x*_d_ + _c_)/(-q + a_ + _b_*sin(x*_d_ + _c_)))/(q*_d_)),
         module_name='4.1.1.1 (a+b sin)^n',
         rule_number=25,
     ),

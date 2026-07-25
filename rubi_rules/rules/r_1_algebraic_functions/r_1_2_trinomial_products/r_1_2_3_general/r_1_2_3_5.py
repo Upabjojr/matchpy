@@ -225,7 +225,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x**2*_c_ + x*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_], x), PolyQ(Pq_, x), NeQ(-4*a_*_c_ + _b_**2, 0), ILtQ(p_ + sympy.S.Half, 0), PosQ(_c_), EqQ(2*p_ + Expon(Pq_, x) + 1, 0),),
-        replacement=With({q: Expon(Pq_, x)}, With({Pqq: Coeff(Pq_, x, q)}, Pqq*_c_**p_*atanh((2*x*_c_ + _b_)/(2*sqrt(_c_)*sqrt(x**2*_c_ + x*_b_ + a_))) + Int((x**2*_c_ + x*_b_ + a_)**p_*ExpandToSum(-Pqq*_c_**(p_ + sympy.S.Half)*(x**2*_c_ + x*_b_ + a_)**(-p_ + sympy.S(-1)/2) + Pq_, x), x))),
+        replacement=With({q: Expon(Pq_, x)}, With({Pqq: Coeff(Pq_, x, q)}, Pqq*_c_**p_*atanh((2*x*_c_ + _b_)/(2*sqrt(x**2*_c_ + x*_b_ + a_)*Rt(_c_, 2))) + Int((x**2*_c_ + x*_b_ + a_)**p_*ExpandToSum(-Pqq*_c_**(p_ + sympy.S.Half)*(x**2*_c_ + x*_b_ + a_)**(-p_ + sympy.S(-1)/2) + Pq_, x), x))),
         module_name='1.2.3.5 P(x) (a+b x^n+c x^(2 n))^p',
         rule_number=14,
     ),
@@ -233,7 +233,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x**2*_c_ + x*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_], x), PolyQ(Pq_, x), NeQ(-4*a_*_c_ + _b_**2, 0), ILtQ(p_ + sympy.S.Half, 0), NegQ(_c_), EqQ(2*p_ + Expon(Pq_, x) + 1, 0),),
-        replacement=With({q: Expon(Pq_, x)}, With({Pqq: Coeff(Pq_, x, q)}, -Pqq*(-_c_)**p_*atan((2*x*_c_ + _b_)/(2*sqrt(-_c_)*sqrt(x**2*_c_ + x*_b_ + a_))) + Int((x**2*_c_ + x*_b_ + a_)**p_*ExpandToSum(-Pqq*(-_c_)**(p_ + sympy.S.Half)*(x**2*_c_ + x*_b_ + a_)**(-p_ + sympy.S(-1)/2) + Pq_, x), x))),
+        replacement=With({q: Expon(Pq_, x)}, With({Pqq: Coeff(Pq_, x, q)}, -Pqq*(-_c_)**p_*atan((2*x*_c_ + _b_)/(2*sqrt(x**2*_c_ + x*_b_ + a_)*Rt(-_c_, 2))) + Int((x**2*_c_ + x*_b_ + a_)**p_*ExpandToSum(-Pqq*(-_c_)**(p_ + sympy.S.Half)*(x**2*_c_ + x*_b_ + a_)**(-p_ + sympy.S(-1)/2) + Pq_, x), x))),
         module_name='1.2.3.5 P(x) (a+b x^n+c x^(2 n))^p',
         rule_number=15,
     ),
@@ -273,7 +273,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_/(x**_n_*_b_ + x**_n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _n_], x), EqQ(_n2_, 2*_n_), PolyQ(Pq_, x), NeQ(-4*a_*_c_ + _b_**2, 0),),
-        replacement=With({q: sqrt(-4*a_*_c_ + _b_**2)}, 2*_c_*Int(Pq_/(-q + 2*x**_n_*_c_ + _b_), x)/q - 2*_c_*Int(Pq_/(q + 2*x**_n_*_c_ + _b_), x)/q),
+        replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, 2*_c_*Int(Pq_/(-q + 2*x**_n_*_c_ + _b_), x)/q - 2*_c_*Int(Pq_/(q + 2*x**_n_*_c_ + _b_), x)/q),
         module_name='1.2.3.5 P(x) (a+b x^n+c x^(2 n))^p',
         rule_number=20,
     ),

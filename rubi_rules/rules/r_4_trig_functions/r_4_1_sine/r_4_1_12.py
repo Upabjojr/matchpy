@@ -107,7 +107,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sin(_d_*(x*_f_ + _e_)**2), x),
         constraints=(FreeQ([_d_, _e_, _f_], x),),
-        replacement=(sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * ((_f_ * sympy.root(_d_, Integer(2))))**(Integer(-1)) * sympy.fresnels((sympy.sqrt((Integer(2) * (sympy.pi)**(Integer(-1)))) * sympy.root(_d_, Integer(2)) * (_e_ + (_f_ * x))))),
+        replacement=(sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * ((_f_ * Rt(_d_, Integer(2))))**(Integer(-1)) * sympy.fresnels((sympy.sqrt((Integer(2) * (sympy.pi)**(Integer(-1)))) * Rt(_d_, Integer(2)) * (_e_ + (_f_ * x))))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=1,
     ),
@@ -115,7 +115,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(cos(_d_*(x*_f_ + _e_)**2), x),
         constraints=(FreeQ([_d_, _e_, _f_], x),),
-        replacement=(sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * ((_f_ * sympy.root(_d_, Integer(2))))**(Integer(-1)) * sympy.fresnelc((sympy.sqrt((Integer(2) * (sympy.pi)**(Integer(-1)))) * sympy.root(_d_, Integer(2)) * (_e_ + (_f_ * x))))),
+        replacement=(sympy.sqrt((sympy.pi * (Integer(2))**(Integer(-1)))) * ((_f_ * Rt(_d_, Integer(2))))**(Integer(-1)) * sympy.fresnelc((sympy.sqrt((Integer(2) * (sympy.pi)**(Integer(-1)))) * Rt(_d_, Integer(2)) * (_e_ + (_f_ * x))))),
         module_name='4.1.12 (e x)^m (a+b sin(c+d x^n))^p',
         rule_number=2,
     ),

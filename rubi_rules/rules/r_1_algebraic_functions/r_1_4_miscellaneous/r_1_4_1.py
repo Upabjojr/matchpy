@@ -173,24 +173,24 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int(Px_*_u_, x),
-        constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x), And(FreeQ(_a_, x), LinearQ(v_, x))))), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Int(_u_*(a + b*x)**Expon(Px_, x), x)),
+        constraints=(PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x), And(FreeQ(_a_, x), LinearQ(v_, x))))), EqQ(Px_, (x*Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)) + Rt(Coeff(Px_, x, 0), Expon(Px_, x)))**Expon(Px_, x)),),
+        replacement=With({a: Rt(Coeff(Px_, x, 0), Expon(Px_, x)), b: Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x))}, Int(_u_*(a + b*x)**Expon(Px_, x), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=4,
     ),
     # Rule 5
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
-        constraints=(IntegerQ(p_), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x)),
+        constraints=(IntegerQ(p_), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)) + Rt(Coeff(Px_, x, 0), Expon(Px_, x)))**Expon(Px_, x)),),
+        replacement=With({a: Rt(Coeff(Px_, x, 0), Expon(Px_, x)), b: Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x))}, Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=5,
     ),
     # Rule 6
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
-        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x)) + Coeff(Px_, x, 0)**(1/Expon(Px_, x)))**Expon(Px_, x)),),
-        replacement=With({a: Coeff(Px_, x, 0)**(1/Expon(Px_, x)), b: Coeff(Px_, x, Expon(Px_, x))**(1/Expon(Px_, x))}, Star(((a + b*x)**Expon(Px_, x))**p_/(a + b*x)**(p_*Expon(Px_, x)), Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x))),
+        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x), GtQ(Expon(Px_, x), 1), NeQ(Coeff(Px_, x, 0), 0), EqQ(Px_, (x*Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x)) + Rt(Coeff(Px_, x, 0), Expon(Px_, x)))**Expon(Px_, x)),),
+        replacement=With({a: Rt(Coeff(Px_, x, 0), Expon(Px_, x)), b: Rt(Coeff(Px_, x, Expon(Px_, x)), Expon(Px_, x))}, Star(((a + b*x)**Expon(Px_, x))**p_/(a + b*x)**(p_*Expon(Px_, x)), Int(_u_*(a + b*x)**(p_*Expon(Px_, x)), x))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=6,
     ),
@@ -669,24 +669,24 @@ RULES = [
     # Rule 66
     RubiRulePattern(
         pattern=Int(Px_*_u_, x),
-        constraints=(PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x**2), And(FreeQ(_a_, x), BinomialQ(v_, x, 2))))), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**Expon(Px_, x**2), x)),
+        constraints=(PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), Not(MatchQ(Px_, Condition(_a_*v_**Expon(Px_, x**2), And(FreeQ(_a_, x), BinomialQ(v_, x, 2))))), EqQ(Px_, (x**2*Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2)) + Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)))**Expon(Px_, x**2)),),
+        replacement=With({a: Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)), b: Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**Expon(Px_, x**2), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=66,
     ),
     # Rule 67
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
-        constraints=(IntegerQ(p_), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x)),
+        constraints=(IntegerQ(p_), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2)) + Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)))**Expon(Px_, x**2)),),
+        replacement=With({a: Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)), b: Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2))}, Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x)),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=67,
     ),
     # Rule 68
     RubiRulePattern(
         pattern=Int(Px_**p_*_u_, x),
-        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2)) + Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)))**Expon(Px_, x**2)),),
-        replacement=With({a: Coeff(Px_, x**2, 0)**(1/Expon(Px_, x**2)), b: Coeff(Px_, x**2, Expon(Px_, x**2))**(1/Expon(Px_, x**2))}, Star(((a + b*x**2)**Expon(Px_, x**2))**p_/(a + b*x**2)**(p_*Expon(Px_, x**2)), Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x))),
+        constraints=(Not(IntegerQ(p_)), PolyQ(Px_, x**2), GtQ(Expon(Px_, x**2), 1), NeQ(Coeff(Px_, x**2, 0), 0), EqQ(Px_, (x**2*Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2)) + Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)))**Expon(Px_, x**2)),),
+        replacement=With({a: Rt(Coeff(Px_, x**2, 0), Expon(Px_, x**2)), b: Rt(Coeff(Px_, x**2, Expon(Px_, x**2)), Expon(Px_, x**2))}, Star(((a + b*x**2)**Expon(Px_, x**2))**p_/(a + b*x**2)**(p_*Expon(Px_, x**2)), Int(_u_*(a + b*x**2)**(p_*Expon(Px_, x**2)), x))),
         module_name='1.4.1 Algebraic function simplification',
         rule_number=68,
     ),

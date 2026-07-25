@@ -241,7 +241,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Q6_**p_*_u_, x),
         constraints=(ILtQ(p_, 0), PolyQ(Q6_, x, 6), EqQ(Coeff(Q6_, x, 1), 0), EqQ(Coeff(Q6_, x, 5), 0), RationalFunctionQ(_u_, x), EqQ(-3*Coeff(Q6_, x, 0)*Coeff(Q6_, x, 4) + Coeff(Q6_, x, 2)**2, 0), EqQ(-27*Coeff(Q6_, x, 0)**2*Coeff(Q6_, x, 6) + Coeff(Q6_, x, 2)**3, 0),),
-        replacement=With({a: Coeff(Q6_, x, 0), b: Coeff(Q6_, x, 2), c: Coeff(Q6_, x, 3), d: Coeff(Q6_, x, 4), e: Coeff(Q6_, x, 6)}, Star(1/(3**(3*p_)*a**(2*p_)), Int(ExpandIntegrand(_u_*(3*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(-3*(-1)**(sympy.S(1)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_*(3*(-1)**(sympy.S(2)/3)*a**(sympy.S(2)/3)*c**(sympy.S(1)/3)*x + 3*a + b*x**2)**p_, x), x))),
+        replacement=With({a: Coeff(Q6_, x, 0), b: Coeff(Q6_, x, 2), c: Coeff(Q6_, x, 3), d: Coeff(Q6_, x, 4), e: Coeff(Q6_, x, 6)}, Star(1/(3**(3*p_)*a**(2*p_)), Int(ExpandIntegrand(_u_*(3*a + b*x**2 + 3*x*Rt(a, 3)**2*Rt(c, 3))**p_*(3*a + b*x**2 - 3*(-1)**(sympy.S(1)/3)*x*Rt(a, 3)**2*Rt(c, 3))**p_*(3*a + b*x**2 + 3*(-1)**(sympy.S(2)/3)*x*Rt(a, 3)**2*Rt(c, 3))**p_, x), x))),
         module_name='1.3.3 P(x)^p',
         rule_number=16,
     ),

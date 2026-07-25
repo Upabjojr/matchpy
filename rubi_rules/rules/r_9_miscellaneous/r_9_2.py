@@ -306,7 +306,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/sqrt((-a*v_ + b*u_)/a))/(a*sqrt((-a*v_ + b*u_)/a))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/Rt((-a*v_ + b*u_)/a, 2))/(a*Rt((-a*v_ + b*u_)/a, 2))),
         module_name='9.2 Derivative integration rules',
         rule_number=26,
     ),
@@ -314,7 +314,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/sqrt((a*v_ - b*u_)/a))/(a*sqrt((a*v_ - b*u_)/a))),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/Rt((a*v_ - b*u_)/a, 2))/(a*Rt((a*v_ - b*u_)/a, 2))),
         module_name='9.2 Derivative integration rules',
         rule_number=27,
     ),
@@ -338,7 +338,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*sqrt(a*b)/(a*sqrt(v_)))/sqrt(a*b)),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*Rt(a*b, 2)/(a*sqrt(v_)))/Rt(a*b, 2)),
         module_name='9.2 Derivative integration rules',
         rule_number=30,
     ),
@@ -346,7 +346,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
-        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*sqrt(-a*b)/(a*sqrt(v_)))/sqrt(-a*b)),
+        replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*Rt(-a*b, 2)/(a*sqrt(v_)))/Rt(-a*b, 2)),
         module_name='9.2 Derivative integration rules',
         rule_number=31,
     ),

@@ -146,7 +146,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*cosh(x*_d_ + _c_)/(a_ + _b_*sinh(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ(a_**2 + _b_**2, 0),),
-        replacement=Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) - sqrt(a_**2 + _b_**2)), x) + Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) + sqrt(a_**2 + _b_**2)), x) - (x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) - Rt(a_**2 + _b_**2, 2)), x) + Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) + Rt(a_**2 + _b_**2, 2)), x) - (x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=5,
     ),
@@ -154,7 +154,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*sinh(x*_d_ + _c_)/(a_ + _b_*cosh(x*_d_ + _c_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IGtQ(_m_, 0), NeQ(a_**2 - _b_**2, 0),),
-        replacement=Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) - sqrt(a_**2 - _b_**2)), x) + Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) + sqrt(a_**2 - _b_**2)), x) - (x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
+        replacement=Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) - Rt(a_**2 - _b_**2, 2)), x) + Int((x*_f_ + _e_)**_m_*exp(x*_d_ + _c_)/(a_ + _b_*exp(x*_d_ + _c_) + Rt(a_**2 - _b_**2, 2)), x) - (x*_f_ + _e_)**(_m_ + 1)/(_b_*_f_*(_m_ + 1)),
         module_name='6.7.9 Active hyperbolic functions',
         rule_number=6,
     ),

@@ -322,7 +322,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x*_d_)**_m_/(x**_n_*_b_ + x**_n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, _n_], x), EqQ(_n2_, 2*_n_), PolyQ(Pq_, x), NeQ(-4*a_*_c_ + _b_**2, 0),),
-        replacement=With({q: sqrt(-4*a_*_c_ + _b_**2)}, 2*_c_*Int(Pq_*(x*_d_)**_m_/(-q + 2*x**_n_*_c_ + _b_), x)/q - 2*_c_*Int(Pq_*(x*_d_)**_m_/(q + 2*x**_n_*_c_ + _b_), x)/q),
+        replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, 2*_c_*Int(Pq_*(x*_d_)**_m_/(-q + 2*x**_n_*_c_ + _b_), x)/q - 2*_c_*Int(Pq_*(x*_d_)**_m_/(q + 2*x**_n_*_c_ + _b_), x)/q),
         module_name='1.2.3.6 P(x) (d x)^m (a+b x^n+c x^(2 n))^p',
         rule_number=26,
     ),

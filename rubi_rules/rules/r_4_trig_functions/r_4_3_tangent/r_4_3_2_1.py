@@ -213,7 +213,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_c_ + _d_*InertTan(x*_f_ + _e_))/sqrt(a_ + _b_*InertTan(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-a_*_d_ + _b_*_c_, 0), NeQ(a_**2 + _b_**2, 0), NeQ(_c_**2 + _d_**2, 0), NeQ(2*a_*_c_*_d_ - _b_*(_c_**2 - _d_**2), 0), Or(PerfectSquareQ(a_**2 + _b_**2), RationalQ(a_, _b_, _c_, _d_)),),
-        replacement=With({q: sqrt(a_**2 + _b_**2)}, -Int((-q*_c_ + a_*_c_ + _b_*_d_ + (-q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q) + Int((q*_c_ + a_*_c_ + _b_*_d_ + (q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q)),
+        replacement=With({q: Rt(a_**2 + _b_**2, 2)}, -Int((-q*_c_ + a_*_c_ + _b_*_d_ + (-q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q) + Int((q*_c_ + a_*_c_ + _b_*_d_ + (q*_d_ - a_*_d_ + _b_*_c_)*tan(x*_f_ + _e_))/sqrt(a_ + _b_*tan(x*_f_ + _e_)), x)/(2*q)),
         module_name='4.3.2.1 (a+b tan)^m (c+d tan)^n',
         rule_number=15,
     ),

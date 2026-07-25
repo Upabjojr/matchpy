@@ -690,7 +690,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_b_*InertSin(x*_f_ + _e_))/sqrt(c_ + _d_*InertSin(x*_f_ + _e_)), x),
         constraints=(FreeQ([_b_, c_, _d_, _e_, _f_], x), GtQ(c_**2 - _d_**2, 0), PosQ((c_ + _d_)/_b_), GtQ(c_**2, 0),),
-        replacement=2*c_*sqrt(_b_*(c_ + _d_))*sqrt(1 - csc(x*_f_ + _e_))*sqrt(csc(x*_f_ + _e_) + 1)*EllipticPi((c_ + _d_)/_d_, asin(sqrt(c_ + _d_*sin(x*_f_ + _e_))/(sqrt((c_ + _d_)/_b_)*sqrt(_b_*sin(x*_f_ + _e_)))), (-c_ - _d_)/(c_ - _d_))*tan(x*_f_ + _e_)/(_d_*_f_*sqrt(c_**2 - _d_**2)),
+        replacement=2*c_*sqrt(1 - csc(x*_f_ + _e_))*sqrt(csc(x*_f_ + _e_) + 1)*EllipticPi((c_ + _d_)/_d_, asin(sqrt(c_ + _d_*sin(x*_f_ + _e_))/(sqrt(_b_*sin(x*_f_ + _e_))*Rt((c_ + _d_)/_b_, 2))), (-c_ - _d_)/(c_ - _d_))*Rt(_b_*(c_ + _d_), 2)*tan(x*_f_ + _e_)/(_d_*_f_*sqrt(c_**2 - _d_**2)),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=75,
     ),
@@ -698,7 +698,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(_b_*InertSin(x*_f_ + _e_))/sqrt(c_ + _d_*InertSin(x*_f_ + _e_)), x),
         constraints=(FreeQ([_b_, c_, _d_, _e_, _f_], x), NeQ(c_**2 - _d_**2, 0), PosQ((c_ + _d_)/_b_),),
-        replacement=2*_b_*sqrt((c_ + _d_)/_b_)*sqrt(c_*(1 - csc(x*_f_ + _e_))/(c_ + _d_))*sqrt(c_*(csc(x*_f_ + _e_) + 1)/(c_ - _d_))*EllipticPi((c_ + _d_)/_d_, asin(sqrt(c_ + _d_*sin(x*_f_ + _e_))/(sqrt((c_ + _d_)/_b_)*sqrt(_b_*sin(x*_f_ + _e_)))), (-c_ - _d_)/(c_ - _d_))*tan(x*_f_ + _e_)/(_d_*_f_),
+        replacement=2*_b_*sqrt(c_*(1 - csc(x*_f_ + _e_))/(c_ + _d_))*sqrt(c_*(csc(x*_f_ + _e_) + 1)/(c_ - _d_))*EllipticPi((c_ + _d_)/_d_, asin(sqrt(c_ + _d_*sin(x*_f_ + _e_))/(sqrt(_b_*sin(x*_f_ + _e_))*Rt((c_ + _d_)/_b_, 2))), (-c_ - _d_)/(c_ - _d_))*Rt((c_ + _d_)/_b_, 2)*tan(x*_f_ + _e_)/(_d_*_f_),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=76,
     ),
@@ -714,7 +714,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(a_ + _b_*InertSin(x*_f_ + _e_))/sqrt(_c_ + _d_*InertSin(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-a_*_d_ + _b_*_c_, 0), NeQ(a_**2 - _b_**2, 0), NeQ(_c_**2 - _d_**2, 0), PosQ((a_ + _b_)/(_c_ + _d_)),),
-        replacement=sqrt((1 - sin(x*_f_ + _e_))*(a_*_d_ - _b_*_c_)/((a_ + _b_*sin(x*_f_ + _e_))*(_c_ + _d_)))*sqrt((-a_*_d_ + _b_*_c_)*(sin(x*_f_ + _e_) + 1)/((a_ + _b_*sin(x*_f_ + _e_))*(_c_ - _d_)))*(2*a_ + 2*_b_*sin(x*_f_ + _e_))*EllipticPi(_b_*(_c_ + _d_)/(_d_*(a_ + _b_)), asin(sqrt((a_ + _b_)/(_c_ + _d_))*sqrt(_c_ + _d_*sin(x*_f_ + _e_))/sqrt(a_ + _b_*sin(x*_f_ + _e_))), (a_ - _b_)*(_c_ + _d_)/((a_ + _b_)*(_c_ - _d_)))/(_d_*_f_*sqrt((a_ + _b_)/(_c_ + _d_))*cos(x*_f_ + _e_)),
+        replacement=sqrt((1 - sin(x*_f_ + _e_))*(a_*_d_ - _b_*_c_)/((a_ + _b_*sin(x*_f_ + _e_))*(_c_ + _d_)))*sqrt((-a_*_d_ + _b_*_c_)*(sin(x*_f_ + _e_) + 1)/((a_ + _b_*sin(x*_f_ + _e_))*(_c_ - _d_)))*(2*a_ + 2*_b_*sin(x*_f_ + _e_))*EllipticPi(_b_*(_c_ + _d_)/(_d_*(a_ + _b_)), asin(sqrt(_c_ + _d_*sin(x*_f_ + _e_))*Rt((a_ + _b_)/(_c_ + _d_), 2)/sqrt(a_ + _b_*sin(x*_f_ + _e_))), (a_ - _b_)*(_c_ + _d_)/((a_ + _b_)*(_c_ - _d_)))/(_d_*_f_*Rt((a_ + _b_)/(_c_ + _d_), 2)*cos(x*_f_ + _e_)),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=78,
     ),
@@ -746,7 +746,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(_d_*InertSin(x*_f_ + _e_))*sqrt(a_ + _b_*InertSin(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), GtQ(a_**2 - _b_**2, 0), PosQ((a_ + _b_)/_d_), GtQ(a_**2, 0),),
-        replacement=-2*sqrt(-cot(x*_f_ + _e_)**2)*sqrt((a_ + _b_)/_d_)*sqrt(a_**2)*elliptic_f(asin(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(sqrt((a_ + _b_)/_d_)*sqrt(_d_*sin(x*_f_ + _e_)))), (-a_ - _b_)/(a_ - _b_))/(a_*_f_*sqrt(a_**2 - _b_**2)*cot(x*_f_ + _e_)),
+        replacement=-2*sqrt(-cot(x*_f_ + _e_)**2)*sqrt(a_**2)*Rt((a_ + _b_)/_d_, 2)*elliptic_f(asin(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(sqrt(_d_*sin(x*_f_ + _e_))*Rt((a_ + _b_)/_d_, 2))), (-a_ - _b_)/(a_ - _b_))/(a_*_f_*sqrt(a_**2 - _b_**2)*cot(x*_f_ + _e_)),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=82,
     ),
@@ -754,7 +754,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(_d_*InertSin(x*_f_ + _e_))*sqrt(a_ + _b_*InertSin(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0), PosQ((a_ + _b_)/_d_),),
-        replacement=-2*sqrt((a_ + _b_)/_d_)*sqrt(a_*(1 - csc(x*_f_ + _e_))/(a_ + _b_))*sqrt(a_*(csc(x*_f_ + _e_) + 1)/(a_ - _b_))*tan(x*_f_ + _e_)*elliptic_f(asin(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(sqrt((a_ + _b_)/_d_)*sqrt(_d_*sin(x*_f_ + _e_)))), (-a_ - _b_)/(a_ - _b_))/(a_*_f_),
+        replacement=-2*sqrt(a_*(1 - csc(x*_f_ + _e_))/(a_ + _b_))*sqrt(a_*(csc(x*_f_ + _e_) + 1)/(a_ - _b_))*Rt((a_ + _b_)/_d_, 2)*tan(x*_f_ + _e_)*elliptic_f(asin(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(sqrt(_d_*sin(x*_f_ + _e_))*Rt((a_ + _b_)/_d_, 2))), (-a_ - _b_)/(a_ - _b_))/(a_*_f_),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=83,
     ),
@@ -770,7 +770,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(a_ + _b_*InertSin(x*_f_ + _e_))*sqrt(c_ + _d_*InertSin(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_], x), NeQ(-a_*_d_ + _b_*c_, 0), NeQ(a_**2 - _b_**2, 0), NeQ(c_**2 - _d_**2, 0), PosQ((c_ + _d_)/(a_ + _b_)),),
-        replacement=sqrt((1 - sin(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*sin(x*_f_ + _e_))))*sqrt((a_*_d_ - _b_*c_)*(sin(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*sin(x*_f_ + _e_))))*(2*c_ + 2*_d_*sin(x*_f_ + _e_))*elliptic_f(asin(sqrt((c_ + _d_)/(a_ + _b_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))/sqrt(c_ + _d_*sin(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((c_ + _d_)/(a_ + _b_))*(-a_*_d_ + _b_*c_)*cos(x*_f_ + _e_)),
+        replacement=sqrt((1 - sin(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*sin(x*_f_ + _e_))))*sqrt((a_*_d_ - _b_*c_)*(sin(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*sin(x*_f_ + _e_))))*(2*c_ + 2*_d_*sin(x*_f_ + _e_))*elliptic_f(asin(sqrt(a_ + _b_*sin(x*_f_ + _e_))*Rt((c_ + _d_)/(a_ + _b_), 2)/sqrt(c_ + _d_*sin(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*(-a_*_d_ + _b_*c_)*Rt((c_ + _d_)/(a_ + _b_), 2)*cos(x*_f_ + _e_)),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=85,
     ),

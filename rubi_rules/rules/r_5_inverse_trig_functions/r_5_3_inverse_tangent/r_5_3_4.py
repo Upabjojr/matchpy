@@ -1002,7 +1002,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x*(_a_ + _b_*atan(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*atan(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*atan(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
+        replacement=Int((_a_ + _b_*atan(x*_c_))**_p_/(-x*Rt(-_e_/d_, 2) + 1)**2, x)/(4*d_**2*Rt(-_e_/d_, 2)) - Int((_a_ + _b_*atan(x*_c_))**_p_/(x*Rt(-_e_/d_, 2) + 1)**2, x)/(4*d_**2*Rt(-_e_/d_, 2)),
         module_name='5.3.4 u (a+b arctan(c x))^p',
         rule_number=113,
     ),
@@ -1010,7 +1010,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x*(_a_ + _b_*acot(x*_c_))**_p_/(x**2*_e_ + d_)**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_], x), IGtQ(_p_, 0),),
-        replacement=Int((_a_ + _b_*acot(x*_c_))**_p_/(-x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)) - Int((_a_ + _b_*acot(x*_c_))**_p_/(x*sqrt(-_e_/d_) + 1)**2, x)/(4*d_**2*sqrt(-_e_/d_)),
+        replacement=Int((_a_ + _b_*acot(x*_c_))**_p_/(-x*Rt(-_e_/d_, 2) + 1)**2, x)/(4*d_**2*Rt(-_e_/d_, 2)) - Int((_a_ + _b_*acot(x*_c_))**_p_/(x*Rt(-_e_/d_, 2) + 1)**2, x)/(4*d_**2*Rt(-_e_/d_, 2)),
         module_name='5.3.4 u (a+b arctan(c x))^p',
         rule_number=114,
     ),

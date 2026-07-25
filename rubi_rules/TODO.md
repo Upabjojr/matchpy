@@ -110,6 +110,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
 - [ ] name conflict of utility and eager functions: prepend eager_ to their names
 - [ ] all stuff managing rules and creating replacement pattern should be moved to sympy_matching/ (maybe even constraints, MathematicaConstraint, which should then be renamed). Rule pattern matching should be generically used by SymPy, independently of Wolfram and Rubi.
+- [ ] evaluate=False when constructing the rules?
 
 Strange warning:
 

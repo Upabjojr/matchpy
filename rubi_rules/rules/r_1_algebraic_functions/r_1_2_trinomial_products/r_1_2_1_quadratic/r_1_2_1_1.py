@@ -116,7 +116,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**2*_c_ + x*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(p_, 0), PerfectSquareQ(-4*a_*_c_ + _b_**2),),
-        replacement=With({q: sqrt(-4*a_*_c_ + _b_**2)}, Int(Simp(-q/2 + x*_c_ + _b_/2, x)**p_*Simp(q/2 + x*_c_ + _b_/2, x)**p_, x)/_c_**p_),
+        replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, Int(Simp(-q/2 + x*_c_ + _b_/2, x)**p_*Simp(q/2 + x*_c_ + _b_/2, x)**p_, x)/_c_**p_),
         module_name='1.2.1.1 (a+b x+c x^2)^p',
         rule_number=4,
     ),
@@ -164,7 +164,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(x**2*_c_ + x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), PosQ(-4*_a_*_c_ + _b_**2), PerfectSquareQ(-4*_a_*_c_ + _b_**2),),
-        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, _c_*Int(1/Simp(-q/2 + x*_c_ + _b_/2, x), x)/q - _c_*Int(1/Simp(q/2 + x*_c_ + _b_/2, x), x)/q),
+        replacement=With({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, _c_*Int(1/Simp(-q/2 + x*_c_ + _b_/2, x), x)/q - _c_*Int(1/Simp(q/2 + x*_c_ + _b_/2, x), x)/q),
         module_name='1.2.1.1 (a+b x+c x^2)^p',
         rule_number=10,
     ),
@@ -228,7 +228,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x**2*_c_ + x*_b_ + _a_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, p_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), Not(IntegerQ(4*p_)),),
-        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, -((q - 2*x*_c_ - _b_)/(2*q))**(-p_ - 1)*(x**2*_c_ + x*_b_ + _a_)**(p_ + 1)*hyper((-p_, p_ + 1), (p_ + 2,), (q + 2*x*_c_ + _b_)/(2*q))/(q*(p_ + 1))),
+        replacement=With({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, -((q - 2*x*_c_ - _b_)/(2*q))**(-p_ - 1)*(x**2*_c_ + x*_b_ + _a_)**(p_ + 1)*hyper((-p_, p_ + 1), (p_ + 2,), (q + 2*x*_c_ + _b_)/(2*q))/(q*(p_ + 1))),
         module_name='1.2.1.1 (a+b x+c x^2)^p',
         rule_number=18,
     ),

@@ -137,7 +137,10 @@ class FFLConverter:
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra
         'D': 'D', 'Denominator': 'sympy.denom',
-        'Rt': 'sympy.root', 'Simplify': 'Simplify',
+        # NOTE: 'Rt' is intentionally NOT here. It is a Rubi utility (see
+        # rubi_rules.codegen RUBI_UTILS_MAP), emitted as the deferred Rt(...) node so
+        # its simplest-root algorithm runs at fire time -- not eagerly as sympy.root.
+        'Simplify': 'Simplify',
         'FractionalPart': 'sympy.frac', 'IntegerPart': 'sympy.floor',
         # List functions:
         'Min': 'sympy.Min', 'Max': 'sympy.Max',

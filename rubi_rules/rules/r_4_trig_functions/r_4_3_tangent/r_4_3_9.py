@@ -139,7 +139,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*InertTan(x*_e_ + _d_)**_n_ + _c_*InertTan(x*_e_ + _d_)**_n2_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), NeQ(-4*_a_*_c_ + _b_**2, 0),),
-        replacement=Module({q: sqrt(-4*_a_*_c_ + _b_**2)}, 2*_c_*Int(1/(-q + _b_ + 2*_c_*tan(x*_e_ + _d_)**_n_), x)/q - 2*_c_*Int(1/(q + _b_ + 2*_c_*tan(x*_e_ + _d_)**_n_), x)/q),
+        replacement=Module({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, 2*_c_*Int(1/(-q + _b_ + 2*_c_*tan(x*_e_ + _d_)**_n_), x)/q - 2*_c_*Int(1/(q + _b_ + 2*_c_*tan(x*_e_ + _d_)**_n_), x)/q),
         module_name='4.3.9 trig^m (a+b tan^n+c tan^(2 n))^p',
         rule_number=5,
     ),
@@ -147,7 +147,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(_a_ + _b_*InertCot(x*_e_ + _d_)**_n_ + _c_*InertCot(x*_e_ + _d_)**_n2_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _n_], x), EqQ(_n2_, 2*_n_), NeQ(-4*_a_*_c_ + _b_**2, 0),),
-        replacement=Module({q: sqrt(-4*_a_*_c_ + _b_**2)}, 2*_c_*Int(1/(-q + _b_ + 2*_c_*cot(x*_e_ + _d_)**_n_), x)/q - 2*_c_*Int(1/(q + _b_ + 2*_c_*cot(x*_e_ + _d_)**_n_), x)/q),
+        replacement=Module({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, 2*_c_*Int(1/(-q + _b_ + 2*_c_*cot(x*_e_ + _d_)**_n_), x)/q - 2*_c_*Int(1/(q + _b_ + 2*_c_*cot(x*_e_ + _d_)**_n_), x)/q),
         module_name='4.3.9 trig^m (a+b tan^n+c tan^(2 n))^p',
         rule_number=6,
     ),
@@ -347,7 +347,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((A_ + _B_*InertTan(x*_e_ + _d_))/(_a_ + _b_*InertTan(x*_e_ + _d_) + _c_*InertTan(x*_e_ + _d_)**2), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0),),
-        replacement=Module({q: sqrt(-4*_a_*_c_ + _b_**2)}, (_B_ - (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(-q + _b_ + 2*_c_*tan(x*_e_ + _d_), x), x) + (_B_ + (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(q + _b_ + 2*_c_*tan(x*_e_ + _d_), x), x)),
+        replacement=Module({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, (_B_ - (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(-q + _b_ + 2*_c_*tan(x*_e_ + _d_), x), x) + (_B_ + (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(q + _b_ + 2*_c_*tan(x*_e_ + _d_), x), x)),
         module_name='4.3.9 trig^m (a+b tan^n+c tan^(2 n))^p',
         rule_number=31,
     ),
@@ -355,7 +355,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((A_ + _B_*InertCot(x*_e_ + _d_))/(_a_ + _b_*InertCot(x*_e_ + _d_) + _c_*InertCot(x*_e_ + _d_)**2), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, A_, _B_], x), NeQ(-4*_a_*_c_ + _b_**2, 0),),
-        replacement=Module({q: sqrt(-4*_a_*_c_ + _b_**2)}, (_B_ - (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(-q + _b_ + 2*_c_*cot(x*_e_ + _d_), x), x) + (_B_ + (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(q + _b_ + 2*_c_*cot(x*_e_ + _d_), x), x)),
+        replacement=Module({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, (_B_ - (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(-q + _b_ + 2*_c_*cot(x*_e_ + _d_), x), x) + (_B_ + (-2*A_*_c_ + _B_*_b_)/q)*Int(1/Simp(q + _b_ + 2*_c_*cot(x*_e_ + _d_), x), x)),
         module_name='4.3.9 trig^m (a+b tan^n+c tan^(2 n))^p',
         rule_number=32,
     ),

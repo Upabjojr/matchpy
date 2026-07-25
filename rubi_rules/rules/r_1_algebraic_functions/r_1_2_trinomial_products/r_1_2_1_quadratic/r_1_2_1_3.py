@@ -971,8 +971,8 @@ RULES = [
     # Rule 109
     RubiRulePattern(
         pattern=Int((x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(x**2*_c_ + x*_b_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_p_, -1), IntegersQ(_m_, _n_), NiceSqrtQ(-4*a_*_c_ + _b_**2), Not(FractionalPowerFactorQ(sqrt(-4*a_*_c_ + _b_**2))),),
-        replacement=With({q: sqrt(-4*a_*_c_ + _b_**2)}, Star(_c_**(-_p_), Int(ExpandIntegrand((x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(-q/2 + x*_c_ + _b_/2)**_p_*(q/2 + x*_c_ + _b_/2)**_p_, x), x))),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _g_], x), ILtQ(_p_, -1), IntegersQ(_m_, _n_), NiceSqrtQ(-4*a_*_c_ + _b_**2), Not(FractionalPowerFactorQ(Rt(-4*a_*_c_ + _b_**2, 2))),),
+        replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, Star(_c_**(-_p_), Int(ExpandIntegrand((x*_e_ + _d_)**_m_*(x*_g_ + _f_)**_n_*(-q/2 + x*_c_ + _b_/2)**_p_*(q/2 + x*_c_ + _b_/2)**_p_, x), x))),
         module_name='1.2.1.3 (d+e x)^m (f+g x) (a+b x+c x^2)^p',
         rule_number=109,
     ),
@@ -1524,7 +1524,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(sqrt(x*_e_ + _d_)/(sqrt(x*_g_ + _f_)*sqrt(x**2*_c_ + x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
-        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, sqrt(2)*sqrt((x*(q + _b_) + 2*_a_)*(-_d_*_g_ + _e_*_f_)/((x*_e_ + _d_)*(q*_f_ - 2*_a_*_g_ + _b_*_f_)))*sqrt((-_d_*_g_ + _e_*_f_)*(q + 2*x*_c_ + _b_)/((x*_e_ + _d_)*(2*_c_*_f_ - _g_*(q + _b_))))*(x*_e_ + _d_)*sqrt(2*_c_*_f_ - _g_*(q + _b_))*sqrt(-q + 2*x*_c_ + _b_)*EllipticPi(_e_*(2*_c_*_f_ - _g_*(q + _b_))/(_g_*(2*_c_*_d_ - _e_*(q + _b_))), asin(sqrt(x*_g_ + _f_)*sqrt(2*_c_*_d_ - _e_*(q + _b_))/(sqrt(x*_e_ + _d_)*sqrt(2*_c_*_f_ - _g_*(q + _b_)))), (2*_c_*_f_ - _g_*(q + _b_))*(q*_d_ - 2*_a_*_e_ + _b_*_d_)/((2*_c_*_d_ - _e_*(q + _b_))*(q*_f_ - 2*_a_*_g_ + _b_*_f_)))/(_g_*sqrt(x*_c_ + 2*_a_*_c_/(q + _b_))*sqrt(2*_c_*_d_ - _e_*(q + _b_))*sqrt(x**2*_c_ + x*_b_ + _a_))),
+        replacement=With({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, sqrt(2)*sqrt((x*(q + _b_) + 2*_a_)*(-_d_*_g_ + _e_*_f_)/((x*_e_ + _d_)*(q*_f_ - 2*_a_*_g_ + _b_*_f_)))*sqrt((-_d_*_g_ + _e_*_f_)*(q + 2*x*_c_ + _b_)/((x*_e_ + _d_)*(2*_c_*_f_ - _g_*(q + _b_))))*(x*_e_ + _d_)*sqrt(2*_c_*_f_ - _g_*(q + _b_))*sqrt(-q + 2*x*_c_ + _b_)*EllipticPi(_e_*(2*_c_*_f_ - _g_*(q + _b_))/(_g_*(2*_c_*_d_ - _e_*(q + _b_))), asin(sqrt(x*_g_ + _f_)*sqrt(2*_c_*_d_ - _e_*(q + _b_))/(sqrt(x*_e_ + _d_)*sqrt(2*_c_*_f_ - _g_*(q + _b_)))), (2*_c_*_f_ - _g_*(q + _b_))*(q*_d_ - 2*_a_*_e_ + _b_*_d_)/((2*_c_*_d_ - _e_*(q + _b_))*(q*_f_ - 2*_a_*_g_ + _b_*_f_)))/(_g_*sqrt(x*_c_ + 2*_a_*_c_/(q + _b_))*sqrt(2*_c_*_d_ - _e_*(q + _b_))*sqrt(x**2*_c_ + x*_b_ + _a_))),
         module_name='1.2.1.3 (d+e x)^m (f+g x) (a+b x+c x^2)^p',
         rule_number=178,
     ),
@@ -1548,7 +1548,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_e_ + _d_)*sqrt(x*_g_ + _f_)*sqrt(x**2*_c_ + x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_], x),),
-        replacement=With({q: sqrt(-4*_a_*_c_ + _b_**2)}, Star(sqrt(-q + 2*x*_c_ + _b_)*sqrt(q + 2*x*_c_ + _b_)/sqrt(x**2*_c_ + x*_b_ + _a_), Int(1/((x*_e_ + _d_)*sqrt(x*_g_ + _f_)*sqrt(-q + 2*x*_c_ + _b_)*sqrt(q + 2*x*_c_ + _b_)), x))),
+        replacement=With({q: Rt(-4*_a_*_c_ + _b_**2, 2)}, Star(sqrt(-q + 2*x*_c_ + _b_)*sqrt(q + 2*x*_c_ + _b_)/sqrt(x**2*_c_ + x*_b_ + _a_), Int(1/((x*_e_ + _d_)*sqrt(x*_g_ + _f_)*sqrt(-q + 2*x*_c_ + _b_)*sqrt(q + 2*x*_c_ + _b_)), x))),
         module_name='1.2.1.3 (d+e x)^m (f+g x) (a+b x+c x^2)^p',
         rule_number=181,
     ),

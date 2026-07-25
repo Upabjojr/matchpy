@@ -172,7 +172,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x**3*_b_ + a_)*sqrt(x**2*_f_ + x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), PosQ(a_/_b_),),
-        replacement=With({r: Numerator((a_/_b_)**(sympy.S(1)/3)), s: Denominator((a_/_b_)**(sympy.S(1)/3))}, Star(r/(3*a_), Int(1/((r + s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)) + Star(r/(3*a_), Int((2*r - s*x)/((r**2 - r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x))),
+        replacement=With({r: Numerator(Rt(a_/_b_, 3)), s: Denominator(Rt(a_/_b_, 3))}, Star(r/(3*a_), Int(1/((r + s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)) + Star(r/(3*a_), Int((2*r - s*x)/((r**2 - r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=6,
     ),
@@ -180,7 +180,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(x**2*_f_ + _d_)*(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _f_], x), PosQ(a_/_b_),),
-        replacement=With({r: Numerator((a_/_b_)**(sympy.S(1)/3)), s: Denominator((a_/_b_)**(sympy.S(1)/3))}, Star(r/(3*a_), Int(1/((r + s*x)*sqrt(x**2*_f_ + _d_)), x)) + Star(r/(3*a_), Int((2*r - s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 - r*s*x + s**2*x**2)), x))),
+        replacement=With({r: Numerator(Rt(a_/_b_, 3)), s: Denominator(Rt(a_/_b_, 3))}, Star(r/(3*a_), Int(1/((r + s*x)*sqrt(x**2*_f_ + _d_)), x)) + Star(r/(3*a_), Int((2*r - s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 - r*s*x + s**2*x**2)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=7,
     ),
@@ -188,7 +188,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x**3*_b_ + a_)*sqrt(x**2*_f_ + x*_e_ + _d_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NegQ(a_/_b_),),
-        replacement=With({r: Numerator((-a_/_b_)**(sympy.S(1)/3)), s: Denominator((-a_/_b_)**(sympy.S(1)/3))}, Star(r/(3*a_), Int(1/((r - s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)) + Star(r/(3*a_), Int((2*r + s*x)/((r**2 + r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x))),
+        replacement=With({r: Numerator(Rt(-a_/_b_, 3)), s: Denominator(Rt(-a_/_b_, 3))}, Star(r/(3*a_), Int(1/((r - s*x)*sqrt(x**2*_f_ + x*_e_ + _d_)), x)) + Star(r/(3*a_), Int((2*r + s*x)/((r**2 + r*s*x + s**2*x**2)*sqrt(x**2*_f_ + x*_e_ + _d_)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=8,
     ),
@@ -196,7 +196,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/(sqrt(x**2*_f_ + _d_)*(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _f_], x), NegQ(a_/_b_),),
-        replacement=With({r: Numerator((-a_/_b_)**(sympy.S(1)/3)), s: Denominator((-a_/_b_)**(sympy.S(1)/3))}, Star(r/(3*a_), Int(1/((r - s*x)*sqrt(x**2*_f_ + _d_)), x)) + Star(r/(3*a_), Int((2*r + s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 + r*s*x + s**2*x**2)), x))),
+        replacement=With({r: Numerator(Rt(-a_/_b_, 3)), s: Denominator(Rt(-a_/_b_, 3))}, Star(r/(3*a_), Int(1/((r - s*x)*sqrt(x**2*_f_ + _d_)), x)) + Star(r/(3*a_), Int((2*r + s*x)/(sqrt(x**2*_f_ + _d_)*(r**2 + r*s*x + s**2*x**2)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=9,
     ),
@@ -396,7 +396,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), NeQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0),),
-        replacement=With({q: (_b_/a_)**(sympy.S(1)/3)}, Star(-q/(-q*c_ + _d_*(1 + sqrt(3))), Int(1/sqrt(x**3*_b_ + a_), x)) + Star(_d_/(-q*c_ + _d_*(1 + sqrt(3))), Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x))),
+        replacement=With({q: Rt(_b_/a_, 3)}, Star(-q/(-q*c_ + _d_*(1 + sqrt(3))), Int(1/sqrt(x**3*_b_ + a_), x)) + Star(_d_/(-q*c_ + _d_*(1 + sqrt(3))), Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=34,
     ),
@@ -460,7 +460,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_], x), NeQ(-c_*_f_ + _d_*_e_, 0), NeQ(-8*a_**2*_d_**6 - 20*a_*_b_*c_**3*_d_**3 + _b_**2*c_**6, 0), NeQ(-8*a_**2*_f_**6 - 20*a_*_b_*_e_**3*_f_**3 + _b_**2*_e_**6, 0),),
-        replacement=With({q: (_b_/a_)**(sympy.S(1)/3)}, Star((-q*_e_ + _f_*(1 + sqrt(3)))/(-q*c_ + _d_*(1 + sqrt(3))), Int(1/sqrt(x**3*_b_ + a_), x)) + Star((-c_*_f_ + _d_*_e_)/(-q*c_ + _d_*(1 + sqrt(3))), Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x))),
+        replacement=With({q: Rt(_b_/a_, 3)}, Star((-q*_e_ + _f_*(1 + sqrt(3)))/(-q*c_ + _d_*(1 + sqrt(3))), Int(1/sqrt(x**3*_b_ + a_), x)) + Star((-c_*_f_ + _d_*_e_)/(-q*c_ + _d_*(1 + sqrt(3))), Int((q*x + 1 + sqrt(3))/((x*_d_ + c_)*sqrt(x**3*_b_ + a_)), x))),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=42,
     ),
@@ -500,7 +500,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*(x**3*_b_ + a_)**(sympy.S(1)/3)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(a_*_d_**3 + _b_*c_**3, 0),),
-        replacement=2**(sympy.S(2)/3)*log((-x*_d_ + c_)*(x*_d_ + c_)**2)/(8*_b_**(sympy.S(1)/3)*c_) - 3*2**(sympy.S(2)/3)*log(_b_**(sympy.S(1)/3)*(-x*_d_ + c_) + 2**(sympy.S(2)/3)*_d_*(x**3*_b_ + a_)**(sympy.S(1)/3))/(8*_b_**(sympy.S(1)/3)*c_) + 2**(sympy.S(2)/3)*sqrt(3)*atan(sqrt(3)*(-2**(sympy.S(1)/3)*_b_**(sympy.S(1)/3)*(-x*_d_ + c_)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)) + 1)/3)/(4*_b_**(sympy.S(1)/3)*c_),
+        replacement=2**(sympy.S(2)/3)*log((-x*_d_ + c_)*(x*_d_ + c_)**2)/(8*c_*Rt(_b_, 3)) - 3*2**(sympy.S(2)/3)*log(2**(sympy.S(2)/3)*_d_*(x**3*_b_ + a_)**(sympy.S(1)/3) + (-x*_d_ + c_)*Rt(_b_, 3))/(8*c_*Rt(_b_, 3)) + 2**(sympy.S(2)/3)*sqrt(3)*atan(sqrt(3)*(1 - 2**(sympy.S(1)/3)*(-x*_d_ + c_)*Rt(_b_, 3)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)))/3)/(4*c_*Rt(_b_, 3)),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=47,
     ),
@@ -516,7 +516,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + e_)/((x*_d_ + c_)*(x**3*_b_ + a_)**(sympy.S(1)/3)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, e_, _f_], x), EqQ(c_*_f_ + _d_*e_, 0), EqQ(-a_*_d_**3 + 2*_b_*c_**3, 0),),
-        replacement=_f_*log(x*_d_ + c_)/(_b_**(sympy.S(1)/3)*_d_) - 3*_f_*log(_b_**(sympy.S(1)/3)*(x*_d_ + 2*c_) - _d_*(x**3*_b_ + a_)**(sympy.S(1)/3))/(2*_b_**(sympy.S(1)/3)*_d_) + sqrt(3)*_f_*atan(sqrt(3)*(2*_b_**(sympy.S(1)/3)*(x*_d_ + 2*c_)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)) + 1)/3)/(_b_**(sympy.S(1)/3)*_d_),
+        replacement=_f_*log(x*_d_ + c_)/(_d_*Rt(_b_, 3)) - 3*_f_*log(-_d_*(x**3*_b_ + a_)**(sympy.S(1)/3) + (x*_d_ + 2*c_)*Rt(_b_, 3))/(2*_d_*Rt(_b_, 3)) + sqrt(3)*_f_*atan(sqrt(3)*(1 + 2*(x*_d_ + 2*c_)*Rt(_b_, 3)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)))/3)/(_d_*Rt(_b_, 3)),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=49,
     ),
@@ -540,7 +540,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/((x*_d_ + c_)*(x**3*_b_ + a_)**(sympy.S(2)/3)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(-a_*_d_**3 + 2*_b_*c_**3, 0),),
-        replacement=With({q: _b_**(sympy.S(1)/3)}, -_d_*log(q*x - (x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) + 3*_d_*log(q*(x*_d_ + 2*c_) - _d_*(x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) - _d_*log(x*_d_ + c_)/(2*q**2*c_**2) - sqrt(3)*_d_*atan(sqrt(3)*(2*q*x/(x**3*_b_ + a_)**(sympy.S(1)/3) + 1)/3)/(6*q**2*c_**2) + sqrt(3)*_d_*atan(sqrt(3)*(2*q*(x*_d_ + 2*c_)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)) + 1)/3)/(2*q**2*c_**2)),
+        replacement=With({q: Rt(_b_, 3)}, -_d_*log(q*x - (x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) + 3*_d_*log(q*(x*_d_ + 2*c_) - _d_*(x**3*_b_ + a_)**(sympy.S(1)/3))/(4*q**2*c_**2) - _d_*log(x*_d_ + c_)/(2*q**2*c_**2) - sqrt(3)*_d_*atan(sqrt(3)*(2*q*x/(x**3*_b_ + a_)**(sympy.S(1)/3) + 1)/3)/(6*q**2*c_**2) + sqrt(3)*_d_*atan(sqrt(3)*(2*q*(x*_d_ + 2*c_)/(_d_*(x**3*_b_ + a_)**(sympy.S(1)/3)) + 1)/3)/(2*q**2*c_**2)),
         module_name='1.4.3 Miscellaneous algebraic functions',
         rule_number=52,
     ),

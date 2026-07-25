@@ -212,7 +212,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.sqrt((_c_ * sympy.Function('ProductLog')((_a_ + (_b_ * x))))) * (d_ + (_d_ * sympy.Function('ProductLog')((_a_ + (_b_ * x)))))))**(Integer(-1)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), PosQ(_c_),),
-        replacement=(sympy.root((sympy.pi * _c_), Integer(2)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ + (_b_ * x))))) * (sympy.root(_c_, Integer(2)))**(Integer(-1)))) * ((_b_ * _c_ * _d_))**(Integer(-1))),
+        replacement=(Rt((sympy.pi * _c_), Integer(2)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ + (_b_ * x))))) * (Rt(_c_, Integer(2)))**(Integer(-1)))) * ((_b_ * _c_ * _d_))**(Integer(-1))),
         module_name='8.9 Product logarithm function',
         rule_number=15,
     ),
@@ -220,7 +220,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((sympy.sqrt((_c_ * sympy.Function('ProductLog')((_a_ + (_b_ * x))))) * (d_ + (_d_ * sympy.Function('ProductLog')((_a_ + (_b_ * x)))))))**(Integer(-1)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NegQ(_c_),),
-        replacement=(sympy.root(((Integer(-1) * sympy.pi) * _c_), Integer(2)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ + (_b_ * x))))) * (sympy.root((Integer(-1) * _c_), Integer(2)))**(Integer(-1)))) * ((_b_ * _c_ * _d_))**(Integer(-1))),
+        replacement=(Rt(((Integer(-1) * sympy.pi) * _c_), Integer(2)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ + (_b_ * x))))) * (Rt((Integer(-1) * _c_), Integer(2)))**(Integer(-1)))) * ((_b_ * _c_ * _d_))**(Integer(-1))),
         module_name='8.9 Product logarithm function',
         rule_number=16,
     ),
@@ -284,7 +284,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((((_c_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_)))))**(p_) * ((d_ + (_d_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_))))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), IntegerQ(1/_n_), EqQ(p_, sympy.S.Half - 1/_n_), PosQ(_c_*_n_),),
-        replacement=(sympy.root((sympy.pi * _c_ * _n_), Integer(2)) * ((_d_ * _n_ * (_a_)**((_n_)**(Integer(-1))) * (_c_)**((_n_)**(Integer(-1)))))**(Integer(-1)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (sympy.root((_c_ * _n_), Integer(2)))**(Integer(-1))))),
+        replacement=(Rt((sympy.pi * _c_ * _n_), Integer(2)) * ((_d_ * _n_ * (_a_)**((_n_)**(Integer(-1))) * (_c_)**((_n_)**(Integer(-1)))))**(Integer(-1)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (Rt((_c_ * _n_), Integer(2)))**(Integer(-1))))),
         module_name='8.9 Product logarithm function',
         rule_number=24,
     ),
@@ -292,7 +292,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((((_c_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_)))))**(p_) * ((d_ + (_d_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_))))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), IntegerQ(1/_n_), EqQ(p_, sympy.S.Half - 1/_n_), NegQ(_c_*_n_),),
-        replacement=(sympy.root(((Integer(-1) * sympy.pi) * _c_ * _n_), Integer(2)) * ((_d_ * _n_ * (_a_)**((_n_)**(Integer(-1))) * (_c_)**((_n_)**(Integer(-1)))))**(Integer(-1)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (sympy.root(((Integer(-1) * _c_) * _n_), Integer(2)))**(Integer(-1))))),
+        replacement=(Rt(((Integer(-1) * sympy.pi) * _c_ * _n_), Integer(2)) * ((_d_ * _n_ * (_a_)**((_n_)**(Integer(-1))) * (_c_)**((_n_)**(Integer(-1)))))**(Integer(-1)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (Rt(((Integer(-1) * _c_) * _n_), Integer(2)))**(Integer(-1))))),
         module_name='8.9 Product logarithm function',
         rule_number=25,
     ),
@@ -396,7 +396,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((x)**(_m_) * ((_c_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_)))))**(p_) * ((d_ + (_d_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_))))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_], x), NeQ(_m_, -1), IntegerQ(p_ + sympy.S(-1)/2), EqQ(_m_ + _n_*(p_ + sympy.S(-1)/2), -1), PosQ(_c_/(p_ + sympy.S(-1)/2)),),
-        replacement=((_a_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * (_c_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * sympy.root((sympy.pi * _c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (sympy.root((_c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((_d_ * _n_))**(Integer(-1))),
+        replacement=((_a_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * (_c_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * Rt((sympy.pi * _c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)) * sympy.erf((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (Rt((_c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((_d_ * _n_))**(Integer(-1))),
         module_name='8.9 Product logarithm function',
         rule_number=38,
     ),
@@ -404,7 +404,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(((x)**(_m_) * ((_c_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_)))))**(p_) * ((d_ + (_d_ * sympy.Function('ProductLog')((_a_ * (x)**(_n_))))))**(Integer(-1))), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_], x), NeQ(_m_, -1), IntegerQ(p_ + sympy.S(-1)/2), EqQ(_m_ + _n_*(p_ + sympy.S(-1)/2), -1), NegQ(_c_/(p_ + sympy.S(-1)/2)),),
-        replacement=((_a_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * (_c_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * sympy.root(((Integer(-1) * sympy.pi) * _c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (sympy.root(((Integer(-1) * _c_) * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((_d_ * _n_))**(Integer(-1))),
+        replacement=((_a_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * (_c_)**((p_ + (Integer(-1) * (Integer(2))**(Integer(-1))))) * Rt(((Integer(-1) * sympy.pi) * _c_ * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)) * sympy.erfi((sympy.sqrt((_c_ * ProductLog((_a_ * (x)**(_n_))))) * (Rt(((Integer(-1) * _c_) * ((p_ + (Integer(-1) * (Integer(2))**(Integer(-1)))))**(Integer(-1))), Integer(2)))**(Integer(-1)))) * ((_d_ * _n_))**(Integer(-1))),
         module_name='8.9 Product logarithm function',
         rule_number=39,
     ),

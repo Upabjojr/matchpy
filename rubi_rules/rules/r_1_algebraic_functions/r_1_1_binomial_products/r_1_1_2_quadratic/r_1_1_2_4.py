@@ -201,7 +201,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x/((x**2*_b_ + a_)**(sympy.S(1)/4)*(x**2*_d_ + c_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(-2*a_*_d_ + _b_*c_, 0), PosQ(a_),),
-        replacement=-sqrt(2)*atan(sqrt(2)*(sqrt(a_) - sqrt(x**2*_b_ + a_))/(2*a_**(sympy.S(1)/4)*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_**(sympy.S(1)/4)*_d_) - sqrt(2)*atanh(sqrt(2)*(sqrt(a_) + sqrt(x**2*_b_ + a_))/(2*a_**(sympy.S(1)/4)*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_**(sympy.S(1)/4)*_d_),
+        replacement=-sqrt(2)*atan(sqrt(2)*(-sqrt(x**2*_b_ + a_) + Rt(a_, 4)**2)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)*Rt(a_, 4)))/(2*_d_*Rt(a_, 4)) - sqrt(2)*atanh(sqrt(2)*(sqrt(x**2*_b_ + a_) + Rt(a_, 4)**2)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)*Rt(a_, 4)))/(2*_d_*Rt(a_, 4)),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=14,
     ),
@@ -217,7 +217,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**2/((x**2*_b_ + a_)**(sympy.S(3)/4)*(x**2*_d_ + c_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(-2*a_*_d_ + _b_*c_, 0), PosQ(_b_**2/a_),),
-        replacement=-_b_*atan((_b_ + sqrt(_b_**2/a_)*sqrt(x**2*_b_ + a_))/(x*(_b_**2/a_)**(sympy.S(3)/4)*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(a_*_d_*(_b_**2/a_)**(sympy.S(3)/4)) + _b_*atanh((_b_ - sqrt(_b_**2/a_)*sqrt(x**2*_b_ + a_))/(x*(_b_**2/a_)**(sympy.S(3)/4)*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(a_*_d_*(_b_**2/a_)**(sympy.S(3)/4)),
+        replacement=-_b_*atan((_b_ + sqrt(x**2*_b_ + a_)*Rt(_b_**2/a_, 4)**2)/(x*(x**2*_b_ + a_)**(sympy.S(1)/4)*Rt(_b_**2/a_, 4)**3))/(a_*_d_*Rt(_b_**2/a_, 4)**3) + _b_*atanh((_b_ - sqrt(x**2*_b_ + a_)*Rt(_b_**2/a_, 4)**2)/(x*(x**2*_b_ + a_)**(sympy.S(1)/4)*Rt(_b_**2/a_, 4)**3))/(a_*_d_*Rt(_b_**2/a_, 4)**3),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=16,
     ),
@@ -225,7 +225,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**2/((x**2*_b_ + a_)**(sympy.S(3)/4)*(x**2*_d_ + c_)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_], x), EqQ(-2*a_*_d_ + _b_*c_, 0), NegQ(_b_**2/a_),),
-        replacement=-sqrt(2)*_b_*atan(sqrt(2)*x*(-_b_**2/a_)**(sympy.S(1)/4)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_*_d_*(-_b_**2/a_)**(sympy.S(3)/4)) + sqrt(2)*_b_*atanh(sqrt(2)*x*(-_b_**2/a_)**(sympy.S(1)/4)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_*_d_*(-_b_**2/a_)**(sympy.S(3)/4)),
+        replacement=-sqrt(2)*_b_*atan(sqrt(2)*x*Rt(-_b_**2/a_, 4)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_*_d_*Rt(-_b_**2/a_, 4)**3) + sqrt(2)*_b_*atanh(sqrt(2)*x*Rt(-_b_**2/a_, 4)/(2*(x**2*_b_ + a_)**(sympy.S(1)/4)))/(2*a_*_d_*Rt(-_b_**2/a_, 4)**3),
         module_name='1.1.2.4 (e x)^m (a+b x^2)^p (c+d x^2)^q',
         rule_number=17,
     ),

@@ -376,7 +376,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(InertCsc(x*_f_ + _e_)/(sqrt(a_ + _b_*InertCsc(x*_f_ + _e_))*sqrt(c_ + _d_*InertCsc(x*_f_ + _e_))), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_], x), NeQ(-a_*_d_ + _b_*c_, 0), NeQ(a_**2 - _b_**2, 0), NeQ(c_**2 - _d_**2, 0),),
-        replacement=sqrt((1 - csc(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*sqrt((a_*_d_ - _b_*c_)*(csc(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(-2*c_ - 2*_d_*csc(x*_f_ + _e_))*elliptic_f(asin(sqrt((c_ + _d_)/(a_ + _b_))*sqrt(a_ + _b_*csc(x*_f_ + _e_))/sqrt(c_ + _d_*csc(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((c_ + _d_)/(a_ + _b_))*(-a_*_d_ + _b_*c_)*cot(x*_f_ + _e_)),
+        replacement=sqrt((1 - csc(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*sqrt((a_*_d_ - _b_*c_)*(csc(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(-2*c_ - 2*_d_*csc(x*_f_ + _e_))*elliptic_f(asin(sqrt(a_ + _b_*csc(x*_f_ + _e_))*Rt((c_ + _d_)/(a_ + _b_), 2)/sqrt(c_ + _d_*csc(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*(-a_*_d_ + _b_*c_)*Rt((c_ + _d_)/(a_ + _b_), 2)*cot(x*_f_ + _e_)),
         module_name='4.5.2.2 (g sec)^p (a+b sec)^m (c+d sec)^n',
         rule_number=35,
     ),
@@ -456,7 +456,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((A_ + _B_*InertSec(x*_f_ + _e_))*InertSec(x*_f_ + _e_)/(sqrt(a_ + _b_*InertSec(x*_f_ + _e_))*(c_ + _d_*InertSec(x*_f_ + _e_))**(sympy.S(3)/2)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, A_, _B_], x), NeQ(-a_*_d_ + _b_*c_, 0), NeQ(a_**2 - _b_**2, 0), NeQ(c_**2 - _d_**2, 0), EqQ(A_, _B_),),
-        replacement=2*A_*sqrt((1 - sec(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*sec(x*_f_ + _e_))))*(sec(x*_f_ + _e_) + 1)*elliptic_e(asin(sqrt((c_ + _d_)/(a_ + _b_))*sqrt(a_ + _b_*sec(x*_f_ + _e_))/sqrt(c_ + _d_*sec(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((c_ + _d_)/(a_ + _b_))*sqrt((a_*_d_ - _b_*c_)*(sec(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*sec(x*_f_ + _e_))))*(-a_*_d_ + _b_*c_)*tan(x*_f_ + _e_)),
+        replacement=2*A_*sqrt((1 - sec(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*sec(x*_f_ + _e_))))*(sec(x*_f_ + _e_) + 1)*elliptic_e(asin(sqrt(a_ + _b_*sec(x*_f_ + _e_))*Rt((c_ + _d_)/(a_ + _b_), 2)/sqrt(c_ + _d_*sec(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((a_*_d_ - _b_*c_)*(sec(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*sec(x*_f_ + _e_))))*(-a_*_d_ + _b_*c_)*Rt((c_ + _d_)/(a_ + _b_), 2)*tan(x*_f_ + _e_)),
         module_name='4.5.2.2 (g sec)^p (a+b sec)^m (c+d sec)^n',
         rule_number=45,
     ),
@@ -464,7 +464,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((A_ + _B_*InertCsc(x*_f_ + _e_))*InertCsc(x*_f_ + _e_)/(sqrt(a_ + _b_*InertCsc(x*_f_ + _e_))*(c_ + _d_*InertCsc(x*_f_ + _e_))**(sympy.S(3)/2)), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, A_, _B_], x), NeQ(-a_*_d_ + _b_*c_, 0), NeQ(a_**2 - _b_**2, 0), NeQ(c_**2 - _d_**2, 0), EqQ(A_, _B_),),
-        replacement=-2*A_*sqrt((1 - csc(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(csc(x*_f_ + _e_) + 1)*elliptic_e(asin(sqrt((c_ + _d_)/(a_ + _b_))*sqrt(a_ + _b_*csc(x*_f_ + _e_))/sqrt(c_ + _d_*csc(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((c_ + _d_)/(a_ + _b_))*sqrt((a_*_d_ - _b_*c_)*(csc(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(-a_*_d_ + _b_*c_)*cot(x*_f_ + _e_)),
+        replacement=-2*A_*sqrt((1 - csc(x*_f_ + _e_))*(-a_*_d_ + _b_*c_)/((a_ + _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(csc(x*_f_ + _e_) + 1)*elliptic_e(asin(sqrt(a_ + _b_*csc(x*_f_ + _e_))*Rt((c_ + _d_)/(a_ + _b_), 2)/sqrt(c_ + _d_*csc(x*_f_ + _e_))), (a_ + _b_)*(c_ - _d_)/((a_ - _b_)*(c_ + _d_)))/(_f_*sqrt((a_*_d_ - _b_*c_)*(csc(x*_f_ + _e_) + 1)/((a_ - _b_)*(c_ + _d_*csc(x*_f_ + _e_))))*(-a_*_d_ + _b_*c_)*Rt((c_ + _d_)/(a_ + _b_), 2)*cot(x*_f_ + _e_)),
         module_name='4.5.2.2 (g sec)^p (a+b sec)^m (c+d sec)^n',
         rule_number=46,
     ),
