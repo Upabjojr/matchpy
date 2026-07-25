@@ -671,7 +671,26 @@ def test_NumericQ():
     assert NumericQ(sin(cos(2)))
 
 def test_NumberQ():
-    assert NumberQ(pi)
+    # Mathematica NumberQ[u] is True ONLY for explicit numbers -- Integer/Rational/Real
+    # or Complex[a,b] with explicit parts. Cross-checked against real Rubi (ssh pi):
+    # Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are all NOT numbers (they are symbolic
+    # constants / radicals), while I, 3*I and 2+3*I ARE. (SymPy's is_number is broader
+    # -- it accepts every constant -- which used to make NumberQ[(-1)^(1/4)] wrongly
+    # True and crash SignOfFactor; see test_SignOfFactor_complex_numeric_factor.)
+    assert NumberQ(S(2))
+    assert NumberQ(Rational(3, 2))
+    assert NumberQ(sympify(2.5))
+    assert NumberQ(I)
+    assert NumberQ(3*I)
+    assert NumberQ(2 + 3*I)
+    assert not NumberQ(pi)
+    assert not NumberQ(E)
+    assert not NumberQ(sqrt(2))
+    assert not NumberQ((-1)**(S(1)/4))
+    assert not NumberQ(sqrt(2)*I)
+    assert not NumberQ(-(-1)**(S(3)/4) + (-1)**(S(1)/4))   # really sqrt(2), but a Plus of Powers
+    assert not NumberQ(x)
+    assert not NumberQ(2*x)
 
 def test_CoefficientList():
     assert CoefficientList(1 + a*x, x) == [1, a]
@@ -979,12 +998,29 @@ def test_NumericFactor():
     assert NumericFactor(a**(S(1)/3)) == S(1)
     assert NumericFactor(a*S(3)) == S(3)
     assert NumericFactor(a + b) == S(1)
+    # Radical / symbolic-constant arguments are NOT Mathematica numbers, so they take
+    # the Sum/Power branch. Cross-checked vs real Rubi (ssh pi):
+    assert NumericFactor((S(1)/3)**(S(1)/3)) == Rational(1, 3)   # MMA: 1/3
+    assert NumericFactor(pi) == S(1)                              # MMA: 1
+
+
+def test_NumericFactor_complex_value_returns_real():
+    """Regression: NumericFactor of a Plus-of-Powers that is REALLY a real number
+    (e.g. -(-1)^(3/4)+(-1)^(1/4), which equals Sqrt[2]) must not be mistaken for an
+    explicit complex number. Mathematica returns 1 here (NumberQ is False -> Sum branch),
+    and the old SymPy is_number path returned the complex-looking value and crashed a
+    later `< 0` test. Cross-checked vs real Rubi (ssh pi)."""
+    val = -(-1)**(S(3)/4) + (-1)**(S(1)/4)
+    assert NumericFactor(val) == S(1)
 
 def test_NonnumericFactors():
     assert NonnumericFactors(S(3)) == S(1)
     assert NonnumericFactors(I) == I
     assert NonnumericFactors(S(3) + I) == S(3) + I
-    assert NonnumericFactors((S(1)/3)**(S(1)/3)) == S(1)
+    # (1/3)^(1/3) is a radical (NOT a Mathematica number), so its numeric factor is 1/3
+    # and the non-numeric part is 3^(2/3) -- cross-checked against real Rubi (ssh pi).
+    # (Previously NumberQ wrongly accepted the radical and this returned 1.)
+    assert NonnumericFactors((S(1)/3)**(S(1)/3)) == S(3)**(S(2)/3)
     assert NonnumericFactors(log(a)) == log(a)
 
 def test_Prepend():
@@ -1301,6 +1337,22 @@ def test_NormalizeLeadTermSigns():
 def test_SignOfFactor():
     assert SignOfFactor(S(-x + 3)) == [1, -x + 3]
     assert SignOfFactor(S(-x)) == [-1, x]
+
+
+def test_SignOfFactor_complex_numeric_factor():
+    """Regression for the 1/(x^4+1) crash: SignOfFactor tests ``NumericFactor(First(u)) < 0``
+    on a sum whose leading term's numeric factor SymPy has not simplified to an obvious
+    real (here it equals Sqrt[2]). A bare ``< 0`` raised TypeError; matching Mathematica
+    (Less on a non-real stays falsy) it must return sign 1, no exception. Cross-checked
+    vs real Rubi (ssh pi): SignOfFactor[u] = {1, u}."""
+    val = -(-1)**(S(3)/4) + (-1)**(S(1)/4)
+    u = (((-1)**(S(3)/4) + (-1)**(S(1)/4))/(4*I*x + 4*(-1)**(S(1)/4))
+         + ((-1)**(S(3)/4) + (-1)**(S(1)/4))/(-4*I*x + 4*(-1)**(S(1)/4))
+         + val/(4*x + 4*(-1)**(S(1)/4))
+         + val/(-4*x + 4*(-1)**(S(1)/4)))
+    sign, rest = SignOfFactor(u)
+    assert sign == 1
+    assert rest == u
 
 def test_NormalizePowerOfLinear():
     assert NormalizePowerOfLinear((x + 3)**5, x) == (x + 3)**5

@@ -785,9 +785,29 @@ def SinhCoshQ(f):
 # Numerator moved to sympy_wolfram.functions_eager (imported above); see Denominator.
 
 def NumberQ(u):
-    if isinstance(u, (int, float)):
+    # Mathematica NumberQ[u]: True iff u is an EXPLICIT number -- Integer, Rational,
+    # Real, or Complex[a,b] with explicit real/imaginary parts (so I, 3*I, 2+3*I are
+    # numbers, but Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are NOT).
+    #
+    # SymPy's ``is_number`` is broader: it is True for every constant, including
+    # radicals and symbolic constants. Using it made NumberQ[(-1)^(1/4)] wrongly True,
+    # so NumericFactor took its NumberQ branch and returned a complex-looking value
+    # (really Sqrt[2]) instead of Mathematica's 1 -- which then crashed a `< 0` test in
+    # SignOfFactor. Match Mathematica: explicit real, or explicit a+b*I.
+    if isinstance(u, (int, float, complex)):
         return True
-    return u.is_number
+    u = sympify(u)
+    if isinstance(u, (Integer, Rational, Float)):
+        return True
+    if u.is_number:
+        try:
+            re_u, im_u = u.as_real_imag()
+        except (TypeError, ValueError, AttributeError):
+            return False
+        return (im_u != 0
+                and isinstance(re_u, (Integer, Rational, Float))
+                and isinstance(im_u, (Integer, Rational, Float)))
+    return False
 
 def NumericQ(u):
     return N(u).is_number
@@ -1386,7 +1406,7 @@ def NumericFactor(u):
         else:
             m = NumericFactor(First(u))
             n = NumericFactor(Rest(u))
-            if m < 0 and n < 0:
+            if Less(m, 0) and Less(n, 0):   # robust: see SignOfFactor note on Less vs <
                 return -GCD(-m, -n)
             else:
                 return GCD(m, n)
@@ -3514,10 +3534,15 @@ def NormalizeSumFactors(u):
         return u
 
 def SignOfFactor(u):
-    if RationalQ(u) and u < 0 or SumQ(u) and NumericFactor(First(u)) < 0:
+    # ``Less(x, 0)`` rather than bare ``x < 0``: Mathematica's Less on a non-real
+    # stays unevaluated -> falsy, so the branch is simply not taken. SymPy's ``<``
+    # instead returns a Relational whose bool() raises. NumericFactor can hand back a
+    # value SymPy has not simplified to an obvious real (e.g. -(-1)^(3/4)+(-1)^(1/4),
+    # which is Sqrt[2]); Less treats "not provably negative" as False, matching Rubi.
+    if RationalQ(u) and Less(u, 0) or SumQ(u) and Less(NumericFactor(First(u)), 0):
         return [-1, -u]
     elif IntegerPowerQ(u):
-        if SumQ(u.base) and NumericFactor(First(u.base)) < 0:
+        if SumQ(u.base) and Less(NumericFactor(First(u.base)), 0):
             return [(-1)**u.exp, (-u.base)**u.exp]
     elif ProductQ(u):
         k = 1

@@ -76,6 +76,11 @@ FULL_RULESET_INTEGRANDS = [
     (1/x, None), (x**2, None), (x**5, None), (sqrt(x), None), (1/sqrt(x), None),
     (1/(3*x + 2), None), ((3*x + 2)**4, None),
     (1/(x**2 + 1), None), ((x**2 + 1)**(-2), None), (1/(x**2 + 4), None),
+    # 1/(x^4+1): its partial-fraction path produces terms whose numeric factor SymPy
+    # leaves as an unsimplified Plus-of-Powers (really Sqrt[2]); SignOfFactor's `< 0`
+    # test used to crash with TypeError on that non-real form. Guards the NumberQ /
+    # SignOfFactor fix (see test_SignOfFactor_complex_numeric_factor).
+    (1/(x**4 + 1), None),
     (1/sqrt(x**2 + 1), None), (sqrt(x**2 + 1), None), (1/(x*(x + 1)), None),
     (1/(x*(6*x + 4)), None),   # Simplify nc_simplify RecursionError fix
     # hyper/TupleArg round-trip fix + DerivativeDivides/Condition bool-leak fix:

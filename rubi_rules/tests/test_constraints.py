@@ -97,12 +97,17 @@ class TestNumberQ:
         assert c.check(n=Integer(5)) == True
         assert c.check(n=Rational(1, 2)) == True
         assert c.check(n=Float(3.14)) == True
-        assert c.check(n=pi) == True
+        assert c.check(n=I) == True
+        assert c.check(n=2 + 3*I) == True
 
     def test_not_number(self):
         c = NumberQ('n')
         assert c.check(n=x) == False
         assert c.check(n=x + 1) == False
+        # Mathematica NumberQ is False for symbolic constants and radicals
+        # (only explicit Integer/Rational/Real/Complex count). Verified vs real Rubi.
+        assert c.check(n=pi) == False
+        assert c.check(n=sqrt(2)) == False
 
 
 class TestAtomQ:
