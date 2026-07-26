@@ -250,6 +250,24 @@ def _check_log_times_polynomial():
         ('Unintegrable', 'CannotIntegrate'))
 
 
+# Two integrands the correctness audit hit with RecursionError; both integrate cleanly
+# now (a side effect of the PolynomialQuotient-Laurent / If.doit-MatchQ / FractionalPower
+# fixes changed the deep reduction paths that used to recurse). Verified numerically.
+_A_rf, _B_rf, _C_rf, _f_rf = sympy.symbols('A B C f')
+_RECURSION_FIX_INTEGRANDS = [
+    (_A_rf + _B_rf*x + _C_rf*x**2)/(sqrt(_a + _b*x)*(_e + _f_rf*x)**2*sqrt(_a*_c - _b*_c*x)),
+    (_a*x**3 + 2*_b*_n*x**2*log(_c*x**_n))/(_a*x**2 + _b*x*log(_c*x**_n)**2)**3,
+]
+
+
+def _check_recursion_fixes():
+    """Integrands that used to blow the Python recursion limit; now solve cleanly."""
+    return _check_symbolic_group(
+        'recursion-fix', _RECURSION_FIX_INTEGRANDS,
+        {_a: 2, _b: 3, _c: 5, _e: 2, _f_rf: 1, _A_rf: 1, _B_rf: 1, _C_rf: 1, _n: 2},
+        (0.35, 0.6, 1.1, 1.7), ('Unintegrable', 'CannotIntegrate'))
+
+
 # Rational functions of a single exponential f(E^(a+b x)). Rubi integrates these
 # via the FunctionOfExponential substitution (rule 2.3:[96] / MMA rule 2692):
 # v = FunctionOfExponential[u,x] = E^(a+b x), then Int[FunctionOfExponentialFunction[u,x]/x].
@@ -572,6 +590,7 @@ def test_full_ruleset_integrals():
     failures += _check_function_of_exponential()  # FunctionOfExponential subst (rule 96)
     failures += _check_inthide()                  # IntHide delegates to rubi_integrate
     failures += _check_deferred_crash_fixes()     # symbolic-n Coeff + non-real compare
+    failures += _check_recursion_fixes()          # deep-reduction paths that used to recurse
     failures += _check_no_crash()                 # nested-exp preprocessing crash
     failures += _check_derivative_of_unknown_function()  # Derivative[n_][f_][x_] + sum rules
     failures += _check_plain_sums_still_split()         # whole-sum attempt is non-invasive
