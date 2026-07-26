@@ -156,13 +156,13 @@ def test_eager_FreeQ():
     """FreeQ is a standard Wolfram predicate lifted here from rubi_rules; a list is free
     iff every element is. It accepts either SymPy or match-bound MatchPy values."""
     a, b, y = sympy.symbols('a b y')
-    assert fe.FreeQ(a + b * y, x) is True          # no x
-    assert fe.FreeQ(a + b * x, x) is False         # contains x
-    assert fe.FreeQ([a, b, y], x) is True          # all free
-    assert fe.FreeQ([a, b * x], x) is False        # one contains x
+    assert fe.eager_FreeQ(a + b * y, x) is True          # no x
+    assert fe.eager_FreeQ(a + b * x, x) is False         # contains x
+    assert fe.eager_FreeQ([a, b, y], x) is True          # all free
+    assert fe.eager_FreeQ([a, b * x], x) is False        # one contains x
     # matchpy SymbolWrapper coerces to its sympy value
     from matchpy.expressions.expressions import SymbolWrapper
-    assert fe.FreeQ(SymbolWrapper(a), x) is True
+    assert fe.eager_FreeQ(SymbolWrapper(a), x) is True
 
 
 def test_freeq_lifted_and_reexported():
@@ -170,23 +170,23 @@ def test_freeq_lifted_and_reexported():
     rubi_rules re-exports the SAME objects, and the Rubi FreeQ constraint delegates here."""
     import importlib
     uf = importlib.import_module('rubi_rules.utils.utility_functions')
-    assert uf.FreeQ is fe.FreeQ
+    assert uf.eager_FreeQ is fe.eager_FreeQ
     assert uf._ensure_sympy is fe._ensure_sympy
 
 
 def test_eager_IntegerQ():
     """IntegerQ is a standard Wolfram predicate lifted here; True iff an explicit integer."""
-    assert fe.IntegerQ(S(1)) is True
-    assert fe.IntegerQ(S(-1)) is True
-    assert fe.IntegerQ(S(-1.9)) is False
-    assert fe.IntegerQ(S(0.0)) is False
+    assert fe.eager_IntegerQ(S(1)) is True
+    assert fe.eager_IntegerQ(S(-1)) is True
+    assert fe.eager_IntegerQ(S(-1.9)) is False
+    assert fe.eager_IntegerQ(S(0.0)) is False
 
 
 def test_eager_AtomQ():
     """AtomQ is a standard Wolfram predicate lifted here; True iff no subexpressions."""
-    assert fe.AtomQ(x)
-    assert not fe.AtomQ(x + 1)
-    assert not fe.AtomQ([a, b])
+    assert fe.eager_AtomQ(x)
+    assert not fe.eager_AtomQ(x + 1)
+    assert not fe.eager_AtomQ([a, b])
 
 
 def test_eager_NumberQ():
@@ -195,32 +195,32 @@ def test_eager_NumberQ():
     real Rubi (ssh pi): Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are NOT numbers (symbolic
     constants / radicals), while I, 3*I and 2+3*I ARE. (SymPy's is_number is broader --
     it accepts every constant -- which used to make NumberQ[(-1)^(1/4)] wrongly True.)"""
-    assert fe.NumberQ(S(2))
-    assert fe.NumberQ(sympy.Rational(3, 2))
-    assert fe.NumberQ(sympy.sympify(2.5))
-    assert fe.NumberQ(I)
-    assert fe.NumberQ(3 * I)
-    assert fe.NumberQ(2 + 3 * I)
-    assert not fe.NumberQ(sympy.pi)
-    assert not fe.NumberQ(sympy.E)
-    assert not fe.NumberQ(sympy.sqrt(2))
-    assert not fe.NumberQ((-1) ** (S(1) / 4))
-    assert not fe.NumberQ(sympy.sqrt(2) * I)
-    assert not fe.NumberQ(-(-1) ** (S(3) / 4) + (-1) ** (S(1) / 4))  # really sqrt(2), but a Plus of Powers
-    assert not fe.NumberQ(x)
-    assert not fe.NumberQ(2 * x)
+    assert fe.eager_NumberQ(S(2))
+    assert fe.eager_NumberQ(sympy.Rational(3, 2))
+    assert fe.eager_NumberQ(sympy.sympify(2.5))
+    assert fe.eager_NumberQ(I)
+    assert fe.eager_NumberQ(3 * I)
+    assert fe.eager_NumberQ(2 + 3 * I)
+    assert not fe.eager_NumberQ(sympy.pi)
+    assert not fe.eager_NumberQ(sympy.E)
+    assert not fe.eager_NumberQ(sympy.sqrt(2))
+    assert not fe.eager_NumberQ((-1) ** (S(1) / 4))
+    assert not fe.eager_NumberQ(sympy.sqrt(2) * I)
+    assert not fe.eager_NumberQ(-(-1) ** (S(3) / 4) + (-1) ** (S(1) / 4))  # really sqrt(2), but a Plus of Powers
+    assert not fe.eager_NumberQ(x)
+    assert not fe.eager_NumberQ(2 * x)
 
 
 def test_eager_PolynomialQ():
     """PolynomialQ is a standard Wolfram predicate lifted here; polynomial test in a variable."""
     A, B, C = sympy.symbols('A B C')
-    assert not fe.PolynomialQ(x * (-1 + x ** 2), (1 + x) ** (S(1) / 2))
-    assert not fe.PolynomialQ((16 * x + 1) / ((x + 5) ** 2 * (x ** 2 + x + 1)), 2 * x)
-    assert not fe.PolynomialQ(A + b * x + c * x ** 2, x ** 2)
-    assert fe.PolynomialQ(A + B * x + C * x ** 2)
-    assert fe.PolynomialQ(A + B * x ** 4 + C * x ** 2, x ** 2)
-    assert fe.PolynomialQ(x ** 3, x)
-    assert not fe.PolynomialQ(sympy.sqrt(x), x)
+    assert not fe.eager_PolynomialQ(x * (-1 + x ** 2), (1 + x) ** (S(1) / 2))
+    assert not fe.eager_PolynomialQ((16 * x + 1) / ((x + 5) ** 2 * (x ** 2 + x + 1)), 2 * x)
+    assert not fe.eager_PolynomialQ(A + b * x + c * x ** 2, x ** 2)
+    assert fe.eager_PolynomialQ(A + B * x + C * x ** 2)
+    assert fe.eager_PolynomialQ(A + B * x ** 4 + C * x ** 2, x ** 2)
+    assert fe.eager_PolynomialQ(x ** 3, x)
+    assert not fe.eager_PolynomialQ(sympy.sqrt(x), x)
 
 
 def test_eager_PositiveQ():
@@ -228,21 +228,21 @@ def test_eager_PositiveQ():
 
     (A comparable value returns SymPy's ``BooleanTrue``/``BooleanFalse``, not a Python
     bool, so these use plain truthiness.)"""
-    assert fe.PositiveQ(S(1))
-    assert not fe.PositiveQ(S(-3))
-    assert not fe.PositiveQ(S(0))
-    assert not fe.PositiveQ(sympy.zoo)
-    assert not fe.PositiveQ(I)        # not comparable -> not positive
+    assert fe.eager_PositiveQ(S(1))
+    assert not fe.eager_PositiveQ(S(-3))
+    assert not fe.eager_PositiveQ(S(0))
+    assert not fe.eager_PositiveQ(sympy.zoo)
+    assert not fe.eager_PositiveQ(I)        # not comparable -> not positive
     d = sympy.Symbol('d')
-    assert fe.PositiveQ(b / (b * (b * c / (-a * d + b * c)) - a * (b * d / (-a * d + b * c))))
+    assert fe.eager_PositiveQ(b / (b * (b * c / (-a * d + b * c)) - a * (b * d / (-a * d + b * c))))
 
 
 def test_eager_MemberQ():
     """MemberQ is a standard Wolfram predicate lifted here (plain membership)."""
-    assert fe.MemberQ([a, b, c], b) is True
-    assert fe.MemberQ([sin, cos, sympy.log, sympy.tan], sin(x).func) is True
-    assert fe.MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, cos]) is True
-    assert fe.MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, sympy.tan]) is False
+    assert fe.eager_MemberQ([a, b, c], b) is True
+    assert fe.eager_MemberQ([sin, cos, sympy.log, sympy.tan], sin(x).func) is True
+    assert fe.eager_MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, cos]) is True
+    assert fe.eager_MemberQ([[sin, cos], [sympy.tan, sympy.cot]], [sin, sympy.tan]) is False
 
 
 def test_eager_MemberQ_head_wildcard_matches_by_class():
@@ -254,20 +254,20 @@ def test_eager_MemberQ_head_wildcard_matches_by_class():
     from sympy_matching.wild import HeadRef
     from sympy import asin, acos, atan, erf, fresnels
     # codegen form: HeadRef literals in the list
-    assert fe.MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(asin)) is True
-    assert fe.MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(atan)) is False
-    assert fe.MemberQ([HeadRef(erf), HeadRef(fresnels)], HeadRef(fresnels)) is True
+    assert fe.eager_MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(asin)) is True
+    assert fe.eager_MemberQ([HeadRef(asin), HeadRef(acos)], HeadRef(atan)) is False
+    assert fe.eager_MemberQ([HeadRef(erf), HeadRef(fresnels)], HeadRef(fresnels)) is True
     # bare-class list, HeadRef subject
-    assert fe.MemberQ([sin, cos], HeadRef(sin)) is True
+    assert fe.eager_MemberQ([sin, cos], HeadRef(sin)) is True
 
 
 def test_predicates_reexported_by_rubi():
     """rubi_rules re-exports the SAME eager predicate objects from this layer."""
     import importlib
     uf = importlib.import_module('rubi_rules.utils.utility_functions')
-    assert uf.IntegerQ is fe.IntegerQ
-    assert uf.PositiveQ is fe.PositiveQ
-    assert uf.MemberQ is fe.MemberQ
+    assert uf.eager_IntegerQ is fe.eager_IntegerQ
+    assert uf.eager_PositiveQ is fe.eager_PositiveQ
+    assert uf.eager_MemberQ is fe.eager_MemberQ
 
 
 def test_head_to_class_unwraps_headref_and_class():

@@ -72,11 +72,11 @@ class IGtQ(MathematicaConstraint):
         self._u = self.args[0]
         self._n = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, Greater
+        from .utility_functions import eager_IntegerQ, Greater
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         n = self._resolve(self._n, sk)
-        return IntegerQ(u) and Greater(u, n)
+        return eager_IntegerQ(u) and Greater(u, n)
     def __repr__(self):
         return f"IGtQ({self._u}, {self._n})"
 
@@ -87,11 +87,11 @@ class ILtQ(MathematicaConstraint):
         self._u = self.args[0]
         self._n = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, Less
+        from .utility_functions import eager_IntegerQ, Less
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         n = self._resolve(self._n, sk)
-        return IntegerQ(u) and Less(u, n)
+        return eager_IntegerQ(u) and Less(u, n)
     def __repr__(self):
         return f"ILtQ({self._u}, {self._n})"
 
@@ -102,11 +102,11 @@ class IGeQ(MathematicaConstraint):
         self._u = self.args[0]
         self._n = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, GreaterEqual
+        from .utility_functions import eager_IntegerQ, GreaterEqual
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         n = self._resolve(self._n, sk)
-        return IntegerQ(u) and GreaterEqual(u, n)
+        return eager_IntegerQ(u) and GreaterEqual(u, n)
     def __repr__(self):
         return f"IGeQ({self._u}, {self._n})"
 
@@ -117,11 +117,11 @@ class ILeQ(MathematicaConstraint):
         self._u = self.args[0]
         self._n = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, LessEqual
+        from .utility_functions import eager_IntegerQ, LessEqual
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         n = self._resolve(self._n, sk)
-        return IntegerQ(u) and LessEqual(u, n)
+        return eager_IntegerQ(u) and LessEqual(u, n)
     def __repr__(self):
         return f"ILeQ({self._u}, {self._n})"
 
@@ -1064,7 +1064,7 @@ class IntLinearQ(MathematicaConstraint):
         self._n = self.args[5]
         self._x = self.args[6]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, eager_IntegersQ, Less, Greater, IntLinearcQ as _IntLinearQ
+        from .utility_functions import eager_IntegerQ, eager_IntegersQ, Less, Greater, IntLinearcQ as _IntLinearQ
         sk = self._resolve_all(kwargs)
         a = self._resolve(self._a, sk)
         b = self._resolve(self._b, sk)
@@ -1139,8 +1139,8 @@ class FractionalPowerFactorQ(MathematicaConstraint):
         # NB import ProductQ from utility_functions: the bare name `ProductQ` in this
         # module is the CONSTRAINT CLASS (always truthy when constructed), so `if
         # ProductQ(u)` without this import wrongly took the product branch for EVERY u.
-        from .utility_functions import AtomQ, eager_PowerQ, eager_FractionQ, eager_First, eager_Rest, eager_ProductQ
-        if AtomQ(u):
+        from .utility_functions import eager_AtomQ, eager_PowerQ, eager_FractionQ, eager_First, eager_Rest, eager_ProductQ
+        if eager_AtomQ(u):
             # Mathematica: Head[u] === Complex -- True only for an explicit COMPLEX NUMBER
             # (I, 2*I as Complex[0,2], ...), NOT for every atom. The old `u.is_complex`
             # was wrong: in SymPy reals are complex, so it wrongly fired on real atoms.

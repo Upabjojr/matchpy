@@ -54,7 +54,7 @@ def _ensure_sympy(expr):
     return expr
 
 
-def FreeQ(nodes, var):
+def eager_FreeQ(nodes, var):
     """Mathematica ``FreeQ[expr, form]`` -- True iff ``form`` (``var``) occurs nowhere
     in ``expr``. A list/tuple of ``nodes`` is free iff *every* element is.
 
@@ -269,7 +269,7 @@ def eager_Apart(u, x):
     return u
 
 
-def PositiveQ(var):
+def eager_PositiveQ(var):
     """Mathematica ``PositiveQ[expr]`` — True iff ``expr`` is a positive real number.
 
     Standard Wolfram predicate: after :func:`Simplify`, a comparable value is tested
@@ -286,7 +286,7 @@ def PositiveQ(var):
     return False
 
 
-def IntegerQ(var):
+def eager_IntegerQ(var):
     """Mathematica ``IntegerQ[expr]`` — True iff ``expr`` is an explicit integer."""
     var = eager_Simplify(_ensure_sympy(var))
     if isinstance(var, (int, Integer)):
@@ -295,7 +295,7 @@ def IntegerQ(var):
         return var.is_Integer
 
 
-def MemberQ(l, u):
+def eager_MemberQ(l, u):
     """Mathematica ``MemberQ[list, form]`` — True iff ``form`` occurs in ``list``.
 
     Head-membership: a function-head wildcard ``F_[...]`` binds its head to a
@@ -313,7 +313,7 @@ def MemberQ(l, u):
     return u in members
 
 
-def AtomQ(expr):
+def eager_AtomQ(expr):
     """Mathematica ``AtomQ[expr]`` — True iff ``expr`` has no subexpressions."""
     expr = _ensure_sympy(expr)
     expr = sympify(expr)
@@ -325,7 +325,7 @@ def AtomQ(expr):
         return expr.is_Atom
 
 
-def NumberQ(u):
+def eager_NumberQ(u):
     """Mathematica ``NumberQ[u]`` — True iff ``u`` is an EXPLICIT number."""
     # Mathematica NumberQ[u]: True iff u is an EXPLICIT number -- Integer, Rational,
     # Real, or Complex[a,b] with explicit real/imaginary parts (so I, 3*I, 2+3*I are
@@ -352,7 +352,7 @@ def NumberQ(u):
     return False
 
 
-def PolynomialQ(u, x=None):
+def eager_PolynomialQ(u, x=None):
     """Mathematica ``PolynomialQ[u]`` / ``PolynomialQ[u, x]`` — polynomial test."""
     if x is None:
         return u.is_polynomial()
@@ -384,12 +384,12 @@ def PolynomialQ(u, x=None):
                 return False
 
         elif isinstance(x.exp, (Float, Rational)):  # not full - proof
-            if FreeQ(simplify(u), x.base) and eager_Exponent(u, x.base) == 0:
-                if not all(FreeQ(u, i) for i in x.base.free_symbols):
+            if eager_FreeQ(simplify(u), x.base) and eager_Exponent(u, x.base) == 0:
+                if not all(eager_FreeQ(u, i) for i in x.base.free_symbols):
                     return False
 
     if isinstance(x, Mul):
-        return all(PolynomialQ(u, i) for i in x.args)
+        return all(eager_PolynomialQ(u, i) for i in x.args)
 
     return u.is_polynomial(x)
 

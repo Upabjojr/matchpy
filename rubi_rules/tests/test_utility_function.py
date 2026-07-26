@@ -1,7 +1,7 @@
 
 from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Module,
-                                                eager_Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, eager_List, Log,
-                                                PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, eager_IntegersQ,
+                                                eager_Scan, MapAnd, eager_FalseQ, ZeroQ, eager_NegativeQ, NonzeroQ, eager_FreeQ, eager_List, Log,
+                                                eager_PositiveQ, PositiveIntegerQ, NegativeIntegerQ, eager_IntegerQ, eager_IntegersQ,
                                                 eager_ComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
                                                 eager_FractionOrNegativeQ, eager_NegQ, Equal, Unequal, eager_IntPart,
                                                 eager_FracPart, eager_RationalQ, eager_ProductQ, eager_SumQ, eager_NonsumQ, eager_First, eager_Rest,
@@ -10,17 +10,17 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 AppellF1, eager_PolynomialQuotient, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos,
                                                 Sinh, Coth, LessEqual, Less, Greater,
                                                 GreaterEqual, eager_FractionQ, IntLinearcQ, Expand, eager_IndependentQ, eager_PowerQ,
-                                                eager_IntegerPowerQ, eager_FractionalPowerQ, AtomQ, ExpQ, eager_LogQ,
-                                                eager_Head, MemberQ, eager_TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, eager_HyperbolicQ,
+                                                eager_IntegerPowerQ, eager_FractionalPowerQ, eager_AtomQ, ExpQ, eager_LogQ,
+                                                eager_Head, eager_MemberQ, eager_TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, eager_HyperbolicQ,
                                                 SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, eager_InverseTrigQ, SinhCoshQ,
-                                                eager_LeafCount, eager_Numerator, NumberQ, NumericQ, eager_Length, ListQ, Im, Re,
+                                                eager_LeafCount, eager_Numerator, eager_NumberQ, eager_NumericQ, eager_Length, ListQ, Im, Re,
                                                 eager_InverseHyperbolicQ, eager_InverseFunctionQ, eager_EqQ, eager_FractionalPowerFreeQ,
-                                                eager_ComplexFreeQ, PolynomialQ, FactorSquareFree, eager_PowerOfLinearQ, eager_Exponent,
-                                                eager_QuadraticQ, eager_LinearPairQ, BinomialParts, TrinomialParts, eager_PolyQ, EvenQ, OddQ,
+                                                eager_ComplexFreeQ, eager_PolynomialQ, FactorSquareFree, eager_PowerOfLinearQ, eager_Exponent,
+                                                eager_QuadraticQ, eager_LinearPairQ, BinomialParts, TrinomialParts, eager_PolyQ, eager_EvenQ, eager_OddQ,
                                                 eager_PerfectSquareQ, NiceSqrtAuxQ, eager_NiceSqrtQ, eager_Together, PosAux, eager_PosQ,
                                                 CoefficientList, eager_ReplaceAll, eager_ExpandLinearProduct, eager_GCD, ContentFactor,
                                                 NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst,
-                                                eager_ExpandExpression, eager_Apart, SmartApart, MatchQ, PolynomialQuotientRemainder,
+                                                eager_ExpandExpression, eager_Apart, SmartApart, eager_MatchQ, PolynomialQuotientRemainder,
                                                 eager_FreeFactors, eager_NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms,
                                                 NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup,
                                                 eager_AlgebraicFunctionQ, eager_Coeff, LeadTerm, RemainingTerms, LeadFactor,
@@ -86,7 +86,7 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, eager_If, eager_IntQuadraticQ, eager_IntBinomialQ, RectifyTangent, RectifyCotangent,
                                                 Inequality, eager_Condition, eager_Simp, SimpHelp, eager_SplitProduct, SplitSum, eager_SubstFor,
                                                 SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, eager_FunctionOfTrigOfLinearQ,
-                                                ElementaryFunctionQ, eager_Complex, UnsameQ, _SimpFixFactor, Tanh,
+                                                ElementaryFunctionQ, eager_Complex, eager_UnsameQ, _SimpFixFactor, Tanh,
                                                 eager_DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify,
                                                 _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, PureFunctionOfCothQ,
                                                 _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
@@ -343,12 +343,12 @@ def test_Scan():
     assert list(eager_Scan(sin, [a, b])) == [sin(a), sin(b)]
 
 def test_MapAnd():
-    assert MapAnd(PositiveQ, [S(1), S(2), S(3), S(0)]) == False
-    assert MapAnd(PositiveQ, [S(1), S(2), S(3)]) == True
+    assert MapAnd(eager_PositiveQ, [S(1), S(2), S(3), S(0)]) == False
+    assert MapAnd(eager_PositiveQ, [S(1), S(2), S(3)]) == True
 
 def test_FalseQ():
-    assert FalseQ(True) == False
-    assert FalseQ(False) == True
+    assert eager_FalseQ(True) == False
+    assert eager_FalseQ(False) == True
 
 def test_ComplexNumberQ():
     assert eager_ComplexNumberQ(1 + I*2, I) == True
@@ -377,9 +377,9 @@ def test_FractionOrNegativeQ():
     assert eager_FractionOrNegativeQ(S(1)) == False
 
 def test_NegativeQ():
-    assert NegativeQ(-S(1)) == True
-    assert NegativeQ(S(1)) == False
-    assert NegativeQ(oo) == False
+    assert eager_NegativeQ(-S(1)) == True
+    assert eager_NegativeQ(S(1)) == False
+    assert eager_NegativeQ(oo) == False
 
 def test_ProductQ():
     assert eager_ProductQ(a*b) == True
@@ -627,12 +627,12 @@ def test_PolyQ():
     assert not eager_PolyQ(x**3, x, 2)
 
 def test_EvenQ():
-    assert EvenQ(S(2))
-    assert not EvenQ(S(1))
+    assert eager_EvenQ(S(2))
+    assert not eager_EvenQ(S(1))
 
 def test_OddQ():
-    assert OddQ(S(1))
-    assert not OddQ(S(2))
+    assert eager_OddQ(S(1))
+    assert not eager_OddQ(S(2))
 
 def test_PerfectSquareQ():
     assert eager_PerfectSquareQ(S(4))
@@ -659,7 +659,7 @@ def test_PosQ():
     assert eager_PosQ(sin(1)**2*pi**4)
 
 def test_NumericQ():
-    assert NumericQ(sin(cos(2)))
+    assert eager_NumericQ(sin(cos(2)))
 
 # test_NumberQ moved to sympy_wolfram/tests/test_mathematica_functions.py::test_eager_NumberQ
 # (NumberQ is a standard Wolfram predicate, now defined in sympy_wolfram). The SignOfFactor
@@ -691,7 +691,7 @@ def test_MatchQ():
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
-    assert MatchQ(a*b + c, a_*b_ + c_, a_, b_, c_) == (a, b, c)
+    assert eager_MatchQ(a*b + c, a_*b_ + c_, a_, b_, c_) == (a, b, c)
 
 def test_PolynomialQuotientRemainder():
     assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]
@@ -1995,8 +1995,8 @@ def test_Inequality():
     assert Inequality(S('0'), Less, S('1'), LessEqual, S('5'))
 
 def test_SplitProduct():
-    assert eager_SplitProduct(OddQ, S(3)*x) == [3, x]
-    assert not eager_SplitProduct(OddQ, S(2)*x)
+    assert eager_SplitProduct(eager_OddQ, S(3)*x) == [3, x]
+    assert not eager_SplitProduct(eager_OddQ, S(2)*x)
 
 def test_SplitSum():
     assert SplitSum(eager_FracPart, sin(x)) == [sin(x), 0]
@@ -2287,13 +2287,13 @@ def _meq(got, expected):
 
 
 _MMA_PREDICATES = [
-    (lambda: _U.IntegerQ(S(7)), True),
-    (lambda: _U.IntegerQ(Rational(7, 2)), False),
+    (lambda: _U.eager_IntegerQ(S(7)), True),
+    (lambda: _U.eager_IntegerQ(Rational(7, 2)), False),
     (lambda: _U.eager_RationalQ(Rational(3, 4)), True),
     (lambda: _U.eager_FractionQ(Rational(3, 4)), True),
     (lambda: _U.eager_FractionQ(S(3)), False),
-    (lambda: _U.EvenQ(S(6)), True),
-    (lambda: _U.OddQ(S(5)), True),
+    (lambda: _U.eager_EvenQ(S(6)), True),
+    (lambda: _U.eager_OddQ(S(5)), True),
     (lambda: _U.eager_SumQ(a + b), True),
     (lambda: _U.eager_ProductQ(2 * a), True),
     (lambda: _U.eager_PowerQ(a**2), True),
@@ -2304,7 +2304,7 @@ _MMA_PREDICATES = [
     (lambda: _U.eager_QuadraticQ(1 + x + x**2, x), True),
     (lambda: _U.eager_BinomialQ(1 + x**3, x), True),
     (lambda: _U.eager_TrinomialQ(1 + x**2 + x**4, x), True),
-    (lambda: _U.PolynomialQ(1 + x + x**5, x), True),
+    (lambda: _U.eager_PolynomialQ(1 + x + x**5, x), True),
     (lambda: _U.eager_PolyQ(1 + x**2, x, S(2)), True),
     (lambda: _U.eager_PolyQ(x**3 + 1, x, S(3)), True),
     (lambda: _U.eager_TrigQ(sin(x)), True),
@@ -2313,14 +2313,14 @@ _MMA_PREDICATES = [
     (lambda: _U.eager_InverseTrigQ(asin(x)), True),
     (lambda: _U.eager_InverseHyperbolicQ(asinh(x)), True),
     (lambda: _U.eager_LogQ(log(x)), True),
-    (lambda: _U.AtomQ(x), True),
-    (lambda: _U.AtomQ(a + b), False),
+    (lambda: _U.eager_AtomQ(x), True),
+    (lambda: _U.eager_AtomQ(a + b), False),
     (lambda: _U.eager_ComplexNumberQ(2 + 3 * I), True),
     (lambda: _U.eager_IntegersQ(S(2), S(3)), True),
     (lambda: _U.eager_IntegersQ(S(2), Rational(3, 2)), False),
     (lambda: _U.eager_SqrtNumberQ(sqrt(2)), True),
-    (lambda: _U.NumberQ(S(3)), True),
-    (lambda: _U.NumericQ(pi), True),
+    (lambda: _U.eager_NumberQ(S(3)), True),
+    (lambda: _U.eager_NumericQ(pi), True),
     (lambda: _U.eager_RationalFunctionQ((1 + x) / (1 + x**2), x), True),
     (lambda: _U.eager_AlgebraicFunctionQ(sqrt(1 + x), x), True),
     (lambda: _U.eager_MonomialQ(3 * x**2, x), True),
@@ -2360,8 +2360,8 @@ _MMA_RENAMED = [
     (lambda: _U.ZeroQ(S(0)), True),                     # EqQ[0, 0]
     (lambda: _U.ZeroQ(a * e - b * d * S(0)), False),    # EqQ[a*e, 0]
     (lambda: _U.NonzeroQ(S(1)), True),                  # NeQ[1, 0]
-    (lambda: _U.PositiveQ(S(3)), True),                 # GtQ[3, 0]
-    (lambda: _U.NegativeQ(S(-3)), True),                # LtQ[-3, 0]
+    (lambda: _U.eager_PositiveQ(S(3)), True),                 # GtQ[3, 0]
+    (lambda: _U.eager_NegativeQ(S(-3)), True),                # LtQ[-3, 0]
     (lambda: _U.PositiveIntegerQ(S(5)), True),          # IGtQ[5, 0]
     (lambda: _U.NegativeIntegerQ(S(-5)), True),         # ILtQ[-5, 0]
 ]

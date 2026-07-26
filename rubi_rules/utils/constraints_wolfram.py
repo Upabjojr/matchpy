@@ -31,10 +31,10 @@ class OddQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import OddQ as _OddQ
+        from .utility_functions import eager_OddQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _OddQ(u)
+        return eager_OddQ(u)
     def __repr__(self):
         return f"OddQ({self._u})"
 
@@ -44,10 +44,10 @@ class EvenQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import EvenQ as _EvenQ
+        from .utility_functions import eager_EvenQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _EvenQ(u)
+        return eager_EvenQ(u)
     def __repr__(self):
         return f"EvenQ({self._u})"
 
@@ -57,10 +57,10 @@ class NumericQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import NumericQ as _NumericQ
+        from .utility_functions import eager_NumericQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _NumericQ(u)
+        return eager_NumericQ(u)
     def __repr__(self):
         return f"NumericQ({self._u})"
 
@@ -70,10 +70,10 @@ class NegativeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import NegativeQ as _NegativeQ
+        from .utility_functions import eager_NegativeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _NegativeQ(u)
+        return eager_NegativeQ(u)
     def __repr__(self):
         return f"NegativeQ({self._u})"
 
@@ -113,12 +113,12 @@ class FalseQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import FalseQ as _FalseQ
+        from .utility_functions import eager_FalseQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         if hasattr(u, 'doit'):
             u = u.doit()
-        return _FalseQ(u)
+        return eager_FalseQ(u)
     def __repr__(self):
         return f"FalseQ({self._u})"
 
