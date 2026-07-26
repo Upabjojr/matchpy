@@ -332,4 +332,13 @@ def matchpy_to_sympy(expr):
     if isinstance(expr, NamedAtom):
         return SympySymbol(expr.name)
 
+    if isinstance(expr, Wildcard) and getattr(expr, 'variable_name', None):
+        # An unbound wildcard reaching here is a pattern variable LOCAL to a MatchQ
+        # embedded in a replacement, e.g. If[MatchQ[f, f1*Complex(0, j)], ...] -- f1/j/e1
+        # are bound only WHEN that MatchQ runs, not by the outer rule match. Convert it
+        # back to a WildSymbol so the MatchQ can re-match and resolve it at .doit();
+        # leaving it a raw MatchPy Wildcard makes the enclosing SymPy node fail to
+        # sympify (SympifyError: Wildcard.dot('f1')).
+        return WildSymbol(expr.variable_name)
+
     return from_expression(expr)

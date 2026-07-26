@@ -193,6 +193,11 @@ _SYMBOLIC_COEFF_INTEGRANDS = [
     x/(_a + _b*x**6),
     x**3/(_a + _b*x**6),
     x/(_a + _b*x**10),
+    # x^2 (c+d x)/Sqrt[c^2-d^2 x^2]: used to CRASH with IndexError in
+    # FractionalPowerFactorQ -- its `if ProductQ(u)` resolved to the ProductQ constraint
+    # CLASS (always truthy) and its `u.args[1:]` handed a bare tuple that the recursion
+    # peeled to empty args. See TestFractionalPowerFactorQ.
+    x**2*(_c + _d*x)/sqrt(_c**2 - _d**2*x**2),
 ]
 
 
@@ -314,6 +319,12 @@ _NO_CRASH_INTEGRANDS = [
     (exp(x) + 1)*exp(x + exp(x))/(x + exp(x)),
     exp(x + exp(x)),
     exp(exp(x)),
+    # csc(a+b x)^2/(c+d x): a DeactivateTrig rule's replacement embeds If[MatchQ[f,
+    # f1*Complex(0,j)], ...] whose MatchQ-local wildcards leaked -- matchpy_to_sympy
+    # raised SympifyError: Wildcard.dot('f1'). Now converts to a WildSymbol (no crash)
+    # and the wildcard-laden branch is rejected by _dfs_is_clean, so the result is a
+    # clean Unintegrable (Rubi returns Defer[Int] here too).
+    sympy.csc(_a + _b*x)**2/(_c + _d*x),
 ]
 
 

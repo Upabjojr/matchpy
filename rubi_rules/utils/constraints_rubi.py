@@ -1136,13 +1136,24 @@ class FractionalPowerFactorQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import AtomQ, PowerQ, FractionQ
+        # NB import ProductQ from utility_functions: the bare name `ProductQ` in this
+        # module is the CONSTRAINT CLASS (always truthy when constructed), so `if
+        # ProductQ(u)` without this import wrongly took the product branch for EVERY u.
+        from .utility_functions import AtomQ, PowerQ, FractionQ, First, Rest, ProductQ
         if AtomQ(u):
-            return u.is_complex
+            # Mathematica: Head[u] === Complex -- True only for an explicit COMPLEX NUMBER
+            # (I, 2*I as Complex[0,2], ...), NOT for every atom. The old `u.is_complex`
+            # was wrong: in SymPy reals are complex, so it wrongly fired on real atoms.
+            return bool(u.is_number and u.is_real is False)
         if PowerQ(u):
             return FractionQ(u.exp)
         if ProductQ(u):
-            return FractionalPowerFactorQ(u.args[0]).check(**kwargs) or FractionalPowerFactorQ(u.args[1:]).check(**kwargs)
+            # Mathematica recurses First[u] || Rest[u]. Rest[u] must stay a PRODUCT of the
+            # remaining factors; the old `u.args[1:]` handed a bare TUPLE, which is neither
+            # atom/power/product, so the recursion peeled it to an empty args tuple and
+            # raised IndexError (Int[x^2 (d+e x)/Sqrt[d^2-e^2 x^2]] etc. crashed here).
+            return (FractionalPowerFactorQ(First(u)).check(**kwargs)
+                    or FractionalPowerFactorQ(Rest(u)).check(**kwargs))
         return False
     def __repr__(self):
         return f"FractionalPowerFactorQ({self._u})"

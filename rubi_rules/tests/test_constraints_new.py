@@ -314,19 +314,53 @@ class TestSimplerSqrtQ:
 
 
 class TestFractionalPowerFactorQ:
-    """Tests for FractionalPowerFactorQ constraint."""
+    """Tests for FractionalPowerFactorQ constraint. Values cross-checked against real
+    Rubi (ssh pi): Head[u]===Complex for atoms, FractionQ[exponent] for powers, and for
+    products First[u] || Rest[u].
 
-    def test_fractional_power(self):
-        c = FractionalPowerFactorQ('u')
-        assert c.check(u=x**Rational(1, 2)) == True
+    Guards two bugs that made it wrong / crash:
+      * ``ProductQ`` inside ``check`` resolved to the CONSTRAINT CLASS (always truthy, since
+        this module defines a ``ProductQ`` class), so the product branch fired for EVERY u
+        -- e.g. a bare sum ``a+I`` wrongly recursed into its terms and returned True.
+      * the product branch used ``u.args[1:]`` (a raw tuple) instead of ``Rest[u]`` (the
+        product of the remaining factors), so the recursion peeled down to an empty args
+        tuple and raised IndexError (Int[x^2 (d+e x)/Sqrt[d^2-e^2 x^2]] etc. crashed).
+      * the atom branch returned ``u.is_complex`` -- True for reals in SymPy -- instead of
+        Head[u]===Complex.
+    """
 
-    def test_integer_power(self):
+    def _q(self, u):
         c = FractionalPowerFactorQ('u')
-        assert c.check(u=x**2) == False
+        return bool(c.check(u=u))
 
-    def test_complex_atom(self):
-        c = FractionalPowerFactorQ('u')
-        assert c.check(u=I) == True
+    def test_atoms(self):
+        a = Symbol('a')
+        assert self._q(I) is True          # Head===Complex
+        assert self._q(a) is False         # real symbol is NOT complex (was wrongly True)
+        assert self._q(Integer(2)) is False
+
+    def test_powers(self):
+        assert self._q(x**Rational(1, 2)) is True    # fractional exponent
+        assert self._q(x**2) is False                # integer exponent
+
+    def test_products(self):
+        a, b = Symbol('a'), Symbol('b')
+        assert self._q(a * x**Rational(1, 2)) is True   # a fractional-power factor
+        assert self._q(2 * I) is True                    # a complex factor
+        assert self._q(a * b) is False                   # neither
+
+    def test_a_bare_sum_is_false(self):
+        """Regression for the ProductQ-class shadow: a Plus is neither atom/power/product,
+        so it must be False -- it must NOT recurse into its terms as if it were a product."""
+        a = Symbol('a')
+        assert self._q(a + I) is False       # was wrongly True
+        assert self._q(a + x**Rational(1, 2)) is False
+
+    def test_deep_product_does_not_crash(self):
+        """Regression for the u.args[1:] tuple IndexError on longer products."""
+        a, b, c = Symbol('a'), Symbol('b'), Symbol('c')
+        assert self._q(a * b * c * x**Rational(1, 3)) is True
+        assert self._q(a * b * c) is False
 
 
 # =============================================================================

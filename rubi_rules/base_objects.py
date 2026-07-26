@@ -512,6 +512,13 @@ def _dfs_is_clean(expr) -> bool:
         return False
     if expr.has(sympy.zoo, sympy.nan):
         return False
+    # A finished antiderivative never contains a pattern WILDCARD. One can survive when
+    # a rule's replacement embeds an If[MatchQ[...]] whose MatchQ-local variables (f1/j/e1)
+    # did not get resolved (the MatchQ was not evaluated at fire time); such a result is
+    # not a real closed form -- reject it so the integral is reported unsolved (matching
+    # Rubi, which returns the integral unevaluated there) instead of a wildcard-laden mess.
+    if any(getattr(s, 'wildcard_name', None) for s in expr.free_symbols):
+        return False
     return not any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
 
 
