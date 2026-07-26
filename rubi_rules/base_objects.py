@@ -42,7 +42,7 @@ from matchpy.functions import ReplacementRule
 from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 
-from sympy_wolfram.constraints import MathematicaConstraint
+from sympy_wolfram.constraints import MathematicaConstraint, _resolve_with_substitution
 
 
 class Int(sympy.Function):
@@ -207,25 +207,29 @@ def _make_constraint_checker(constraint_obj, variables):
             return constraint_obj.check(**kwargs)
         return check_rubi
 
-    # Generic SymPy Boolean: use .subs() approach. The constraint holds WildSymbol('m')
-    # etc. (a Symbol SUBCLASS that is NOT equal to Symbol('m')), so we substitute by
-    # matching the constraint's own free symbols BY NAME -- keying the subs dict on a
-    # plain Symbol(name) silently no-ops and leaves the wildcards in place.
-    _free_by_name = {getattr(s, 'name', None): s for s in constraint_obj.free_symbols}
-
+    # Generic SymPy Boolean guard (a bare relational like Ne(GCD(m+1,n),1), NOT a
+    # MathematicaConstraint). Resolve its wildcards the SAME way every other constraint
+    # does -- through _resolve_with_substitution, keyed by wildcard_name.
+    #
+    # Why the dedicated path: the guard's variables are WildSymbols, which cross the
+    # sympy<->matchpy boundary as Wildcards; a plain Symbol crosses as a SymbolWrapper
+    # CONSTANT. So the matcher hands back values by wildcard NAME (as SymbolWrappers,
+    # e.g. 'm' -> SymbolWrapper(1)), never as an object equal to a Symbol('m') or even to
+    # a freshly built WildSymbol('m') (a WildSymbol is instance-unique -- its _wild_index
+    # is in _hashable_content, so two WildSymbol('m') compare unequal). The only sound
+    # move is to xreplace the guard's OWN wildcard instances, matched by name, with the
+    # match values converted back to SymPy (SymbolWrapper(1) -> Integer(1)) -- exactly
+    # what _resolve_with_substitution does. Keying a .subs() on Symbol(name) instead (as
+    # this once did) was a silent no-op, so the guard stayed symbolic and `== True` was
+    # wrongly False -- which disabled the x^m/(a+b x^n) GCD-reduction rules and made
+    # Int[x/(a+b x^6)] fall through to the odd-m root-sum rule (a wrong I*ArcTan answer).
     def check_subs(**kwargs):
-        subs_dict = {}
-        for name in variables:
-            if name in kwargs:
-                val = matchpy_to_sympy(kwargs[name])
-                subs_dict[_free_by_name.get(name, sympy.Symbol(name))] = val
-        result = constraint_obj.subs(subs_dict)
-        # Evaluate any deferred MathematicaExpr nodes the substitution leaves behind.
-        # A bare relational such as Ne(GCD(m+1,n),1) keeps GCD(...) unevaluated, so the
-        # relational stays symbolic and `== True` is wrongly False -- silently disabling
-        # the rule (this is what stopped the x^m/(a+b x^n) GCD-reduction rules from ever
-        # firing, so Int[x/(a+b x^6)] fell through to the odd-m root-sum rule and gave a
-        # wrong I*ArcTan result). doit() reduces GCD(2,6) -> 2, so Ne(2,1) -> True.
+        substitution = {name: matchpy_to_sympy(kwargs[name])
+                        for name in variables if name in kwargs}
+        result = _resolve_with_substitution(constraint_obj, substitution)
+        # A bare relational leaves any deferred MathematicaExpr node (GCD, Denominator,
+        # ...) unevaluated -- Ne(GCD(2,6),1) stays symbolic -- so reduce it before the
+        # truth test: doit() gives GCD(2,6) -> 2, hence Ne(2,1) -> True.
         if hasattr(result, 'doit'):
             try:
                 result = result.doit()

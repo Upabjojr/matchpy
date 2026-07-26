@@ -750,15 +750,21 @@ class TestMatchQEnforcementIsGated:
 
 
 class TestGenericBooleanConstraintChecker:
-    """Regression: a generic SymPy-Boolean guard (NOT a MathematicaConstraint) whose
-    operands are WildSymbols and contain a deferred node -- e.g. the GCD-reduction guard
-    ``Ne(GCD(m+1, n), 1)`` -- must evaluate correctly. Two bugs made it silently False:
-      * ``check_subs`` keyed the substitution on ``Symbol(name)``, but the guard holds
-        ``WildSymbol(name)`` (a Symbol SUBCLASS that is != ``Symbol(name)``), so nothing
-        substituted; and
-      * the deferred ``GCD`` node was never ``doit()``'d, so the relational stayed symbolic.
-    The dead guard disabled the ``x^m/(a+b x^n)`` GCD-reduction rules, so ``Int[x/(a+b x^6)]``
-    fell through to the odd-m root-sum rule and returned a wrong ``I*ArcTan`` answer.
+    """Regression + design guard for a generic SymPy-Boolean rule guard -- a bare
+    relational like ``Ne(GCD(m+1, n), 1)``, NOT a MathematicaConstraint.
+
+    Its variables are WildSymbols, which cross the SymPy<->MatchPy boundary as
+    Wildcards; a plain ``Symbol`` crosses as a ``SymbolWrapper`` CONSTANT. So the matcher
+    returns the bound values by wildcard NAME, as ``SymbolWrapper``s (e.g.
+    ``'m' -> SymbolWrapper(1)``). The checker must therefore resolve the guard's own
+    wildcards BY NAME -- via ``_resolve_with_substitution``, the same resolver every other
+    constraint uses -- with the values converted back to SymPy. The old code instead
+    built a ``.subs({Symbol(name): value})`` key: a ``Symbol`` is the constant side, so it
+    matched neither the guard's WildSymbol nor even a fresh ``WildSymbol(name)`` (a
+    WildSymbol is instance-unique via its ``_wild_index``) -- a silent no-op that left the
+    relational symbolic, made ``== True`` False, and disabled the ``x^m/(a+b x^n)``
+    GCD-reduction rules (so ``Int[x/(a+b x^6)]`` gave a wrong ``I*ArcTan``). The deferred
+    ``GCD`` node also has to be ``doit()``'d before the truth test.
     """
 
     def _checker(self, constraint):
@@ -776,6 +782,29 @@ class TestGenericBooleanConstraintChecker:
         assert cc(Substitution({'m': sympy.Integer(3), 'n': sympy.Integer(6)})) is True
         # GCD(1+1, 3) = 1 -> guard correctly FAILS (Ne(1, 1) is False)
         assert cc(Substitution({'m': sympy.Integer(1), 'n': sympy.Integer(3)})) is False
+
+    def test_guard_resolves_the_symbolwrapper_values_the_matcher_delivers(self):
+        """The bound values arrive as MatchPy ``SymbolWrapper`` constants (that is how the
+        matcher hands back what a Wildcard matched), NOT as bare SymPy numbers. The checker
+        must unwrap them -- ``SymbolWrapper(1) -> Integer(1)`` -- before evaluating."""
+        from matchpy.expressions.substitution import Substitution
+        from matchpy.expressions.expressions import SymbolWrapper
+        from rubi_rules.utils.rubi_utils import GCD
+        m_, n_ = WildSymbol('m'), WildSymbol('n')
+        cc = self._checker(sympy.Ne(GCD(m_ + 1, n_), 1))
+        sw = lambda k: SymbolWrapper(sympy.Integer(k))
+        assert cc(Substitution({'m': sw(1), 'n': sw(6)})) is True   # GCD(2,6)=2 != 1
+        assert cc(Substitution({'m': sw(1), 'n': sw(3)})) is False  # GCD(2,3)=1
+
+    def test_a_fresh_symbol_or_wildsymbol_would_not_have_substituted(self):
+        """Documents WHY the resolver keys by name: neither a plain ``Symbol('m')`` nor a
+        freshly built ``WildSymbol('m')`` is equal to the guard's own wildcard, so a
+        ``.subs()`` keyed on either is a silent no-op (this was the original bug)."""
+        m_ = WildSymbol('m')
+        guard = sympy.Ne(m_, 1)
+        assert guard.subs({Symbol('m'): sympy.Integer(1)}) == guard          # no-op
+        assert guard.subs({WildSymbol('m'): sympy.Integer(1)}) == guard      # no-op (diff instance)
+        assert guard.subs({m_: sympy.Integer(1)}).doit() is sympy.false      # only the real instance
 
     def test_eq_guard_with_wildsymbol_still_works(self):
         """A plain Eq guard over a WildSymbol substitutes and evaluates too."""
