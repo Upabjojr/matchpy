@@ -260,7 +260,7 @@ class FreeOf(Constraint):
     FreeOf(variable, symbol_name) succeeds when the expression bound to `variable`
     does NOT contain a NamedAtom with name `symbol_name` anywhere in its tree.
 
-    This is analogous to Mathematica's FreeOf[expr, x].
+    This is analogous to Mathematica's FreeQ[expr, x].
 
     Optimized over a CustomConstraint because:
     - Uses a dedicated iterative traversal with early exit (no generator overhead)

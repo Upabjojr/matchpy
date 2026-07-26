@@ -5,7 +5,6 @@ from types import ModuleType
 from matchpy.expressions.expressions import Wildcard, Operation
 from matchpy.matching.one_to_one import match as match_one_to_one
 from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.matching.syntactic import DiscriminationNet
 from matchpy.expressions.functions import preorder_iter
 from matchpy.matching.code_generation import CodeGenerator
 from matchpy.matching.json_serialization import to_json, from_json
@@ -16,8 +15,6 @@ def pytest_configure():
 def pytest_generate_tests(metafunc):
     if 'match' in metafunc.fixturenames:
         metafunc.parametrize('match', ['one-to-one', 'many-to-one', 'generated', 'json-roundtrip'], indirect=True)
-    if 'match_syntactic' in metafunc.fixturenames:
-        metafunc.parametrize('match_syntactic', ['one-to-one', 'many-to-one', 'syntactic', 'generated', 'json-roundtrip'], indirect=True)
     if 'match_many' in metafunc.fixturenames:
         metafunc.parametrize('match_many', ['many-to-one', 'generated', 'json-roundtrip'], indirect=True)
 
@@ -66,13 +63,6 @@ def match_generated(expression, *patterns):
 
 
 
-def syntactic_matcher(expression, pattern):
-    matcher = DiscriminationNet()
-    matcher.add(pattern)
-    for _, substitution in matcher.match(expression):
-        yield substitution
-
-
 def match_json_roundtrip(expression, *patterns):
     try:
         pattern = patterns[0]
@@ -107,23 +97,6 @@ def match(request):
         return match_one_to_one
     elif request.param == 'many-to-one':
         return match_many_to_one
-    elif request.param == 'generated':
-        return match_generated
-    elif request.param == 'json-roundtrip':
-        return match_json_roundtrip
-    else:
-        raise ValueError("Invalid internal test config")
-
-
-@pytest.fixture
-def match_syntactic(request):
-    pytest.matcher = request.param
-    if request.param == 'one-to-one':
-        return match_one_to_one
-    elif request.param == 'many-to-one':
-        return match_many_to_one
-    elif request.param == 'syntactic':
-        return syntactic_matcher
     elif request.param == 'generated':
         return match_generated
     elif request.param == 'json-roundtrip':

@@ -18,7 +18,7 @@ import sympy
 from sympy import symbols, Eq, Integer, sin, cos, Rational, simplify
 
 from matchpy.expressions.expressions import (
-    Operation, Wildcard, Pattern, to_expression,
+    Operation, Wildcard, Pattern, to_matchpy_expression,
 )
 from matchpy.expressions.constraints import FreeOf
 from matchpy.matching.one_to_one import match as match_one
@@ -39,8 +39,8 @@ class TestIdentityElementAdd:
     def test_add_identity_matches_bare_symbol(self):
         """Pattern: a_ + x, subject: x → a_ = 0 (Add identity)."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ + x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(a_ + x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(0)
@@ -48,8 +48,8 @@ class TestIdentityElementAdd:
     def test_add_identity_matches_with_value(self):
         """Pattern: a_ + x, subject: 5 + x → a_ = 5."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ + x))
-        subject = to_expression(5 + x)
+        pattern = Pattern(to_matchpy_expression(a_ + x))
+        subject = to_matchpy_expression(5 + x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(5)
@@ -57,8 +57,8 @@ class TestIdentityElementAdd:
     def test_add_identity_with_symbolic(self):
         """Pattern: c_ + x, subject: y + x → c_ = y."""
         c_ = WildSymbol('c_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(c_ + x))
-        subject = to_expression(y + x)
+        pattern = Pattern(to_matchpy_expression(c_ + x))
+        subject = to_matchpy_expression(y + x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['c']) == y
@@ -72,8 +72,8 @@ class TestIdentityElementMul:
     def test_mul_identity_matches_bare_symbol(self):
         """Pattern: a_ * x, subject: x → a_ = 1 (Mul identity)."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ * x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(a_ * x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(1)
@@ -81,8 +81,8 @@ class TestIdentityElementMul:
     def test_mul_identity_matches_with_coefficient(self):
         """Pattern: a_ * x, subject: 3*x → a_ = 3."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ * x))
-        subject = to_expression(3 * x)
+        pattern = Pattern(to_matchpy_expression(a_ * x))
+        subject = to_matchpy_expression(3 * x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(3)
@@ -90,8 +90,8 @@ class TestIdentityElementMul:
     def test_mul_identity_with_symbolic(self):
         """Pattern: k_ * x, subject: y*x → k_ = y."""
         k_ = WildSymbol('k_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(k_ * x))
-        subject = to_expression(y * x)
+        pattern = Pattern(to_matchpy_expression(k_ * x))
+        subject = to_matchpy_expression(y * x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['k']) == y
@@ -108,8 +108,8 @@ class TestIdentityElementPow:
     def test_pow_identity_matches_with_exponent(self):
         """Pattern: x**w_, subject: x**3 → w_ = 3."""
         w_ = WildSymbol('w_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(x**w_))
-        subject = to_expression(x**3)
+        pattern = Pattern(to_matchpy_expression(x**w_))
+        subject = to_matchpy_expression(x**3)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['w']) == Integer(3)
@@ -117,8 +117,8 @@ class TestIdentityElementPow:
     def test_pow_identity_symbolic_exponent(self):
         """Pattern: x**n_, subject: x**y → n_ = y."""
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(x**n_))
-        subject = to_expression(x**y)
+        pattern = Pattern(to_matchpy_expression(x**n_))
+        subject = to_matchpy_expression(x**y)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['n']) == y
@@ -126,8 +126,8 @@ class TestIdentityElementPow:
     def test_pow_identity_rational_exponent(self):
         """Pattern: x**n_, subject: x**(1/2) = sqrt(x) → n_ = 1/2."""
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(x**n_))
-        subject = to_expression(x**Rational(1, 2))
+        pattern = Pattern(to_matchpy_expression(x**n_))
+        subject = to_matchpy_expression(x**Rational(1, 2))
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['n']) == Rational(1, 2)
@@ -136,8 +136,8 @@ class TestIdentityElementPow:
         """Pattern: a_*x**n_, subject: 5*x**3 → a_=5, n_=3."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ * x**n_))
-        subject = to_expression(5 * x**3)
+        pattern = Pattern(to_matchpy_expression(a_ * x**n_))
+        subject = to_matchpy_expression(5 * x**3)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(5)
@@ -153,8 +153,8 @@ class TestExplicitOptionalValue:
         """Pattern: b_*x with b_ defaulting to 0.
         Subject: x → b_ = 0 (explicit default, NOT identity)."""
         b_ = WildSymbol('b_', optional_value=0)
-        pattern = Pattern(to_expression(b_ * x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(b_ * x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['b']) == Integer(0)
@@ -163,8 +163,8 @@ class TestExplicitOptionalValue:
         """Pattern: c_ + x with c_ defaulting to 2.
         Subject: x → c_ = 2 (explicit, not identity)."""
         c_ = WildSymbol('c_', optional_value=2)
-        pattern = Pattern(to_expression(c_ + x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(c_ + x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['c']) == Integer(2)
@@ -173,8 +173,8 @@ class TestExplicitOptionalValue:
         """When the subject HAS the operand, use that — not the default.
         Pattern: c_ + x with default 2; subject: 7 + x → c_ = 7."""
         c_ = WildSymbol('c_', optional_value=2)
-        pattern = Pattern(to_expression(c_ + x))
-        subject = to_expression(7 + x)
+        pattern = Pattern(to_matchpy_expression(c_ + x))
+        subject = to_matchpy_expression(7 + x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['c']) == Integer(7)
@@ -183,8 +183,8 @@ class TestExplicitOptionalValue:
         """Pattern: x**n_ with n_ defaulting to 1/2.
         Subject: x**3 → n_ = 3 (default not used; wildcard matches subject)."""
         n_ = WildSymbol('n_', optional_value=Rational(1, 2))
-        pattern = Pattern(to_expression(x**n_))
-        subject = to_expression(x**3)
+        pattern = Pattern(to_matchpy_expression(x**n_))
+        subject = to_matchpy_expression(x**3)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['n']) == Integer(3)
@@ -193,8 +193,8 @@ class TestExplicitOptionalValue:
         """Pattern: s_*x with s_ defaulting to -1.
         Subject: x → s_ = -1."""
         s_ = WildSymbol('s_', optional_value=-1)
-        pattern = Pattern(to_expression(s_ * x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(s_ * x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['s']) == Integer(-1)
@@ -210,8 +210,8 @@ class TestMixedOptionalValues:
         Subject: x → a_=1, b_=0."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=0)
-        pattern = Pattern(to_expression(a_ * x + b_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(a_ * x + b_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(1)
@@ -222,8 +222,8 @@ class TestMixedOptionalValues:
         Subject: 3*x + 7 → a_=3, b_=7."""
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=0)
-        pattern = Pattern(to_expression(a_ * x + b_))
-        subject = to_expression(3 * x + 7)
+        pattern = Pattern(to_matchpy_expression(a_ * x + b_))
+        subject = to_matchpy_expression(3 * x + 7)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(3)
@@ -234,8 +234,8 @@ class TestMixedOptionalValues:
         Subject: x**2 → c_=5 (from MUL one_identity), n_=2."""
         c_ = WildSymbol('c_', optional_value=5)
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(c_ * x**n_))
-        subject = to_expression(x**2)
+        pattern = Pattern(to_matchpy_expression(c_ * x**n_))
+        subject = to_matchpy_expression(x**2)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['c']) == Integer(5)
@@ -247,8 +247,8 @@ class TestMixedOptionalValues:
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ * x**n_ + b_))
-        subject = to_expression(x**2)
+        pattern = Pattern(to_matchpy_expression(a_ * x**n_ + b_))
+        subject = to_matchpy_expression(x**2)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(1)
@@ -261,8 +261,8 @@ class TestMixedOptionalValues:
         a_ = WildSymbol('a_', optional_value=IDENTITY_ELEMENT)
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(a_ * x**n_ + b_))
-        subject = to_expression(2 * x**3 + 7)
+        pattern = Pattern(to_matchpy_expression(a_ * x**n_ + b_))
+        subject = to_matchpy_expression(2 * x**3 + 7)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(2)
@@ -276,10 +276,10 @@ class TestMixedOptionalValues:
         n_ = WildSymbol('n_', optional_value=IDENTITY_ELEMENT)
         b_ = WildSymbol('b_', optional_value=IDENTITY_ELEMENT)
         pattern = Pattern(
-            to_expression(a_ * x**n_ + b_),
+            to_matchpy_expression(a_ * x**n_ + b_),
             FreeOf('a', 'x'), FreeOf('b', 'x'),
         )
-        subject = to_expression(y * x**2 + z)
+        subject = to_matchpy_expression(y * x**2 + z)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == y
@@ -296,8 +296,8 @@ class TestPlainWildSymbol:
         """Pattern: a_*x with a_ mandatory. Subject: x alone does NOT match
         because the MUL needs 2 operands and a_ has no default."""
         a_ = WildSymbol('a_')
-        pattern = Pattern(to_expression(a_ * x))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(a_ * x))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         # No match: a_ is required and MUL pattern needs explicit coefficient
         assert len(matches) == 0
@@ -305,8 +305,8 @@ class TestPlainWildSymbol:
     def test_plain_matches_when_present(self):
         """Pattern: a_*x, subject: 3*x → a_ = 3."""
         a_ = WildSymbol('a_')
-        pattern = Pattern(to_expression(a_ * x))
-        subject = to_expression(3 * x)
+        pattern = Pattern(to_matchpy_expression(a_ * x))
+        subject = to_matchpy_expression(3 * x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['a']) == Integer(3)
@@ -314,8 +314,8 @@ class TestPlainWildSymbol:
     def test_plain_in_pow_exponent(self):
         """Pattern: x**n_ (mandatory), subject: x**5 → n_ = 5."""
         n_ = WildSymbol('n_')
-        pattern = Pattern(to_expression(x**n_))
-        subject = to_expression(x**5)
+        pattern = Pattern(to_matchpy_expression(x**n_))
+        subject = to_matchpy_expression(x**5)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1
         assert matchpy_to_sympy(matches[0]['n']) == Integer(5)
@@ -323,8 +323,8 @@ class TestPlainWildSymbol:
     def test_plain_pow_does_not_match_bare_base(self):
         """Pattern: x**n_ (mandatory), subject: x → no match (no exponent)."""
         n_ = WildSymbol('n_')
-        pattern = Pattern(to_expression(x**n_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(x**n_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 0
 
@@ -347,8 +347,8 @@ class TestPowOptionalMatchesBareBase:
         when m_ carries optional_value=IDENTITY_ELEMENT.
         """
         w_ = WildSymbol('w_', optional_value=IDENTITY_ELEMENT)
-        pattern = Pattern(to_expression(x**w_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(x**w_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1, "Expected one match; got none"
         assert matchpy_to_sympy(matches[0]['w']) == Integer(1)
@@ -359,8 +359,8 @@ class TestPowOptionalMatchesBareBase:
         An explicit default of 1 is equivalent to IDENTITY_ELEMENT for Pow.
         """
         w_ = WildSymbol('w_', optional_value=Integer(1))
-        pattern = Pattern(to_expression(x**w_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(x**w_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 1, "Expected one match; got none"
         assert matchpy_to_sympy(matches[0]['w']) == Integer(1)
@@ -372,8 +372,8 @@ class TestPowOptionalMatchesBareBase:
         no explicit exponent node) does not match.
         """
         w_ = WildSymbol('w_')   # no optional_value
-        pattern = Pattern(to_expression(x**w_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(x**w_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         assert len(matches) == 0, "Mandatory wildcard must not match bare base"
 
@@ -386,8 +386,8 @@ class TestPowOptionalMatchesBareBase:
         the mathematically correct exponent for bare-base matching.
         """
         w_ = WildSymbol('w_', optional_value=Integer(2))
-        pattern = Pattern(to_expression(x**w_))
-        subject = to_expression(x)
+        pattern = Pattern(to_matchpy_expression(x**w_))
+        subject = to_matchpy_expression(x)
         matches = list(match_one(subject, pattern))
         # There IS a match, but w_ takes the declared default 2, not 1.
         assert len(matches) == 1

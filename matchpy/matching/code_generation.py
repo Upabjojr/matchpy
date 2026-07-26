@@ -1,9 +1,9 @@
 import re
 
-from ..expressions.expressions import Wildcard, Operation, OperationHead, SymbolWildcard
+from ..expressions.expressions import Wildcard, Operation, OperationHead
 from ..expressions.constraints import CustomConstraint
 from ..expressions.functions import op_iter, get_variables
-from .syntactic import OPERATION_END
+from ._common import OPERATION_END
 from .many_to_one import LabelTypeEpsilon, LabelTypeEnd, LabelTypeOperation, LabelTypeExpression
 from ..utils import get_short_lambda_source
 
@@ -175,7 +175,7 @@ class CommutativeMatcher{0}(CommutativeMatcher):
     def commutative_var_entry(self, entry):
         return '(VariableWithCount({!r}, {}, {}, {}), {})'.format(
             entry[0][0], entry[0][1], entry[0][2],
-            self.expr(entry[0][3]), self.operation_symbol(entry[1]) if isinstance(entry[1], type) else repr(entry[1])
+            self.expr(entry[0][3]), self.operation_symbol(entry[1]) if isinstance(entry[1], OperationHead) else repr(entry[1])
         )
 
     def commutative_patterns(self, patterns):
@@ -206,27 +206,20 @@ class CommutativeMatcher{0}(CommutativeMatcher):
             exit_func = self.exit_eps
         elif isinstance(label, LabelTypeExpression):
             expr = label.value
-            if isinstance(expr, Wildcard) and not isinstance(expr, SymbolWildcard):
+            if isinstance(expr, Wildcard):
                 wc = expr
                 if wc.default_value is not None:
                     self.enter_variable_assignment(transition.variable_name, self.optional_expr(wc.default_value))
                     constraints = sorted(transition.check_constraints) if transition.check_constraints is not None else []
                     self.generate_constraints(constraints, [transition])
                     self.exit_variable_assignment()
-                if isinstance(wc, SymbolWildcard):
-                    enter_func = self.enter_symbol_wildcard
-                    exit_func = self.exit_symbol_wildcard
-                elif wc.fixed_size and self._associative_stack[-1] is None:
+                if wc.fixed_size and self._associative_stack[-1] is None:
                     enter_func = self.enter_fixed_wildcard
                     exit_func = self.exit_fixed_wildcard
                 else:
                     enter_func = self.enter_sequence_wildcard
                     exit_func = self.exit_sequence_wildcard
                 raw_label = wc
-            elif isinstance(expr, SymbolWildcard):
-                enter_func = self.enter_symbol_wildcard
-                exit_func = self.exit_symbol_wildcard
-                raw_label = expr
             else:
                 enter_func = self.enter_symbol
                 exit_func = self.exit_symbol
@@ -314,23 +307,6 @@ class CommutativeMatcher{0}(CommutativeMatcher):
         atype = self._associative_stack.pop()
         if atype is not None:
             self._associative -= 1
-
-    def enter_symbol_wildcard(self, wildcard):
-        self.add_line(
-            'if len({0}) >= 1 and isinstance({0}[0], {1}):'.
-            format(self._subjects[-1], self.symbol_type(wildcard.symbol_type))
-        )
-        self.indent()
-        tmp = self.get_var_name('tmp')
-        self.add_line('{} = {}.popleft()'.format(tmp, self._subjects[-1]))
-        return tmp
-
-    def symbol_type(self, symbol):
-        return symbol.__name__
-
-    def exit_symbol_wildcard(self, value):
-        self.add_line('{}.appendleft({})'.format(self._subjects[-1], value))
-        self.dedent()
 
     def enter_fixed_wildcard(self, wildcard):
         self.add_line('if len({}) >= 1:'.format(self._subjects[-1]))
@@ -494,6 +470,14 @@ class CommutativeMatcher{0}(CommutativeMatcher):
         self._emit_final_yield(pattern_index, subst_name)
 
     def generate_constraints(self, constraints, transitions):
+        # Count the blocks actually OPENED: a constraint disjoint from the transitions'
+        # patterns is `continue`d without emitting an `if`/indent, but the old cleanup
+        # loop dedented once per constraint INCLUDING the skipped ones. Whenever a
+        # pattern-index branch carried skipped constraints (routine in Rubi's
+        # commutative rule sets), the indentation stack underflowed and the emitted
+        # code dedented out of the enclosing function -- `return` at column 0,
+        # SyntaxError, "code generation is unviable for Rubi".
+        opened = 0
         for constraint_index in constraints:
             constraint, patterns = self._matcher.constraints[constraint_index]
             t_iter = iter(t.patterns for t in transitions)
@@ -510,11 +494,12 @@ class CommutativeMatcher{0}(CommutativeMatcher):
             self.add_line('if {}({}):'.format(constraint_name, subst_name))
             self.indent()
             self.add_line('pass')
+            opened += 1
 
         for transition in transitions:
             self.generate_state_code(transition.target, valid_patterns=transition.patterns)
 
-        for _ in constraints:
+        for _ in range(opened):
             self.dedent()
 
     def enter_global_constraint(self, constraint, subst_name=None):

@@ -200,12 +200,12 @@ def _many_to_one_replace(expression, rules):
     'replacer', [replace_all, _many_to_one_replace]
 )
 def test_logic_simplify(replacer):
-    LAnd = Operation.new('and', Arity.variadic, 'LAnd', associative=True, one_identity=True, commutative=True)
-    LOr = Operation.new('or', Arity.variadic, 'LOr', associative=True, one_identity=True, commutative=True)
-    LXor = Operation.new('xor', Arity.variadic, 'LXor', associative=True, one_identity=True, commutative=True)
-    LNot = Operation.new('not', Arity.unary, 'LNot')
-    LImplies = Operation.new('implies', Arity.binary, 'LImplies')
-    Iff = Operation.new('iff', Arity.binary, 'Iff')
+    LAnd = Operation.new('and', Arity.variadic, associative=True, one_identity=True, commutative=True)
+    LOr = Operation.new('or', Arity.variadic, associative=True, one_identity=True, commutative=True)
+    LXor = Operation.new('xor', Arity.variadic, associative=True, one_identity=True, commutative=True)
+    LNot = Operation.new('not', Arity.unary)
+    LImplies = Operation.new('implies', Arity.binary)
+    Iff = Operation.new('iff', Arity.binary)
 
     ___ = Wildcard.star()
 

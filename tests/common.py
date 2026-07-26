@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from matchpy.expressions.expressions import (
-    Arity, Operation, NamedAtom, Wildcard, SymbolWildcard, make_dot_variable, make_plus_variable, make_star_variable,
-    make_symbol_variable
+    Arity, Operation, NamedAtom, Wildcard, make_dot_variable, make_plus_variable, make_star_variable
 )
 
 from .utils import MockConstraint
@@ -27,11 +26,7 @@ d = NamedAtom('d')
 a_x = NamedAtom('a', variable_name='x')
 s = SpecialSymbol('s')
 _ = Wildcard.dot()
-_s = Wildcard.symbol()
-_ss = Wildcard.symbol(SpecialSymbol)
 x_ = make_dot_variable('x')
-s_ = make_symbol_variable('s')
-ss_ = make_symbol_variable('ss', SpecialSymbol)
 y_ = make_dot_variable('y')
 z_ = make_dot_variable('z')
 __ = Wildcard.plus()

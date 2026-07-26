@@ -5,8 +5,8 @@ import itertools
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.expressions import (Arity, Operation, NamedAtom, SymbolWildcard, Wildcard, Expression, Pattern)
 from matchpy import match
+from matchpy.expressions.expressions import (Arity, Operation, NamedAtom, Wildcard, Expression, Pattern)
 
 from .common import *
 
@@ -17,8 +17,6 @@ SIMPLE_EXPRESSIONS = [
     x_,
     ___,
     f(_, variable_name='x'),
-    s_,
-    _s,
 ]
 
 SpecialF = Operation.new('special', Arity.variadic)
@@ -232,10 +230,8 @@ class TestExpression:
             (a,                             NamedAtom('a', variable_name='x')),
             (NamedAtom('a', variable_name='x'),     NamedAtom('a', variable_name='y')),
             (a,                             _),
-            (a,                             _s),
             (a,                             x_),
             (_,                             x_),
-            (_s,                            x_),
             (x_,                            y_),
             (x_,                            x__),
             (f(a),                          f(b)),
@@ -247,13 +243,6 @@ class TestExpression:
             (a,                             f(a)),
             (x_,                            f(a)),
             (_,                             f(a)),
-            (_s,                            f(a)),
-            (_s,                            s_),
-            (SymbolWildcard(variable_name='x'),  SymbolWildcard(variable_name='y')),
-            (s_,                            ss_),
-            (_s,                            __),
-            (_,                             _s),
-            (SymbolWildcard(NamedAtom), SymbolWildcard(SpecialSymbol)),
             (f(a),                          SpecialF(a)),
         ]
     )  # yapf: disable
@@ -281,10 +270,6 @@ class TestExpression:
         with pytest.raises(ValueError):
             _ = Wildcard(0, True)
 
-    def test_symbol_wildcard_error(self):
-        with pytest.raises(TypeError):
-            _ = SymbolWildcard(object)
-
     @pytest.mark.parametrize(
         '   expression,                         renaming,       expected_result',
         [
@@ -292,8 +277,6 @@ class TestExpression:
             (a,                                 {'x': 'y'},     a),
             (x_,                                {},             x_),
             (x_,                                {'x': 'y'},     y_),
-            (SymbolWildcard(),                  {},             SymbolWildcard()),
-            (SymbolWildcard(),                  {'x': 'y'},     SymbolWildcard()),
             (f(x_),                             {},             f(x_)),
             (f(x_),                             {'x': 'y'},     f(y_)),
         ]

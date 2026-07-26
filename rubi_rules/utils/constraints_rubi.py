@@ -264,7 +264,9 @@ class HalfIntegerQ(MathematicaConstraint):
             return False
         return True
     def __repr__(self):
-        return f"HalfIntegerQ({', '.join(self._u)})"
+        # str() each element: self._u is a sympy Tuple of WildSymbols, and
+        # ', '.join over non-strings raised TypeError (crashing the rule tracer).
+        return f"HalfIntegerQ({', '.join(str(v) for v in self._u)})"
 
 class FractionQ(MathematicaConstraint):
     """Constraint: all args are explicit fractions."""
@@ -602,10 +604,17 @@ class PolyQ(MathematicaConstraint):
         from .utility_functions import eager_PolyQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
+        # The 2nd arg is NOT always the bare integration variable (unlike FreeQ): the
+        # "P(x) (a+b x^n)^p" rules pass PolyQ(Pq_, v_**n_), so it must be RESOLVED. Left
+        # unresolved it stayed a WildSymbol Pow that every integrand is trivially a
+        # degree-0 "polynomial" in -> PolyQ always True -> rule 1.1.3.7#46 fired on
+        # atanh(a+b x)/(x^2 (1-(a+b x)^2)) and dropped the offset via SubstFor, giving a
+        # wrong (PolyLog-free) answer for Int[atanh(a+b x)^2/x^3].
+        x = self._resolve(self._x, sk)
         if self._n is not None:
             n = self._resolve(self._n, sk)
-            return eager_PolyQ(u, self._x, n)
-        return eager_PolyQ(u, self._x)
+            return eager_PolyQ(u, x, n)
+        return eager_PolyQ(u, x)
     def __repr__(self):
         if self._n is not None:
             return f"PolyQ({self._u}, {self._x}, {self._n})"
@@ -1129,6 +1138,23 @@ class IntQuadraticQ(MathematicaConstraint):
 # Complex single-arg predicates with custom logic
 # =============================================================================
 
+def _fractional_power_factor(u):
+    """Eager FractionalPowerFactorQ over an already-resolved SymPy value.
+
+    Mathematica: AtomQ -> Head===Complex; PowerQ -> FractionQ[exponent]; ProductQ ->
+    recurse First || Rest. Kept separate from the constraint class so the recursion
+    never re-enters check()/_resolve (see the product-branch comment there).
+    """
+    from .utility_functions import eager_AtomQ, eager_PowerQ, eager_FractionQ, eager_First, eager_Rest, eager_ProductQ
+    if eager_AtomQ(u):
+        return bool(u.is_number and u.is_real is False)
+    if eager_PowerQ(u):
+        return eager_FractionQ(u.exp)
+    if eager_ProductQ(u):
+        return _fractional_power_factor(eager_First(u)) or _fractional_power_factor(eager_Rest(u))
+    return False
+
+
 class FractionalPowerFactorQ(MathematicaConstraint):
     """Constraint: a factor of u is complex constant or fractional power."""
     def __init__(self, u):
@@ -1152,8 +1178,14 @@ class FractionalPowerFactorQ(MathematicaConstraint):
             # remaining factors; the old `u.args[1:]` handed a bare TUPLE, which is neither
             # atom/power/product, so the recursion peeled it to an empty args tuple and
             # raised IndexError (Int[x^2 (d+e x)/Sqrt[d^2-e^2 x^2]] etc. crashed here).
-            return (FractionalPowerFactorQ(eager_First(u)).check(**kwargs)
-                    or FractionalPowerFactorQ(eager_Rest(u)).check(**kwargs))
+            #
+            # Recurse on the ALREADY-RESOLVED value with the plain helper below -- NOT by
+            # constructing nested FractionalPowerFactorQ(...).check(**kwargs): each nested
+            # check() re-ran _resolve on the piece, re-substituting matched values by
+            # symbol NAME; when a binding's value contains a same-named symbol (c -> a*c-..),
+            # every level GREW the expression and the recursion never terminated
+            # (RecursionError on (A+Bx+Cx^2)/(sqrt(a+bx)(e+fx)^2 sqrt(ac-bcx))).
+            return _fractional_power_factor(eager_First(u)) or _fractional_power_factor(eager_Rest(u))
         return False
     def __repr__(self):
         return f"FractionalPowerFactorQ({self._u})"
@@ -1385,12 +1417,21 @@ class EveryQ(MathematicaConstraint):
     def __init__(self, func, u):
         self._func = self.args[0]
         self._u = self.args[1]
+    def _apply(self, val, sk):
+        # The functional argument is typically Lambda(xi, BinomialQ(xi, x)): calling it
+        # returns a CONSTRAINT NODE (a sympy Boolean, unconditionally truthy), not a
+        # verdict -- `all(self._func(a) ...)` was therefore always True (same failure
+        # shape as the old ProductQ class-shadowing bug). Run .check() on the result.
+        r = self._func(val)
+        if isinstance(r, MathematicaConstraint):
+            return bool(r.check(**sk))
+        return bool(r)
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         expr = self._resolve(self._u, sk)
         if isinstance(expr, sympy.Basic) and expr.args:
-            return all(self._func(a) for a in expr.args)
-        return bool(self._func(expr))
+            return all(self._apply(a, sk) for a in expr.args)
+        return self._apply(expr, sk)
     def __repr__(self):
         return f"EveryQ(<func>, {self._u})"
 

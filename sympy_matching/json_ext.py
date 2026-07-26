@@ -22,7 +22,7 @@ from sympy.core.basic import Basic as SympyBasic
 from matchpy.matching.json_serialization import (
     serialize_wrapped_value,
     deserialize_wrapped_value,
-    _WRAPPED_VALUE_DESERIALIZERS,
+    register_wrapped_value_deserializer,
 )
 
 
@@ -158,17 +158,18 @@ def _deserialize_sympy_value(data):
         return func(*args)
 
 
-# Install the deserializer
-_WRAPPED_VALUE_DESERIALIZERS['sympy'] = _deserialize_sympy_value
+# Install the deserializer through the public registration API.
+register_wrapped_value_deserializer('sympy', _deserialize_sympy_value)
 
 
 # =============================================================================
 # Python tuple serialization -- for multi-variable constraint args
 # =============================================================================
-# MathematicaConstraint.__new__ normalises list args to tuples so that
-# constraint.args is always hashable (required by SymPy Basic.__hash__).
-# When a constraint such as FreeOf(['a', 'b'], x) is serialised its first arg
-# is the Python tuple (Symbol('a'), Symbol('b')) and needs its own handler.
+# SympyMatchingConstraint.__new__ (sympy_matching/constraint.py) normalises list
+# args to tuples so that constraint.args is always hashable (required by SymPy
+# Basic.__hash__). When a constraint such as the Wolfram FreeQ(['a', 'b'], x) is
+# serialised its first arg is the Python tuple (Symbol('a'), Symbol('b')) and
+# needs its own handler.
 
 @serialize_wrapped_value.register(tuple)
 def _serialize_python_tuple(val):
@@ -184,7 +185,7 @@ def _deserialize_python_tuple(data):
     return tuple(deserialize_wrapped_value(item) for item in data['items'])
 
 
-_WRAPPED_VALUE_DESERIALIZERS['python_tuple'] = _deserialize_python_tuple
+register_wrapped_value_deserializer('python_tuple', _deserialize_python_tuple)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

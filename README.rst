@@ -28,9 +28,9 @@ Expressions
 
 Expressions are tree-like data structures, consisting of operations (functions, internal nodes) and symbols (constants, leaves):
 
->>> from matchpy import Operation, Symbol, Arity
+>>> from matchpy import Operation, NamedAtom, Arity
 >>> f = Operation.new('f', Arity.binary)
->>> a = Symbol('a')
+>>> a = NamedAtom('a')
 >>> print(f(a, a))
 f(a, a)
 
@@ -59,7 +59,7 @@ Given a pattern and an expression (which is usually called subject), the idea of
 
 >>> from matchpy import match
 >>> y = Wildcard.dot('y')
->>> b = Symbol('b')
+>>> b = NamedAtom('b')
 >>> subject = f(a, b)
 >>> pattern = Pattern(f(x, y))
 >>> substitution = next(match(subject, pattern))
@@ -89,7 +89,7 @@ Associativity and Commutativity
 
 MatchPy natively supports associative and/or commutative operations. Nested associative operators are automatically flattened, the operands in commutative operations are sorted:
 
->>> g = Operation.new('g', Arity.polyadic, associative=True, commutative=True)
+>>> g = Operation.new('g', Arity.variadic, associative=True, commutative=True)
 >>> print(g(a, g(b, a)))
 g(a, a, b)
 
@@ -99,7 +99,7 @@ Associativity and commutativity is also considered for pattern matching:
 >>> subject = g(a, a, b)
 >>> print(next(match(subject, pattern)))
 {x ↦ g(a, a)}
->>> h = Operation.new('h', Arity.polyadic)
+>>> h = Operation.new('h', Arity.variadic)
 >>> pattern = Pattern(h(b, x))
 >>> subject = h(a, a, b)
 >>> list(match(subject, pattern))
@@ -108,7 +108,7 @@ Associativity and commutativity is also considered for pattern matching:
 Many-to-One Matching
 ....................
 
-When a fixed set of patterns is matched repeatedly against different subjects, matching can be sped up significantly by using many-to-one matching. The idea of many-to-one matching is to construct a so called discrimination net, a data structure similar to a decision tree or a finite automaton that exploits similarities between patterns. In MatchPy, there are two such data structures, implemented as classes: `DiscriminationNet <https://matchpy.readthedocs.io/en/latest/api/matchpy.matching.syntactic.html>`_ and `ManyToOneMatcher <https://matchpy.readthedocs.io/en/latest/api/matchpy.matching.many_to_one.html>`_. The DiscriminationNet class only supports syntactic pattern matching, that is, operations are neither associative nor commutative. Sequence variables are not supported either. The ManyToOneMatcher class supports associative and/or commutative matching with sequence variables. For syntactic pattern matching, the DiscriminationNet should be used, as it is usually faster.
+When a fixed set of patterns is matched repeatedly against different subjects, matching can be sped up significantly by using many-to-one matching. The idea of many-to-one matching is to construct an automaton-like data structure (similar to a decision tree) that exploits similarities between patterns. In MatchPy this is the `ManyToOneMatcher <https://matchpy.readthedocs.io/en/latest/api/matchpy.matching.many_to_one.html>`_, which supports associative and/or commutative matching with sequence variables. (An older syntactic-only ``DiscriminationNet`` has been removed from this fork.)
 
 >>> pattern1 = Pattern(f(a, x))
 >>> pattern2 = Pattern(f(y, b))

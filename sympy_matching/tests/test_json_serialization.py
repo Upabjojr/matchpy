@@ -10,7 +10,7 @@ import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Integer, Rational, Eq, pi, E, I, oo
 
 from matchpy.expressions.expressions import (
-    Operation, NamedAtom, SymbolWrapper, Wildcard, Pattern, to_expression,
+    Operation, NamedAtom, SymbolWrapper, Wildcard, Pattern, to_matchpy_expression,
 )
 from matchpy.matching.many_to_one import ManyToOneMatcher
 from matchpy.matching.json_serialization import to_json, from_json
@@ -82,7 +82,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(sin(x))
+        subject = to_matchpy_expression(sin(x))
         results = list(matcher2.match(subject))
         assert len(results) == 1
         _, subst = results[0]
@@ -96,7 +96,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(x ** 3)
+        subject = to_matchpy_expression(x ** 3)
         results = list(matcher2.match(subject))
         assert len(results) == 1
         _, subst = results[0]
@@ -111,7 +111,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(sin(x) ** 2)
+        subject = to_matchpy_expression(sin(x) ** 2)
         results = list(matcher2.match(subject))
         assert len(results) == 1
         _, subst = results[0]
@@ -129,13 +129,13 @@ class TestMatcherRoundtrip:
         matcher2 = from_json(json_str)
 
         # sin(x) should match sin pattern
-        results = list(matcher2.match(to_expression(sin(x))))
+        results = list(matcher2.match(to_matchpy_expression(sin(x))))
         labels = [p for p, _ in results]
         assert sin_pat in labels
         assert cos_pat not in labels
 
         # cos(y) should match cos pattern
-        results = list(matcher2.match(to_expression(cos(y))))
+        results = list(matcher2.match(to_matchpy_expression(cos(y))))
         labels = [p for p, _ in results]
         assert cos_pat in labels
         assert sin_pat not in labels
@@ -149,7 +149,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(sin(x) ** 2 + cos(x) ** 2)
+        subject = to_matchpy_expression(sin(x) ** 2 + cos(x) ** 2)
         results = list(matcher2.match(subject))
         assert len(results) >= 1
         found_x = any(subst.get('u') == sw_x for _, subst in results)
@@ -163,7 +163,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(Eq(x ** 2 - 1, 0))
+        subject = to_matchpy_expression(Eq(x ** 2 - 1, 0))
         results = list(matcher2.match(subject))
         assert len(results) == 1
 
@@ -176,7 +176,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(sympy.pi * x)
+        subject = to_matchpy_expression(sympy.pi * x)
         results = list(matcher2.match(subject))
         assert len(results) == 1
         _, subst = results[0]
@@ -191,7 +191,7 @@ class TestMatcherRoundtrip:
         json_str = to_json(matcher)
         matcher2 = from_json(json_str)
 
-        subject = to_expression(Rational(1, 2) * x)
+        subject = to_matchpy_expression(Rational(1, 2) * x)
         results = list(matcher2.match(subject))
         assert len(results) == 1
         _, subst = results[0]

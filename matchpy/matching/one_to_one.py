@@ -4,7 +4,7 @@ from typing import Iterable, Iterator, List, Sequence, Tuple, cast, Set
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Pattern, Operation, OperationHead, NamedAtom, SymbolWrapper, SymbolWildcard, Wildcard
+    Expression, Pattern, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard
 )
 from ..expressions.constraints import Constraint
 from ..expressions.substitution import Substitution
@@ -87,9 +87,6 @@ def _match(subjects: List[Expression], pattern: Expression, subst: Substitution,
         # All size checks are already handled elsewhere
         # When called directly from match, len(subjects) = 1
         # The operation matching also already only assigns valid number of subjects to a wildcard
-        # So all we need to check here is the symbol type for SymbolWildcards
-        if isinstance(pattern, SymbolWildcard) and not isinstance(subjects[0], pattern.symbol_type):
-            return
         match_iter = iter([subst])
         if pattern.default_value is not None and not subjects:
             expr = pattern.default_value
@@ -296,19 +293,15 @@ def _match_commutative_operation(
 
     if not pattern.operation.associative:
         for name, count in fixed_vars.items():
-            min_count, symbol_type, default = pattern.fixed_variable_infos[name]
-            factory = _fixed_var_iter_factory(name, count, min_count, symbol_type, constraints, default)
+            min_count, default = pattern.fixed_variable_infos[name]
+            factory = _fixed_var_iter_factory(name, count, min_count, constraints, default)
             factories.append(factory)
 
         if pattern.wildcard_fixed is True:
-            factory = _fixed_var_iter_factory(None, 1, pattern.wildcard_min_length, None, constraints, None)
+            factory = _fixed_var_iter_factory(None, 1, pattern.wildcard_min_length, constraints, None)
             factories.append(factory)
-    else:
-        for name, count in fixed_vars.items():
-            min_count, symbol_type, default = pattern.fixed_variable_infos[name]
-            if symbol_type is not None:
-                factory = _fixed_var_iter_factory(name, count, min_count, symbol_type, constraints, default)
-                factories.append(factory)
+    # (associative operations treat their fixed variables as sequence variables below;
+    # the old symbol-typed exception is gone along with SymbolWildcard.)
 
     for rem_expr, substitution in generator_chain((subjects, substitution), *factories):
         sequence_vars = _variables_with_counts(pattern.sequence_variables, pattern.sequence_variable_infos)
@@ -346,7 +339,7 @@ def _match_commutative_operation(
 def _variables_with_counts(variables, infos):
     return tuple(
         VariableWithCount(name, count, infos[name].min_count, infos[name].default)
-        for name, count in variables.items() if infos[name].type is None
+        for name, count in variables.items()
     )
 
 
@@ -361,7 +354,7 @@ def _fixed_expr_factory(expression, constraints):
     return factory
 
 
-def _fixed_var_iter_factory(variable_name, count, length, symbol_type, constraints, optional):
+def _fixed_var_iter_factory(variable_name, count, length, constraints, optional):
     def factory(data):
         subjects, substitution = data
         if variable_name in substitution:
@@ -380,7 +373,7 @@ def _fixed_var_iter_factory(variable_name, count, length, symbol_type, constrain
                 yield subjects, new_substitution
             if length == 1:
                 for expr, expr_count in subjects.items():
-                    if expr_count >= count and (symbol_type is None or isinstance(expr, symbol_type)):
+                    if expr_count >= count:
                         if variable_name is not None:
                             new_substitution = Substitution(substitution)
                             new_substitution[variable_name] = expr

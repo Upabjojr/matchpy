@@ -15,9 +15,9 @@ Symbols
 
 First off, we create simple classes for our scalars and vectors:
 
->>> class Scalar(Symbol):
+>>> class Scalar(NamedAtom):
 ...     pass
->>> class Vector(Symbol):
+>>> class Vector(NamedAtom):
 ...     pass
 
 Now we can create vectors and scalars like this:
@@ -28,7 +28,7 @@ Now we can create vectors and scalars like this:
 For matrices, we want to be able to specify additional properties that a matrix has, for
 example it might be a diagonal or triangular matrix. We will just use a set of strings for the properties:
 
->>> class Matrix(Symbol):
+>>> class Matrix(NamedAtom):
 ...     def __init__(self, name, properties=[]):
 ...         super().__init__(name)
 ...         self.properties = frozenset(properties)
@@ -44,7 +44,7 @@ Operations
 
 We can quickly create a new operation using the `.Operation.new` factory method:
 
->>> Times = Operation.new('*', Arity.variadic, 'Times', associative=True, one_identity=True, infix=True)
+>>> Times = Operation.new('*', Arity.variadic, associative=True, one_identity=True, infix=True)
 
 We need to specify a name (``'*'``) and arity for the operation. In case that the name is not a valid python identifier,
 we also need to specify a class name (``'Times'``). The matrix multiplication is associative, but not commutative.
@@ -54,30 +54,24 @@ by that operand:
 >>> Times(a)
 Scalar('a')
 
-The infix property is used when printing terms so that they look prettier:
+The infix flag allows a non-identifier name like ``'*'``; terms are still printed in prefix form
+(``name(operand, ...)``):
 
 >>> print(Times(a, v))
-(a * v)
+*(a, v)
 
-An alternative way of adding a new operation, is creating a subclass of `.Operation` manually.
-This is especially useful, if you want to add custom methods or properties to your operations.
-For example, we can customize the string formatting of the transposition:
+In this fork, ``Operation`` is a fixed value class parameterised by an ``OperationHead`` — operations are
+not defined by subclassing ``Operation``. `.Operation.new` returns the head, which is callable to build
+terms, so we define the remaining operations the same way:
 
->>> class Transpose(Operation):
-...     name = '^T'
-...     arity = Arity.unary
-...     def __str__(self):
-...         return '({})^T'.format(self.operands[0])
-
-Lets define the remaining operations:
-
->>> Plus = Operation.new('+', Arity.variadic, 'Plus', one_identity=True, infix=True, commutative=True, associative=True)
->>> Inverse = Operation.new('I', Arity.unary, 'Inverse')
+>>> Transpose = Operation.new('Transpose', Arity.unary)
+>>> Plus = Operation.new('+', Arity.variadic, one_identity=True, infix=True, commutative=True, associative=True)
+>>> Inverse = Operation.new('I', Arity.unary)
 
 Finally, we can compose more complex terms:
 
 >>> print(Plus(Times(v, Transpose(v)), Times(a, Inverse(M1))))
-((a * I(M1)) + (v * (v)^T))
++(*(a, I(M1)), *(v, Transpose(v)))
 
 Note that the summands are automatically sorted, because *Plus* is commutative.
 
@@ -91,20 +85,22 @@ In patterns, we can use `wildcards <.Wildcard>` as a placehold that match anythi
 True
 
 However, for our linear algebra patterns, we want to distinguish between different kinds of symbols.
-Hence, we can make use of `symbol wildcards <.SymbolWildcard>`, e.g. to create a wildcard that only matches vectors:
+A wildcard by itself matches anything, so we combine a *named* wildcard with a `.CustomConstraint`
+on the matched value (constraints are covered fully in the next section):
 
->>> _v = Wildcard.symbol(Vector)
->>> is_match(a, Pattern(_v))
+>>> v_ = Wildcard.dot('v')
+>>> v_is_vector = CustomConstraint(lambda v: isinstance(v, Vector))
+>>> is_match(a, Pattern(v_, v_is_vector))
 False
->>> is_match(v, Pattern(_v))
+>>> is_match(v, Pattern(v_, v_is_vector))
 True
 
 We can also assign a name to wildcards and in that case, we call them variables. These names are used to
 populate the match substitution in case there is a match:
 
 >>> x_ = Wildcard.dot('x')
->>> next(match(Times(a, v), Pattern(Times(x_, _v))))
-{'x': Scalar('a')}
+>>> next(match(Times(a, v), Pattern(Times(x_, v_), v_is_vector)))
+{'v': Vector('v'), 'x': Scalar('a')}
 
 Constraints
 -----------
@@ -115,8 +111,8 @@ class with any (lambda) function, or create your own subclass of `.Constraint`.
 
 For example, if we want to only match diagonal matrices with a certain variable, we can create a constraint for that:
 
->>> C_ = Wildcard.symbol('M3', Matrix)
->>> C_is_diagonal_matrix = CustomConstraint(lambda M3: 'diagonal' in M3.properties)
+>>> C_ = Wildcard.dot('M3')
+>>> C_is_diagonal_matrix = CustomConstraint(lambda M3: isinstance(M3, Matrix) and 'diagonal' in M3.properties)
 >>> pattern = Pattern(C_, C_is_diagonal_matrix)
 
 Then the variable *M3* will only match diagonal matrices:
@@ -181,7 +177,7 @@ Because ``Times`` is associative, these rules even work for more complex express
 
 >>> expr3 = Times(M1, M1, M2, Inverse(Times(M1, M2)), M2)
 >>> replace_all(expr3, simplify_matrix_inverse_rules)
-Times(Matrix('M1'), Matrix('M2'))
+Operation(*, Matrix('M1'), Matrix('M2'))
 
 Note that we can normalize a matrix product inside an inversion by moving it outside, i.e.
 using the equality :math:`(A B)^{-1} = B^{-1} A^{-1}`:
@@ -198,13 +194,13 @@ This allows us to simplify an expression like this:
 
 >>> expr4 = Times(M1, M2, Inverse(Times(M3, M1, M2)))
 >>> replace_all(expr4, simplify_matrix_inverse_rules)
-Inverse(Matrix('M3'))
+Operation(I, Matrix('M3'))
 
 Or this:
 
 >>> expr5 = Times(M1, M2, Inverse(Times(M3, M2)))
 >>> replace_all(expr5, simplify_matrix_inverse_rules)
-Times(Matrix('M1'), Inverse(Matrix('M3')))
+Operation(*, Matrix('M1'), Operation(I, Matrix('M3')))
 
 Example: Finding matches for a BLAS kernel
 ------------------------------------------
@@ -216,19 +212,20 @@ the `?TRMM`_ BLAS_ routine. These all have the form :math:`\alpha op(A) B` or :m
 
 First, we define the variables and constraints we need:
 
->>> A_ = Wildcard.symbol('A', Matrix)
->>> B_ = Wildcard.symbol('B', Matrix)
+>>> A_ = Wildcard.dot('A')
+>>> B_ = Wildcard.dot('B')
 >>> before_ = Wildcard.star('before')
 >>> after_ = Wildcard.star('after')
->>> A_is_triangular = CustomConstraint(lambda A: 'triangular' in A.properties)
+>>> A_is_triangular = CustomConstraint(lambda A: isinstance(A, Matrix) and 'triangular' in A.properties)
+>>> B_is_matrix = CustomConstraint(lambda B: isinstance(B, Matrix))
 
 Then we can construct the patterns, again using context variables to capture the remaining operands:
 
 >>> trmm_patterns = [
-...     Pattern(Times(before_, A_, B_, after_), A_is_triangular),
-...     Pattern(Times(before_, Transpose(A_), B_, after_), A_is_triangular),
-...     Pattern(Times(before_, B_, A_, after_), A_is_triangular),
-...     Pattern(Times(before_, B_, Transpose(A_), after_), A_is_triangular),
+...     Pattern(Times(before_, A_, B_, after_), A_is_triangular, B_is_matrix),
+...     Pattern(Times(before_, Transpose(A_), B_, after_), A_is_triangular, B_is_matrix),
+...     Pattern(Times(before_, B_, A_, after_), A_is_triangular, B_is_matrix),
+...     Pattern(Times(before_, B_, Transpose(A_), after_), A_is_triangular, B_is_matrix),
 ... ]
 
 Then, we can find all matching subexpressions using `.one_to_one.match`:

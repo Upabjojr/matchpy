@@ -95,28 +95,61 @@ def _resolve_fields(cls):
     return fields
 
 
+def _compile_setter(cls):
+    """Code-generate a specialized ``(self, kwargs) -> None`` initializer for ``cls``.
+
+    Semantically identical to the old generic ``TypedModel.__init__`` loop, but with
+    the per-field work (name lookup, default/factory, type-check, setattr) unrolled
+    into straight-line code -- the same trick ``dataclasses`` uses. This matters
+    because every matchpy ``Expression`` node is a TypedModel: building the Rubi
+    ManyToOneMatcher creates ~3.1 million nodes, and the generic loop's field-dict
+    iteration + spec unpacking was one of the top construction hotspots.
+
+    Cached on the class as ``__typed_setter__`` (checked via ``cls.__dict__`` so a
+    subclass never inherits a base's setter, which would miss its extra fields).
+    """
+    fields = _resolve_fields(cls)
+    env = {'_MISSING': _MISSING, '_setattr': object.__setattr__}
+    lines = ['def __typed_setter__(self, kwargs):']
+    if not fields:
+        lines.append('    pass')
+    for i, (name, (spec, checker)) in enumerate(fields.items()):
+        get = f"    value = kwargs.pop({name!r}, _MISSING)"
+        lines.append(get)
+        if spec.default_factory is not None:
+            env[f'_fac{i}'] = spec.default_factory
+            lines.append(f"    if value is _MISSING: value = _fac{i}()")
+        elif spec.default is not _MISSING:
+            env[f'_def{i}'] = spec.default
+            lines.append(f"    if value is _MISSING: value = _def{i}")
+        else:
+            lines.append(f"    if value is _MISSING:")
+            lines.append(f"        raise TypeError({cls.__name__ + ': missing required argument ' + repr(name)!r})")
+        if checker is not None:
+            env[f'_chk{i}'] = checker[1]
+            msg = "{}.{} expected {}, got {{}}".format(cls.__name__, name, checker[0])
+            lines.append(f"    if not _chk{i}(value):")
+            lines.append(f"        raise TypeError({msg!r}.format(type(value).__name__))")
+        lines.append(f"    _setattr(self, {name!r}, value)")
+    # Leftover kwargs: same lenient semantics as before -- ignore names that exist as
+    # class-level attributes (a field a subclass turned into a ClassVar, still passed
+    # by a base __init__); error only on genuinely unknown names.
+    lines.append('    if kwargs:')
+    lines.append('        unexpected = [k for k in kwargs if not hasattr(type(self), k)]')
+    lines.append('        if unexpected:')
+    lines.append(f"            raise TypeError('{cls.__name__}: unexpected keyword arguments ' + repr(unexpected))")
+    exec('\n'.join(lines), env)
+    setter = env['__typed_setter__']
+    cls.__typed_setter__ = setter
+    return setter
+
+
 class TypedModel:
     """Base for annotation-declared, type-checked value objects (replaces BaseModel)."""
 
     def __init__(self, **kwargs):
-        for name, (spec, checker) in _resolve_fields(type(self)).items():
-            if name in kwargs:
-                value = kwargs.pop(name)
-            elif spec.default_factory is not None:
-                value = spec.default_factory()
-            elif spec.default is not _MISSING:
-                value = spec.default
-            else:
-                raise TypeError("{}: missing required argument '{}'".format(type(self).__name__, name))
-            if checker is not None and not checker[1](value):
-                raise TypeError("{}.{} expected {}, got {}".format(
-                    type(self).__name__, name, checker[0], type(value).__name__))
-            object.__setattr__(self, name, value)
-        if kwargs:
-            # Ignore leftover kwargs that name a class-level attribute (e.g. a
-            # field a subclass turned into a ClassVar, still passed by a base
-            # __init__); error only on genuinely unknown names.
-            unexpected = [k for k in kwargs if not hasattr(type(self), k)]
-            if unexpected:
-                raise TypeError("{}: unexpected keyword arguments {}".format(
-                    type(self).__name__, unexpected))
+        cls = type(self)
+        setter = cls.__dict__.get('__typed_setter__')
+        if setter is None:
+            setter = _compile_setter(cls)
+        setter(self, kwargs)

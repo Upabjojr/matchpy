@@ -5,7 +5,7 @@ import importlib
 import sympy
 from sympy import Symbol, S
 
-from matchpy import to_expression
+from matchpy import to_matchpy_expression
 
 from sympy_matching.conversion import matchpy_to_sympy
 from sympy_matching.operations import SYMPY_NODES
@@ -97,9 +97,9 @@ for module_path, class_name, arity_code in SYMPY_NODES:
 
 @pytest.mark.parametrize("func", _UNARY_CASES, ids=lambda f: f.__name__)
 def test_unary_roundtrip(func):
-    """Each registered unary function should survive to_expression -> matchpy_to_sympy roundtrip."""
+    """Each registered unary function should survive to_matchpy_expression -> matchpy_to_sympy roundtrip."""
     expr = func(x)
-    mp_expr = to_expression(expr)
+    mp_expr = to_matchpy_expression(expr)
     result = matchpy_to_sympy(mp_expr)
     assert result == expr, f"{func.__name__}: roundtrip gave {result}, expected {expr}"
 
@@ -107,8 +107,8 @@ def test_unary_roundtrip(func):
 @pytest.mark.parametrize("func,args", _MULTI_ARG_CASES,
                          ids=lambda f: f.__name__ if callable(f) else "")
 def test_multi_arg_roundtrip(func, args):
-    """Each registered multi-arg function should survive to_expression -> matchpy_to_sympy roundtrip."""
+    """Each registered multi-arg function should survive to_matchpy_expression -> matchpy_to_sympy roundtrip."""
     expr = func(*args)
-    mp_expr = to_expression(expr)
+    mp_expr = to_matchpy_expression(expr)
     result = matchpy_to_sympy(mp_expr)
     assert result == expr, f"{func.__name__}: roundtrip gave {result}, expected {expr}"

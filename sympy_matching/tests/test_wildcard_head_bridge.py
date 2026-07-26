@@ -11,7 +11,7 @@ Three pieces are covered:
     a matched function head wrapped as a substitutable SymPy Symbol (a function
     *class* is not a SymPy expression, so it cannot be substituted directly).
 
-``matchpy_to_sympy`` / ``from_expression``
+``matchpy_to_sympy`` / ``from_matchpy_expression``
     a matched head arrives as ``SymbolWrapper(OperationHead)`` and MUST come back
     as a ``HeadRef`` -- never as the raw ``OperationHead``, which would blow up on
     the first arithmetic operation.
@@ -25,7 +25,7 @@ from matchpy.expressions.expressions import (
 )
 from matchpy.matching.many_to_one import ManyToOneMatcher
 
-from sympy_matching.conversion import matchpy_to_sympy, to_expression
+from sympy_matching.conversion import matchpy_to_sympy, to_matchpy_expression
 from sympy_matching.operations import HEAD_TO_SYMPY_FUNC, SYMPY_FUNC_TO_HEAD
 from sympy_matching.wild import HeadRef, WildHeadApp, WildHeadDeriv, WildSymbol
 
@@ -64,7 +64,7 @@ class TestWildHeadAppConversion:
 
     def test_converts_to_operation_with_wildcard_head(self):
         F, v = WildSymbol('F'), WildSymbol('v')
-        expr = to_expression(WildHeadApp(F, v))
+        expr = to_matchpy_expression(WildHeadApp(F, v))
         assert isinstance(expr, Operation)
         assert isinstance(expr.head, WildcardOperationHead)
         assert expr.head.variable_name == 'F'
@@ -72,20 +72,20 @@ class TestWildHeadAppConversion:
 
     def test_head_variable_name_follows_the_wildcard(self):
         for name in ('F', 'G', 'trig'):
-            expr = to_expression(WildHeadApp(WildSymbol(name), WildSymbol('v')))
+            expr = to_matchpy_expression(WildHeadApp(WildSymbol(name), WildSymbol('v')))
             assert expr.head.variable_name == name
 
     def test_operands_are_converted_recursively(self):
         F, a, b = WildSymbol('F'), WildSymbol('a'), WildSymbol('b')
-        expr = to_expression(WildHeadApp(F, a + b * x))
+        expr = to_matchpy_expression(WildHeadApp(F, a + b * x))
         # the single operand is the converted `a + b*x`, an ADD operation
         assert len(expr.operands) == 1
         assert isinstance(expr.operands[0], Operation)
 
     def test_arity_follows_the_number_of_arguments(self):
         F, u, v = WildSymbol('F'), WildSymbol('u'), WildSymbol('v')
-        assert len(to_expression(WildHeadApp(F, u)).operands) == 1
-        assert len(to_expression(WildHeadApp(F, u, v)).operands) == 2
+        assert len(to_matchpy_expression(WildHeadApp(F, u)).operands) == 1
+        assert len(to_matchpy_expression(WildHeadApp(F, u, v)).operands) == 2
 
 
 # =============================================================================
@@ -166,8 +166,8 @@ class TestEndToEnd:
 
     def _match(self, sympy_pattern, sympy_subject):
         m = ManyToOneMatcher()
-        m.add(Pattern(to_expression(sympy_pattern)), label='p')
-        return [subst for _, subst in m.match(to_expression(sympy_subject))]
+        m.add(Pattern(to_matchpy_expression(sympy_pattern)), label='p')
+        return [subst for _, subst in m.match(to_matchpy_expression(sympy_subject))]
 
     @pytest.mark.parametrize('func', [sympy.sin, sympy.cos, sympy.atan])
     def test_wild_head_app_matches_any_function_and_returns_a_headref(self, func):
@@ -208,27 +208,27 @@ class TestWildHeadDerivConversion:
 
     def test_produces_a_derivative_operation(self):
         F, n = WildSymbol('F'), WildSymbol('n')
-        expr = to_expression(WildHeadDeriv(F, x, n))
+        expr = to_matchpy_expression(WildHeadDeriv(F, x, n))
         assert isinstance(expr, Operation)
         assert expr.head.name == 'Derivative'
         assert len(expr.operands) == 2
 
     def test_the_inner_application_carries_a_wildcard_head(self):
         F, n = WildSymbol('F'), WildSymbol('n')
-        inner = to_expression(WildHeadDeriv(F, x, n)).operands[0]
+        inner = to_matchpy_expression(WildHeadDeriv(F, x, n)).operands[0]
         assert isinstance(inner.head, WildcardOperationHead)
         assert inner.head.variable_name == 'F'
 
     def test_the_variable_spec_is_a_tuple_of_var_and_order(self):
         F, n = WildSymbol('F'), WildSymbol('n')
-        spec = to_expression(WildHeadDeriv(F, x, n)).operands[1]
+        spec = to_matchpy_expression(WildHeadDeriv(F, x, n)).operands[1]
         assert spec.head.name == 'Tuple'
         assert len(spec.operands) == 2
 
     def test_shape_matches_a_real_derivative_except_for_the_head(self):
         F, n = WildSymbol('F'), WildSymbol('n')
-        pat = to_expression(WildHeadDeriv(F, x, n))
-        subj = to_expression(sympy.Derivative(sympy.Function('f')(x), (x, 2)))
+        pat = to_matchpy_expression(WildHeadDeriv(F, x, n))
+        subj = to_matchpy_expression(sympy.Derivative(sympy.Function('f')(x), (x, 2)))
         assert pat.head == subj.head
         assert len(pat.operands) == len(subj.operands)
         assert pat.operands[1].head == subj.operands[1].head
@@ -252,23 +252,23 @@ class TestDerivativeRoundtrip:
     def test_roundtrip_is_exact(self, order):
         f = sympy.Function('f')
         orig = sympy.Derivative(f(x), (x, order))
-        rt = matchpy_to_sympy(to_expression(orig))
+        rt = matchpy_to_sympy(to_matchpy_expression(orig))
         assert rt == orig
         assert isinstance(rt, sympy.Derivative)
 
     def test_roundtrip_of_a_first_derivative_written_without_a_spec(self):
         f = sympy.Function('f')
-        rt = matchpy_to_sympy(to_expression(sympy.Derivative(f(x), x)))
+        rt = matchpy_to_sympy(to_matchpy_expression(sympy.Derivative(f(x), x)))
         assert rt == sympy.Derivative(f(x), x)
 
     def test_roundtrip_of_a_multivariate_derivative(self):
         y = sympy.Symbol('y')
         f = sympy.Function('f')
         orig = sympy.Derivative(f(x, y), (x, 2), (y, 1))
-        assert matchpy_to_sympy(to_expression(orig)) == orig
+        assert matchpy_to_sympy(to_matchpy_expression(orig)) == orig
 
     def test_the_result_is_usable_as_a_derivative(self):
-        rt = matchpy_to_sympy(to_expression(sympy.Derivative(sympy.sin(x), (x, 2))))
+        rt = matchpy_to_sympy(to_matchpy_expression(sympy.Derivative(sympy.sin(x), (x, 2))))
         assert rt.doit() == -sympy.sin(x)
 
 
@@ -276,8 +276,8 @@ class TestWildHeadDerivMatching:
 
     def _match(self, sympy_pattern, sympy_subject):
         m = ManyToOneMatcher()
-        m.add(Pattern(to_expression(sympy_pattern)), label='p')
-        return [subst for _, subst in m.match(to_expression(sympy_subject))]
+        m.add(Pattern(to_matchpy_expression(sympy_pattern)), label='p')
+        return [subst for _, subst in m.match(to_matchpy_expression(sympy_subject))]
 
     @pytest.mark.parametrize('order', [2, 3, 4])
     def test_matches_any_function_and_binds_head_and_order(self, order):

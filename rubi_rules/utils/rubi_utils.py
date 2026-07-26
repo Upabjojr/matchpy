@@ -6,17 +6,18 @@ e.g. ``ExpandToSum[v, x]``, must evaluate only WHEN THE RULE FIRES, with the
 matched value of ``v`` — never at rule-definition/import time while ``v`` is
 still a symbolic wildcard.
 
-To model that, every RUBI utility exists in two forms with the SAME name:
+To model that, every RUBI utility exists in two forms:
 
-* ``utility_functions.<Name>`` — an EAGER plain Python function that computes
-  immediately. This is the real implementation.
-* ``rubi_utils.<Name>`` — a DEFERRED ``MathematicaExpr`` subclass. Constructing
-  it (``ExpandToSum(v_, x)``) just builds an unevaluated node; its ``_evaluate``
-  (invoked by ``.doit()``) delegates to the eager ``utility_functions.<Name>``.
+* ``utility_functions.eager_<Name>`` — an EAGER plain Python function that
+  computes immediately. This is the real implementation.
+* ``rubi_utils.<Name>`` — a DEFERRED ``MathematicaExpr`` subclass keeping the
+  bare Mathematica name. Constructing it (``ExpandToSum(v_, x)``) just builds an
+  unevaluated node; its ``_evaluate`` (invoked by ``.doit()``) delegates to the
+  eager ``utility_functions.eager_<Name>``.
 
 Generated rule modules import the DEFERRED classes (via ``from rubi_utils import *``)
 so replacement expressions hold unevaluated nodes. ``_make_replacement_fn``
-(rubi_rules/base_objects.py) substitutes the matched wildcard values first and
+(sympy_matching/matching_rule.py) substitutes the matched wildcard values first and
 only then calls ``.doit()`` — so the eager function runs at fire time on concrete
 arguments, exactly like Mathematica's ``:>``.
 
@@ -153,9 +154,17 @@ class FracPart(MathematicaExpr):
         return Expr.__new__(cls, u, n)
 
     def _evaluate(self, **kwargs):
+        # Rubi: FracPart[u,n] = FractionalPart[n*u] for rationals -- TRUNCATION toward
+        # zero (FracPart[-3/2] = -1/2), NOT sympy's frac (periodic; frac(-3/2) = 1/2).
+        # The sign of the surviving fractional exponent matters for branch-cut-sensitive
+        # forms like (a+b x)^FracPart[p]. Delegates to the eager implementation.
         u, n = self.args
+        if n == S.One:
+            from .utility_functions import eager_FracPart
+            return eager_FracPart(u)
         if u.is_Rational:
-            return frac(n * u)
+            from .utility_functions import FractionalPart
+            return FractionalPart(n * u)
         if u.is_Add:
             result = S.Zero
             for term in u.args:
@@ -180,9 +189,15 @@ class IntPart(MathematicaExpr):
         return Expr.__new__(cls, u, n)
 
     def _evaluate(self, **kwargs):
+        # Rubi: IntPart[u,n] = IntegerPart[n*u] for rationals -- truncation toward zero
+        # (IntPart[-3/2] = -1), NOT floor (-2). Delegates to the eager implementation.
         u, n = self.args
+        if n == S.One:
+            from .utility_functions import eager_IntPart
+            return eager_IntPart(u)
         if u.is_Rational:
-            return floor(n * u)
+            from .utility_functions import IntegerPart
+            return IntegerPart(n * u)
         if u.is_Add:
             result = S.Zero
             for term in u.args:
@@ -494,15 +509,6 @@ SubstrFor = SubstFor
 
 
 # =============================================================================
-# Re-export all utility functions from utility_functions.py
-#
-# rubi_utils.py is NOT a generated file, so it can import from utility_functions.
-# Generated rule files (rubi_rules/rules/*.py) import from rubi_utils, not from
-# utility_functions, keeping the generated code clean.
-# =============================================================================
-
-
-# =============================================================================
 # Additional RUBI utility wrappers for generated code
 # These wrap utility_functions.* implementations for use in generated rules
 # =============================================================================
@@ -533,7 +539,7 @@ class Star(MathematicaExpr):
     Rubi co-opts Wolfram's meaning-free ``\\[Star]`` infix operator as a product
     that displays as ``u*v`` and evaluates by distributing ``u`` over the terms of
     ``v`` (see the module docstring on deferred vs eager nodes). Delegates to the
-    eager :func:`utility_functions.Star`.
+    eager :func:`utility_functions.eager_Star`.
 
     In the source rules this arrives as an infix ``u \\[Star] Int[...]``; the
     code generator reconstructs it into ``Star(u, v)`` (see
@@ -814,7 +820,7 @@ class Rt(MathematicaExpr):
     Deferred so that rules using ``Rt[u, n_]`` (n_ a wildcard exponent) build an
     unevaluated node at import time and only compute the actual root at fire time,
     once ``n_`` is bound to a concrete integer.  ``_evaluate`` delegates to the eager
-    ``utility_functions.Rt`` (= ``RtAux[TogetherSimplify[u], n]``), which reproduces
+    ``utility_functions.eager_Rt`` (= ``RtAux[TogetherSimplify[u], n]``), which reproduces
     Mathematica's ``Rt``: pull perfect nth powers out of products/powers, handle sign
     for odd/even n, and fall back to the principal ``NthRoot[u, n] = u^(1/n)``.
 

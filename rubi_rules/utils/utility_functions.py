@@ -61,7 +61,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.ntheory.factor_ import (factorint, factorrat)
 from sympy.polys.partfrac import apart
-from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed, NotInvertible)
+from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed, NotInvertible, GeneratorsNeeded)
 from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree, invert)
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.powsimp import powdenest
@@ -90,8 +90,8 @@ from sympy_wolfram.functions_eager import (
 )
 
 
-from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_expression, \
-    to_expression
+from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_matchpy_expression, \
+    to_matchpy_expression
 from matchpy import is_match, replace_all
 from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
 
@@ -119,7 +119,7 @@ def _ReplacementRuleWrapped(pattern, replacement):
         result = replacement(**converted)
         # Ensure result is a matchpy Expression for replace_all
         if not isinstance(result, (Operation, _MatchPySymbolWrapper)):
-            result = to_expression(result)
+            result = to_matchpy_expression(result)
         return result
     wrapped.__name__ = getattr(replacement, '__name__', 'replacement')
     wrapped.__qualname__ = getattr(replacement, '__qualname__', 'replacement')
@@ -129,12 +129,11 @@ def _ReplacementRuleWrapped(pattern, replacement):
 UtilityOp = Operation.new(
     'UtilityOp',
     Arity.variadic,
-    'UtilityOp',
     associative=True, commutative=False, one_identity=False)
 
 
 def UtilityOperator(*args):
-    return UtilityOp(*(to_expression(arg) for arg in args))
+    return UtilityOp(*(to_matchpy_expression(arg) for arg in args))
 
 
 A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, \
@@ -797,7 +796,10 @@ def Re(u):
 def eager_InverseHyperbolicQ(u):
     if not u.is_Atom:
         u = eager_Head(u)
-    return u in [acosh, asinh, atanh, acoth, acsch, acsch]
+    # Rubi $InverseHyperbolicFunctions = {ArcSinh, ArcCosh, ArcTanh, ArcCoth, ArcSech, ArcCsch};
+    # asech was missing here (acsch was listed twice), so asech(...) integrands were
+    # wrongly classified as containing no inverse function.
+    return u in [acosh, asinh, atanh, acoth, asech, acsch]
 
 def eager_InverseFunctionQ(u):
     # returns True if u is a call on an inverse function; else returns False.
@@ -1306,7 +1308,12 @@ def eager_GCD(*args):
             return args[0]
         else:
             return S(1)
-    return gcd(*args)
+    # Fold pairwise: sympy's gcd(f, g, *gens) treats a 3rd positional arg as a
+    # GENERATOR, not an operand -- eager_GCD(6, 10, 15) returned 2 (true gcd 1).
+    result = gcd(args[0], args[1])
+    for a in args[2:]:
+        result = gcd(result, a)
+    return result
 
 def ContentFactor(expn):
     return factor_terms(expn)
@@ -1321,11 +1328,15 @@ def NumericFactor(u):
         else:
             return S(1)
     elif eager_PowerQ(u):
-        if eager_RationalQ(u.base) and eager_RationalQ(u.exp):
+        # Rubi: If[RationalQ[u[[1]]] && FractionQ[u[[2]]],
+        #          If[u[[2]]>0, 1/Denominator[u[[1]]], 1/Denominator[1/u[[1]]]], 1].
+        # The old code tested RationalQ on the exponent (too broad) and simplified the
+        # negative branch to Denominator[b] instead of 1/Denominator[1/b] (= 1/Numerator[b]).
+        if eager_RationalQ(u.base) and eager_FractionQ(u.exp):
             if u.exp > 0:
                 return 1/eager_Denominator(u.base)
             else:
-                return 1/(1/eager_Denominator(u.base))
+                return 1/eager_Denominator(1/u.base)
         else:
             return S(1)
     elif eager_ProductQ(u):
@@ -1643,28 +1654,49 @@ def ExpandAlgebraicFunction(expr, x):
 
     return expr
 
+def _reciprocal_of_linear_parts(term, x):
+    """If ``term == e/(a + b*x)`` with ``e, a, b`` free of x and b != 0, return
+    ``(e, a, b)``; else None. Structural classifier used by CollectReciprocals."""
+    num, den = term.as_numer_denom()
+    if x in num.free_symbols:
+        return None
+    try:
+        poly = Poly(den, x)
+    except (PolynomialError, GeneratorsNeeded):
+        return None
+    if poly.degree() != 1:
+        return None
+    b, a = poly.all_coeffs()
+    if x in a.free_symbols or x in b.free_symbols:
+        return None
+    return (num, a, b)
+
+
+@_pure_expr_cache(maxsize=20000)
 def CollectReciprocals(expr, x):
     # Basis: e/(a+b x)+f/(c+d x)==(c e+a f+(d e+b f) x)/(a c+(b c+a d) x+b d x^2)
+    #
+    # STRUCTURAL scan instead of the old Wild .match: matching the 7-wildcard pattern
+    # ``u_ + e_/(a_+b_*x) + f_/(c_+d_*x)`` against a COMMUTATIVE Add backtracks
+    # exponentially per call (14% of a profiled log-family timeout, where every DFS
+    # step feeds a DISTINCT sum so the memo cache cannot absorb it). The scan
+    # classifies each term as e/(a+b*x) once (linear-time) and tests the zero
+    # conditions pairwise -- same semantics, polynomial cost. Memoised on top.
     if eager_SumQ(expr):
-        u_ = Wild('u')
-        a_ = Wild('a', exclude=[x])
-        b_ = Wild('b', exclude=[x])
-        c_ = Wild('c', exclude=[x])
-        d_ = Wild('d', exclude=[x])
-        e_ = Wild('e', exclude=[x])
-        f_ = Wild('f', exclude=[x])
-        pattern = u_ + e_/(a_ + b_*x) + f_/(c_+d_*x)
-        match = expr.match(pattern)
-        if match:
-            try: # .match() does not work properly always
-                keys = [u_, a_, b_, c_, d_, e_, f_]
-                u, a, b, c, d, e, f = tuple([match[i] for i in keys])
-                if ZeroQ(b*c + a*d) & ZeroQ(d*e + b*f):
-                    return CollectReciprocals(u + (c*e + a*f)/(a*c + b*d*x**2),x)
-                elif ZeroQ(b*c + a*d) & ZeroQ(c*e + a*f):
-                    return CollectReciprocals(u + (d*e + b*f)*x/(a*c + b*d*x**2),x)
-            except:
-                pass
+        terms = list(expr.args)
+        recips = [(i, _reciprocal_of_linear_parts(t, x)) for i, t in enumerate(terms)]
+        recips = [(i, r) for i, r in recips if r is not None]
+        for ii in range(len(recips)):
+            i, (e, a, b) = recips[ii]
+            for jj in range(ii + 1, len(recips)):
+                j, (f, c, d) = recips[jj]
+                if not ZeroQ(b*c + a*d):
+                    continue
+                rest = Add(*[t for k, t in enumerate(terms) if k not in (i, j)])
+                if ZeroQ(d*e + b*f):
+                    return CollectReciprocals(rest + (c*e + a*f)/(a*c + b*d*x**2), x)
+                if ZeroQ(c*e + a*f):
+                    return CollectReciprocals(rest + (d*e + b*f)*x/(a*c + b*d*x**2), x)
     return expr
 
 def ExpandCleanup(u, x):
@@ -1793,7 +1825,14 @@ def eager_Denom(u):
 def eager_Expon(expr, form):
     return eager_Exponent(eager_Together(expr), form)
 
+@_pure_expr_cache(maxsize=20000)
 def MergeMonomials(expr, x):
+    # MEMOISED: this runs two sympy Wild .match calls per invocation, and matching a
+    # COMMUTATIVE product backtracks exponentially (_matches_commutative was the top
+    # self-time frame of a profiled 60s+ trig timeout: NormalizeIntegrandAux ->
+    # MergeMonomials held 60% of all samples, recomputed on the same expressions
+    # throughout the DFS -- one NormalizeIntegrandFactor branch even calls it three
+    # times with identical arguments).
     u_ = Wild('u')
     p_ = Wild('p', exclude=[x, 1, 0])
     a_ = Wild('a', exclude=[x])
@@ -2961,7 +3000,9 @@ def FactorNumericGcd(u):
         res = [FactorNumericGcd(i) for i in u.args]
         return Mul(*res)
     elif eager_SumQ(u):
-        g = eager_GCD([NumericFactor(i) for i in u.args])
+        # star-unpack: passing the LIST as one argument hit eager_GCD's len==1
+        # branch and always returned 1, so numeric content was never factored out.
+        g = eager_GCD(*[NumericFactor(i) for i in u.args])
         r = Add(*[i/g for i in u.args])
         return g*r
     return u
@@ -3699,7 +3740,11 @@ def FindTrigFactor(func1, func2, u, v, flag):
     if u == 1:
         return False
     elif (eager_Head(LeadBase(u)) == func1 or eager_Head(LeadBase(u)) == func2) and eager_OddQ(LeadDegree(u)) and IntegerQuotientQ(LeadBase(u).args[0], v) and (flag or NonzeroQ(LeadBase(u).args[0] - v)):
-        return [LeadBase[u].args[0], RemainingFactors(u)]
+        # was `LeadBase[u]` -- Mathematica bracket-call transcribed literally; in Python
+        # that subscripts the FUNCTION object (TypeError: 'function' object is not
+        # subscriptable). Only fired when an odd trig factor with an integer-multiple
+        # argument was found, which is why it survived so long (crashed acsc(a+b x)^2/x).
+        return [LeadBase(u).args[0], RemainingFactors(u)]
     lst = FindTrigFactor(func1, func2, RemainingFactors(u), v, flag)
     if eager_AtomQ(lst):
         return False
@@ -5592,13 +5637,18 @@ def eager_Divides(y, u, x):
     else:
         return False
 
+@_pure_expr_cache(maxsize=20000)
 def eager_DerivativeDivides(y, u, x):
     """
     If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
     is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
+
+    Memoised (pure function of its SymPy args): the Not[FalseQ[DerivativeDivides[...]]]
+    guards re-evaluate it on identical (y, u, x) triples throughout the DFS -- profiling
+    showed ~15ms per call, a third of a slow integral's runtime.
     """
     from matchpy import is_match
-    pattern0 = Pattern(to_expression(_a_*x), _patched_custom_constraint_call(lambda a : eager_FreeQ(a, x)))
+    pattern0 = Pattern(to_matchpy_expression(_a_*x), _patched_custom_constraint_call(lambda a : eager_FreeQ(a, x)))
 
     def f1(y, u, x):
         if eager_PolynomialQ(y, x):
@@ -5901,7 +5951,9 @@ def CommonFactors(lst):
             all(eager_RationalQ(i) for i in [eager_FullSimplify(j/eager_First(lst3)) for j in lst3])):
             lst4 = [eager_FullSimplify(j/eager_First(lst3)) for j in lst3]
             num = eager_GCD(*lst4)
-            common = common*Log((eager_First(lst3)[0])**num)
+            # .args[0] of the log node (Mathematica Log[First[lst3][[1]]^num]);
+            # a sympy log is not subscriptable, so [0] raised TypeError here.
+            common = common*Log((eager_First(lst3).args[0])**num)
             lst2 = [lst2[i]*lst4[i]/num for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
         lst4 = [LeadDegree(i) for i in lst1]

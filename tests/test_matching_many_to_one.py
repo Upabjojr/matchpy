@@ -201,9 +201,9 @@ def test_different_pattern_different_label():
 
 def test_one_identity_optional_commutativity():
     Int = Operation.new('Int', Arity.binary)
-    Add = Operation.new('+', Arity.variadic, 'Add', infix=True, associative=True, commutative=True, one_identity=True)
-    Mul = Operation.new('*', Arity.variadic, 'Mul', infix=True, associative=True, commutative=True, one_identity=True)
-    Pow = Operation.new('^', Arity.binary, 'Pow', infix=True)
+    Add = Operation.new('+', Arity.variadic, infix=True, associative=True, commutative=True, one_identity=True)
+    Mul = Operation.new('*', Arity.variadic, infix=True, associative=True, commutative=True, one_identity=True)
+    Pow = Operation.new('^', Arity.binary, infix=True)
 
     class Integer(NamedAtom):
         def __init__(self, value):

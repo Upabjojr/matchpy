@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Eq, Integer, Rational, S
 
-from matchpy.expressions.expressions import Operation, NamedAtom, SymbolWrapper, to_expression
-from sympy_matching import to_expression, matchpy_to_sympy
+from matchpy.expressions.expressions import Operation, NamedAtom, SymbolWrapper, to_matchpy_expression
+from sympy_matching import to_matchpy_expression, matchpy_to_sympy
 from sympy_matching.operations import (
     ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY,
     SYMPY_NODES, SYMPY_FUNC_TO_HEAD,
@@ -148,7 +148,7 @@ class TestConversions:
 
     @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
     def test_convert_sympy_to_matchpy(self, expr_sympy, expr_matchpy):
-        expr_matchpy_converted = to_expression(expr_sympy)
+        expr_matchpy_converted = to_matchpy_expression(expr_sympy)
         assert expr_matchpy_converted == expr_matchpy
         if isinstance(expr_matchpy, Operation):
             assert isinstance(expr_matchpy_converted, Operation)
@@ -167,7 +167,7 @@ class TestConversions:
     @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
     def test_roundtrip_structural(self, expr_sympy, expr_matchpy):
         """SymPy → MatchPy → SymPy preserves expressions (structural cases)."""
-        mp_expr = to_expression(expr_sympy)
+        mp_expr = to_matchpy_expression(expr_sympy)
         result = matchpy_to_sympy(mp_expr)
         if isinstance(expr_sympy, sympy.Eq):
             assert result == expr_sympy
@@ -179,26 +179,26 @@ class TestConversions:
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_roundtrip(self, expr):
         """SymPy → MatchPy → SymPy roundtrip for every registered node."""
-        mp_expr = to_expression(expr)
+        mp_expr = to_matchpy_expression(expr)
         result = matchpy_to_sympy(mp_expr)
         assert result == expr
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_produces_operation(self, expr):
-        """to_expression produces an Operation for non-atom function calls."""
-        mp_expr = to_expression(expr)
+        """to_matchpy_expression produces an Operation for non-atom function calls."""
+        mp_expr = to_matchpy_expression(expr)
         assert isinstance(mp_expr, Operation)
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_head_is_registered(self, expr):
         """Top-level head belongs to the registered set."""
-        mp_expr = to_expression(expr)
+        mp_expr = to_matchpy_expression(expr)
         assert mp_expr.head in SYMPY_FUNC_TO_HEAD.values()
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_dispatch_is_direct(self, expr):
         """Singledispatch routes directly, not through the SympyBasic fallback."""
-        handler = to_expression.dispatch(type(expr))
+        handler = to_matchpy_expression.dispatch(type(expr))
         assert 'basic' not in handler.__name__.lower(), (
             f"{type(expr).__name__} falls through to the generic handler"
         )
@@ -209,17 +209,17 @@ class TestConversions:
 
     def test_hyper_roundtrip(self):
         expr = hyper((S(1), S(2)), (S(3),), x)
-        assert matchpy_to_sympy(to_expression(expr)) == expr
+        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
 
     def test_meijerg_roundtrip(self):
         expr = meijerg((S(1),), (S(2),), (S(3),), (S(4),), x)
-        assert matchpy_to_sympy(to_expression(expr)) == expr
+        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
 
     @pytest.mark.xfail(reason="Piecewise uses ExprCondPair internally")
     def test_piecewise_roundtrip(self):
         from sympy.functions.elementary.piecewise import Piecewise
         expr = Piecewise((x, x > 0), (S(0), True))
-        assert matchpy_to_sympy(to_expression(expr)) == expr
+        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
 
 
 # ── hyper / meijerg / appellf1 round-trip ────────────────────────────────────
@@ -232,19 +232,19 @@ class TestConversions:
 def test_hyper_roundtrip():
     a, b, c, w = symbols('a b c w')
     h = hyper((a, b), (c,), w)
-    assert matchpy_to_sympy(to_expression(h)) == h
+    assert matchpy_to_sympy(to_matchpy_expression(h)) == h
 
 
 def test_meijerg_roundtrip():
     a, b, c, d, w = symbols('a b c d w')
     g = meijerg(((a,), (b,)), ((c,), (d,)), w)
-    assert matchpy_to_sympy(to_expression(g)) == g
+    assert matchpy_to_sympy(to_matchpy_expression(g)) == g
 
 
 def test_appellf1_roundtrip():
     a, b1, b2, c, x1, y1 = symbols('a b1 b2 c x1 y1')
     f = appellf1(a, b1, b2, c, x1, y1)
-    assert matchpy_to_sympy(to_expression(f)) == f
+    assert matchpy_to_sympy(to_matchpy_expression(f)) == f
 
 
 class TestSympyTupleHead:
@@ -257,35 +257,35 @@ class TestSympyTupleHead:
 
     def test_roundtrips_as_a_real_sympy_tuple(self):
         t = sympy.Tuple(x, S(1))
-        rt = matchpy_to_sympy(to_expression(t))
+        rt = matchpy_to_sympy(to_matchpy_expression(t))
         assert rt == t
         assert type(rt) is sympy.Tuple
 
     def test_a_plain_python_tuple_still_roundtrips_separately(self):
         """TUPLE_HEAD ('tuple') and the new TUPLE head ('Tuple') must not collide."""
-        rt = matchpy_to_sympy(to_expression((x, S(1))))
+        rt = matchpy_to_sympy(to_matchpy_expression((x, S(1))))
         assert rt == (x, S(1))
         assert type(rt) is tuple
 
     def test_the_two_heads_are_distinct(self):
         from sympy_matching.conversion import TUPLE_HEAD
-        assert to_expression(sympy.Tuple(x)).head != TUPLE_HEAD
-        assert to_expression((x,)).head == TUPLE_HEAD
+        assert to_matchpy_expression(sympy.Tuple(x)).head != TUPLE_HEAD
+        assert to_matchpy_expression((x,)).head == TUPLE_HEAD
 
     def test_nested_inside_a_derivative_survives(self):
         f = sympy.Function('f')
         d = sympy.Derivative(f(x), (x, 3))
-        assert matchpy_to_sympy(to_expression(d)) == d
+        assert matchpy_to_sympy(to_matchpy_expression(d)) == d
 
     def test_rebuilding_from_args_is_identity_after_a_roundtrip(self):
         """The exact traversal (TrigSimplifyRecur) that used to corrupt Derivative."""
         f = sympy.Function('f')
         d = sympy.Derivative(f(x), (x, 2))
-        rebuilt_args = [matchpy_to_sympy(to_expression(a)) for a in d.args]
+        rebuilt_args = [matchpy_to_sympy(to_matchpy_expression(a)) for a in d.args]
         assert d.func(*rebuilt_args) == d
 
     def test_hyper_tuplearg_is_not_captured_by_the_tuple_registration(self):
         """TupleArg subclasses Tuple; head lookup is by EXACT type, so hyper keeps
         its own handling and still roundtrips."""
         expr = hyper((S(1), S(2)), (S(3),), x)
-        assert matchpy_to_sympy(to_expression(expr)) == expr
+        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr

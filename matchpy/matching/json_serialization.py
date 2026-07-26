@@ -14,32 +14,13 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard, SymbolWildcard, Pattern, Arity
+    Expression, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard, Pattern, Arity
 )
 from ..expressions.constraints import Constraint, EqualVariablesConstraint, CustomConstraint
 from ..expressions.substitution import Substitution
 from ..utils import VariableWithCount
 
 
-def _resolve_symbol_type(name: str):
-    """Look up a NamedAtom subclass by name. Falls back to NamedAtom."""
-    if name == 'NamedAtom':
-        return NamedAtom
-    def _find(cls):
-        for sub in cls.__subclasses__():
-            if sub.__name__ == name:
-                return sub
-            found = _find(sub)
-            if found:
-                return found
-        return None
-    result = _find(NamedAtom)
-    return result if result is not None else NamedAtom
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# WRAPPED VALUE SERIALIZATION — for SymbolWrapper.value (extensible)
-# ══════════════════════════════════════════════════════════════════════════════
 
 @singledispatch
 def serialize_wrapped_value(val):
@@ -73,8 +54,32 @@ _WRAPPED_VALUE_DESERIALIZERS = {
 }
 
 
+def register_wrapped_value_deserializer(tag: str, fn=None):
+    """PUBLIC extension point: register ``fn(data) -> value`` for ``_val_type == tag``.
+
+    The deserialization counterpart of the ``serialize_wrapped_value`` singledispatch
+    (dispatch is on the JSON ``_val_type`` tag rather than a Python type, so a plain
+    tag registry replaces singledispatch here). Usable as a decorator::
+
+        @register_wrapped_value_deserializer('sympy')
+        def _deser(data): ...
+
+    External libraries (e.g. ``sympy_matching.json_ext``) use this instead of
+    reaching into the private registry dict.
+    """
+    if fn is None:
+        def _decorator(f):
+            _WRAPPED_VALUE_DESERIALIZERS[tag] = f
+            return f
+        return _decorator
+    _WRAPPED_VALUE_DESERIALIZERS[tag] = fn
+    return fn
+
+
 def deserialize_wrapped_value(data):
-    """Deserialize a wrapped value from JSON dict. Extensible via _WRAPPED_VALUE_DESERIALIZERS."""
+    """Deserialize a wrapped value from JSON dict.
+
+    Extensible via :func:`register_wrapped_value_deserializer`."""
     if data is None:
         return None
     val_type = data.get('_val_type')
@@ -119,13 +124,6 @@ def _serialize_operation_expr(expr):
         'variable_name': expr.variable_name,
     }
 
-@_serialize_expression.register(SymbolWildcard)
-def _serialize_symbol_wildcard_expr(expr):
-    return {
-        '_expr_type': 'SymbolWildcard',
-        'variable_name': expr.variable_name,
-        'symbol_type': expr.symbol_type.__name__,
-    }
 
 @_serialize_expression.register(Wildcard)
 def _serialize_wildcard_expr(expr):
@@ -257,7 +255,7 @@ def _register_transition_key_serializers():
     """Register transition key serializers (deferred to avoid circular imports)."""
     from .many_to_one import (
         TransitionKeyEnd, TransitionKeyPatternId,
-        HeadTypeExpression, HeadTypeOperation, HeadTypeSymbol, HeadTypeNone,
+        HeadTypeExpression, HeadTypeOperation, HeadTypeNone,
     )
 
     @_serialize_transition_key.register(TransitionKeyEnd)
@@ -276,9 +274,6 @@ def _register_transition_key_serializers():
     def _ser_key_head_expr(key):
         return {'_key_type': 'HeadTypeExpression', 'value': _serialize_expression(key.value)}
 
-    @_serialize_transition_key.register(HeadTypeSymbol)
-    def _ser_key_head_sym(key):
-        return {'_key_type': 'HeadTypeSymbol', 'value': key.value.__name__}
 
     @_serialize_transition_key.register(HeadTypeNone)
     def _ser_key_head_none(key):
@@ -377,9 +372,6 @@ def _deser_operation(data):
     operands = [_deserialize_expression(op) for op in data['operands']]
     return Operation(head, *operands, variable_name=data.get('variable_name'))
 
-def _deser_symbol_wildcard(data):
-    st = _resolve_symbol_type(data.get('symbol_type', 'NamedAtom'))
-    return SymbolWildcard(variable_name=data.get('variable_name'), symbol_type=st)
 
 def _deser_wildcard(data):
     default_value = _deserialize_expression(data.get('default_value'))
@@ -403,11 +395,25 @@ def _deser_symbol(data):
 
 _EXPRESSION_DESERIALIZERS = {
     'Operation': _deser_operation,
-    'SymbolWildcard': _deser_symbol_wildcard,
     'Wildcard': _deser_wildcard,
     'SymbolWrapper': _deser_symbol_wrapper,
     'NamedAtom': _deser_symbol,
 }
+
+
+def register_expression_deserializer(tag: str, fn=None):
+    """PUBLIC extension point: register ``fn(data) -> Expression`` for ``_expr_type == tag``.
+
+    Counterpart of the ``_serialize_expression`` singledispatch for the JSON side
+    (dispatch is on the ``_expr_type`` tag). Usable as a decorator.
+    """
+    if fn is None:
+        def _decorator(f):
+            _EXPRESSION_DESERIALIZERS[tag] = f
+            return f
+        return _decorator
+    _EXPRESSION_DESERIALIZERS[tag] = fn
+    return fn
 
 def _deserialize_expression(data) -> Optional[Expression]:
     """Reconstruct an Expression from a JSON-safe dict."""
@@ -536,9 +542,6 @@ def _deser_key_head_expression(data):
     from .many_to_one import HeadTypeExpression
     return HeadTypeExpression(value=_deserialize_expression(data['value']))
 
-def _deser_key_head_symbol(data):
-    from .many_to_one import HeadTypeSymbol
-    return HeadTypeSymbol(value=_resolve_symbol_type(data.get('value', 'NamedAtom')))
 
 def _deser_key_head_none(data):
     from .many_to_one import _HEAD_NONE
@@ -549,7 +552,6 @@ _TRANSITION_KEY_DESERIALIZERS = {
     'TransitionKeyPatternId': _deser_key_pattern_id,
     'HeadTypeOperation': _deser_key_head_operation,
     'HeadTypeExpression': _deser_key_head_expression,
-    'HeadTypeSymbol': _deser_key_head_symbol,
     'HeadTypeNone': _deser_key_head_none,
 }
 
@@ -696,7 +698,7 @@ def serialize_matcher(matcher) -> dict:
 def _rebuild_replacement_fn(replacement_expr):
     """Rebuild a replacement function from a deserialized SymPy expression."""
     def _replacement(**match_dict):
-        from sympy_matching.conversion import matchpy_to_sympy, to_expression
+        from sympy_matching.conversion import matchpy_to_sympy, to_matchpy_expression
         from sympy_matching.wild import WildSymbol
         sympy_subs = {}
         for name, matchpy_val in match_dict.items():
@@ -705,7 +707,7 @@ def _rebuild_replacement_fn(replacement_expr):
         for atom in replacement_expr.atoms():
             if isinstance(atom, WildSymbol) and atom.wildcard_name in sympy_subs:
                 result = result.subs(atom, sympy_subs[atom.wildcard_name])
-        return to_expression(result)
+        return to_matchpy_expression(result)
     return _replacement
 
 

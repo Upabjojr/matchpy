@@ -96,19 +96,26 @@ class MemberQ(MathematicaConstraint):
     Delegates to the eager :func:`sympy_wolfram.functions_eager.eager_MemberQ` (which
     reconciles function-head wildcards against class/HeadRef membership lists).
     """
-    def __init__(self, u, members):
-        self._u = self.args[0]
-        self._members = self.args[1]
+    def __init__(self, members, form):
+        # Mathematica argument order (as the generated rules call it):
+        # MemberQ[list, form] -- e.g. MemberQ([HeadRef(asin), HeadRef(acos)], F_).
+        self._list = self.args[0]
+        self._form = self.args[1]
 
     def check(self, **kwargs):
         from sympy_wolfram.functions_eager import eager_MemberQ
         sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        members = self._members if isinstance(self._members, (list, tuple)) else [self._members]
-        return eager_MemberQ(list(members), u)
+        # The FORM is (almost always) the matched wildcard -- it MUST be resolved.
+        # The old code both swapped the two roles when calling eager_MemberQ(list,
+        # form) AND left the form unresolved, so every MemberQ guard was False and
+        # the 18 rules using it (erf/fresnel/Si/Ci families, ...) never fired.
+        form = self._resolve(self._form, sk)
+        raw = self._list if isinstance(self._list, (list, tuple, sympy.Tuple)) else [self._list]
+        members = [self._resolve(m, sk) for m in raw]
+        return eager_MemberQ(members, form)
 
     def __repr__(self):
-        return f"MemberQ({self._u}, {self._members})"
+        return f"MemberQ({self._list}, {self._form})"
 
 
 class NumberQ(MathematicaConstraint):

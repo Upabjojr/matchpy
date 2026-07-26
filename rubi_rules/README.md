@@ -38,8 +38,9 @@ Rubi rule explicitly gives up.
 
 ### Which rules ran: `return_matched_rules=True`
 
-Returns `(result, matched_rules)`, where `matched_rules` lists the rules that were
-**accepted** on the winning path (as `(module_name, rule_number)`):
+Returns `(result, matched_rules)`. `matched_rules` is a list of `(result, applied)`
+pairs (one per top-level integrand handled), where `applied` is a flat list of the
+rules **accepted** on the winning path, each as `(module_name, rule_number)`:
 
 ```python
 result, matched = rubi_integrate(exp(x)*sin(x**2 + x), x, return_matched_rules=True)

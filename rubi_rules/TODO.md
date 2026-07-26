@@ -103,19 +103,21 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] generated rules contain stuff like: With(List(Set(Symbol('g'), ... ) ==> could you please avoid defining Symbol('g') in the rule? All symbols should be defined at the beginning of the file.
 - [ ] remember to document IDENTITY_ELEMENT as optional matching character.
 - [ ] remove not used variables from generated rules.
-- [ ] RubiConstraint ==> rename and make it a subtype of MathematicaExpr?
-- [ ] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even RubiRulePattern should be renamed and moved to sympy_matching/ ?
-- [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ.
+- [X] RubiConstraint ==> rename and make it a subtype of MathematicaExpr? (done: renamed to MathematicaConstraint, now a subclass of (MathematicaExpr, SympyMatchingConstraint) in sympy_wolfram/constraints.py)
+- [X] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even RubiRulePattern should be renamed and moved to sympy_matching/ ? (done: generic base SympyMatchingConstraint + SympyMatchingRule live in sympy_matching/; MathematicaConstraint moved to sympy_wolfram/; RubiRulePattern is now an alias of SympyMatchingRule)
+- [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ. (partially done: renamed to FreeOf, not removed)
 - [ ] rename MatchPy classes that have a naming conflict with SymPy classes.
 - [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
-- [ ] name conflict of utility and eager functions: prepend eager_ to their names
-- [ ] all stuff managing rules and creating replacement pattern should be moved to sympy_matching/ (maybe even constraints, MathematicaConstraint, which should then be renamed). Rule pattern matching should be generically used by SymPy, independently of Wolfram and Rubi.
+- [X] name conflict of utility and eager functions: prepend eager_ to their names (done: eager functions are eager_<Name>; deferred classes keep the bare name)
+- [X] all stuff managing rules and creating replacement pattern should be moved to sympy_matching/ (maybe even constraints, MathematicaConstraint, which should then be renamed). Rule pattern matching should be generically used by SymPy, independently of Wolfram and Rubi. (done: sympy_matching/matching_rule.py + constraint.py, no Wolfram/Rubi dependency)
 - [ ] evaluate=False when constructing the rules?
 - [ ] by the way, why are eager_Module, eager_Scan, eager_With, eager_Head, eager_First, eager_Rest still in rubi_utils ? These are standard mathematica library, so they should be in
       sympy_wolfram/, by the way eager_Module, eager_Scan, eager_With appear not to be used anywhere except a few tests. RationalQ (both class and eager function) are still in
       rubi_rules/, despite being standard Mathematica library. Can you please fix and check no other inconsistency with Mathematica standard library?
 - [ ] rebuild rubi test suite
-- [ ] lift replacement rule building to sympy_matching/
+- [X] lift replacement rule building to sympy_matching/ (done: build_tracing_replacer / _make_replacement_fn in sympy_matching/matching_rule.py)
+- [ ] rename SympyMatchingRule to RewriteRule, SymPyRewriteRule, Rule, MatchingRule?
+- [ ] rename SympyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not.
 
 Strange warning:
 

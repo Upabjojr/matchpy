@@ -85,6 +85,25 @@ def test_behaviour():
     assert mf.Complex(Integer(2), Integer(3)) == 2 + 3 * I           # eager __new__
 
 
+def test_SumWolfram_floors_fractional_bounds():
+    """Regression: the binomial-Pq rules build Sum(coeff, {k, 0, (q-r)/n}), whose upper
+    limit is FRACTIONAL when the degree doesn't divide evenly (e.g. (8-3)/4 = 5/4).
+    SumWolfram must truncate the iterator at floor(imax) (Mathematica semantics) and
+    EXPAND to finite terms -- a fractional-bound sympy.Sum stays UNEVALUATED and drove
+    simplify() into unbounded recursion, crashing Int[(x^4+1)/(x^8+1)] and
+    Int[(d+e x^4)/(a-c x^8)] with RecursionError."""
+    from sympy import Rational
+    k = sympy.Symbol('k')
+    # fractional upper bound 5/4 -> iterate k = 0, 1 (floor)
+    assert mf.Sum(x**(4 * k) * x**(4 * k + 3), mf.List(k, Integer(0), Rational(5, 4))).doit() == x**11 + x**3
+    # integer bound unchanged
+    assert mf.Sum(x**k, mf.List(k, Integer(0), Integer(3))).doit() == x**3 + x**2 + x + 1
+    # a SYMBOLIC bound is only floored when concrete: it must NOT be truncated and
+    # still evaluate normally (sympy's geometric closed form), depending on q.
+    q = sympy.Symbol('q')
+    assert mf.Sum(x**k, mf.List(k, Integer(0), q / 2)).doit().has(q)
+
+
 def test_eager_helpers_are_self_contained():
     assert fe.eager_LeafCount(sin(x)) == 2
     assert fe.eager_Length(x + Integer(1)) == 2

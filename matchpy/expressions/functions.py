@@ -2,7 +2,7 @@
 """Utility functions for working with expression trees."""
 from typing import Iterator, Tuple, Set, Dict, Optional
 
-from .expressions import Expression, Operation, Wildcard, SymbolWildcard, NamedAtom, SymbolWrapper, Pattern
+from .expressions import Expression, Operation, Wildcard, NamedAtom, SymbolWrapper, Pattern
 
 __all__ = [
     'is_constant', 'is_syntactic', 'is_anonymous', 'contains_variables_from_set',
@@ -26,7 +26,7 @@ def is_syntactic(expression: Expression) -> bool:
         if expression.head.associative or expression.head.commutative or expression.head.one_identity:
             return False
         return all(is_syntactic(o) for o in expression.operands)
-    if isinstance(expression, Wildcard) and not isinstance(expression, SymbolWildcard):
+    if isinstance(expression, Wildcard):
         if not expression.fixed_size:
             return False
     return True
@@ -147,7 +147,7 @@ def match_head(subject, pattern) -> bool:
             return True
         return isinstance(subject, Operation) and subject.head == pattern.head
 
-    # Symbols require subject to be the same symbol (or same type for SymbolWildcard)
+    # Symbols require subject to be the same symbol
     if isinstance(pattern, NamedAtom):
         return isinstance(subject, NamedAtom)
 

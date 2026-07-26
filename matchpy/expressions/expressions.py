@@ -4,7 +4,7 @@
 This refactored version uses:
 - TypedModel (matchpy._typed) for all expression types
 - OperationHead objects (instead of class-based Operation subclasses)
-- Singledispatch `to_expression` / `from_expression` for conversions
+- Singledispatch `to_matchpy_expression` / `from_matchpy_expression` for conversions
 - `Operation(head, *operands)` as raw constructor (normalize only, no one_identity)
 - `head(*operands)` as factory (applies one_identity, may return non-Operation)
 """
@@ -17,9 +17,9 @@ from multiset import Multiset
 from .._typed import TypedModel, field
 
 __all__ = [
-    'Expression', 'Arity', 'AtomExpr', 'NamedAtom', 'SymbolWrapper', 'Wildcard', 'Operation', 'SymbolWildcard', 'Pattern',
-    'OperationHead', 'to_expression', 'from_expression',
-    'make_dot_variable', 'make_plus_variable', 'make_star_variable', 'make_symbol_variable',
+    'Expression', 'Arity', 'AtomExpr', 'NamedAtom', 'SymbolWrapper', 'Wildcard', 'Operation', 'Pattern',
+    'OperationHead', 'to_matchpy_expression', 'from_matchpy_expression',
+    'make_dot_variable', 'make_plus_variable', 'make_star_variable',
     'LIST_HEAD', 'TUPLE_HEAD', 'DICT_HEAD', 'DICT_PAIR_HEAD',
 ]
 
@@ -217,7 +217,13 @@ class OperationHead(TypedModel):
         return Operation(self, *operands, variable_name=variable_name)
 
     def __hash__(self):
-        return hash((self.name, self.arity, self.commutative, self.associative, self.one_identity))
+        # Cached: rebuilt-tuple hash, computed ~1.9M times during Rubi matcher build.
+        # OperationHead is immutable after construction.
+        h = self.__dict__.get('_cached_hash')
+        if h is None:
+            h = hash((self.name, self.arity, self.commutative, self.associative, self.one_identity))
+            self.__dict__['_cached_hash'] = h
+        return h
 
     def __eq__(self, other):
         if not isinstance(other, OperationHead):
@@ -383,11 +389,10 @@ class Operation(Expression):
         super().__init__(head=head, operands=op_list, variable_name=variable_name, **kwargs)
 
     @classmethod
-    def new(cls, name: str, arity: Arity = Arity.variadic, class_name: str = None, **kwargs) -> 'OperationHead':
+    def new(cls, name: str, arity: Arity = Arity.variadic, **kwargs) -> 'OperationHead':
         """Create a new OperationHead (backward-compatible factory).
 
         Returns an OperationHead which is callable to create Operations.
-        The class_name parameter is accepted for backward compatibility but ignored.
 
         Raises:
             ValueError: If name is a Python keyword or not a valid identifier.
@@ -455,7 +460,16 @@ class Operation(Expression):
         )
 
     def __hash__(self):
-        return hash((Operation, self.head, tuple(self.operands), self.variable_name))
+        # CACHED: this hash is recursive over the whole subtree (operands tuple), and
+        # matcher construction / transition-table lookups hash the same node millions of
+        # times. Safe to cache because expressions are immutable after construction --
+        # the only post-construction mutation in the codebase is on a NamedAtom copy
+        # (many_to_one._get_label_and_head), never on an Operation.
+        h = self.__dict__.get('_cached_hash')
+        if h is None:
+            h = hash((Operation, self.head, tuple(self.operands), self.variable_name))
+            self.__dict__['_cached_hash'] = h
+        return h
 
 
 # ─── AtomExpr base ────────────────────────────────────────────────────────────────
@@ -543,7 +557,21 @@ class SymbolWrapper(AtomExpr):
 
     @cached_property
     def name(self) -> str:
-        """String representation for display and cross-type matching with NamedAtom."""
+        """String representation for display and cross-type matching with NamedAtom.
+
+        Fast path: for objects with a string ``.name`` (sympy Symbol/WildSymbol —
+        the overwhelming majority of wrapped values), that attribute IS the str()
+        form, and ``str()`` on a sympy object invokes the full printing machinery
+        (~23x slower). Profiling showed ~14% of ManyToOneMatcher build time was
+        sympy's printer called from ``SymbolWrapper.__hash__`` via this property.
+
+        NOT taken for sympy ``Dummy`` (``.name`` is ``'d'`` but ``str()`` is ``'_d'`` —
+        the underscore matters for name-based matching); detected duck-typed via
+        ``is_Dummy`` so this layer stays sympy-free.
+        """
+        n = getattr(self.value, 'name', None)
+        if type(n) is str and getattr(self.value, 'is_Dummy', False) is not True:
+            return n
         return str(self.value)
 
     def __str__(self):
@@ -654,21 +682,6 @@ class Wildcard(AtomExpr):
         """
         return Wildcard(min_count=1, fixed_size=True, variable_name=name, default_value=default)
 
-    @staticmethod
-    def symbol(name_or_type=None, symbol_type=None) -> 'SymbolWildcard':
-        """Create a wildcard that only matches symbols of a given type.
-
-        Can be called as:
-            Wildcard.symbol()                  — matches any NamedAtom
-            Wildcard.symbol('name')            — named, matches any NamedAtom
-            Wildcard.symbol(SpecialSymbol)     — matches SpecialSymbol subclass
-            Wildcard.symbol('name', SpecialSymbol) — named, matches SpecialSymbol
-        """
-        if name_or_type is not None and isinstance(name_or_type, type):
-            # First arg is a type, not a name
-            return SymbolWildcard(variable_name=None, symbol_type=name_or_type)
-        name = name_or_type
-        return SymbolWildcard(variable_name=name, symbol_type=symbol_type or NamedAtom)
 
     def __str__(self):
         if self.variable_name:
@@ -709,20 +722,13 @@ class Wildcard(AtomExpr):
         if isinstance(other, Operation):
             return True  # Atoms sort before Operations
         if isinstance(other, Wildcard):
-            # Ordering: fixed_size → min_count → variable_name → SymbolWildcard-ness → symbol_type
+            # Ordering: fixed_size → min_count → variable_name
             if self.fixed_size != other.fixed_size:
                 return self.fixed_size  # True (dot) < False (sequence)
             if self.min_count != other.min_count:
                 return self.min_count < other.min_count
             if (self.variable_name or '') != (other.variable_name or ''):
                 return (self.variable_name or '') < (other.variable_name or '')
-            # Same variable_name: SymbolWildcard-ness
-            self_sw = isinstance(self, SymbolWildcard)
-            other_sw = isinstance(other, SymbolWildcard)
-            if self_sw != other_sw:
-                return not self_sw  # plain Wildcard < SymbolWildcard
-            if self_sw and other_sw:
-                return self.symbol_type.__name__ < other.symbol_type.__name__
             return False  # equal
         return NotImplemented
 
@@ -735,50 +741,6 @@ class Wildcard(AtomExpr):
     def __hash__(self):
         return hash((Wildcard, self.min_count, self.fixed_size, self.variable_name))
 
-
-# ─── SymbolWildcard ───────────────────────────────────────────────────────────
-
-class SymbolWildcard(Wildcard):
-    """A wildcard that only matches atoms of a specific type."""
-    symbol_type: type = NamedAtom
-
-    def __init__(self, variable_name_or_type=None, symbol_type=None, **kwargs):
-        # Handle multiple calling conventions:
-        #   SymbolWildcard(SpecialSymbol)       — type as first positional arg
-        #   SymbolWildcard(variable_name='x')   — named kwarg
-        #   SymbolWildcard('x', SpecialSymbol)  — name + type positional
-        if 'variable_name' in kwargs:
-            variable_name = kwargs.pop('variable_name')
-        elif variable_name_or_type is not None and isinstance(variable_name_or_type, type):
-            symbol_type = variable_name_or_type
-            variable_name = None
-        else:
-            variable_name = variable_name_or_type
-        st = symbol_type or NamedAtom
-        if not issubclass(st, NamedAtom):
-            raise TypeError(f"symbol_type must be a subclass of NamedAtom, got {st!r}")
-        TypedModel.__init__(self, min_count=1, fixed_size=True, variable_name=variable_name,
-                           default_value=None, symbol_type=st, **kwargs)
-        self.head = None
-
-    def with_renamed_vars(self, renaming) -> 'SymbolWildcard':
-        new_name = renaming.get(self.variable_name, self.variable_name)
-        return SymbolWildcard(variable_name=new_name, symbol_type=self.symbol_type)
-
-    def __copy__(self) -> 'SymbolWildcard':
-        return SymbolWildcard(variable_name=self.variable_name, symbol_type=self.symbol_type)
-
-    def __eq__(self, other):
-        if not isinstance(other, SymbolWildcard):
-            return NotImplemented
-        return (self.symbol_type == other.symbol_type and
-                self.variable_name == other.variable_name)
-
-    def __hash__(self):
-        return hash((SymbolWildcard, self.symbol_type, self.variable_name))
-
-    def __repr__(self):
-        return f'SymbolWildcard(variable_name={self.variable_name!r}, symbol_type={self.symbol_type.__name__})'
 
 
 # ─── Pattern ──────────────────────────────────────────────────────────────────
@@ -810,23 +772,40 @@ class Pattern(TypedModel):
     def variable_name(self):
         return self.expression.variable_name
 
-    @property
+    @cached_property
     def local_constraints(self):
-        """Constraints that depend on pattern variables (checked during matching)."""
+        """Constraints that depend on pattern variables (checked during matching).
+
+        cached_property: rebuilt tuples on every access were measurable during matcher
+        construction (accessed once per _internal_add, ~100k times on the Rubi set).
+        """
         return tuple(c for c in self.constraints if c.variables)
 
-    @property
+    @cached_property
     def global_constraints(self):
-        """Constraints with no variables (checked after matching completes)."""
+        """Constraints with no variables (checked after matching completes).
+
+        cached_property: accessed once per yielded match in _internal_iter.
+        """
         return tuple(c for c in self.constraints if not c.variables)
 
     def __eq__(self, other):
         if not isinstance(other, Pattern):
             return NotImplemented
-        return self.expression == other.expression and set(self.constraints) == set(other.constraints)
+        # frozenset comparison via a cached view -- the old `set(a) == set(b)` built
+        # two fresh sets on every comparison (Pattern is a dict key in the matcher).
+        return self.expression == other.expression and self._constraint_set == other._constraint_set
+
+    @cached_property
+    def _constraint_set(self):
+        return frozenset(self.constraints)
 
     def __hash__(self):
-        return hash((Pattern, self.expression, self.constraints))
+        h = self.__dict__.get('_cached_hash')
+        if h is None:
+            h = hash((Pattern, self.expression, self.constraints))
+            self.__dict__['_cached_hash'] = h
+        return h
 
     def __repr__(self):
         if self.constraints:
@@ -850,36 +829,75 @@ DICT_PAIR_HEAD = OperationHead(name='dictpair', arity=Arity.binary)
 # ─── Singledispatch converters ────────────────────────────────────────────────
 
 @singledispatch
-def to_expression(obj) -> Expression:
-    """Convert a Python object to a MatchPy expression.
+def to_matchpy_expression(obj) -> Expression:
+    """Convert ANY object into a MatchPy :class:`Expression` (the ingestion point).
 
-    Register handlers for specific types using @to_expression.register(type).
+    True singledispatch: every supported input type is a registration -- Python
+    containers below, and e.g. the whole SymPy tree via ``sympy_matching``.
+    The default turns an unknown object into a ``NamedAtom`` of its ``str()``.
     """
-    if isinstance(obj, Expression):
-        return obj
-    if isinstance(obj, dict):
-        pairs = []
-        for k, v in obj.items():
-            k_expr = to_expression(k) if not isinstance(k, Expression) else k
-            v_expr = to_expression(v) if not isinstance(v, Expression) else v
-            pairs.append(Operation(DICT_PAIR_HEAD, k_expr, v_expr))
-        return Operation(DICT_HEAD, *pairs)
-    if isinstance(obj, (list, tuple)):
-        head = LIST_HEAD if isinstance(obj, list) else TUPLE_HEAD
-        operands = [to_expression(item) for item in obj]
-        return Operation(head, *operands)
     return NamedAtom(str(obj))
 
 
-@singledispatch
-def from_expression(expr):
-    """Convert a MatchPy expression back to a Python object.
+@to_matchpy_expression.register(Expression)
+def _expression_to_expression(obj: Expression) -> Expression:
+    """A MatchPy expression is already converted -- identity."""
+    return obj
 
-    Register handlers for specific types using @from_expression.register(type).
+
+@to_matchpy_expression.register(dict)
+def _dict_to_expression(obj: dict) -> Expression:
+    pairs = [Operation(DICT_PAIR_HEAD, to_matchpy_expression(k), to_matchpy_expression(v))
+             for k, v in obj.items()]
+    return Operation(DICT_HEAD, *pairs)
+
+
+@to_matchpy_expression.register(list)
+def _list_to_expression(obj: list) -> Expression:
+    return Operation(LIST_HEAD, *[to_matchpy_expression(item) for item in obj])
+
+
+@to_matchpy_expression.register(tuple)
+def _tuple_to_expression(obj: tuple) -> Expression:
+    return Operation(TUPLE_HEAD, *[to_matchpy_expression(item) for item in obj])
+
+
+@singledispatch
+def from_matchpy_expression(expr):
+    """Convert a MatchPy expression back to a GENERIC Python object.
+
+    This is the domain-agnostic reverse of :func:`to_matchpy_expression`: atoms unwrap to
+    their names/values, everything else passes through unchanged. A conversion
+    targeting a specific library belongs in its OWN dispatch function -- e.g.
+    ``sympy_matching.matchpy_to_sympy`` maps ``NamedAtom -> sympy.Symbol`` and
+    operation heads to SymPy classes, which would be wrong to impose here (the
+    registries are global, so registering SymPy semantics on this function would
+    change behaviour for every non-SymPy user of matchpy).
     """
-    if isinstance(expr, NamedAtom) and not isinstance(expr, Wildcard):
-        return expr.name
     return expr
+
+
+@from_matchpy_expression.register(NamedAtom)
+def _named_atom_from_expression(expr: NamedAtom):
+    return expr.name
+
+
+@from_matchpy_expression.register(Wildcard)
+def _wildcard_from_expression(expr: Wildcard):
+    # A Wildcard is not a NamedAtom-with-a-name from the caller's perspective;
+    # pass it through unchanged (the old default's `and not isinstance(Wildcard)`
+    # exclusion, expressed as a proper registration).
+    return expr
+
+
+@from_matchpy_expression.register(SymbolWrapper)
+def _symbol_wrapper_from_expression(expr: 'SymbolWrapper'):
+    """Unwrap the original wrapped object -- matchpy-generic, so it lives here.
+
+    (``sympy_matching`` overrides this registration with a HeadRef-aware version
+    for wrapped operation heads.)
+    """
+    return expr.value
 
 
 # ─── Factory helpers ──────────────────────────────────────────────────────────
@@ -899,6 +917,3 @@ def make_star_variable(name: str) -> Wildcard:
     return Wildcard.star(name)
 
 
-def make_symbol_variable(name: str, symbol_type=None) -> SymbolWildcard:
-    """Create a named symbol wildcard (matches atoms of a specific type)."""
-    return SymbolWildcard(variable_name=name, symbol_type=symbol_type or NamedAtom)

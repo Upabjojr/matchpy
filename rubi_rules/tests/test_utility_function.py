@@ -2899,10 +2899,10 @@ def test_inert_trig_heads_are_distinct_from_active():
     has to stay a distinct head so it can never masquerade as a solved active
     result. (Supersedes the old head-registration approach.)"""
     from rubi_rules.utils.utility_functions import InertSec
-    from sympy_matching.conversion import to_expression
+    from sympy_matching.conversion import to_matchpy_expression
     import sympy as _sp
     xx = Symbol('x')
-    assert to_expression(InertSec(xx)).head != to_expression(_sp.sec(xx)).head
+    assert to_matchpy_expression(InertSec(xx)).head != to_matchpy_expression(_sp.sec(xx)).head
 
 
 def test_deactivation_dispatch_solves_cofunction_integrals():

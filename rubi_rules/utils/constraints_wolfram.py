@@ -136,6 +136,21 @@ class UnsameQ(MathematicaConstraint):
         sk = self._resolve_all(kwargs)
         a = self._resolve(self._a, sk)
         b = self._resolve(self._b, sk)
+        # Evaluate deferred nodes BEFORE comparing. The 9.3/9.4 catch-all rules guard
+        # with UnsameQ(NormalizeIntegrand(u_, x), u_); without doit() the left side
+        # stays an unevaluated node, structurally != u for EVERY integrand, so the
+        # catch-all fired unconditionally, rewriting Int[u,x] -> Int[u,x] until the
+        # cycle detector stopped it -- pure wasted DFS work on every slow integral.
+        if hasattr(a, 'doit'):
+            try:
+                a = a.doit()
+            except Exception:
+                pass
+        if hasattr(b, 'doit'):
+            try:
+                b = b.doit()
+            except Exception:
+                pass
         return a != b
     def __repr__(self):
         return f"UnsameQ({self._a}, {self._b})"
@@ -159,6 +174,11 @@ class MatchQ(MathematicaConstraint):
     The distinction is simply whether the name was bound by the outer pattern, which
     is what `_make_matchpy_constraint` uses to decide which variables to declare.
     """
+
+    # STRUCTURAL constraint: the pattern argument must stay an UNEVALUATED tree
+    # (evaluating e.g. Complex(0, j_) to I*j would change what it matches), so opt
+    # out of MathematicaConstraint._resolve's argument evaluation.
+    _EVAL_RESOLVED_ARGS = False
 
     def __init__(self, u, pattern):
         self._u = self.args[0]
@@ -185,15 +205,15 @@ def _pattern_matches(subject, pattern) -> bool:
     """
     from matchpy import match as _match
     from matchpy.expressions.expressions import Pattern
-    from sympy_matching.conversion import to_expression, matchpy_to_sympy
+    from sympy_matching.conversion import to_matchpy_expression, matchpy_to_sympy
 
     test = None
     if type(pattern).__name__ == 'Condition' and len(getattr(pattern, 'args', ())) == 2:
         pattern, test = pattern.args
 
     try:
-        subject_expr = to_expression(subject)
-        pattern_expr = Pattern(to_expression(pattern))
+        subject_expr = to_matchpy_expression(subject)
+        pattern_expr = Pattern(to_matchpy_expression(pattern))
     except Exception:
         return False
 

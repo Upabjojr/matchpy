@@ -7,8 +7,10 @@ functions whose logic depends *solely* on SymPy.  They used to live in
 here and ``utility_functions`` imports them back (the correct layer direction:
 rubi_rules -> sympy_wolfram).
 
-Deferred (``MathematicaExpr``) counterparts of the same name live in
-``sympy_wolfram.mathematica_functions`` and delegate here.
+Deferred (``MathematicaExpr``) counterpart classes keep the bare Mathematica name
+(``LeafCount``, ``Part``, …) and live in ``sympy_wolfram.mathematica_functions``;
+the eager functions here carry the ``eager_`` prefix (``eager_LeafCount``, …) and
+the deferred classes delegate to them.
 
 Only functions with a purely-SymPy body belong here.  ``First``/``Rest``/
 ``Numerator``/``Denominator``/``Part``/``Apart``/``Simplify`` used to *look* Rubi-coupled
@@ -17,6 +19,8 @@ because their Rubi bodies called ``SumQ``/``ProductQ``/``Sort``/``RationalFuncti
 (``is_Add``/``is_Mul``/sort-by-``sort_key``/``is_rational_function``/part-extraction),
 so the coupling was spurious.  They are inlined below and the functions live here.
 """
+import functools as _functools
+
 import sympy
 from sympy import (
     Add, Basic, Float, I, Integer, Mul, Pow, Rational, S, Symbol, Tuple,
@@ -60,8 +64,9 @@ def eager_FreeQ(nodes, var):
 
     This is a standard Wolfram-library predicate (not Rubi-specific): its body is
     ``expr.has(var)`` over SymPy, with the matchpy->sympy coercion handled by
-    :func:`_ensure_sympy`. The Rubi ``FreeQ`` *constraint* class in
-    ``rubi_rules.utils.constraints_wolfram`` delegates here.
+    :func:`_ensure_sympy`. The ``FreeQ`` *constraint* class in
+    ``sympy_wolfram.constraints_wolfram`` (re-exported by
+    ``rubi_rules.utils.constraints_wolfram``) delegates here.
     """
     var = _ensure_sympy(var)
     if isinstance(nodes, (tuple, list)):
@@ -163,15 +168,7 @@ def _sort(args):
     return sorted(args, key=lambda t: t.sort_key())
 
 
-def eager_Simplify(expr):
-    """Mathematica ``Simplify[expr]`` (eager).
-
-    First resolves any unevaluated deferred ``MathematicaExpr`` nodes (a product of
-    such nodes drives ``sympy.simplify``'s nc_simplify into unbounded recursion), then
-    delegates to ``sympy.simplify``.  A ``Boolean`` (e.g. a ``BinomialDegree`` returning
-    ``False`` on a non-binomial) sitting inside an arithmetic node has no numeric value,
-    so we return the expression unevaluated rather than crash.
-    """
+def _eager_simplify_impl(expr):
     from sympy_wolfram.objects import MathematicaExpr
     if isinstance(expr, Basic) and expr.has(MathematicaExpr):
         try:
@@ -191,6 +188,29 @@ def eager_Simplify(expr):
         return expr
 
 
+_eager_simplify_cached = _functools.lru_cache(maxsize=50000)(_eager_simplify_impl)
+
+
+def eager_Simplify(expr):
+    """Mathematica ``Simplify[expr]`` (eager).
+
+    First resolves any unevaluated deferred ``MathematicaExpr`` nodes (a product of
+    such nodes drives ``sympy.simplify``'s nc_simplify into unbounded recursion), then
+    delegates to ``sympy.simplify``.  A ``Boolean`` (e.g. a ``BinomialDegree`` returning
+    ``False`` on a non-binomial) sitting inside an arithmetic node has no numeric value,
+    so we return the expression unevaluated rather than crash.
+
+    MEMOISED (bounded): Simplify is a pure function of its argument, and rule-guard
+    evaluation during the integration DFS calls it on the SAME expressions thousands of
+    times -- profiling a slow trig/sqrt integral showed ~9.6k simplify calls consuming
+    over half the runtime. The cache falls back to a direct call on unhashable input.
+    """
+    try:
+        return _eager_simplify_cached(expr)
+    except TypeError:          # unhashable argument -> compute directly
+        return _eager_simplify_impl(expr)
+
+
 def eager_First(expr, d=None):
     """Mathematica ``First[expr]`` — first element (``d`` unused, kept for arity)."""
     if isinstance(expr, (tuple, list, Tuple)):
@@ -208,7 +228,17 @@ def eager_Rest(expr):
         return expr[1:]
     if expr.is_Add or expr.is_Mul:
         return expr.func(*_sort(expr.args)[1:])
-    return expr.args[1]
+    # Generic head: Mathematica Rest[f[a, b, ...]] = f[b, ...]. The old
+    # `expr.args[1]` was only correct for 2-argument heads (where the rebuilt
+    # one-arg node auto-evaluates, e.g. Rest[b^-1] -> -1) and silently DROPPED
+    # the tail for 3+-argument heads (hyper, Subst, Int, ...).
+    rest = expr.args[1:]
+    if len(rest) == 1:
+        return rest[0]
+    try:
+        return expr.func(*rest)
+    except (TypeError, ValueError):
+        return rest
 
 
 def eager_Numerator(u):
@@ -238,7 +268,7 @@ def eager_Denominator(var):
 
 
 class Util_Part(Function):
-    """Helper for :func:`Part` — deferred until its index simplifies to an integer."""
+    """Helper for :func:`eager_Part` — deferred until its index simplifies to an integer."""
 
     def doit(self):
         i = eager_Simplify(self.args[0])
@@ -279,7 +309,7 @@ def eager_Apart(u, x):
 def eager_PositiveQ(var):
     """Mathematica ``PositiveQ[expr]`` — True iff ``expr`` is a positive real number.
 
-    Standard Wolfram predicate: after :func:`Simplify`, a comparable value is tested
+    Standard Wolfram predicate: after :func:`eager_Simplify`, a comparable value is tested
     ``> 0``; ``ComplexInfinity``/``Infinity`` and non-comparable (e.g. complex) values
     are not positive.
     """

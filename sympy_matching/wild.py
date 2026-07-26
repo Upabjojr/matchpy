@@ -3,7 +3,7 @@
 
 `WildSymbol` behaves like a normal `sympy.Symbol` inside SymPy expression trees,
 so patterns can be written naturally with SymPy syntax. During conversion via
-`to_expression`, it becomes the appropriate MatchPy wildcard.
+`to_matchpy_expression`, it becomes the appropriate MatchPy wildcard.
 
 Examples:
     a_ = WildSymbol('a_')
@@ -69,9 +69,9 @@ class WildSymbol(SympySymbol):
     Notes:
         * ``WildSymbol('a_')`` converts to ``Wildcard.dot('a')``
         * ``WildSymbol('a_', optional_value=1)`` converts to
-          ``Wildcard.optional('a', to_expression(1))``
+          ``Wildcard.optional('a', to_matchpy_expression(1))``
         * ``WildSymbol('a_', optional_value=IDENTITY_ELEMENT)`` converts to
-          ``Wildcard.optional('a', to_expression(<identity>))`` where
+          ``Wildcard.optional('a', to_matchpy_expression(<identity>))`` where
           ``<identity>`` is determined by the enclosing operation (0 for Add,
           1 for Mul).
     """

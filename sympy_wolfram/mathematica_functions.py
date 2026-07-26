@@ -9,15 +9,15 @@ re-exported from ``rubi_utils`` for backward compatibility.
 
 Only functions whose evaluation depends *solely* on SymPy (directly, or via the
 self-contained eager helpers in :mod:`sympy_wolfram.functions_eager`) live here.
-Anything whose evaluation delegates to Rubi's integration utilities
-(``First``/``Rest``/``Exponent``/``Apart``/``Part`` — which need ``SumQ``/``Sort``/
-``PolynomialQ``/``RationalFunctionQ``/``Util_Part``) stays in ``rubi_rules`` to avoid
-a wrong-direction import.
+That includes ``First``/``Rest``/``Exponent``/``Apart``/``Part``: their seemingly
+Rubi-coupled bodies (``SumQ``/``Sort``/``PolynomialQ``/``RationalFunctionQ``/
+``Util_Part``) turned out to be generic SymPy operations, so those deferred classes
+live HERE too, not in ``rubi_rules``.
 
-Note: the deferred class and its eager counterpart share the Mathematica name but
-live in different modules — the node class ``LeafCount`` is here, the eager function
-``LeafCount`` is in :mod:`sympy_wolfram.functions_eager` — exactly as before, when the
-class was in ``rubi_utils`` and the function in ``utility_functions``.
+Note: the deferred class keeps the bare Mathematica name while its eager counterpart
+is prefixed with ``eager_`` and lives in a different module — the node class
+``LeafCount`` is here, the eager function ``eager_LeafCount`` is in
+:mod:`sympy_wolfram.functions_eager`.
 """
 import sympy
 from sympy import Expr, Integer, S

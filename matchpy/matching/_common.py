@@ -8,10 +8,13 @@ from ..expressions.expressions import Expression, Operation, OperationHead, Wild
 from ..expressions.substitution import Substitution
 from ..expressions.functions import is_constant, is_syntactic, op_iter
 
-__all__ = ['CommutativePatternsParts', 'Matcher', 'VarInfo']
+__all__ = ['CommutativePatternsParts', 'Matcher', 'VarInfo', 'OPERATION_END']
+
+OPERATION_END = ')'
+"""Sentinel written after an operation's operands in the flattened pattern/subject streams."""
 
 Matcher = Callable[[Sequence[Expression], Expression, Substitution], Iterator[Substitution]]
-VarInfo = NamedTuple('VarInfo', [('min_count', int), ('type', Optional[type]), ('default', Optional[Expression])])
+VarInfo = NamedTuple('VarInfo', [('min_count', int), ('default', Optional[Expression])])
 
 
 class CommutativePatternsParts(object):
@@ -98,15 +101,14 @@ class CommutativePatternsParts(object):
                     name = wc.variable_name
                     if wc.fixed_size:
                         self.fixed_variables[name] += 1
-                        symbol_type = getattr(wc, 'symbol_type', None)
-                        self._update_var_info(self.fixed_variable_infos, name, wc.min_count, symbol_type, wc.default_value)
+                        self._update_var_info(self.fixed_variable_infos, name, wc.min_count, wc.default_value)
                         if wc.default_value is None:
                             self.fixed_variable_length += wc.min_count
                         else:
                             self.optional_count += 1
                     else:
                         self.sequence_variables[name] += 1
-                        self._update_var_info(self.sequence_variable_infos, name, wc.min_count, None, wc.default_value)
+                        self._update_var_info(self.sequence_variable_infos, name, wc.min_count, wc.default_value)
                         if wc.default_value is None:
                             self.sequence_variable_min_length += wc.min_count
                 else:
@@ -121,13 +123,12 @@ class CommutativePatternsParts(object):
                 self.rest[expression] += 1
 
     @staticmethod
-    def _update_var_info(infos, name, count, symbol_type=None, default=None):
+    def _update_var_info(infos, name, count, default=None):
         if name not in infos:
-            infos[name] = VarInfo(count, symbol_type, default)
+            infos[name] = VarInfo(count, default)
         else:
             existing_info = infos[name]
             assert existing_info.min_count == count
-            assert existing_info.type == symbol_type
             assert existing_info.default == default
 
     def __str__(self):

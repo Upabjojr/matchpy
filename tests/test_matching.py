@@ -46,10 +46,10 @@ class TestMatch:
             (f(f(a, b)),        f(f(a, b)),     True)
         ]
     )  # yapf: disable
-    def test_constant_match(self, match_syntactic, expression, pattern, is_match):
+    def test_constant_match(self, match, expression, pattern, is_match):
         expression = expression
         pattern = Pattern(pattern)
-        result = list(match_syntactic(expression, pattern))
+        result = list(match(expression, pattern))
         if is_match:
             assert result == [dict()], "Expression {!s} and {!s} did not match but were supposed to".format(
                 expression, pattern
@@ -179,10 +179,10 @@ class TestMatch:
           # (f(a),              f(x2_),                             None),
         ]
     )  # yapf: disable
-    def test_wildcard_dot_match(self, match_syntactic, expression, pattern, expected_match):
+    def test_wildcard_dot_match(self, match, expression, pattern, expected_match):
         expression = expression
         pattern = Pattern(pattern)
-        result = list(match_syntactic(expression, pattern))
+        result = list(match(expression, pattern))
         if expected_match is not None:
             assert result == [expected_match
                              ], "Expression {!s} and {!s} did not match as {!s} but were supposed to".format(
@@ -484,23 +484,6 @@ class TestMatch:
     @pytest.mark.parametrize(
         '   expression,             pattern,        expected_matches',
         [
-            (a,                     s_,             [{'s': a}]),
-            (s,                     s_,             [{'s': s}]),
-            (f(a),                  s_,             []),
-            (a,                     ss_,            []),
-            (f(a),                  ss_,            []),
-            (s,                     ss_,            [{'ss': s}]),
-            (f_a(a),                f_a(s_),        [{'s': a}]),
-            (f_a(f(a)),             f_a(s_),        []),
-            (f_c(a),                f_c(ss_),       []),
-            (f_c(s),                f_c(ss_),       [{'ss': s}]),
-            (f_c(a, s),             f_c(ss_, ___),  [{'ss': s}]),
-            (f_c(a, s),             f_c(s_, ___),   [{'s': s}, {'s': a}]),
-            (f_ac(a),               f_ac(ss_),      []),
-            (f_ac(s),               f_ac(ss_),      [{'ss': s}]),
-            (f_ac(a, s),            f_ac(ss_, ___), [{'ss': s}]),
-            (f_ac(a, s),            f_ac(s_, ___),  [{'s': s}, {'s': a}]),
-            (f_ac(a, s),            f_ac(s_),       []),
         ]
     )  # yapf: disable
     def test_wildcard_symbol_match(self, match, expression, pattern, expected_matches):
@@ -720,12 +703,12 @@ class TestMatch:
         ]
     )  # yapf: disable
     def test_global_constraint_syntactic_match(
-            self, match_syntactic, expression, pattern, constraint_values, match_count
+            self, match, expression, pattern, constraint_values, match_count
     ):
         constraints = [MockConstraint(v) for v in constraint_values]
         pattern = Pattern(pattern, *constraints)
         expression = expression
-        result = list(match_syntactic(expression, pattern))
+        result = list(match(expression, pattern))
         assert len(result) == match_count, "Wrong number of matched for {!r} and {!r}".format(expression, pattern)
 
     @pytest.mark.parametrize(
@@ -740,12 +723,12 @@ class TestMatch:
         ]
     )  # yapf: disable
     def test_local_constraint_syntactic_match(
-            self, match_syntactic, expression, pattern, constraint_values, match_count
+            self, match, expression, pattern, constraint_values, match_count
     ):
         constraints = [MockConstraint(v, 'x') for v in constraint_values]
         pattern = Pattern(pattern, *constraints)
         expression = expression
-        result = list(match_syntactic(expression, pattern))
+        result = list(match(expression, pattern))
         assert len(result) == match_count, "Wrong number of matched for {!r} and {!r}".format(expression, pattern)
 
     @pytest.mark.parametrize(

@@ -49,7 +49,7 @@ except ImportError:
 from multiset import Multiset
 
 from ..expressions.expressions import (
-    Expression, Operation, OperationHead, NamedAtom, SymbolWildcard, SymbolWrapper,
+    Expression, Operation, OperationHead, NamedAtom, SymbolWrapper,
     Wildcard, WildcardOperationHead, Pattern
 )
 from ..expressions.constraints import Constraint
@@ -61,8 +61,7 @@ from ..expressions.functions import (
 from ..utils import (VariableWithCount, commutative_sequence_variable_partition_iter)
 from .. import functions
 from .bipartite import BipartiteGraph, enum_maximum_matchings_iter, LEFT, RIGHT
-from .syntactic import OPERATION_END, is_operation
-from ._common import check_one_identity
+from ._common import check_one_identity, OPERATION_END
 
 __all__ = ['ManyToOneMatcher', 'ManyToOneReplacer']
 
@@ -76,8 +75,11 @@ _VISITED = set()
 # ── LabelType hierarchy ──────────────────────────────────────────────────────
 # Represents the value stored in _Transition.label.
 
-class LabelType(TypedModel):
-    """Base class for transition labels."""
+class LabelType:
+    """Base class for transition labels (plain __slots__ class: internal to the
+    matcher, always constructed by matchpy itself, so the TypedModel type-check
+    layer bought nothing and cost ~3.1M generic-init calls per Rubi build)."""
+    __slots__ = ()
 
     def unwrap(self):
         """Return the raw wrapped value (for downstream isinstance checks)."""
@@ -85,7 +87,10 @@ class LabelType(TypedModel):
 
 class LabelTypeExpression(LabelType):
     """Label wrapping an expression value (Expression or native Python object)."""
-    value: object  # Expression or native Python hashable object
+    __slots__ = ('value',)
+
+    def __init__(self, value):
+        self.value = value
 
     def unwrap(self):
         return self.value
@@ -103,7 +108,10 @@ class LabelTypeExpression(LabelType):
 
 class LabelTypeOperation(LabelType):
     """Label wrapping an OperationHead."""
-    value: object  # OperationHead instance
+    __slots__ = ('value',)
+
+    def __init__(self, value):
+        self.value = value
 
     def unwrap(self):
         return self.value
@@ -121,6 +129,7 @@ class LabelTypeOperation(LabelType):
 
 class LabelTypeEpsilon(LabelType):
     """Singleton epsilon (empty) transition label."""
+    __slots__ = ()
 
     def unwrap(self):
         return None
@@ -136,6 +145,7 @@ class LabelTypeEpsilon(LabelType):
 
 class LabelTypeEnd(LabelType):
     """Label for OPERATION_END transitions (end of operands)."""
+    __slots__ = ()
 
     def unwrap(self):
         return OPERATION_END
@@ -157,16 +167,20 @@ _LABEL_END = LabelTypeEnd()
 # TransitionKey is the base for all dict keys in _State.transitions.
 # HeadType is a subclass of TransitionKey representing expression heads.
 
-class TransitionKey(TypedModel):
-    """Base class for transition dictionary keys."""
+class TransitionKey:
+    """Base class for transition dictionary keys (plain __slots__ class)."""
+    __slots__ = ()
 
 class HeadType(TransitionKey):
     """Base for expression heads used as transition keys."""
-    pass
+    __slots__ = ()
 
 class HeadTypeExpression(HeadType):
     """Head is a specific expression value (e.g. a NamedAtom instance or native object)."""
-    value: object  # Expression or native Python hashable object
+    __slots__ = ('value',)
+
+    def __init__(self, value):
+        self.value = value
 
     def __hash__(self):
         return hash(('HeadTypeExpression', self.value))
@@ -178,7 +192,10 @@ class HeadTypeExpression(HeadType):
 
 class HeadTypeOperation(HeadType):
     """Head is an OperationHead instance."""
-    value: object  # OperationHead instance
+    __slots__ = ('value',)
+
+    def __init__(self, value):
+        self.value = value
 
     def __hash__(self):
         return hash(self.value)
@@ -188,20 +205,9 @@ class HeadTypeOperation(HeadType):
             return self.value == other.value
         return NotImplemented
 
-class HeadTypeSymbol(HeadType):
-    """Head is a symbol type (for SymbolWildcard matching)."""
-    value: type
-
-    def __hash__(self):
-        return hash(self.value)
-
-    def __eq__(self, other):
-        if isinstance(other, HeadTypeSymbol):
-            return self.value is other.value
-        return NotImplemented
-
 class HeadTypeNone(HeadType):
     """Wildcard head (matches anything). Represents the None catch-all."""
+    __slots__ = ()
 
     def __hash__(self):
         return hash('HeadTypeNone')
@@ -221,6 +227,7 @@ class HeadTypeAnyOperation(HeadType):
     this single key instead of under its own head; every operation subject offers
     this key in addition to its concrete head (see ``_get_heads``).
     """
+    __slots__ = ()
 
     def __hash__(self):
         return hash('HeadTypeAnyOperation')
@@ -233,6 +240,7 @@ _HEAD_ANY_OP = HeadTypeAnyOperation()
 
 class TransitionKeyEnd(TransitionKey):
     """Key for OPERATION_END transitions."""
+    __slots__ = ()
 
     def __hash__(self):
         return hash('TransitionKeyEnd')
@@ -245,7 +253,10 @@ _TRANSITION_END = TransitionKeyEnd()
 
 class TransitionKeyPatternId(TransitionKey):
     """Key for commutative subpattern id transitions."""
-    value: int
+    __slots__ = ('value',)
+
+    def __init__(self, value):
+        self.value = value
 
     def __hash__(self):
         return hash(('TransitionKeyPatternId', self.value))
@@ -258,11 +269,14 @@ class TransitionKeyPatternId(TransitionKey):
 
 # ── _PatternKey / _PatternValue ──────────────────────────────────────────────
 
-class _PatternKey(TypedModel):
-    """Hashable key for CommutativeMatcher.patterns dict."""
+class _PatternKey:
+    """Hashable key for CommutativeMatcher.patterns dict (plain __slots__ class)."""
+    __slots__ = ('subpatterns', 'variables')
 
-    subpatterns: Tuple[int, ...]
-    variables: Tuple[Tuple, ...]  # Tuple[Tuple[VariableWithCount, bool|Type[Operation]], ...]
+    def __init__(self, subpatterns, variables):
+        # subpatterns: Tuple[int, ...]; variables: Tuple[Tuple[VariableWithCount, bool], ...]
+        self.subpatterns = subpatterns
+        self.variables = variables
 
     def __hash__(self):
         return hash((self.subpatterns, self.variables))
@@ -272,18 +286,22 @@ class _PatternKey(TypedModel):
             return self.subpatterns == other.subpatterns and self.variables == other.variables
         return NotImplemented
 
-class _PatternValue(TypedModel):
-    """Value stored in CommutativeMatcher.patterns dict."""
+class _PatternValue:
+    """Value stored in CommutativeMatcher.patterns dict (plain __slots__ class)."""
+    __slots__ = ('index', 'pattern_set', 'variables')
 
-    index: int
-    pattern_set: MultisetOfInt
-    variables: Tuple[Tuple, ...]  # Tuple[Tuple[VariableWithCount, bool|Type[Operation]], ...]
+    def __init__(self, index, pattern_set, variables):
+        self.index = index
+        self.pattern_set = pattern_set
+        self.variables = variables
 
-class _State(TypedModel):
+class _State:
+    __slots__ = ('number', 'transitions', 'matcher')
 
-    number: int
-    transitions: Dict[TransitionKey, List['_Transition']] = field(default_factory=dict)
-    matcher: Optional['CommutativeMatcher'] = None
+    def __init__(self, number, transitions=None, matcher=None):
+        self.number = number                                  # int
+        self.transitions = {} if transitions is None else transitions  # Dict[TransitionKey, List[_Transition]]
+        self.matcher = matcher                                # Optional[CommutativeMatcher]
 
     # NOTE: no custom model_dump / transitions field_validator here. JSON
     # (de)serialization is hand-rolled in matchpy.matching.json_serialization
@@ -301,14 +319,16 @@ class _State(TypedModel):
         return NotImplemented
 
 
-class _Transition(TypedModel):
+class _Transition:
+    __slots__ = ('label', 'target', 'variable_name', 'patterns', 'check_constraints', 'subst')
 
-    label: LabelType
-    target: _State
-    variable_name: Optional[str] = None
-    patterns: Set[int] = field(default_factory=set)
-    check_constraints: Optional[Set[int]] = None
-    subst: Optional[Substitution] = None
+    def __init__(self, label, target, variable_name=None, patterns=None, check_constraints=None, subst=None):
+        self.label = label                                    # LabelType
+        self.target = target                                  # _State
+        self.variable_name = variable_name                    # Optional[str]
+        self.patterns = set() if patterns is None else patterns  # Set[int]
+        self.check_constraints = check_constraints            # Optional[Set[int]]
+        self.subst = subst                                    # Optional[Substitution]
 
     def __hash__(self):
         return hash((self.label, self.target.number, self.variable_name))
@@ -328,7 +348,6 @@ class _MatchIter:
         self.substitution = Substitution()
         self.constraints = set(range(len(matcher.constraints)))
         self.associative = [intial_associative]
-        self.visited = set()
 
     def __iter__(self):
         for _ in self._match(self.matcher.root):
@@ -371,7 +390,9 @@ class _MatchIter:
                 yield label, new_substitution
 
     def _match(self, state: _State) -> Iterator[_State]:
-        self.visited.add(state.number)
+        # (a write-only `self.visited` set was removed here -- it was populated on
+        # every state visit and never read; the debug visualization uses the module
+        # level _VISITED instead.)
         if len(self.subjects) == 0:
             if state.number in self.matcher.finals or _TRANSITION_END in state.transitions:
                 yield state
@@ -398,7 +419,7 @@ class _MatchIter:
             return
         if isinstance(label, LabelTypeExpression):
             expr = label.value
-            if isinstance(expr, Wildcard) and not isinstance(expr, SymbolWildcard):
+            if isinstance(expr, Wildcard):
                 min_count = expr.min_count
                 if expr.default_value is not None and min_count > 0:
                     yield from self._check_transition(transition, expr.default_value, False)
@@ -504,10 +525,6 @@ class _MatchIter:
             # is a WildcardOperationHead are reachable for this subject.
             yield _HEAD_ANY_OP
         else:
-            # For Symbols, traverse class hierarchy for SymbolWildcard matching
-            for base in type(expression).__mro__:
-                if base is not object and issubclass(base, NamedAtom):
-                    yield HeadTypeSymbol(value=base)
             yield HeadTypeExpression(value=expression)
         yield _HEAD_NONE
 
@@ -709,12 +726,21 @@ class ManyToOneMatcher(TypedModel):
             The internal id for the pattern. This is mainly used by the :class:`CommutativeMatcher`.
         """
         pattern_index = len(self.patterns)
-        renamed_constraints = [c.with_renamed_vars(renaming) for c in pattern.local_constraints]
+        # Skip the rename entirely for an identity renaming: the CommutativeMatcher
+        # sub-pattern path passes {n: n for n in vnames}, so with_renamed_vars would
+        # rebuild every constraint (re-running CustomConstraint's signature
+        # introspection) and re-sort every commutative operand for a provable no-op --
+        # measured ~185k redundant CustomConstraint reconstructions on the Rubi set.
+        is_identity = all(k == v for k, v in renaming.items())
+        if is_identity:
+            renamed_constraints = list(pattern.local_constraints)
+        else:
+            renamed_constraints = [c.with_renamed_vars(renaming) for c in pattern.local_constraints]
         constraint_indices = [self._add_constraint(c, pattern_index) for c in renamed_constraints]
         self.patterns.append((pattern, label, constraint_indices))
         self.pattern_to_index[pattern] = pattern_index  # O(1) lookup index
         self.pattern_vars.append(renaming)
-        pattern = rename_variables(pattern.expression, renaming)
+        pattern = pattern.expression if is_identity else rename_variables(pattern.expression, renaming)
         state = self.root
         patterns_stack = [deque([pattern])]
 
@@ -757,9 +783,21 @@ class ManyToOneMatcher(TypedModel):
             index = len(self.constraints)
             self.constraints.append((constraint, set([pattern])))
             self.constraint_to_index[constraint] = index
+        # try/except instead of setdefault: setdefault eagerly allocates a throwaway
+        # set() (and a key tuple) on every call -- ~2.3M wasted allocations building
+        # the Rubi matcher (measured ~0.5-1s).
+        cvars = self.constraint_vars
+        cpm = self.constraint_pattern_map
         for var in constraint.variables:
-            self.constraint_vars.setdefault(var, set()).add(index)
-            self.constraint_pattern_map.setdefault((var, pattern), set()).add(index)
+            try:
+                cvars[var].add(index)
+            except KeyError:
+                cvars[var] = {index}
+            key = (var, pattern)
+            try:
+                cpm[key].add(index)
+            except KeyError:
+                cpm[key] = {index}
         return index
 
     def match(self, subject: Expression) -> Iterator[Tuple[Expression, Substitution]]:
@@ -851,11 +889,7 @@ class ManyToOneMatcher(TypedModel):
                 return LabelTypeOperation(value=expression.head), _HEAD_ANY_OP
             return LabelTypeOperation(value=expression.head), HeadTypeOperation(value=expression.head)
         else:
-            if isinstance(expression, SymbolWildcard):
-                head = HeadTypeSymbol(value=expression.symbol_type)
-                label_expr = SymbolWildcard(symbol_type=expression.symbol_type)
-                return LabelTypeExpression(value=label_expr), head
-            elif isinstance(expression, Wildcard):
+            if isinstance(expression, Wildcard):
                 head = _HEAD_NONE
                 label_expr = Wildcard(expression.min_count, expression.fixed_size, default_value=expression.default_value)
                 return LabelTypeExpression(value=label_expr), head
@@ -1348,8 +1382,6 @@ class CommutativeMatcher(TypedModel):
         return pattern_set, pattern_vars
 
     def _is_sequence_wildcard(self, expression: Expression) -> bool:
-        if isinstance(expression, SymbolWildcard):
-            return False
         if isinstance(expression, Wildcard):
             return not expression.fixed_size or self.associative
         return False
@@ -1366,12 +1398,14 @@ class CommutativeMatcher(TypedModel):
                 break
             if not self._is_canonical_matching(matching):
                 continue
+            # matched_subjects depends only on `matching`, not on `substs` -- hoisted
+            # out of the Cartesian-product loop (it was rebuilt per product element).
+            matched_subjects = Multiset(subexpression for subexpression, _ in matching)
             for substs in itertools.product(*(bipartite[edge] for edge in matching.items())):
                 try:
                     bipartite_substitution = substitution.union(*substs)
                 except ValueError:
                     continue
-                matched_subjects = Multiset(subexpression for subexpression, _ in matching)
                 yield bipartite_substitution, matched_subjects
 
     def _match_sequence_variables(

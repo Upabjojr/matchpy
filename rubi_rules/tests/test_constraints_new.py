@@ -716,7 +716,7 @@ class TestConstraintVariablesAreRestrictedToThePattern:
         from rubi_rules.utils.constraints_wolfram import MatchQ
         from sympy_matching.wild import WildSymbol
         u_, local_ = WildSymbol('u'), WildSymbol('localvar')
-        cc = _make_matchpy_constraint(MatchQ(u_, local_ * Symbol('x')), ['u'], {'u'})
+        cc = _make_matchpy_constraint(MatchQ(u_, local_ * Symbol('x')), {'u'})
         assert set(cc._variables) == {'u'}          # 'localvar' must NOT be declared
 
 
@@ -732,13 +732,16 @@ class TestMatchQEnforcementIsGated:
     """
 
     def _cc(self, constraint, enforce):
-        import rubi_rules.base_objects as bo
-        saved = bo.ENFORCE_MATCHQ
-        bo.ENFORCE_MATCHQ = enforce
+        # ENFORCE_MATCHQ + the machinery live in sympy_matching.matching_rule now
+        # (rubi_rules.base_objects only re-exports them). _make_constraint_checker reads
+        # the flag from matching_rule's namespace, so patch it THERE.
+        import sympy_matching.matching_rule as mr
+        saved = mr.ENFORCE_MATCHQ
+        mr.ENFORCE_MATCHQ = enforce
         try:
-            return bo._make_matchpy_constraint(constraint, ['u'], {'u'})
+            return mr._make_matchpy_constraint(constraint, {'u'})
         finally:
-            bo.ENFORCE_MATCHQ = saved
+            mr.ENFORCE_MATCHQ = saved
 
     def _mq(self):
         from rubi_rules.utils.constraints_wolfram import MatchQ
@@ -803,7 +806,7 @@ class TestGenericBooleanConstraintChecker:
 
     def _checker(self, constraint):
         from rubi_rules.base_objects import _make_matchpy_constraint
-        return _make_matchpy_constraint(constraint, ['m', 'n'], {'m', 'n'})
+        return _make_matchpy_constraint(constraint, {'m', 'n'})
 
     def test_ne_gcd_guard_evaluates_with_wildsymbols_and_deferred_node(self):
         from matchpy.expressions.substitution import Substitution
@@ -847,3 +850,29 @@ class TestGenericBooleanConstraintChecker:
         cc = self._checker(sympy.Eq(n_, 6))
         assert cc(Substitution({'n': sympy.Integer(6)})) is True
         assert cc(Substitution({'n': sympy.Integer(5)})) is False
+
+
+class TestPolyQResolvesSecondArg:
+    """Regression for the PolyQ constraint dropping the offset in Int[atanh(a+b x)^2/x^3].
+
+    The 'P(x) (a+b x^n)^p' rules pass PolyQ(Pq_, v_**n_) -- the 2nd arg is a WILDCARD
+    expression, not the bare integration variable. PolyQ.check() must RESOLVE it; left
+    unresolved it stayed a WildSymbol Pow that every integrand is a trivial degree-0
+    'polynomial' in, so PolyQ was ALWAYS True. That let rule 1.1.3.7#46 fire on
+    atanh(a+b x)/(x^2 (1-(a+b x)^2)) and drop the offset via SubstFor, giving a
+    numerically-WRONG (PolyLog-free) antiderivative.
+    """
+    def _polyq(self, Pq_val, v_val, n_val):
+        from rubi_rules.utils.constraints_rubi import PolyQ
+        Pq, v, n = WildSymbol('Pq'), WildSymbol('v'), WildSymbol('n')
+        return PolyQ(Pq, v**n).check(Pq=Pq_val, v=v_val, n=n_val)
+
+    def test_rejects_non_polynomial_in_v(self):
+        from sympy import atanh
+        a, b = Symbol('a'), Symbol('b')
+        # atanh(a+bx)/x^2 is NOT a polynomial in (a+bx)^2 -> PolyQ must be falsy
+        assert not self._polyq(atanh(a + b*x)/x**2, a + b*x, Integer(2))
+
+    def test_accepts_genuine_polynomial_in_v(self):
+        a, b = Symbol('a'), Symbol('b')
+        assert self._polyq((a + b*x)**4 + (a + b*x)**2, a + b*x, Integer(2))

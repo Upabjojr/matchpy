@@ -16,7 +16,7 @@ from typing import Callable, List, NamedTuple, Sequence, Tuple, Union, Iterable,
 from multiset import Multiset
 
 from .expressions.expressions import (
-    Expression, Operation, Pattern, Wildcard, SymbolWildcard
+    Expression, Operation, Pattern, Wildcard
 )
 from .expressions.substitution import Substitution
 from .expressions.functions import preorder_iter_with_position, create_operation_expression, op_iter, op_len

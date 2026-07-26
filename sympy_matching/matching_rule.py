@@ -1,0 +1,289 @@
+# -*- coding: utf-8 -*-
+"""Reusable SymPy -> matchpy pattern-matching-rule machinery.
+
+Everything needed to turn a set of rules -- each a SymPy *pattern*, a SymPy
+*replacement*, and SymPy *constraints*, all written with ordinary SymPy objects
+mixed with :class:`~sympy_matching.wild.WildSymbol` -- into a matchpy
+:class:`~matchpy.matching.many_to_one.ManyToOneReplacer`. Depends ONLY on
+``matchpy`` and ``sympy_matching`` (NOT on ``sympy_wolfram`` or ``rubi_rules``),
+so any matcher (integration, equation/ODE solving, term rewriting, ...) can reuse it.
+
+- :class:`SympyMatchingRule` -- one (pattern, constraints, replacement) rule.
+- :func:`build_replacer` (alias ``build_tracing_replacer``) -- assemble a
+  ManyToOneReplacer from rules; each
+  replacement returns ``(result, (rule.module_name, rule.rule_number))`` so the
+  firing rule can be traced.
+- The private helpers lambdify the SymPy replacement into a matchpy replacement
+  callback and translate SymPy/logic constraints into matchpy ``CustomConstraint``s.
+
+History: lifted out of ``rubi_rules.base_objects`` (was Rubi-specific by location
+only). ``rubi_rules.base_objects`` re-exports these names (``RubiRulePattern`` is an
+alias of ``SympyMatchingRule``) so existing Rubi imports keep working.
+"""
+import functools
+from typing import Any, List, Tuple
+
+import sympy
+from pydantic import BaseModel
+
+from matchpy.expressions.expressions import Pattern, to_matchpy_expression
+from matchpy.expressions.constraints import CustomConstraint
+from matchpy.matching.many_to_one import ManyToOneReplacer
+from matchpy.functions import ReplacementRule
+
+from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.wild import WildSymbol
+from sympy_matching.constraint import SympyMatchingConstraint, _resolve_with_substitution
+
+
+class SympyMatchingRule(BaseModel):
+    """A single pattern-matching rule in SymPy form.
+
+    - ``pattern``: a SymPy expression (with WildSymbols) to match.
+    - ``constraints``: a tuple of SymPy guards (``SympyMatchingConstraint`` subclasses
+      and/or bare SymPy Booleans like ``Ne(...)``, composed with Not/And/Or).
+    - ``replacement``: a SymPy expression (with the same WildSymbols) produced on match.
+    - ``module_name`` / ``rule_number``: an optional label for tracing/reporting.
+    """
+    model_config = dict(arbitrary_types_allowed=True)
+
+    pattern: Any
+    constraints: Tuple[Any, ...] = ()
+    replacement: Any
+    module_name: str = ''
+    rule_number: int = 0
+
+
+def _collect_wild_symbols(expr) -> dict:
+    wilds = {}
+    if isinstance(expr, WildSymbol):
+        wilds[expr.wildcard_name] = expr
+    elif hasattr(expr, 'args'):
+        for arg in expr.args:
+            wilds.update(_collect_wild_symbols(arg))
+    return wilds
+
+
+def _make_replacement_fn(replacement_expr, rule):
+    # No scoping pass is needed here: With/Module/Block bind their locals to Dummy
+    # symbols at construction, so substituting a wildcard value below can never be
+    # captured by a local that happens to share its name.
+    def _replacement(**match_dict):
+        sympy_subs = {}
+        for name, matchpy_val in match_dict.items():
+            sympy_subs[name] = matchpy_to_sympy(matchpy_val)
+        result = replacement_expr
+        for ws in _collect_wild_symbols(replacement_expr).values():
+            if ws.wildcard_name in sympy_subs:
+                result = result.subs(ws, sympy_subs[ws.wildcard_name])
+        # Evaluate any deferred helper nodes (With, Condition, ...).
+        # A Condition whose test fails raises StopIteration, which propagates here and
+        # is caught by ManyToOneReplacer.replace() as "no match" -- the rule is silently
+        # skipped, matching Mathematica's Condition semantics.
+        if hasattr(result, 'doit'):
+            result = result.doit()
+        return to_matchpy_expression(result)
+
+    _replacement.__qualname__ = f"{rule.module_name}:[{rule.rule_number}]"
+    _replacement.__module__ = ""
+    return _replacement
+
+
+def _extract_wild_names(constraint_obj):
+    """Extract WildSymbol/Symbol names from a constraint.
+
+    Handles SympyMatchingConstraint (via .variables) and Boolean wrappers
+    Not(...), Or(...), And(...) by recursing into their args.
+    """
+    if isinstance(constraint_obj, sympy.logic.boolalg.Not):
+        inner = constraint_obj.args[0]
+        return _extract_wild_names(inner)
+    if isinstance(constraint_obj, (sympy.logic.boolalg.Or, sympy.logic.boolalg.And)):
+        names = set()
+        for arg in constraint_obj.args:
+            names.update(_extract_wild_names(arg))
+        return sorted(names)
+
+    try:
+        free_syms = constraint_obj.free_symbols
+        names = []
+        for s in free_syms:
+            if isinstance(s, WildSymbol):
+                names.append(s.wildcard_name)
+            elif hasattr(s, 'name') and s.name.endswith('_'):
+                names.append(s.name)
+        if names:
+            return sorted(set(names))
+    except (AttributeError, TypeError):
+        pass
+    if hasattr(constraint_obj, 'variables'):
+        return [v for v in constraint_obj.variables if v.isidentifier()]
+    return []
+
+
+# Mathematica's MatchQ inspects the UNEVALUATED expression. By the time an expression
+# reaches us SymPy has normalised it -- (2*x)**3 is already 8*x**3 and no longer matches
+# `(c*x)^m` -- so structural matching here is NOT faithful to Rubi in either direction:
+# it misses matches Rubi would make, and (because the emitted code no longer distinguishes
+# an outer-bound name from a MatchQ-local one) it can also match more loosely than Rubi.
+#
+# Enforcing it therefore REFUSES rules Rubi would offer (measured on a 120-integrand
+# sample: 81/120 solved as a permissive stub, 69/120 fully enforced). Both polarities lose
+# antiderivatives, so enforcement is OFF by default: a guard that wrongly refuses a rule is
+# worse than one that is merely permissive.
+#
+# The concrete MatchQ constraint's check() is fully implemented and unit-tested; only its
+# USE as a rule guard is gated here (matched by class name so this stays Wolfram-agnostic).
+ENFORCE_MATCHQ = False
+
+
+def _mentions_matchq(constraint_obj) -> bool:
+    """True if this constraint is (or wraps) a MatchQ. See :data:`ENFORCE_MATCHQ`."""
+    if type(constraint_obj).__name__ == 'MatchQ':
+        return True
+    return any(_mentions_matchq(a) for a in getattr(constraint_obj, 'args', ()))
+
+
+def _make_constraint_checker(constraint_obj, variables):
+    """Build a checker function for a single constraint (possibly compound).
+
+    Returns a callable(**kwargs) -> bool.
+    """
+    # MatchQ is not faithful enough to be used as a guard (see ENFORCE_MATCHQ).
+    # This MUST come before the Not/Or/And handling below: applied to a MatchQ nested
+    # inside a Not, the negation would turn the permissive True into False and REFUSE
+    # the rule -- the exact harm the gate exists to avoid.
+    if not ENFORCE_MATCHQ and _mentions_matchq(constraint_obj):
+        return lambda **kwargs: True
+
+    # Not(inner): negate inner check
+    if isinstance(constraint_obj, sympy.logic.boolalg.Not):
+        inner = constraint_obj.args[0]
+        inner_checker = _make_constraint_checker(inner, variables)
+
+        def check_not(**kwargs):
+            return not inner_checker(**kwargs)
+        return check_not
+
+    # Or(a, b, ...): any inner check passes
+    if isinstance(constraint_obj, sympy.logic.boolalg.Or):
+        inner_checkers = [_make_constraint_checker(arg, variables) for arg in constraint_obj.args]
+
+        def check_or(**kwargs):
+            return any(c(**kwargs) for c in inner_checkers)
+        return check_or
+
+    # And(a, b, ...): all inner checks pass
+    if isinstance(constraint_obj, sympy.logic.boolalg.And):
+        inner_checkers = [_make_constraint_checker(arg, variables) for arg in constraint_obj.args]
+
+        def check_and(**kwargs):
+            return all(c(**kwargs) for c in inner_checkers)
+        return check_and
+
+    # SympyMatchingConstraint (incl. Wolfram's MathematicaConstraint): use .check().
+    if isinstance(constraint_obj, SympyMatchingConstraint):
+        def check_constraint(**kwargs):
+            return constraint_obj.check(**kwargs)
+        return check_constraint
+
+    # Generic SymPy Boolean guard (a bare relational like Ne(GCD(m+1,n),1), NOT a
+    # SympyMatchingConstraint). Resolve its wildcards the SAME way -- through
+    # _resolve_with_substitution, keyed by wildcard_name.
+    #
+    # Why the dedicated path: the guard's variables are WildSymbols, which cross the
+    # sympy<->matchpy boundary as Wildcards; a plain Symbol crosses as a SymbolWrapper
+    # CONSTANT. So the matcher hands back values by wildcard NAME (as SymbolWrappers,
+    # e.g. 'm' -> SymbolWrapper(1)), never as an object equal to a Symbol('m') or even a
+    # freshly built WildSymbol('m') (a WildSymbol is instance-unique). The only sound move
+    # is to xreplace the guard's OWN wildcard instances, matched by name, with the match
+    # values converted back to SymPy -- exactly what _resolve_with_substitution does.
+    def check_boolean_guard(**kwargs):
+        substitution = {name: matchpy_to_sympy(kwargs[name])
+                        for name in variables if name in kwargs}
+        result = _resolve_with_substitution(constraint_obj, substitution)
+        # A bare relational leaves any deferred node (GCD, Denominator, ...) unevaluated
+        # -- Ne(GCD(2,6),1) stays symbolic -- so reduce it before the truth test.
+        if hasattr(result, 'doit'):
+            try:
+                result = result.doit()
+            except Exception:
+                pass
+        return result == True   # noqa: E712 -- sympy truth, `is True` would be wrong
+    return check_boolean_guard
+
+
+def _make_matchpy_constraint(constraint_obj, pattern_wilds):
+    """Convert a SymPy-level constraint into a MatchPy ``CustomConstraint``.
+
+    ``pattern_wilds`` is the mapping of wildcard names the PATTERN binds (from
+    :func:`_collect_wild_symbols`); only those may be declared to MatchPy.
+    Handles SympyMatchingConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
+    """
+    # A constraint may mention variables the PATTERN does not bind (MatchQ scopes its
+    # inner pattern's variables to itself). MatchPy can only supply what it matched, and
+    # CustomConstraint.__call__ silently returns True when a declared variable is missing
+    # -- so declaring them made the whole guard a no-op. Declare only what the pattern
+    # binds; the rest stay free variables inside the constraint.
+    declared = _extract_wild_names(constraint_obj)
+    variables = [v for v in declared if v in pattern_wilds]
+    if not variables:
+        return CustomConstraint(lambda: True)
+
+    checker = _make_constraint_checker(constraint_obj, variables)
+
+    # Build a lambda with proper parameter names for MatchPy introspection. The
+    # SOURCE only depends on the variable-name tuple, so the compile step is cached
+    # (parsing 29k+ tiny lambdas was ~1s of Rubi matcher construction); only the
+    # cheap eval-of-code-object binding the concrete checker runs per rule.
+    fn = eval(_trampoline_code(tuple(variables)), {'__checker__': checker})
+
+    return CustomConstraint(fn)
+
+
+@functools.lru_cache(maxsize=None)
+def _trampoline_code(variables):
+    params = ', '.join(variables)
+    src = f"lambda {params}: __checker__({', '.join(f'{v}={v}' for v in variables)})"
+    return compile(src, '<constraint-trampoline>', 'eval')
+
+
+def _make_tracing_replacement_fn(replacement_expr, rule):
+    base_replacement = _make_replacement_fn(replacement_expr, rule)
+
+    def _replacement(**match_dict):
+        result = base_replacement(**match_dict)
+        return result, (rule.module_name, rule.rule_number)
+
+    _replacement.__qualname__ = base_replacement.__qualname__
+    _replacement.__module__ = base_replacement.__module__
+    # Expose the SymPy replacement expression explicitly so serialization does not have
+    # to guess at closure cell order. Attribute name kept as `_rubi_replacement_expr`
+    # because matchpy's json_serialization reads exactly that name.
+    _replacement._rubi_replacement_expr = replacement_expr
+    return _replacement
+
+
+def build_replacer(rules: List[SympyMatchingRule]) -> ManyToOneReplacer:
+    """Assemble a matchpy ManyToOneReplacer from SympyMatchingRule objects.
+
+    Each rule's SymPy pattern/constraints/replacement are converted to matchpy form;
+    the replacement callback returns ``(result, (module_name, rule_number))`` so the
+    firing rule can always be traced. (Historic alias: ``build_tracing_replacer``.)
+    """
+    replacer = ManyToOneReplacer()
+    for rule in rules:
+        matchpy_pattern_expr = to_matchpy_expression(rule.pattern)
+        pattern_wilds = _collect_wild_symbols(rule.pattern)
+        matchpy_constraints = [
+            _make_matchpy_constraint(constraint, pattern_wilds)
+            for constraint in rule.constraints
+        ]
+        pattern = Pattern(matchpy_pattern_expr, *matchpy_constraints)
+        replacement_fn = _make_tracing_replacement_fn(rule.replacement, rule)
+        replacer.add(ReplacementRule(pattern, replacement_fn))
+    return replacer
+
+
+# Historic name (every existing caller uses it); the replacer has always traced.
+build_tracing_replacer = build_replacer
