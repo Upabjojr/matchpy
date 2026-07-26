@@ -79,14 +79,14 @@ from sympy_matching.conversion import matchpy_to_sympy
 # correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
 # in-module callers keep resolving these names; the local defs were removed.
 from sympy_wolfram.functions_eager import (
-    LeafCount, Length, Complex, Not, Exponent,
-    Simplify, First, Rest, Numerator, Denominator, Part, Util_Part, Apart,
+    eager_LeafCount, eager_Length, eager_Complex, eager_Not, eager_Exponent,
+    eager_Simplify, eager_First, eager_Rest, eager_Numerator, eager_Denominator, eager_Part, Util_Part, eager_Apart,
     FreeQ, _ensure_sympy,
     # Standard Wolfram predicates (bodies depend only on SymPy + Simplify/_ensure_sympy);
     # relocated here from utility_functions.
     IntegerQ, MemberQ, PositiveQ,
     # PolynomialQuotient/Remainder handle the rational-p Laurent case (single impl there).
-    PolynomialQuotient, PolynomialRemainder,
+    eager_PolynomialQuotient, eager_PolynomialRemainder,
 )
 
 
@@ -183,10 +183,10 @@ def exception_means_false(f):
 # Wolfram function whose body depends only on SymPy (+ MathematicaExpr for the deferred-
 # node doit), so it lives in the generic Wolfram layer.
 
-def Set(expr, value):
+def eager_Set(expr, value):
     return {expr: value}
 
-def With(subs, expr):
+def eager_With(subs, expr):
     if isinstance(subs, dict):
         k = list(subs.keys())[0]
         expr = expr.xreplace({k: subs[k]})
@@ -196,10 +196,10 @@ def With(subs, expr):
             expr = expr.xreplace({k: i[k]})
     return expr
 
-def Module(subs, expr):
-    return With(subs, expr)
+def eager_Module(subs, expr):
+    return eager_With(subs, expr)
 
-def Scan(f, expr):
+def eager_Scan(f, expr):
     # evaluates f applied to each element of expr in turn.
     for i in expr:
         yield f(i)
@@ -275,12 +275,12 @@ def ZeroQ(*expr):
             u = _ensure_sympy(expr[0])
             if _provably_nonzero(u):
                 return False
-            return Simplify(u) == 0
+            return eager_Simplify(u) == 0
     else:
         return all(ZeroQ(i) for i in expr)
 
 def NegativeQ(u):
-    u = Simplify(_ensure_sympy(u))
+    u = eager_Simplify(_ensure_sympy(u))
     if u in (zoo, oo):
         return False
     if u.is_comparable:
@@ -295,7 +295,7 @@ def NonzeroQ(expr):
     return not ZeroQ(expr)
 
 
-def List(*var):
+def eager_List(*var):
     return list(var)
 
 def PositiveIntegerQ(*args):
@@ -307,7 +307,7 @@ def NegativeIntegerQ(*args):
 # PositiveQ, IntegerQ and MemberQ moved to sympy_wolfram.functions_eager
 # (standard Wolfram predicates); imported at the top of this module.
 
-def IntegersQ(*var):
+def eager_IntegersQ(*var):
     return all(IntegerQ(i) for i in var)
 
 def _ComplexNumberQ(var):
@@ -317,7 +317,7 @@ def _ComplexNumberQ(var):
     else:
         return False
 
-def ComplexNumberQ(*var):
+def eager_ComplexNumberQ(*var):
     """
     ComplexNumberQ(m, n,...) returns True if m, n, ... are all explicit complex numbers, else it returns False.
 
@@ -343,11 +343,11 @@ def RealNumericQ(u):
 def PositiveOrZeroQ(u):
     return u.is_real and u >= 0
 
-def FractionOrNegativeQ(u):
-    return FractionQ(u) or NegativeQ(u)
+def eager_FractionOrNegativeQ(u):
+    return eager_FractionQ(u) or NegativeQ(u)
 
-def NegQ(var):
-    return Not(PosQ(var)) and NonzeroQ(var)
+def eager_NegQ(var):
+    return eager_Not(eager_PosQ(var)) and NonzeroQ(var)
 
 
 def Equal(a, b):
@@ -356,54 +356,54 @@ def Equal(a, b):
 def Unequal(a, b):
     return a != b
 
-def IntPart(u):
+def eager_IntPart(u):
     # IntPart[u] returns the sum of the integer terms of u.
-    if ProductQ(u):
-        if IntegerQ(First(u)):
-            return First(u)*IntPart(Rest(u))
+    if eager_ProductQ(u):
+        if IntegerQ(eager_First(u)):
+            return eager_First(u)*eager_IntPart(eager_Rest(u))
     elif IntegerQ(u):
         return u
-    elif FractionQ(u):
+    elif eager_FractionQ(u):
         return IntegerPart(u)
-    elif SumQ(u):
+    elif eager_SumQ(u):
         res = 0
         for i in u.args:
-            res += IntPart(i)
+            res += eager_IntPart(i)
         return res
     return 0
 
-def FracPart(u):
+def eager_FracPart(u):
     # FracPart[u] returns the sum of the non-integer terms of u.
-    if ProductQ(u):
-        if IntegerQ(First(u)):
-            return First(u)*FracPart(Rest(u))
+    if eager_ProductQ(u):
+        if IntegerQ(eager_First(u)):
+            return eager_First(u)*eager_FracPart(eager_Rest(u))
 
     if IntegerQ(u):
         return 0
-    elif FractionQ(u):
+    elif eager_FractionQ(u):
         return FractionalPart(u)
-    elif SumQ(u):
+    elif eager_SumQ(u):
         res = 0
         for i in u.args:
-            res += FracPart(i)
+            res += eager_FracPart(i)
         return res
     else:
         return u
 
-def RationalQ(*nodes):
+def eager_RationalQ(*nodes):
     return all(_ensure_sympy(var).is_Rational for var in nodes)
 
-def ProductQ(expr):
+def eager_ProductQ(expr):
     return S(_ensure_sympy(expr)).is_Mul
 
-def SumQ(expr):
+def eager_SumQ(expr):
     expr = _ensure_sympy(expr)
     return expr.is_Add
 
-def NonsumQ(expr):
-    return not SumQ(expr)
+def eager_NonsumQ(expr):
+    return not eager_SumQ(expr)
 
-def Subst(a, x, y):
+def eager_Subst(a, x, y):
     if None in [a, x, y]:
         return None
     if a.has(Function('Integrate')):
@@ -416,22 +416,22 @@ def Subst(a, x, y):
 # used SumQ/ProductQ/Sort, all generic SymPy operations (is_Add/is_Mul/sort_key), so the
 # functions belong to the generic Wolfram layer.
 
-def SqrtNumberQ(expr):
+def eager_SqrtNumberQ(expr):
     # SqrtNumberQ[u] returns True if u^2 is a rational number; else it returns False.
-    if PowerQ(expr):
+    if eager_PowerQ(expr):
         m = expr.base
         n = expr.exp
-        return (IntegerQ(n) and SqrtNumberQ(m)) or (IntegerQ(n-S(1)/2) and RationalQ(m))
+        return (IntegerQ(n) and eager_SqrtNumberQ(m)) or (IntegerQ(n-S(1)/2) and eager_RationalQ(m))
     elif expr.is_Mul:
-        return all(SqrtNumberQ(i) for i in expr.args)
+        return all(eager_SqrtNumberQ(i) for i in expr.args)
     else:
-        return RationalQ(expr) or expr == I
+        return eager_RationalQ(expr) or expr == I
 
 def SqrtNumberSumQ(u):
     u = _ensure_sympy(u)
-    return SumQ(u) and SqrtNumberQ(First(u)) and SqrtNumberQ(Rest(u)) or ProductQ(u) and SqrtNumberQ(First(u)) and SqrtNumberSumQ(Rest(u))
+    return eager_SumQ(u) and eager_SqrtNumberQ(eager_First(u)) and eager_SqrtNumberQ(eager_Rest(u)) or eager_ProductQ(u) and eager_SqrtNumberQ(eager_First(u)) and SqrtNumberSumQ(eager_Rest(u))
 
-def LinearQ(expr, x):
+def eager_LinearQ(expr, x):
     """
     LinearQ(expr, x) returns True iff u is a polynomial of degree 1.
 
@@ -449,7 +449,7 @@ def LinearQ(expr, x):
 
     """
     if isinstance(expr, (tuple, list, Tuple)):
-        return all(LinearQ(i, x) for i in expr)
+        return all(eager_LinearQ(i, x) for i in expr)
     return _LinearQ_scalar(expr, x)
 
 
@@ -471,7 +471,7 @@ class Util_Coefficient(Function):
         if len(self.args) == 2:
             n = 1
         else:
-            n = Simplify(self.args[2])
+            n = eager_Simplify(self.args[2])
 
         if NumericQ(n):
             expr = expand(self.args[0])
@@ -482,7 +482,7 @@ class Util_Coefficient(Function):
         else:
             return self
 
-def Coefficient(expr, var, n=1):
+def eager_Coefficient(expr, var, n=1):
     """
     Coefficient(expr, var) gives the coefficient of form in the polynomial expr.
     Coefficient(expr, var, n) gives the coefficient of var**n in expr.
@@ -516,7 +516,7 @@ def Coefficient(expr, var, n=1):
 # Denominator moved to sympy_wolfram.functions_eager (imported above), paired with the
 # recursive Numerator; both bodies are pure SymPy (Simplify/together/fraction).
 
-def Hypergeometric2F1(a, b, c, z):
+def eager_Hypergeometric2F1(a, b, c, z):
     return hyper([a, b], [c], z)
 
 def FractionalPart(a):
@@ -535,7 +535,7 @@ def IntegerPart(a):
 
 AppellF1 = appellf1
 
-def EllipticPi(*args):
+def eager_EllipticPi(*args):
     return elliptic_pi(*args)
 
 def ArcTan(a, b = None):
@@ -628,7 +628,7 @@ def GreaterEqual(*args):
             return False
     return True
 
-def FractionQ(*args):
+def eager_FractionQ(*args):
     """
     FractionQ(m, n,...) returns True if m, n, ... are all explicit fractions, else it returns False.
 
@@ -644,18 +644,18 @@ def FractionQ(*args):
 
     """
     args = [_ensure_sympy(i) for i in args]
-    return all(i.is_Rational for i in args) and all(Denominator(i) != S(1) for i in args)
+    return all(i.is_Rational for i in args) and all(eager_Denominator(i) != S(1) for i in args)
 
 def IntLinearcQ(a, b, c, d, m, n, x):
     # returns True iff (a+b*x)^m*(c+d*x)^n is integrable wrt x in terms of non-hypergeometric functions.
-    return IntegerQ(m) or IntegerQ(n) or IntegersQ(S(3)*m, S(3)*n) or IntegersQ(S(4)*m, S(4)*n) or IntegersQ(S(2)*m, S(6)*n) or IntegersQ(S(6)*m, S(2)*n) or IntegerQ(m + n)
+    return IntegerQ(m) or IntegerQ(n) or eager_IntegersQ(S(3)*m, S(3)*n) or eager_IntegersQ(S(4)*m, S(4)*n) or eager_IntegersQ(S(2)*m, S(6)*n) or eager_IntegersQ(S(6)*m, S(2)*n) or IntegerQ(m + n)
 
 Defer = UnevaluatedExpr
 
 def Expand(expr):
     return expr.expand()
 
-def IndependentQ(u, x):
+def eager_IndependentQ(u, x):
     """
     If u is free from x IndependentQ(u, x) returns True else False.
 
@@ -672,18 +672,18 @@ def IndependentQ(u, x):
     """
     return FreeQ(u, x)
 
-def PowerQ(expr):
+def eager_PowerQ(expr):
     return expr.is_Pow or ExpQ(expr)
 
-def IntegerPowerQ(u):
+def eager_IntegerPowerQ(u):
     if isinstance(u, sym_exp): #special case for exp
         return IntegerQ(u.args[0])
-    return PowerQ(u) and IntegerQ(u.args[1])
+    return eager_PowerQ(u) and IntegerQ(u.args[1])
 
-def FractionalPowerQ(u):
+def eager_FractionalPowerQ(u):
     if isinstance(u, sym_exp):
-        return FractionQ(u.args[0])
-    return PowerQ(u) and FractionQ(u.args[1])
+        return eager_FractionQ(u.args[0])
+    return eager_PowerQ(u) and eager_FractionQ(u.args[1])
 
 def AtomQ(expr):
     expr = _ensure_sympy(expr)
@@ -698,38 +698,38 @@ def AtomQ(expr):
         return expr.is_Atom
 
 def ExpQ(u):
-    return Head(u) in (sym_exp, exp)
+    return eager_Head(u) in (sym_exp, exp)
 
-def LogQ(u):
+def eager_LogQ(u):
     return u.func in (sym_log, Log)
 
-def Head(u):
+def eager_Head(u):
     return u.func
 
-def TrigQ(u):
+def eager_TrigQ(u):
     if AtomQ(u):
         x = u
     else:
-        x = Head(u)
+        x = eager_Head(u)
     return MemberQ([sin, cos, tan, cot, sec, csc], x)
 
 def SinQ(u):
-    return Head(u) == sin
+    return eager_Head(u) == sin
 
 def CosQ(u):
-    return Head(u) == cos
+    return eager_Head(u) == cos
 
 def TanQ(u):
-    return Head(u) == tan
+    return eager_Head(u) == tan
 
 def CotQ(u):
-    return Head(u) == cot
+    return eager_Head(u) == cot
 
 def SecQ(u):
-    return Head(u) == sec
+    return eager_Head(u) == sec
 
 def CscQ(u):
-    return Head(u) == csc
+    return eager_Head(u) == csc
 
 def Sin(u):
     return sin(u)
@@ -749,40 +749,40 @@ def Sec(u):
 def Csc(u):
     return csc(u)
 
-def HyperbolicQ(u):
+def eager_HyperbolicQ(u):
     if AtomQ(u):
         x = u
     else:
-        x = Head(u)
+        x = eager_Head(u)
     return MemberQ([sinh, cosh, tanh, coth, sech, csch], x)
 
 def SinhQ(u):
-    return Head(u) == sinh
+    return eager_Head(u) == sinh
 
 def CoshQ(u):
-    return Head(u) == cosh
+    return eager_Head(u) == cosh
 
 def TanhQ(u):
-    return Head(u) == tanh
+    return eager_Head(u) == tanh
 
 def CothQ(u):
-    return Head(u) == coth
+    return eager_Head(u) == coth
 
 def SechQ(u):
-    return Head(u) == sech
+    return eager_Head(u) == sech
 
 def CschQ(u):
-    return Head(u) == csch
+    return eager_Head(u) == csch
 
-def InverseTrigQ(u):
+def eager_InverseTrigQ(u):
     if AtomQ(u):
         x = u
     else:
-        x = Head(u)
+        x = eager_Head(u)
     return MemberQ([asin, acos, atan, acot, asec, acsc], x)
 
 def SinhCoshQ(f):
-    return MemberQ([sinh, cosh, sech, csch], Head(f))
+    return MemberQ([sinh, cosh, sech, csch], eager_Head(f))
 
 # Numerator moved to sympy_wolfram.functions_eager (imported above); see Denominator.
 
@@ -825,34 +825,34 @@ def Re(u):
     u = S(u)
     return re(u.doit())
 
-def InverseHyperbolicQ(u):
+def eager_InverseHyperbolicQ(u):
     if not u.is_Atom:
-        u = Head(u)
+        u = eager_Head(u)
     return u in [acosh, asinh, atanh, acoth, acsch, acsch]
 
-def InverseFunctionQ(u):
+def eager_InverseFunctionQ(u):
     # returns True if u is a call on an inverse function; else returns False.
-    return LogQ(u) or InverseTrigQ(u) and Length(u) <= 1 or InverseHyperbolicQ(u) or u.func == polylog
+    return eager_LogQ(u) or eager_InverseTrigQ(u) and eager_Length(u) <= 1 or eager_InverseHyperbolicQ(u) or u.func == polylog
 
-def TrigHyperbolicFreeQ(u, x):
+def eager_TrigHyperbolicFreeQ(u, x):
     # If u is free of trig, hyperbolic and calculus functions involving x, TrigHyperbolicFreeQ[u,x] returns true; else it returns False.
     if AtomQ(u):
         return True
     else:
-        if TrigQ(u) | HyperbolicQ(u) | CalculusQ(u):
+        if eager_TrigQ(u) | eager_HyperbolicQ(u) | CalculusQ(u):
             return FreeQ(u, x)
         else:
             for i in u.args:
-                if not TrigHyperbolicFreeQ(i, x):
+                if not eager_TrigHyperbolicFreeQ(i, x):
                     return False
             return True
 
-def InverseFunctionFreeQ(u, x):
+def eager_InverseFunctionFreeQ(u, x):
     # If u is free of inverse, calculus and hypergeometric functions involving x, InverseFunctionFreeQ[u,x] returns true; else it returns False.
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
+        if eager_InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -865,7 +865,7 @@ def RealQ(u):
         return MapAnd(RealQ, u)
     elif NumericQ(u):
         return ZeroQ(Im(N(u)))
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         u = u.base
         v = u.exp
         return RealQ(u) & RealQ(v) & (IntegerQ(v) | PositiveOrZeroQ(u))
@@ -889,7 +889,7 @@ def RealQ(u):
     else:
         return False
 
-def EqQ(u, v):
+def eager_EqQ(u, v):
     # A function-head wildcard F_[...] binds its head to a HeadRef carrying the SymPy
     # class; a head-identity test EqQ[F, Sin] is written against a named head
     # (Symbol('sin')/Symbol('Sin')/a class). Compare by the underlying class so the
@@ -903,14 +903,14 @@ def EqQ(u, v):
             return uc == vc
     return ZeroQ(u - v)
 
-def FractionalPowerFreeQ(u):
+def eager_FractionalPowerFreeQ(u):
     if AtomQ(u):
         return True
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         return False
 
-def ComplexFreeQ(u):
-    if AtomQ(u) and Not(ComplexNumberQ(u)):
+def eager_ComplexFreeQ(u):
+    if AtomQ(u) and eager_Not(eager_ComplexNumberQ(u)):
         return True
     else:
          return False
@@ -946,7 +946,7 @@ def PolynomialQ(u, x = None):
                 return False
 
         elif isinstance(x.exp, (Float, Rational)): #not full - proof
-            if FreeQ(simplify(u), x.base) and Exponent(u, x.base) == 0:
+            if FreeQ(simplify(u), x.base) and eager_Exponent(u, x.base) == 0:
                 if not all(FreeQ(u, i) for i in x.base.free_symbols):
                     return False
 
@@ -958,7 +958,7 @@ def PolynomialQ(u, x = None):
 def FactorSquareFree(u):
     return sqf(u)
 
-def PowerOfLinearQ(expr, x):
+def eager_PowerOfLinearQ(expr, x):
     u = Wild('u')
     w = Wild('w')
     m = Wild('m')
@@ -972,12 +972,12 @@ def PowerOfLinearQ(expr, x):
     if PolynomialQ(Match[u], x) and FreeQ(Match[m], x):
         if IntegerQ(Match[m]):
             e = FactorSquareFree(Match[u]).match(w**n)
-            if FreeQ(e[n], x) and LinearQ(e[w], x):
+            if FreeQ(e[n], x) and eager_LinearQ(e[w], x):
                 return True
             else:
                 return False
         else:
-            return LinearQ(Match[u], x)
+            return eager_LinearQ(Match[u], x)
     else:
         return False
 
@@ -1015,55 +1015,55 @@ def ExponentList(expr, x):
 
 
 @everything_else_means_false
-def QuadraticQ(u, x):
+def eager_QuadraticQ(u, x):
     # QuadraticQ(u, x) returns True iff u is a polynomial of degree 2 and not a monomial of the form a x^2
     if ListQ(u):
         for expr in u:
-            if Not(QuadraticQ(expr, x)):
+            if eager_Not(eager_QuadraticQ(expr, x)):
                 return False
         return True
     else:
-        return PolyQ(u, x, 2) and Not(Coefficient(u, x, 0) == 0 and Coefficient(u, x, 1) == 0)
+        return eager_PolyQ(u, x, 2) and eager_Not(eager_Coefficient(u, x, 0) == 0 and eager_Coefficient(u, x, 1) == 0)
 
 
-def LinearPairQ(u, v, x):
+def eager_LinearPairQ(u, v, x):
     # LinearPairQ(u, v, x) returns True iff u and v are linear not equal x but u/v is a constant wrt x
-    return LinearQ(u, x) and LinearQ(v, x) and NonzeroQ(u-x) and ZeroQ(Coefficient(u, x, 0)*Coefficient(v, x, 1)-Coefficient(u, x, 1)*Coefficient(v, x, 0))
+    return eager_LinearQ(u, x) and eager_LinearQ(v, x) and NonzeroQ(u-x) and ZeroQ(eager_Coefficient(u, x, 0)*eager_Coefficient(v, x, 1)-eager_Coefficient(u, x, 1)*eager_Coefficient(v, x, 0))
 
 def BinomialParts(u, x):
     if PolynomialQ(u, x):
-        if Exponent(u, x) > 0:
+        if eager_Exponent(u, x) > 0:
             lst = ExponentList(u, x)
             if len(lst)==1:
-                return [0, Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
+                return [0, eager_Coefficient(u, x, eager_Exponent(u, x)), eager_Exponent(u, x)]
             elif len(lst) == 2 and lst[0] == 0:
-                return [Coefficient(u, x, 0), Coefficient(u, x, Exponent(u, x)), Exponent(u, x)]
+                return [eager_Coefficient(u, x, 0), eager_Coefficient(u, x, eager_Exponent(u, x)), eager_Exponent(u, x)]
             else:
                 return False
         else:
             return False
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if u.base == x and FreeQ(u.exp, x):
             return [0, 1, u.exp]
         else:
             return False
-    elif ProductQ(u):
-        if FreeQ(First(u), x):
-            lst2 = BinomialParts(Rest(u), x)
+    elif eager_ProductQ(u):
+        if FreeQ(eager_First(u), x):
+            lst2 = BinomialParts(eager_Rest(u), x)
             if AtomQ(lst2):
                 return False
             else:
-                return [First(u)*lst2[0], First(u)*lst2[1], lst2[2]]
-        elif FreeQ(Rest(u), x):
-            lst1 = BinomialParts(First(u), x)
+                return [eager_First(u)*lst2[0], eager_First(u)*lst2[1], lst2[2]]
+        elif FreeQ(eager_Rest(u), x):
+            lst1 = BinomialParts(eager_First(u), x)
             if AtomQ(lst1):
                 return False
             else:
-                return [Rest(u)*lst1[0], Rest(u)*lst1[1], lst1[2]]
-        lst1 = BinomialParts(First(u), x)
+                return [eager_Rest(u)*lst1[0], eager_Rest(u)*lst1[1], lst1[2]]
+        lst1 = BinomialParts(eager_First(u), x)
         if AtomQ(lst1):
             return False
-        lst2 = BinomialParts(Rest(u), x)
+        lst2 = BinomialParts(eager_Rest(u), x)
         if AtomQ(lst2):
             return False
         a = lst1[0]
@@ -1084,30 +1084,30 @@ def BinomialParts(u, x):
                 return [b*d, a*d, n]
             else:
                 return False
-        if EqQ(m, n) and ZeroQ(a*d + b*c):
+        if eager_EqQ(m, n) and ZeroQ(a*d + b*c):
             return [a*c, b*d, 2*m]
         else:
             return False
-    elif SumQ(u):
-        if FreeQ(First(u),x):
-            lst2 = BinomialParts(Rest(u), x)
+    elif eager_SumQ(u):
+        if FreeQ(eager_First(u),x):
+            lst2 = BinomialParts(eager_Rest(u), x)
             if AtomQ(lst2):
                 return False
             else:
-                return [First(u) + lst2[0], lst2[1], lst2[2]]
-        elif FreeQ(Rest(u), x):
-            lst1 = BinomialParts(First(u), x)
+                return [eager_First(u) + lst2[0], lst2[1], lst2[2]]
+        elif FreeQ(eager_Rest(u), x):
+            lst1 = BinomialParts(eager_First(u), x)
             if AtomQ(lst1):
                 return False
             else:
-                return[Rest(u) + lst1[0], lst1[1], lst1[2]]
-        lst1 = BinomialParts(First(u), x)
+                return[eager_Rest(u) + lst1[0], lst1[1], lst1[2]]
+        lst1 = BinomialParts(eager_First(u), x)
         if AtomQ(lst1):
             return False
-        lst2 = BinomialParts(Rest(u),x)
+        lst2 = BinomialParts(eager_Rest(u),x)
         if AtomQ(lst2):
             return False
-        if EqQ(lst1[2], lst2[2]):
+        if eager_EqQ(lst1[2], lst2[2]):
             return [lst1[0] + lst2[0], lst1[1] + lst2[1], lst1[2]]
         else:
             return False
@@ -1124,8 +1124,8 @@ def TrinomialParts(u, x):
         #Catch(
          #   Scan(Function(if ZeroQ(lst), Null, Throw(False), Drop(Drop(Drop(lst, [(len(lst)+1)/2]), 1), -1];
           #  [First(lst), lst[(len(lst)+1)/2], Last(lst), (len(lst)-1)/2]):
-    if PowerQ(u):
-        if EqQ(u.exp, 2):
+    if eager_PowerQ(u):
+        if eager_EqQ(u.exp, 2):
             lst = BinomialParts(u.base, x)
             if not lst or ZeroQ(lst[0]):
                 return False
@@ -1133,23 +1133,23 @@ def TrinomialParts(u, x):
                 return [lst[0]**2, 2*lst[0]*lst[1], lst[1]**2, lst[2]]
         else:
             return False
-    if ProductQ(u):
-        if FreeQ(First(u), x):
-            lst2 = TrinomialParts(Rest(u), x)
+    if eager_ProductQ(u):
+        if FreeQ(eager_First(u), x):
+            lst2 = TrinomialParts(eager_Rest(u), x)
             if not lst2:
                 return False
             else:
-                return [First(u)*lst2[0], First(u)*lst2[1], First(u)*lst2[2], lst2[3]]
-        if FreeQ(Rest(u), x):
-            lst1 = TrinomialParts(First(u), x)
+                return [eager_First(u)*lst2[0], eager_First(u)*lst2[1], eager_First(u)*lst2[2], lst2[3]]
+        if FreeQ(eager_Rest(u), x):
+            lst1 = TrinomialParts(eager_First(u), x)
             if not lst1:
                 return False
             else:
-                return [Rest(u)*lst1[0], Rest(u)*lst1[1], Rest(u)*lst1[2], lst1[3]]
-        lst1 = BinomialParts(First(u), x)
+                return [eager_Rest(u)*lst1[0], eager_Rest(u)*lst1[1], eager_Rest(u)*lst1[2], lst1[3]]
+        lst1 = BinomialParts(eager_First(u), x)
         if not lst1:
             return False
-        lst2 = BinomialParts(Rest(u), x)
+        lst2 = BinomialParts(eager_Rest(u), x)
         if not lst2:
             return False
         a = lst1[0]
@@ -1158,57 +1158,57 @@ def TrinomialParts(u, x):
         c = lst2[0]
         d = lst2[1]
         n = lst2[2]
-        if EqQ(m, n) and NonzeroQ(a*d+b*c):
+        if eager_EqQ(m, n) and NonzeroQ(a*d+b*c):
             return [a*c, a*d + b*c, b*d, m]
         else:
             return False
-    if SumQ(u):
-        if FreeQ(First(u), x):
-            lst2 = TrinomialParts(Rest(u), x)
+    if eager_SumQ(u):
+        if FreeQ(eager_First(u), x):
+            lst2 = TrinomialParts(eager_Rest(u), x)
             if not lst2:
                 return False
             else:
-                return [First(u)+lst2[0], lst2[1], lst2[2], lst2[3]]
-        if FreeQ(Rest(u), x):
-            lst1 = TrinomialParts(First(u), x)
+                return [eager_First(u)+lst2[0], lst2[1], lst2[2], lst2[3]]
+        if FreeQ(eager_Rest(u), x):
+            lst1 = TrinomialParts(eager_First(u), x)
             if not lst1:
                 return False
             else:
-                return [Rest(u)+lst1[0], lst1[1], lst1[2], lst1[3]]
-        lst1 = TrinomialParts(First(u), x)
+                return [eager_Rest(u)+lst1[0], lst1[1], lst1[2], lst1[3]]
+        lst1 = TrinomialParts(eager_First(u), x)
         if not lst1:
-            lst3 = BinomialParts(First(u), x)
+            lst3 = BinomialParts(eager_First(u), x)
             if not lst3:
                 return False
-            lst2 = TrinomialParts(Rest(u), x)
+            lst2 = TrinomialParts(eager_Rest(u), x)
             if not lst2:
-                lst4 = BinomialParts(Rest(u), x)
+                lst4 = BinomialParts(eager_Rest(u), x)
                 if not lst4:
                     return False
-                if EqQ(lst3[2], 2*lst4[2]):
+                if eager_EqQ(lst3[2], 2*lst4[2]):
                     return [lst3[0]+lst4[0], lst4[1], lst3[1], lst4[2]]
-                if EqQ(lst4[2], 2*lst3[2]):
+                if eager_EqQ(lst4[2], 2*lst3[2]):
                     return [lst3[0]+lst4[0], lst3[1], lst4[1], lst3[2]]
                 else:
                     return False
-            if EqQ(lst3[2], lst2[3]) and NonzeroQ(lst3[1]+lst2[1]):
+            if eager_EqQ(lst3[2], lst2[3]) and NonzeroQ(lst3[1]+lst2[1]):
                 return [lst3[0]+lst2[0], lst3[1]+lst2[1], lst2[2], lst2[3]]
-            if EqQ(lst3[2], 2*lst2[3]) and NonzeroQ(lst3[1]+lst2[2]):
+            if eager_EqQ(lst3[2], 2*lst2[3]) and NonzeroQ(lst3[1]+lst2[2]):
                 return [lst3[0]+lst2[0], lst2[1], lst3[1]+lst2[2], lst2[3]]
             else:
                 return False
-        lst2 = TrinomialParts(Rest(u), x)
+        lst2 = TrinomialParts(eager_Rest(u), x)
         if AtomQ(lst2):
-            lst4 = BinomialParts(Rest(u), x)
+            lst4 = BinomialParts(eager_Rest(u), x)
             if not lst4:
                 return False
-            if EqQ(lst4[2], lst1[3]) and NonzeroQ(lst1[1]+lst4[0]):
+            if eager_EqQ(lst4[2], lst1[3]) and NonzeroQ(lst1[1]+lst4[0]):
                 return [lst1[0]+lst4[0], lst1[1]+lst4[1], lst1[2], lst1[3]]
-            if EqQ(lst4[2], 2*lst1[3]) and NonzeroQ(lst1[2]+lst4[1]):
+            if eager_EqQ(lst4[2], 2*lst1[3]) and NonzeroQ(lst1[2]+lst4[1]):
                 return [lst1[0]+lst4[0], lst1[1], lst1[2]+lst4[1], lst1[3]]
             else:
                 return False
-        if EqQ(lst1[3], lst2[3]) and NonzeroQ(lst1[1]+lst2[1]) and NonzeroQ(lst1[2]+lst2[2]):
+        if eager_EqQ(lst1[3], lst2[3]) and NonzeroQ(lst1[1]+lst2[1]) and NonzeroQ(lst1[2]+lst2[2]):
             return [lst1[0]+lst2[0], lst1[1]+lst2[1], lst1[2]+lst2[2], lst1[3]]
         else:
             return False
@@ -1217,10 +1217,10 @@ def TrinomialParts(u, x):
 
 
 @exception_means_false
-def PolyQ(u, x, n=None):
+def eager_PolyQ(u, x, n=None):
     # returns True iff u is a polynomial of degree n.
     if ListQ(u):
-        return all(PolyQ(i, x) for i in u)
+        return all(eager_PolyQ(i, x) for i in u)
 
     if n is None:
         if u == x:
@@ -1230,16 +1230,16 @@ def PolyQ(u, x, n=None):
             x_base = x.base
             if FreeQ(n, x_base):
                 if PositiveIntegerQ(n):
-                    return PolyQ(u, x_base) and (PolynomialQ(u, x) or PolynomialQ(Together(u), x))
+                    return eager_PolyQ(u, x_base) and (PolynomialQ(u, x) or PolynomialQ(eager_Together(u), x))
                 elif AtomQ(n):
                     return PolynomialQ(u, x) and FreeQ(CoefficientList(u, x), x_base)
                 else:
                     return False
 
-        return PolynomialQ(u, x) or PolynomialQ(u, Together(x))
+        return PolynomialQ(u, x) or PolynomialQ(u, eager_Together(x))
 
     else:
-        return PolynomialQ(u, x) and Coefficient(u, x, n) != 0 and Exponent(u, x) == n
+        return PolynomialQ(u, x) and eager_Coefficient(u, x, n) != 0 and eager_Exponent(u, x) == n
 
 
 def EvenQ(u):
@@ -1252,40 +1252,40 @@ def OddQ(u):
     u = _ensure_sympy(u)
     return isinstance(u, (Integer, int)) and u%2 == 1
 
-def PerfectSquareQ(u):
+def eager_PerfectSquareQ(u):
     # (* If u is a rational number whose squareroot is rational or if u is of the form u1^n1 u2^n2 ...
     # and n1, n2, ... are even, PerfectSquareQ[u] returns True; else it returns False. *)
-    if RationalQ(u):
-        return Greater(u, 0) and RationalQ(Sqrt(u))
-    elif PowerQ(u):
+    if eager_RationalQ(u):
+        return Greater(u, 0) and eager_RationalQ(Sqrt(u))
+    elif eager_PowerQ(u):
         return EvenQ(u.exp)
-    elif ProductQ(u):
-        return PerfectSquareQ(First(u)) and PerfectSquareQ(Rest(u))
-    elif SumQ(u):
-        s = Simplify(u)
-        if NonsumQ(s):
-            return PerfectSquareQ(s)
+    elif eager_ProductQ(u):
+        return eager_PerfectSquareQ(eager_First(u)) and eager_PerfectSquareQ(eager_Rest(u))
+    elif eager_SumQ(u):
+        s = eager_Simplify(u)
+        if eager_NonsumQ(s):
+            return eager_PerfectSquareQ(s)
         return False
     else:
         return False
 
 def NiceSqrtAuxQ(u):
-    if RationalQ(u):
+    if eager_RationalQ(u):
         return u > 0
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         return EvenQ(u.exp)
-    elif ProductQ(u):
-        return NiceSqrtAuxQ(First(u)) and NiceSqrtAuxQ(Rest(u))
-    elif SumQ(u):
-        s = Simplify(u)
-        return  NonsumQ(s) and NiceSqrtAuxQ(s)
+    elif eager_ProductQ(u):
+        return NiceSqrtAuxQ(eager_First(u)) and NiceSqrtAuxQ(eager_Rest(u))
+    elif eager_SumQ(u):
+        s = eager_Simplify(u)
+        return  eager_NonsumQ(s) and NiceSqrtAuxQ(s)
     else:
         return False
 
-def NiceSqrtQ(u):
-    return Not(NegativeQ(u)) and NiceSqrtAuxQ(u)
+def eager_NiceSqrtQ(u):
+    return eager_Not(NegativeQ(u)) and NiceSqrtAuxQ(u)
 
-def Together(u):
+def eager_Together(u):
     return factor(u)
 
 def _cmp_gt0(val):
@@ -1310,7 +1310,7 @@ def _cmp_gt0(val):
 
 
 def PosAux(u):
-    if RationalQ(u):
+    if eager_RationalQ(u):
         return u>0
     elif NumberQ(u):
         r = _cmp_gt0(Im(u) if ZeroQ(Re(u)) else Re(u))
@@ -1319,18 +1319,18 @@ def PosAux(u):
         v = N(u)
         r = _cmp_gt0(Im(v) if ZeroQ(Re(v)) else Re(v))
         return bool(r)
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if OddQ(u.exp):
             return PosAux(u.base)
         else:
             return True
-    elif ProductQ(u):
-        if PosAux(First(u)):
-            return PosAux(Rest(u))
+    elif eager_ProductQ(u):
+        if PosAux(eager_First(u)):
+            return PosAux(eager_Rest(u))
         else:
-            return not PosAux(Rest(u))
-    elif SumQ(u):
-        return PosAux(First(u))
+            return not PosAux(eager_Rest(u))
+    elif eager_SumQ(u):
+        return PosAux(eager_First(u))
     else:
         r = _cmp_gt0(u)
         if r is not None:
@@ -1338,7 +1338,7 @@ def PosAux(u):
         return True  # symbolic/undeterminable form -> assume positive (Rubi default)
 
 @_pure_expr_cache(maxsize=20000)
-def PosQ(u):
+def eager_PosQ(u):
     # If u is not 0 and has a positive form, PosQ[u] returns True, else it returns False.
     return PosAux(TogetherSimplify(u))
 
@@ -1348,7 +1348,7 @@ def CoefficientList(u, x):
     else:
         return []
 
-def ReplaceAll(expr, args):
+def eager_ReplaceAll(expr, args):
     if isinstance(args, (tuple, list)):
         n_args = {}
         for i in args:
@@ -1356,18 +1356,18 @@ def ReplaceAll(expr, args):
         return expr.subs(n_args)
     return expr.subs(args)
 
-def ExpandLinearProduct(v, u, a, b, x):
+def eager_ExpandLinearProduct(v, u, a, b, x):
     # If u is a polynomial in x, ExpandLinearProduct[v,u,a,b,x] expands v*u into a sum of terms of the form c*v*(a+b*x)^n.
     if FreeQ([a, b], x) and PolynomialQ(u, x):
-        lst = CoefficientList(ReplaceAll(u, {x: (x - a)/b}), x)
+        lst = CoefficientList(eager_ReplaceAll(u, {x: (x - a)/b}), x)
         lst = [SimplifyTerm(i, x) for i in lst]
         res = 0
         for k in range(1, len(lst)+1):
-            res = res + Simplify(v*lst[k-1]*(a + b*x)**(k - 1))
+            res = res + eager_Simplify(v*lst[k-1]*(a + b*x)**(k - 1))
         return res
     return u*v
 
-def GCD(*args):
+def eager_GCD(*args):
     args = S(args)
     if len(args) == 1:
         if isinstance(args[0], (int, Integer)):
@@ -1388,30 +1388,30 @@ def NumericFactor(u):
             return Im(u)
         else:
             return S(1)
-    elif PowerQ(u):
-        if RationalQ(u.base) and RationalQ(u.exp):
+    elif eager_PowerQ(u):
+        if eager_RationalQ(u.base) and eager_RationalQ(u.exp):
             if u.exp > 0:
-                return 1/Denominator(u.base)
+                return 1/eager_Denominator(u.base)
             else:
-                return 1/(1/Denominator(u.base))
+                return 1/(1/eager_Denominator(u.base))
         else:
             return S(1)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         return Mul(*[NumericFactor(i) for i in u.args])
-    elif SumQ(u):
-        if LeafCount(u) < 50:
+    elif eager_SumQ(u):
+        if eager_LeafCount(u) < 50:
             c = ContentFactor(u)
-            if SumQ(c):
+            if eager_SumQ(c):
                 return S(1)
             else:
                 return NumericFactor(c)
         else:
-            m = NumericFactor(First(u))
-            n = NumericFactor(Rest(u))
+            m = NumericFactor(eager_First(u))
+            n = NumericFactor(eager_Rest(u))
             if Less(m, 0) and Less(n, 0):   # robust: see SignOfFactor note on Less vs <
-                return -GCD(-m, -n)
+                return -eager_GCD(-m, -n)
             else:
-                return GCD(m, n)
+                return eager_GCD(m, n)
     return S(1)
 
 def NonnumericFactors(u):
@@ -1421,19 +1421,19 @@ def NonnumericFactors(u):
         elif ZeroQ(Re(u)):
             return I
         return u
-    elif PowerQ(u):
-        if RationalQ(u.base) and FractionQ(u.exp):
+    elif eager_PowerQ(u):
+        if eager_RationalQ(u.base) and eager_FractionQ(u.exp):
             return u/NumericFactor(u)
         return u
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         result = 1
         for i in u.args:
             result *= NonnumericFactors(i)
         return result
-    elif SumQ(u):
-        if LeafCount(u) < 50:
+    elif eager_SumQ(u):
+        if eager_LeafCount(u) < 50:
             i = ContentFactor(u)
-            if SumQ(i):
+            if eager_SumQ(i):
                 return u
             else:
                 return NonnumericFactors(i)
@@ -1451,14 +1451,14 @@ def MakeAssocList(u, x, alst=None):
         alst = []
     if AtomQ(u):
         return alst
-    elif IntegerPowerQ(u):
+    elif eager_IntegerPowerQ(u):
         return MakeAssocList(u.base, x, alst)
-    elif ProductQ(u) or SumQ(u):
-        return MakeAssocList(Rest(u), x, MakeAssocList(First(u), x, alst))
+    elif eager_ProductQ(u) or eager_SumQ(u):
+        return MakeAssocList(eager_Rest(u), x, MakeAssocList(eager_First(u), x, alst))
     elif FreeQ(u, x):
         tmp = []
         for i in alst:
-            if PowerQ(i):
+            if eager_PowerQ(i):
                 if i.exp == u:
                     tmp.append(i)
                     break
@@ -1477,14 +1477,14 @@ def GensymSubst(u, x, alst=None):
         alst =[]
     if AtomQ(u):
         return u
-    elif IntegerPowerQ(u):
+    elif eager_IntegerPowerQ(u):
         return GensymSubst(u.base, x, alst)**u.exp
-    elif ProductQ(u) or SumQ(u):
+    elif eager_ProductQ(u) or eager_SumQ(u):
         return u.func(*[GensymSubst(i, x, alst) for i in u.args])
     elif FreeQ(u, x):
         tmp = []
         for i in alst:
-            if PowerQ(i):
+            if eager_PowerQ(i):
                 if i.exp == u:
                     tmp.append(i)
                     break
@@ -1511,34 +1511,34 @@ def KernelSubst(u, x, alst):
         elif len(tmp[0].args) > 1: # make sure args has length > 1, else causes index error some times
             return tmp[0].args[1]
 
-    elif IntegerPowerQ(u):
+    elif eager_IntegerPowerQ(u):
         tmp = KernelSubst(u.base, x, alst)
         if u.exp < 0 and ZeroQ(tmp):
             return 'Indeterminate'
         return tmp**u.exp
-    elif ProductQ(u) or SumQ(u):
+    elif eager_ProductQ(u) or eager_SumQ(u):
         return u.func(*[KernelSubst(i, x, alst) for i in u.args])
     return u
 
-def ExpandExpression(u, x):
-    if AlgebraicFunctionQ(u, x) and Not(RationalFunctionQ(u, x)):
+def eager_ExpandExpression(u, x):
+    if eager_AlgebraicFunctionQ(u, x) and eager_Not(eager_RationalFunctionQ(u, x)):
         v = ExpandAlgebraicFunction(u, x)
     else:
         v = S(0)
-    if SumQ(v):
+    if eager_SumQ(v):
         return ExpandCleanup(v, x)
     v = SmartApart(u, x)
-    if SumQ(v):
+    if eager_SumQ(v):
         return ExpandCleanup(v, x)
     v = SmartApart(RationalFunctionFactors(u, x), x, x)
-    if SumQ(v):
+    if eager_SumQ(v):
         w = NonrationalFunctionFactors(u, x)
         return ExpandCleanup(v.func(*[i*w for i in v.args]), x)
     v = Expand(u)
-    if SumQ(v):
+    if eager_SumQ(v):
         return ExpandCleanup(v, x)
     v = Expand(u)
-    if SumQ(v):
+    if eager_SumQ(v):
         return ExpandCleanup(v, x)
     return SimplifyTerm(u, x)
 
@@ -1549,14 +1549,14 @@ def SmartApart(*args):
     if len(args) == 2:
         u, x = args
         alst = MakeAssocList(u, x)
-        tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x), x, alst)
+        tmp = KernelSubst(eager_Apart(GensymSubst(u, x, alst), x), x, alst)
         if tmp == 'Indeterminate':
             return u
         return tmp
 
     u, v, x = args
     alst = MakeAssocList(u, x)
-    tmp = KernelSubst(Apart(GensymSubst(u, x, alst), x), x, alst)
+    tmp = KernelSubst(eager_Apart(GensymSubst(u, x, alst), x), x, alst)
     if tmp == 'Indeterminate':
         return u
     return tmp
@@ -1570,11 +1570,11 @@ def MatchQ(expr, pattern, *var):
         return None
 
 def PolynomialQuotientRemainder(p, q, x):
-    return [PolynomialQuotient(p, q, x), PolynomialRemainder(p, q, x)]
+    return [eager_PolynomialQuotient(p, q, x), eager_PolynomialRemainder(p, q, x)]
 
-def FreeFactors(u, x):
+def eager_FreeFactors(u, x):
     # returns the product of the factors of u free of x.
-    if ProductQ(u):
+    if eager_ProductQ(u):
         result = 1
         for i in u.args:
             if FreeQ(i, x):
@@ -1585,7 +1585,7 @@ def FreeFactors(u, x):
     else:
         return S(1)
 
-def NonfreeFactors(u, x):
+def eager_NonfreeFactors(u, x):
     """
     Returns the product of the factors of u not free of x.
 
@@ -1602,7 +1602,7 @@ def NonfreeFactors(u, x):
     x
 
     """
-    if ProductQ(u):
+    if eager_ProductQ(u):
         result = 1
         for i in u.args:
             if not FreeQ(i, x):
@@ -1627,13 +1627,13 @@ def RemoveContentAux(expr, x):
     return matchpy_to_sympy(result)
 
 def RemoveContent(u, x):
-    v = NonfreeFactors(u, x)
-    w = Together(v)
+    v = eager_NonfreeFactors(u, x)
+    w = eager_Together(v)
 
-    if EqQ(FreeFactors(w, x), 1):
+    if eager_EqQ(eager_FreeFactors(w, x), 1):
         return RemoveContentAux(v, x)
     else:
-        return RemoveContentAux(NonfreeFactors(w, x), x)
+        return RemoveContentAux(eager_NonfreeFactors(w, x), x)
 
 
 def FreeTerms(u, x):
@@ -1653,7 +1653,7 @@ def FreeTerms(u, x):
     b
 
     """
-    if SumQ(u):
+    if eager_SumQ(u):
         result = 0
         for i in u.args:
             if FreeQ(i, x):
@@ -1666,7 +1666,7 @@ def FreeTerms(u, x):
 
 def NonfreeTerms(u, x):
     # returns the sum of the terms of u free of x.
-    if SumQ(u):
+    if eager_SumQ(u):
         result = S(0)
         for i in u.args:
             if not FreeQ(i, x):
@@ -1678,7 +1678,7 @@ def NonfreeTerms(u, x):
         return S(0)
 
 def ExpandAlgebraicFunction(expr, x):
-    if ProductQ(expr):
+    if eager_ProductQ(expr):
         u_ = Wild('u', exclude=[x])
         n_ = Wild('n', exclude=[x])
         v_ = Wild('v')
@@ -1688,9 +1688,9 @@ def ExpandAlgebraicFunction(expr, x):
             keys = [u_, v_]
             if len(keys) == len(match):
                 u, v = tuple([match[i] for i in keys])
-                if SumQ(v):
+                if eager_SumQ(v):
                     u, v = v, u
-                if not FreeQ(u, x) and SumQ(u):
+                if not FreeQ(u, x) and eager_SumQ(u):
                     result = 0
                     for i in u.args:
                         result += i*v
@@ -1702,7 +1702,7 @@ def ExpandAlgebraicFunction(expr, x):
             keys = [u_, n_, v_]
             if len(keys) == len(match):
                 u, n, v = tuple([match[i] for i in keys])
-                if PositiveIntegerQ(n) and SumQ(u):
+                if PositiveIntegerQ(n) and eager_SumQ(u):
                     w = Expand(u**n)
                     result = 0
                     for i in w.args:
@@ -1713,7 +1713,7 @@ def ExpandAlgebraicFunction(expr, x):
 
 def CollectReciprocals(expr, x):
     # Basis: e/(a+b x)+f/(c+d x)==(c e+a f+(d e+b f) x)/(a c+(b c+a d) x+b d x^2)
-    if SumQ(expr):
+    if eager_SumQ(expr):
         u_ = Wild('u')
         a_ = Wild('a', exclude=[x])
         b_ = Wild('b', exclude=[x])
@@ -1737,81 +1737,81 @@ def CollectReciprocals(expr, x):
 
 def ExpandCleanup(u, x):
     v = CollectReciprocals(u, x)
-    if SumQ(v):
+    if eager_SumQ(v):
         res = 0
         for i in v.args:
             res += SimplifyTerm(i, x)
         v = res
-        if SumQ(v):
+        if eager_SumQ(v):
             return UnifySum(v, x)
         else:
             return v
     else:
         return v
 
-def AlgebraicFunctionQ(u, x, flag=False):
+def eager_AlgebraicFunctionQ(u, x, flag=False):
     if ListQ(u):
         if u == []:
             return True
-        elif AlgebraicFunctionQ(First(u), x, flag):
-            return AlgebraicFunctionQ(Rest(u), x, flag)
+        elif eager_AlgebraicFunctionQ(eager_First(u), x, flag):
+            return eager_AlgebraicFunctionQ(eager_Rest(u), x, flag)
         else:
             return False
 
     elif AtomQ(u) or FreeQ(u, x):
         return True
-    elif PowerQ(u):
-        if RationalQ(u.exp) | flag & FreeQ(u.exp, x):
-            return AlgebraicFunctionQ(u.base, x, flag)
-    elif ProductQ(u) | SumQ(u):
+    elif eager_PowerQ(u):
+        if eager_RationalQ(u.exp) | flag & FreeQ(u.exp, x):
+            return eager_AlgebraicFunctionQ(u.base, x, flag)
+    elif eager_ProductQ(u) | eager_SumQ(u):
         for i in u.args:
-            if not AlgebraicFunctionQ(i, x, flag):
+            if not eager_AlgebraicFunctionQ(i, x, flag):
                 return False
         return True
 
     return False
 
-def Coeff(expr, form, n=1):
+def eager_Coeff(expr, form, n=1):
     if n == 1:
-        return Coefficient(Together(expr), form, n)
+        return eager_Coefficient(eager_Together(expr), form, n)
     else:
-        coef1 = Coefficient(expr, form, n)
-        coef2 = Coefficient(Together(expr), form, n)
-        if Simplify(coef1 - coef2) == 0:
+        coef1 = eager_Coefficient(expr, form, n)
+        coef2 = eager_Coefficient(eager_Together(expr), form, n)
+        if eager_Simplify(coef1 - coef2) == 0:
             return coef1
         else:
             return coef2
 
 def LeadTerm(u):
-    if SumQ(u):
-        return First(u)
+    if eager_SumQ(u):
+        return eager_First(u)
     return u
 
 def RemainingTerms(u):
-    if SumQ(u):
-        return Rest(u)
+    if eager_SumQ(u):
+        return eager_Rest(u)
     return u
 
 def LeadFactor(u):
     # returns the leading factor of u.
-    if ComplexNumberQ(u) and Re(u) == 0:
+    if eager_ComplexNumberQ(u) and Re(u) == 0:
         if Im(u) == S(1):
             return u
         else:
             return LeadFactor(Im(u))
-    elif ProductQ(u):
-            return LeadFactor(First(u))
+    elif eager_ProductQ(u):
+            return LeadFactor(eager_First(u))
     return u
 
 def RemainingFactors(u):
     # returns the remaining factors of u.
-    if ComplexNumberQ(u) and Re(u) == 0:
+    if eager_ComplexNumberQ(u) and Re(u) == 0:
         if Im(u) == 1:
             return S(1)
         else:
             return I*RemainingFactors(Im(u))
-    elif ProductQ(u):
-        return RemainingFactors(First(u))*Rest(u)
+    elif eager_ProductQ(u):
+        return RemainingFactors(eager_First(u))*eager_Rest(u)
     return S(1)
 
 def LeadBase(u):
@@ -1829,37 +1829,37 @@ def LeadBase(u):
     a
     """
     v = LeadFactor(u)
-    if PowerQ(v):
+    if eager_PowerQ(v):
         return v.base
     return v
 
 def LeadDegree(u):
     # returns the degree of the leading factor of u.
     v = LeadFactor(u)
-    if PowerQ(v):
+    if eager_PowerQ(v):
         return v.exp
     return S(1)
 
-def Numer(expr):
+def eager_Numer(expr):
     # returns the numerator of u.
-    if PowerQ(expr):
+    if eager_PowerQ(expr):
         if expr.exp < 0:
             return 1
-    if ProductQ(expr):
-        return Mul(*[Numer(i) for i in expr.args])
-    return Numerator(expr)
+    if eager_ProductQ(expr):
+        return Mul(*[eager_Numer(i) for i in expr.args])
+    return eager_Numerator(expr)
 
-def Denom(u):
+def eager_Denom(u):
     # returns the denominator of u
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if u.exp < 0:
             return u.args[0]**(-u.args[1])
-    elif ProductQ(u):
-        return Mul(*[Denom(i) for i in u.args])
-    return Denominator(u)
+    elif eager_ProductQ(u):
+        return Mul(*[eager_Denom(i) for i in u.args])
+    return eager_Denominator(u)
 
-def Expon(expr, form):
-    return Exponent(Together(expr), form)
+def eager_Expon(expr, form):
+    return eager_Exponent(eager_Together(expr), form)
 
 def MergeMonomials(expr, x):
     u_ = Wild('u')
@@ -1899,33 +1899,33 @@ def MergeMonomials(expr, x):
                     return u*b**m/d**m*(c + d*x)**(m + n)
     return expr
 
-def PolynomialDivide(u, v, x):
+def eager_PolynomialDivide(u, v, x):
 
 
-    quo = PolynomialQuotient(u, v, x)
-    rem = PolynomialRemainder(u, v, x)
+    quo = eager_PolynomialQuotient(u, v, x)
+    rem = eager_PolynomialRemainder(u, v, x)
     s = 0
     for i in ExponentList(quo, x):
-        s += Simp(Together(Coefficient(quo, x, i)*x**i), x)
+        s += eager_Simp(eager_Together(eager_Coefficient(quo, x, i)*x**i), x)
     quo = s
-    rem = Together(rem)
-    free = FreeFactors(rem, x)
-    rem = NonfreeFactors(rem, x)
+    rem = eager_Together(rem)
+    free = eager_FreeFactors(rem, x)
+    rem = eager_NonfreeFactors(rem, x)
     monomial = x**Min(*ExponentList(rem, x))
-    if NegQ(Coefficient(rem, x, 0)):
+    if eager_NegQ(eager_Coefficient(rem, x, 0)):
         monomial = -monomial
     s = 0
     for i in ExponentList(rem, x):
-        s += Simp(Together(Coefficient(rem, x, i)*x**i/monomial), x)
+        s += eager_Simp(eager_Together(eager_Coefficient(rem, x, i)*x**i/monomial), x)
     rem = s
-    if BinomialQ(v, x):
-        return quo + free*monomial*rem/ExpandToSum(v, x)
+    if eager_BinomialQ(v, x):
+        return quo + free*monomial*rem/eager_ExpandToSum(v, x)
     else:
         return quo + free*monomial*rem/v
 
 
 
-def BinomialQ(u, x, n=None):
+def eager_BinomialQ(u, x, n=None):
     """
     If u is equivalent to an expression of the form a + b*x**n, BinomialQ(u, x, n) returns True, else it returns False.
 
@@ -1942,14 +1942,14 @@ def BinomialQ(u, x, n=None):
     """
     if ListQ(u):
         for i in u:
-            if Not(BinomialQ(i, x, n)):
+            if eager_Not(eager_BinomialQ(i, x, n)):
                 return False
         return True
     elif NumberQ(x):
         return False
     return ListQ(BinomialParts(u, x))
 
-def TrinomialQ(u, x):
+def eager_TrinomialQ(u, x):
     """
     If u is equivalent to an expression of the form a + b*x**n + c*x**(2*n) where n, b and c are not 0,
     TrinomialQ(u, x) returns True, else it returns False.
@@ -1967,18 +1967,18 @@ def TrinomialQ(u, x):
     """
     if ListQ(u):
         for i in u.args:
-            if Not(TrinomialQ(i, x)):
+            if eager_Not(eager_TrinomialQ(i, x)):
                 return False
         return True
 
     check = False
-    if PowerQ(u):
-        if u.exp == 2 and BinomialQ(u.base, x):
+    if eager_PowerQ(u):
+        if u.exp == 2 and eager_BinomialQ(u.base, x):
             check = True
 
-    return ListQ(TrinomialParts(u,x)) and Not(QuadraticQ(u, x)) and Not(check)
+    return ListQ(TrinomialParts(u,x)) and eager_Not(eager_QuadraticQ(u, x)) and eager_Not(check)
 
-def GeneralizedBinomialQ(u, x):
+def eager_GeneralizedBinomialQ(u, x):
     """
     If u is equivalent to an expression of the form a*x**q+b*x**n where n, q and b are not 0,
     GeneralizedBinomialQ(u, x) returns True, else it returns False.
@@ -1993,10 +1993,10 @@ def GeneralizedBinomialQ(u, x):
 
     """
     if ListQ(u):
-        return all(GeneralizedBinomialQ(i, x) for i in u)
+        return all(eager_GeneralizedBinomialQ(i, x) for i in u)
     return ListQ(GeneralizedBinomialParts(u, x))
 
-def GeneralizedTrinomialQ(u, x):
+def eager_GeneralizedTrinomialQ(u, x):
     """
     If u is equivalent to an expression of the form a*x**q+b*x**n+c*x**(2*n-q) where n, q, b and c are not 0,
     GeneralizedTrinomialQ(u, x) returns True, else it returns False.
@@ -2011,7 +2011,7 @@ def GeneralizedTrinomialQ(u, x):
 
     """
     if ListQ(u):
-        return all(GeneralizedTrinomialQ(i, x) for i in u)
+        return all(eager_GeneralizedTrinomialQ(i, x) for i in u)
     return ListQ(GeneralizedTrinomialParts(u, x))
 
 def FactorSquareFreeList(poly):
@@ -2030,9 +2030,9 @@ def PerfectPowerTest(u, x):
         gcd = 0
         v = 1
         if lst[0] == [1, 1]:
-            lst = Rest(lst)
+            lst = eager_Rest(lst)
         for i in lst:
-            gcd = GCD(gcd, i[1])
+            gcd = eager_GCD(gcd, i[1])
         if gcd > 1:
             for i in lst:
                 v = v*i[0]**(i[1]/gcd)
@@ -2046,44 +2046,44 @@ def SquareFreeFactorTest(u, x):
     # factored form; else it returns False.
     if PolynomialQ(u, x):
         v = FactorSquareFree(u)
-        if PowerQ(v) or ProductQ(v):
+        if eager_PowerQ(v) or eager_ProductQ(v):
             return v
         return False
     return False
 
-def RationalFunctionQ(u, x):
+def eager_RationalFunctionQ(u, x):
     # If u is a rational function of x, RationalFunctionQ[u,x] returns True; else it returns False.
     if AtomQ(u) or FreeQ(u, x):
         return True
-    elif IntegerPowerQ(u):
-        return RationalFunctionQ(u.base, x)
-    elif ProductQ(u) or SumQ(u):
+    elif eager_IntegerPowerQ(u):
+        return eager_RationalFunctionQ(u.base, x)
+    elif eager_ProductQ(u) or eager_SumQ(u):
         for i in u.args:
-            if Not(RationalFunctionQ(i, x)):
+            if eager_Not(eager_RationalFunctionQ(i, x)):
                 return False
         return True
     return False
 
 def RationalFunctionFactors(u, x):
     # RationalFunctionFactors[u,x] returns the product of the factors of u that are rational functions of x.
-    if ProductQ(u):
+    if eager_ProductQ(u):
         res = 1
         for i in u.args:
-            if RationalFunctionQ(i, x):
+            if eager_RationalFunctionQ(i, x):
                 res *= i
         return res
-    elif RationalFunctionQ(u, x):
+    elif eager_RationalFunctionQ(u, x):
         return u
     return S(1)
 
 def NonrationalFunctionFactors(u, x):
-    if ProductQ(u):
+    if eager_ProductQ(u):
         res = 1
         for i in u.args:
-            if not RationalFunctionQ(i, x):
+            if not eager_RationalFunctionQ(i, x):
                 res *= i
         return res
-    elif RationalFunctionQ(u, x):
+    elif eager_RationalFunctionQ(u, x):
         return S(1)
     return u
 
@@ -2094,7 +2094,7 @@ def Reverse(u):
         l = list(u.args)
         return u.func(*list(reversed(l)))
 
-def RationalFunctionExponents(u, x):
+def eager_RationalFunctionExponents(u, x):
     """
     u is a polynomial or rational function of x.
     RationalFunctionExponents(u, x) returns a list of the exponent of the
@@ -2113,34 +2113,34 @@ def RationalFunctionExponents(u, x):
 
     """
     if PolynomialQ(u, x):
-        return [Exponent(u, x), 0]
-    elif IntegerPowerQ(u):
+        return [eager_Exponent(u, x), 0]
+    elif eager_IntegerPowerQ(u):
         # Rubi: u[[2]]*RationalFunctionExponents[u[[1]],x]. In Mathematica a
         # scalar times a list SCALES it element-wise; in Python `n * [a, b]`
         # REPEATS the list, so this silently returned e.g. [0,1,0,1] for
         # (x+1)^-2 instead of [0,2] (and 6 entries for ^-3). Scale explicitly.
         if PositiveQ(u.exp):
-            return [u.exp*i for i in RationalFunctionExponents(u.base, x)]
-        return [(-u.exp)*i for i in Reverse(RationalFunctionExponents(u.base, x))]
-    elif ProductQ(u):
-        lst1 = RationalFunctionExponents(First(u), x)
-        lst2 = RationalFunctionExponents(Rest(u), x)
+            return [u.exp*i for i in eager_RationalFunctionExponents(u.base, x)]
+        return [(-u.exp)*i for i in Reverse(eager_RationalFunctionExponents(u.base, x))]
+    elif eager_ProductQ(u):
+        lst1 = eager_RationalFunctionExponents(eager_First(u), x)
+        lst2 = eager_RationalFunctionExponents(eager_Rest(u), x)
         return [lst1[0] + lst2[0], lst1[1] + lst2[1]]
-    elif SumQ(u):
-        v = Together(u)
-        if SumQ(v):
-            lst1 = RationalFunctionExponents(First(u), x)
-            lst2 = RationalFunctionExponents(Rest(u), x)
+    elif eager_SumQ(u):
+        v = eager_Together(u)
+        if eager_SumQ(v):
+            lst1 = eager_RationalFunctionExponents(eager_First(u), x)
+            lst2 = eager_RationalFunctionExponents(eager_Rest(u), x)
             return [Max(lst1[0] + lst2[1], lst2[0] + lst1[1]), lst1[1] + lst2[1]]
         else:
-            return RationalFunctionExponents(v, x)
+            return eager_RationalFunctionExponents(v, x)
     return [0, 0]
 
-def RationalFunctionExpand(expr, x):
+def eager_RationalFunctionExpand(expr, x):
     # expr is a polynomial or rational function of x.
     # RationalFunctionExpand[u,x] returns the expansion of the factors of u that are rational functions times the other factors.
     def cons_f1(n):
-        return FractionQ(n)
+        return eager_FractionQ(n)
     cons1 = _patched_custom_constraint_call(cons_f1)
 
     def cons_f2(x, v):
@@ -2150,24 +2150,24 @@ def RationalFunctionExpand(expr, x):
     cons2 = _patched_custom_constraint_call(cons_f2)
 
     def With1(n, u, x, v):
-        w = RationalFunctionExpand(u, x)
-        return If(SumQ(w), Add(*[i*v**n for i in w.args]), v**n*w)
+        w = eager_RationalFunctionExpand(u, x)
+        return eager_If(eager_SumQ(w), Add(*[i*v**n for i in w.args]), v**n*w)
     pattern1 = Pattern(UtilityOperator(u_*v_**n_, x_), cons1, cons2)
     rule1 = _ReplacementRuleWrapped(pattern1, With1)
     def With2(u, x):
-        v = ExpandIntegrand(u, x)
+        v = eager_ExpandIntegrand(u, x)
 
         def _consf_u(a, b, c, d, p, m, n, x):
-            return And(FreeQ(List(a, b, c, d, p), x), IntegersQ(m, n), Equal(m, Add(n, S(-1))))
+            return And(FreeQ(eager_List(a, b, c, d, p), x), eager_IntegersQ(m, n), Equal(m, Add(n, S(-1))))
         cons_u = _patched_custom_constraint_call(_consf_u)
         pat = Pattern(UtilityOperator(x_**WildSymbol('m', optional_value=S(1))*(x_*WildSymbol('d', optional_value=S(1)) + c_)**p_/(x_**n_*WildSymbol('b', optional_value=S(1)) + a_), x_), cons_u)
         result_matchq = is_match(UtilityOperator(u, x), pat)
         if UnsameQ(v, u) and not result_matchq:
             return v
         else:
-            v = ExpandIntegrand(RationalFunctionFactors(u, x), x)
+            v = eager_ExpandIntegrand(RationalFunctionFactors(u, x), x)
             w = NonrationalFunctionFactors(u, x)
-            if SumQ(v):
+            if eager_SumQ(v):
                 return Add(*[i*w for i in v.args])
             else:
                 return v*w
@@ -2181,12 +2181,12 @@ def RationalFunctionExpand(expr, x):
     return res
 
 
-def ExpandIntegrand(expr, x, extra=None):
+def eager_ExpandIntegrand(expr, x, extra=None):
     if extra is not None:
         extra, x = x, extra
-        w = ExpandIntegrand(extra, x)
+        w = eager_ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
-        if SumQ(r):
+        if eager_SumQ(r):
             result = [expr*FreeTerms(w, x)]
             for i in r.args:
                 result.append(MergeMonomials(expr*i, x))
@@ -2216,7 +2216,7 @@ def ExpandIntegrand(expr, x, extra=None):
                             c, d = tuple([match[i] for i in keys])
                             if PolynomialQ(u, x):
                                 F = F.func
-                                return ExpandLinearProduct((a + b*F(c + d*x))**n, u, c, d, x)
+                                return eager_ExpandLinearProduct((a + b*F(c + d*x))**n, u, c, d, x)
 
         result = replace_all(UtilityOperator(expr, x), ExpandIntegrand_rules, max_count = 1)
         if isinstance(result, Operation) and result.head == UtilityOp:
@@ -2226,7 +2226,7 @@ def ExpandIntegrand(expr, x, extra=None):
         return res
 
 
-def SimplerQ(u, v):
+def eager_SimplerQ(u, v):
     # If u is simpler than v, SimplerQ(u, v) returns True, else it returns False.  SimplerQ(u, u) returns False
     if IntegerQ(u):
         if IntegerQ(v):
@@ -2238,24 +2238,24 @@ def SimplerQ(u, v):
             return True
     elif IntegerQ(v):
         return False
-    elif FractionQ(u):
-        if FractionQ(v):
-            if Denominator(u) == Denominator(v):
-                return SimplerQ(Numerator(u), Numerator(v))
+    elif eager_FractionQ(u):
+        if eager_FractionQ(v):
+            if eager_Denominator(u) == eager_Denominator(v):
+                return eager_SimplerQ(eager_Numerator(u), eager_Numerator(v))
             else:
-                return Denominator(u)<Denominator(v)
+                return eager_Denominator(u)<eager_Denominator(v)
         else:
             return True
-    elif FractionQ(v):
+    elif eager_FractionQ(v):
         return False
     elif (Re(u)==0 or Re(u) == 0) and (Re(v)==0 or Re(v) == 0):
-        return SimplerQ(Im(u), Im(v))
-    elif ComplexNumberQ(u):
-        if ComplexNumberQ(v):
+        return eager_SimplerQ(Im(u), Im(v))
+    elif eager_ComplexNumberQ(u):
+        if eager_ComplexNumberQ(v):
             if Re(u) == Re(v):
-                return SimplerQ(Im(u), Im(v))
+                return eager_SimplerQ(Im(u), Im(v))
             else:
-                return SimplerQ(Re(u),Re(v))
+                return eager_SimplerQ(Re(u),Re(v))
         else:
             return False
     elif NumberQ(u):
@@ -2265,34 +2265,34 @@ def SimplerQ(u, v):
             return True
     elif NumberQ(v):
         return False
-    elif AtomQ(u) or (Head(u) == re) or (Head(u) == im):
-        if AtomQ(v) or (Head(u) == re) or (Head(u) == im):
+    elif AtomQ(u) or (eager_Head(u) == re) or (eager_Head(u) == im):
+        if AtomQ(v) or (eager_Head(u) == re) or (eager_Head(u) == im):
             return OrderedQ([u,v])
         else:
             return True
-    elif AtomQ(v) or (Head(u) == re) or (Head(u) == im):
+    elif AtomQ(v) or (eager_Head(u) == re) or (eager_Head(u) == im):
         return False
-    elif Head(u) == Head(v):
-        if Length(u) == Length(v):
+    elif eager_Head(u) == eager_Head(v):
+        if eager_Length(u) == eager_Length(v):
             for i in range(len(u.args)):
                 if not u.args[i] == v.args[i]:
-                    return SimplerQ(u.args[i], v.args[i])
+                    return eager_SimplerQ(u.args[i], v.args[i])
             return False
-        return Length(u) < Length(v)
-    elif LeafCount(u) < LeafCount(v):
+        return eager_Length(u) < eager_Length(v)
+    elif eager_LeafCount(u) < eager_LeafCount(v):
         return True
-    elif LeafCount(v) < LeafCount(u):
+    elif eager_LeafCount(v) < eager_LeafCount(u):
         return False
-    return Not(OrderedQ([v,u]))
+    return eager_Not(OrderedQ([v,u]))
 
-def SimplerSqrtQ(u, v):
+def eager_SimplerSqrtQ(u, v):
     # If Rt(u, 2) is simpler than Rt(v, 2), SimplerSqrtQ(u, v) returns True, else it returns False.  SimplerSqrtQ(u, u) returns False
-    if NegativeQ(v) and Not(NegativeQ(u)):
+    if NegativeQ(v) and eager_Not(NegativeQ(u)):
         return True
-    if NegativeQ(u) and Not(NegativeQ(v)):
+    if NegativeQ(u) and eager_Not(NegativeQ(v)):
         return False
-    sqrtu = Rt(u, S(2))
-    sqrtv = Rt(v, S(2))
+    sqrtu = eager_Rt(u, S(2))
+    sqrtv = eager_Rt(v, S(2))
     if IntegerQ(sqrtu):
         if IntegerQ(sqrtv):
             return sqrtu<sqrtv
@@ -2300,28 +2300,28 @@ def SimplerSqrtQ(u, v):
             return True
     if IntegerQ(sqrtv):
         return False
-    if RationalQ(sqrtu):
-        if RationalQ(sqrtv):
+    if eager_RationalQ(sqrtu):
+        if eager_RationalQ(sqrtv):
             return sqrtu<sqrtv
         else:
             return True
-    if RationalQ(sqrtv):
+    if eager_RationalQ(sqrtv):
         return False
-    if PosQ(u):
-        if PosQ(v):
-            return LeafCount(sqrtu)<LeafCount(sqrtv)
+    if eager_PosQ(u):
+        if eager_PosQ(v):
+            return eager_LeafCount(sqrtu)<eager_LeafCount(sqrtv)
         else:
             return True
-    if PosQ(v):
+    if eager_PosQ(v):
         return False
-    if LeafCount(sqrtu)<LeafCount(sqrtv):
+    if eager_LeafCount(sqrtu)<eager_LeafCount(sqrtv):
         return True
-    if LeafCount(sqrtv)<LeafCount(sqrtu):
+    if eager_LeafCount(sqrtv)<eager_LeafCount(sqrtu):
         return False
     else:
-        return Not(OrderedQ([v, u]))
+        return eager_Not(OrderedQ([v, u]))
 
-def SumSimplerQ(u, v):
+def eager_SumSimplerQ(u, v):
     """
     If u + v is simpler than u, SumSimplerQ(u, v) returns True, else it returns False.
     If for every term w of v there is a term of u equal to n*w where n<-1/2, u + v will be simpler than u.
@@ -2336,7 +2336,7 @@ def SumSimplerQ(u, v):
     False
 
     """
-    if RationalQ(u, v):
+    if eager_RationalQ(u, v):
         if v == S(0):
             return False
         elif v > S(0):
@@ -2346,14 +2346,14 @@ def SumSimplerQ(u, v):
     else:
         return SumSimplerAuxQ(Expand(u), Expand(v))
 
-def BinomialDegree(u, x):
+def eager_BinomialDegree(u, x):
     # if u is a binomial. BinomialDegree[u,x] returns the degree of x in u.
     bp = BinomialParts(u, x)
     if bp == False:
         return bp
     return bp[2]
 
-def TrinomialDegree(u, x):
+def eager_TrinomialDegree(u, x):
     # If u is equivalent to a trinomial of the form a + b*x^n + c*x^(2*n) where n!=0, b!=0 and c!=0, TrinomialDegree[u,x] returns n
     t = TrinomialParts(u, x)
     if t:
@@ -2373,41 +2373,41 @@ def CancelCommonFactors(u, v):
         return a.func(*lst)
 
     # CancelCommonFactors[u,v] returns {u',v'} are the noncommon factors of u and v respectively.
-    if ProductQ(u):
-        if ProductQ(v):
-            if MemberQ(v, First(u)):
-                return CancelCommonFactors(Rest(u), _delete_cases(v, First(u)))
+    if eager_ProductQ(u):
+        if eager_ProductQ(v):
+            if MemberQ(v, eager_First(u)):
+                return CancelCommonFactors(eager_Rest(u), _delete_cases(v, eager_First(u)))
             else:
-                lst = CancelCommonFactors(Rest(u), v)
-                return [First(u)*lst[0], lst[1]]
+                lst = CancelCommonFactors(eager_Rest(u), v)
+                return [eager_First(u)*lst[0], lst[1]]
         else:
             if MemberQ(u, v):
                 return [_delete_cases(u, v), 1]
             else:
                 return[u, v]
-    elif ProductQ(v):
+    elif eager_ProductQ(v):
         if MemberQ(v, u):
             return [1, _delete_cases(v, u)]
         else:
             return [u, v]
     return[u, v]
 
-def SimplerIntegrandQ(u, v, x):
+def eager_SimplerIntegrandQ(u, v, x):
     lst = CancelCommonFactors(u, v)
     u1 = lst[0]
     v1 = lst[1]
     # Head/Length recursive branch was commented out in IntegrationUtilityFunctions.m
     # (lines 808-809) and must not be active.
     # Threshold: Mathematica uses 6/10 (line 810); integer form is 5*L < 3*L (not 4*L).
-    if 5*LeafCount(u1) < 3*LeafCount(v1):
+    if 5*eager_LeafCount(u1) < 3*eager_LeafCount(v1):
         return True
-    if RationalFunctionQ(u1, x):
-        if RationalFunctionQ(v1, x):
+    if eager_RationalFunctionQ(u1, x):
+        if eager_RationalFunctionQ(v1, x):
             t1 = 0
             t2 = 0
-            for i in RationalFunctionExponents(u1, x):
+            for i in eager_RationalFunctionExponents(u1, x):
                 t1 += i
-            for i in RationalFunctionExponents(v1, x):
+            for i in eager_RationalFunctionExponents(v1, x):
                 t2 += i
             return t1 < t2
         else:
@@ -2422,7 +2422,7 @@ def GeneralizedBinomialDegree(u, x):
 
 def GeneralizedBinomialParts(expr, x):
     expr = Expand(expr)
-    if GeneralizedBinomialMatchQ(expr, x):
+    if eager_GeneralizedBinomialMatchQ(expr, x):
         # The exclusions MUST match GeneralizedBinomialMatchQ's above. With the
         # looser `exclude=[x]` this re-match could return a DEGENERATE solution the
         # gate had rejected (b=0, leaving n unbound) and then raise KeyError.
@@ -2432,21 +2432,21 @@ def GeneralizedBinomialParts(expr, x):
         q = Wild('q', exclude=[x, 0])
         Match = expr.match(a*x**q + b*x**n)
         if Match and len(Match) == 4:
-            if PosQ(Match[q] - Match[n]):
+            if eager_PosQ(Match[q] - Match[n]):
                 return [Match[b], Match[a], Match[q], Match[n]]
-            elif PosQ(Match[n] - Match[q]):
+            elif eager_PosQ(Match[n] - Match[q]):
                 return [Match[a], Match[b], Match[n], Match[q]]
     else:
         return False
 
-def GeneralizedTrinomialDegree(u, x):
+def eager_GeneralizedTrinomialDegree(u, x):
     t = GeneralizedTrinomialParts(u, x)
     if t:
         return t[3] - t[4]
 
 def GeneralizedTrinomialParts(expr, x):
     expr = Expand(expr)
-    if GeneralizedTrinomialMatchQ(expr, x):
+    if eager_GeneralizedTrinomialMatchQ(expr, x):
         a = Wild('a', exclude=[x, 0])
         b = Wild('b', exclude=[x, 0])
         c = Wild('c', exclude=[x])
@@ -2458,10 +2458,10 @@ def GeneralizedTrinomialParts(expr, x):
     else:
         return False
 
-def MonomialQ(u, x):
+def eager_MonomialQ(u, x):
     # If u is of the form a*x^n where n!=0 and a!=0, MonomialQ[u,x] returns True; else False
     if isinstance(u, (tuple, list, Tuple)):
-        return all(MonomialQ(i, x) for i in u)
+        return all(eager_MonomialQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
@@ -2472,14 +2472,14 @@ def MonomialQ(u, x):
 
 def MonomialSumQ(u, x):
     # if u(x) is a sum and each term is free of x or an expression of the form a*x^n, MonomialSumQ(u, x) returns True; else it returns False
-    if SumQ(u):
+    if eager_SumQ(u):
         for i in u.args:
-            if Not(FreeQ(i, x) or MonomialQ(i, x)):
+            if eager_Not(FreeQ(i, x) or eager_MonomialQ(i, x)):
                 return False
         return True
 
 
-def MinimumMonomialExponent(u, x):
+def eager_MinimumMonomialExponent(u, x):
     """
     u is sum whose terms are monomials.  MinimumMonomialExponent(u, x) returns the exponent of the term having the smallest exponent
 
@@ -2497,12 +2497,12 @@ def MinimumMonomialExponent(u, x):
     # In Mathematica MonomialExponent[i,x] stays unevaluated for a non-monomial
     # term, so PosQ[n - <held>] is False and that term is skipped. The Python port
     # returns None instead, so skip those terms explicitly (else `n - None` raises).
-    n = MonomialExponent(First(u), x)
+    n = MonomialExponent(eager_First(u), x)
     for i in u.args:
         e = MonomialExponent(i, x)
         if e is None:
             continue
-        if n is None or PosQ(n - e):
+        if n is None or eager_PosQ(n - e):
             n = e
 
     return n
@@ -2515,10 +2515,10 @@ def MonomialExponent(u, x):
     if re:
         return re[b]
 
-def LinearMatchQ(u, x):
+def eager_LinearMatchQ(u, x):
     # LinearMatchQ(u, x) returns True iff u matches patterns of the form a+b*x where a and b are free of x
     if isinstance(u, (tuple, list, Tuple)):
-        return all(LinearMatchQ(i, x) for i in u)
+        return all(eager_LinearMatchQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x])
         b = Wild('b', exclude=[x])
@@ -2527,10 +2527,10 @@ def LinearMatchQ(u, x):
             return True
     return False
 
-def PowerOfLinearMatchQ(u, x):
+def eager_PowerOfLinearMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
         for i in u:
-            if not PowerOfLinearMatchQ(i, x):
+            if not eager_PowerOfLinearMatchQ(i, x):
                 return False
         return True
     else:
@@ -2543,9 +2543,9 @@ def PowerOfLinearMatchQ(u, x):
         else:
             return False
 
-def QuadraticMatchQ(u, x):
+def eager_QuadraticMatchQ(u, x):
     if ListQ(u):
-        return all(QuadraticMatchQ(i, x) for i in u)
+        return all(eager_QuadraticMatchQ(i, x) for i in u)
     pattern1 = Pattern(UtilityOperator(x_**2*WildSymbol('c', optional_value=1) + x_*WildSymbol('b', optional_value=1) + WildSymbol('a', optional_value=0), x_), _patched_custom_constraint_call(lambda a, b, c, x: FreeQ([a, b, c], x)))
     pattern2 = Pattern(UtilityOperator(x_**2*WildSymbol('c', optional_value=1) + WildSymbol('a', optional_value=0), x_), _patched_custom_constraint_call(lambda a, c, x: FreeQ([a, c], x)))
     u1 = UtilityOperator(u, x)
@@ -2565,25 +2565,25 @@ def CubicMatchQ(u, x):
         else:
             return False
 
-def BinomialMatchQ(u, x):
+def eager_BinomialMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
-        return all(BinomialMatchQ(i, x) for i in u)
+        return all(eager_BinomialMatchQ(i, x) for i in u)
     else:
         pattern = Pattern(UtilityOperator(x_**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)), x_) , _patched_custom_constraint_call(lambda a, b, n, x: FreeQ([a,b,n],x)))
         u = UtilityOperator(u, x)
         return is_match(u, pattern)
 
-def TrinomialMatchQ(u, x):
+def eager_TrinomialMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
-        return all(TrinomialMatchQ(i, x) for i in u)
+        return all(eager_TrinomialMatchQ(i, x) for i in u)
     else:
         pattern = Pattern(UtilityOperator(x_**WildSymbol('j', optional_value=S(1))*WildSymbol('c', optional_value=S(1)) + x_**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)), x_) , _patched_custom_constraint_call(lambda a, b, c, n, x: FreeQ([a, b, c, n], x)),  _patched_custom_constraint_call(lambda j, n: ZeroQ(j-2*n) ))
         u = UtilityOperator(u, x)
         return is_match(u, pattern)
 
-def GeneralizedBinomialMatchQ(u, x):
+def eager_GeneralizedBinomialMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
-        return all(GeneralizedBinomialMatchQ(i, x) for i in u)
+        return all(eager_GeneralizedBinomialMatchQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x, 0])
         b = Wild('b', exclude=[x, 0])
@@ -2601,9 +2601,9 @@ def GeneralizedBinomialMatchQ(u, x):
         else:
             return False
 
-def GeneralizedTrinomialMatchQ(u, x):
+def eager_GeneralizedTrinomialMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
-        return all(GeneralizedTrinomialMatchQ(i, x) for i in u)
+        return all(eager_GeneralizedTrinomialMatchQ(i, x) for i in u)
     else:
         a = Wild('a', exclude=[x, 0])
         b = Wild('b', exclude=[x, 0])
@@ -2660,11 +2660,11 @@ def NonpolynomialTerms(u, x):
     return s
 
 def PseudoBinomialParts(u, x):
-    if PolynomialQ(u, x) and Greater(Expon(u, x), S(2)):
-        n = Expon(u, x)
-        d = Rt(Coefficient(u, x, n), n)
-        c =  d**(-n + S(1))*Coefficient(u, x, n + S(-1))/n
-        a = Simplify(u - (c + d*x)**n)
+    if PolynomialQ(u, x) and Greater(eager_Expon(u, x), S(2)):
+        n = eager_Expon(u, x)
+        d = eager_Rt(eager_Coefficient(u, x, n), n)
+        c =  d**(-n + S(1))*eager_Coefficient(u, x, n + S(-1))/n
+        a = eager_Simplify(u - (c + d*x)**n)
         if NonzeroQ(a) and FreeQ(a, x):
             return [a, S(1), c, d, n]
         else:
@@ -2672,12 +2672,12 @@ def PseudoBinomialParts(u, x):
     else:
         return False
 
-def NormalizePseudoBinomial(u, x):
+def eager_NormalizePseudoBinomial(u, x):
     lst = PseudoBinomialParts(u, x)
     if lst:
         return (lst[0] + lst[1]*(lst[2] + lst[3]*x)**lst[4])
 
-def PseudoBinomialPairQ(u, v, x):
+def eager_PseudoBinomialPairQ(u, v, x):
     lst1 = PseudoBinomialParts(u, x)
     if AtomQ(lst1):
         return False
@@ -2698,20 +2698,20 @@ def PseudoBinomialQ(u, x):
 def PolynomialGCD(f, g):
     return gcd(f, g)
 
-def PolyGCD(u, v, x):
+def eager_PolyGCD(u, v, x):
     # (* u and v are polynomials in x. *)
     # (* PolyGCD[u,v,x] returns the factors of the gcd of u and v dependent on x. *)
-    return NonfreeFactors(PolynomialGCD(u, v), x)
+    return eager_NonfreeFactors(PolynomialGCD(u, v), x)
 
 def AlgebraicFunctionFactors(u, x, flag=False):
     # (* AlgebraicFunctionFactors[u,x] returns the product of the factors of u that are algebraic functions of x. *)
-    if ProductQ(u):
+    if eager_ProductQ(u):
         result = 1
         for i in u.args:
-            if AlgebraicFunctionQ(i, x, flag):
+            if eager_AlgebraicFunctionQ(i, x, flag):
                 result *= i
         return result
-    if AlgebraicFunctionQ(u, x, flag):
+    if eager_AlgebraicFunctionQ(u, x, flag):
         return u
     return 1
 
@@ -2731,70 +2731,70 @@ def NonalgebraicFunctionFactors(u, x):
     1
 
     """
-    if ProductQ(u):
+    if eager_ProductQ(u):
         result = 1
         for i in u.args:
-            if not AlgebraicFunctionQ(i, x):
+            if not eager_AlgebraicFunctionQ(i, x):
                 result *= i
         return result
-    if AlgebraicFunctionQ(u, x):
+    if eager_AlgebraicFunctionQ(u, x):
         return 1
     return u
 
 def QuotientOfLinearsP(u, x):
-    if LinearQ(u, x):
+    if eager_LinearQ(u, x):
         return True
-    elif SumQ(u):
+    elif eager_SumQ(u):
         if FreeQ(u.args[0], x):
-            return QuotientOfLinearsP(Rest(u), x)
-    elif LinearQ(Numerator(u), x) and LinearQ(Denominator(u), x):
+            return QuotientOfLinearsP(eager_Rest(u), x)
+    elif eager_LinearQ(eager_Numerator(u), x) and eager_LinearQ(eager_Denominator(u), x):
         return True
-    elif ProductQ(u):
-        if FreeQ(First(u), x):
-            return QuotientOfLinearsP(Rest(u), x)
-    elif Numerator(u) == 1 and PowerQ(u):
-        return QuotientOfLinearsP(Denominator(u), x)
+    elif eager_ProductQ(u):
+        if FreeQ(eager_First(u), x):
+            return QuotientOfLinearsP(eager_Rest(u), x)
+    elif eager_Numerator(u) == 1 and eager_PowerQ(u):
+        return QuotientOfLinearsP(eager_Denominator(u), x)
     return u == x or FreeQ(u, x)
 
-def QuotientOfLinearsParts(u, x):
+def eager_QuotientOfLinearsParts(u, x):
     # If u is equivalent to an expression of the form (a+b*x)/(c+d*x), QuotientOfLinearsParts[u,x]
     #   returns the list {a, b, c, d}.
-    if LinearQ(u, x):
-        return [Coefficient(u, x, 0), Coefficient(u, x, 1), 1, 0]
-    elif PowerQ(u):
-        if Numerator(u) == 1:
-            u = Denominator(u)
-            r = QuotientOfLinearsParts(u, x)
+    if eager_LinearQ(u, x):
+        return [eager_Coefficient(u, x, 0), eager_Coefficient(u, x, 1), 1, 0]
+    elif eager_PowerQ(u):
+        if eager_Numerator(u) == 1:
+            u = eager_Denominator(u)
+            r = eager_QuotientOfLinearsParts(u, x)
             return [r[2], r[3], r[0], r[1]]
-    elif SumQ(u):
-        a = First(u)
+    elif eager_SumQ(u):
+        a = eager_First(u)
         if FreeQ(a, x):
-            u = Rest(u)
-            r = QuotientOfLinearsParts(u, x)
+            u = eager_Rest(u)
+            r = eager_QuotientOfLinearsParts(u, x)
             return [r[0] + a*r[2], r[1] + a*r[3], r[2], r[3]]
-    elif ProductQ(u):
-        a = First(u)
+    elif eager_ProductQ(u):
+        a = eager_First(u)
         if FreeQ(a, x):
-            r = QuotientOfLinearsParts(Rest(u), x)
+            r = eager_QuotientOfLinearsParts(eager_Rest(u), x)
             return [a*r[0], a*r[1], r[2], r[3]]
-        a = Numerator(u)
-        d = Denominator(u)
-        if LinearQ(a, x) and LinearQ(d, x):
-            return [Coefficient(a, x, 0), Coefficient(a, x, 1), Coefficient(d, x, 0), Coefficient(d, x, 1)]
+        a = eager_Numerator(u)
+        d = eager_Denominator(u)
+        if eager_LinearQ(a, x) and eager_LinearQ(d, x):
+            return [eager_Coefficient(a, x, 0), eager_Coefficient(a, x, 1), eager_Coefficient(d, x, 0), eager_Coefficient(d, x, 1)]
     elif u == x:
         return [0, 1, 1, 0]
     elif FreeQ(u, x):
         return [u, 0, 1, 0]
     return [u, 0, 1, 0]
 
-def QuotientOfLinearsQ(u, x):
+def eager_QuotientOfLinearsQ(u, x):
     # (*QuotientOfLinearsQ[u,x] returns True iff u is equivalent to an expression of the form (a+b x)/(c+d x) where b!=0 and d!=0.*)
     if ListQ(u):
         for i in u:
-            if not QuotientOfLinearsQ(i, x):
+            if not eager_QuotientOfLinearsQ(i, x):
                 return False
         return True
-    q = QuotientOfLinearsParts(u, x)
+    q = eager_QuotientOfLinearsParts(u, x)
     return QuotientOfLinearsP(u, x) and NonzeroQ(q[1]) and NonzeroQ(q[3])
 
 def Flatten(l):
@@ -2806,19 +2806,19 @@ def Sort(u, r=False):
 # (*Definition: A number is absurd if it is a rational number, a positive rational number raised to a fractional power, or a product of absurd numbers.*)
 def AbsurdNumberQ(u):
     # (* AbsurdNumberQ[u] returns True if u is an absurd number, else it returns False. *)
-    if PowerQ(u):
+    if eager_PowerQ(u):
         v = u.exp
         u = u.base
-        return RationalQ(u) and u > 0 and FractionQ(v)
-    elif ProductQ(u):
+        return eager_RationalQ(u) and u > 0 and eager_FractionQ(v)
+    elif eager_ProductQ(u):
         return all(AbsurdNumberQ(i) for i in u.args)
-    return RationalQ(u)
+    return eager_RationalQ(u)
 
 def AbsurdNumberFactors(u):
     # (* AbsurdNumberFactors[u] returns the product of the factors of u that are absurd numbers. *)
     if AbsurdNumberQ(u):
         return u
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         result = S(1)
         for i in u.args:
             if AbsurdNumberQ(i):
@@ -2830,7 +2830,7 @@ def NonabsurdNumberFactors(u):
     # (* NonabsurdNumberFactors[u] returns the product of the factors of u that are not absurd numbers. *)
     if AbsurdNumberQ(u):
         return S(1)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         result = 1
         for i in u.args:
             result *= NonabsurdNumberFactors(i)
@@ -2838,10 +2838,10 @@ def NonabsurdNumberFactors(u):
     return NonnumericFactors(u)
 
 def SumSimplerAuxQ(u, v):
-    if SumQ(v):
-        return (RationalQ(First(v)) or SumSimplerAuxQ(u,First(v))) and (RationalQ(Rest(v)) or SumSimplerAuxQ(u,Rest(v)))
-    elif SumQ(u):
-        return SumSimplerAuxQ(First(u), v) or SumSimplerAuxQ(Rest(u), v)
+    if eager_SumQ(v):
+        return (eager_RationalQ(eager_First(v)) or SumSimplerAuxQ(u,eager_First(v))) and (eager_RationalQ(eager_Rest(v)) or SumSimplerAuxQ(u,eager_Rest(v)))
+    elif eager_SumQ(u):
+        return SumSimplerAuxQ(eager_First(u), v) or SumSimplerAuxQ(eager_Rest(u), v)
     else:
         return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
 
@@ -2864,11 +2864,11 @@ def Drop(lst, n):
     return lst.func(*[i for i in Drop(list(lst.args), n)])
 
 def CombineExponents(lst):
-    if Length(lst) < 2:
+    if eager_Length(lst) < 2:
         return lst
     elif lst[0][0] == lst[1][0]:
         return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
-    return Prepend(CombineExponents(Rest(lst)), First(lst))
+    return Prepend(CombineExponents(eager_Rest(lst)), eager_First(lst))
 
 def FactorInteger(n, l=None):
     if isinstance(n, (int, Integer)):
@@ -2879,9 +2879,9 @@ def FactorInteger(n, l=None):
 def FactorAbsurdNumber(m):
     # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
     # (* as list of base-degree pairs where the bases are prime numbers and the degrees are rational. *)
-    if RationalQ(m):
+    if eager_RationalQ(m):
         return FactorInteger(m)
-    elif PowerQ(m):
+    elif eager_PowerQ(m):
         r = FactorInteger(m.base)
         return [r[0], r[1]*m.exp]
 
@@ -2907,14 +2907,14 @@ def SubstForInverseFunction(*args):
     """
     if len(args) == 3:
         u, v, x = args[0], args[1], args[2]
-        return SubstForInverseFunction(u, v, (-Coefficient(v.args[0], x, 0) + InverseFunction(Head(v))(x))/Coefficient(v.args[0], x, 1), x)
+        return SubstForInverseFunction(u, v, (-eager_Coefficient(v.args[0], x, 0) + InverseFunction(eager_Head(v))(x))/eager_Coefficient(v.args[0], x, 1), x)
     elif len(args) == 4:
         u, v, w, x = args[0], args[1], args[2], args[3]
         if AtomQ(u):
             if u == x:
                 return w
             return u
-        elif Head(u) == Head(v) and ZeroQ(u.args[0] - v.args[0]):
+        elif eager_Head(u) == eager_Head(v) and ZeroQ(u.args[0] - v.args[0]):
             return x
         res = [SubstForInverseFunction(i, v, w, x) for i in u.args]
         return u.func(*res)
@@ -2926,7 +2926,7 @@ def SubstForFractionalPower(u, v, n, w, x):
         if u == x:
             return w
         return u
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         if ZeroQ(u.base - v):
             return x**(n*u.exp)
     res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
@@ -2941,12 +2941,12 @@ def SubstForFractionalPowerOfQuotientOfLinears(u, x):
         return False
     n = lst[0]
     tmp = lst[1]
-    lst = QuotientOfLinearsParts(tmp, x)
+    lst = eager_QuotientOfLinearsParts(tmp, x)
     a, b, c, d = lst[0], lst[1], lst[2], lst[3]
     if ZeroQ(d):
         return False
-    lst = Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
-    return [NonfreeFactors(lst, x), n, tmp, FreeFactors(lst, x)*(b*c - a*d)]
+    lst = eager_Simplify(x**(n - 1)*SubstForFractionalPower(u, tmp, n, (-a + c*x**n)/(b - d*x**n), x)/(b - d*x**n)**2)
+    return [eager_NonfreeFactors(lst, x), n, tmp, eager_FreeFactors(lst, x)*(b*c - a*d)]
 
 def FractionalPowerOfQuotientOfLinears(u, n, v, x):
     # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n),
@@ -2955,9 +2955,9 @@ def FractionalPowerOfQuotientOfLinears(u, n, v, x):
         return [n, v]
     elif CalculusQ(u):
         return False
-    elif FractionalPowerQ(u):
-        if QuotientOfLinearsQ(u.base, x) and Not(LinearQ(u.base, x)) and (FalseQ(v) or ZeroQ(u.base - v)):
-            return [LCM(Denominator(u.exp), n), u.base]
+    elif eager_FractionalPowerQ(u):
+        if eager_QuotientOfLinearsQ(u.base, x) and eager_Not(eager_LinearQ(u.base, x)) and (FalseQ(v) or ZeroQ(u.base - v)):
+            return [LCM(eager_Denominator(u.exp), n), u.base]
     lst = [n, v]
     for i in u.args:
         lst = FractionalPowerOfQuotientOfLinears(i, lst[0], lst[1],x)
@@ -2965,19 +2965,19 @@ def FractionalPowerOfQuotientOfLinears(u, n, v, x):
             return False
     return lst
 
-def SubstForFractionalPowerQ(u, v, x):
+def eager_SubstForFractionalPowerQ(u, v, x):
     # (* If the substitution x=v^(1/n) will not complicate algebraic subexpressions of u,
     # SubstForFractionalPowerQ[u,v,x] returns True; else it returns False. *)
     if AtomQ(u) or FreeQ(u, x):
         return True
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         return SubstForFractionalPowerAuxQ(u, v, x)
-    return all(SubstForFractionalPowerQ(i, v, x) for i in u.args)
+    return all(eager_SubstForFractionalPowerQ(i, v, x) for i in u.args)
 
 def SubstForFractionalPowerAuxQ(u, v, x):
     if AtomQ(u):
         return False
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         if ZeroQ(u.base - v):
             return True
     return any(SubstForFractionalPowerAuxQ(i, v, x) for i in u.args)
@@ -2987,7 +2987,7 @@ def FractionalPowerOfSquareQ(u):
     # (* FractionalPowerOfSquareQ[u] returns (v+w)^2; else it returns False. *)
     if AtomQ(u):
         return False
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         a_ = Wild('a', exclude=[0])
         b_ = Wild('b', exclude=[0])
         c_ = Wild('c', exclude=[0])
@@ -2996,11 +2996,11 @@ def FractionalPowerOfSquareQ(u):
             keys = [a_, b_, c_]
             if len(keys) == len(match):
                 a, b, c = tuple(match[i] for i in keys)
-                if NonsumQ(a):
+                if eager_NonsumQ(a):
                     return (b + c)**S(2)
     for i in u.args:
         tmp = FractionalPowerOfSquareQ(i)
-        if Not(FalseQ(tmp)):
+        if eager_Not(FalseQ(tmp)):
             return tmp
     return False
 
@@ -3009,27 +3009,27 @@ def FractionalPowerSubexpressionQ(u, v, w):
     # (* FractionalPowerSubexpressionQ[u,v,w] returns True; else it returns False. *)
     if AtomQ(u):
         return False
-    elif FractionalPowerQ(u):
+    elif eager_FractionalPowerQ(u):
         if PositiveQ(u.base/w):
-            return Not(u.base == v) and LeafCount(w) < 3*LeafCount(v)
+            return eager_Not(u.base == v) and eager_LeafCount(w) < 3*eager_LeafCount(v)
     for i in u.args:
         if FractionalPowerSubexpressionQ(i, v, w):
             return True
     return False
 
-def Apply(f, lst):
+def eager_Apply(f, lst):
     return f(*lst)
 
 def FactorNumericGcd(u):
     # (* FactorNumericGcd[u] returns u with the gcd of the numeric coefficients of terms of sums factored out. *)
-    if PowerQ(u):
-        if RationalQ(u.exp):
+    if eager_PowerQ(u):
+        if eager_RationalQ(u.exp):
             return FactorNumericGcd(u.base)**u.exp
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         res = [FactorNumericGcd(i) for i in u.args]
         return Mul(*res)
-    elif SumQ(u):
-        g = GCD([NumericFactor(i) for i in u.args])
+    elif eager_SumQ(u):
+        g = eager_GCD([NumericFactor(i) for i in u.args])
         r = Add(*[i/g for i in u.args])
         return g*r
     return u
@@ -3037,51 +3037,51 @@ def FactorNumericGcd(u):
 def MergeableFactorQ(bas, deg, v):
     # (* MergeableFactorQ[bas,deg,v] returns True iff bas equals the base of a factor of v or bas is a factor of every term of v. *)
     if bas == v:
-        return RationalQ(deg + S(1)) and (deg + 1>=0 or RationalQ(deg) and deg>0)
-    elif PowerQ(v):
+        return eager_RationalQ(deg + S(1)) and (deg + 1>=0 or eager_RationalQ(deg) and deg>0)
+    elif eager_PowerQ(v):
         if bas == v.base:
-            return RationalQ(deg+v.exp) and (deg+v.exp>=0 or RationalQ(deg) and deg>0)
-        return SumQ(v.base) and IntegerQ(v.exp) and (Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
-    elif ProductQ(v):
-        return MergeableFactorQ(bas, deg, First(v)) or MergeableFactorQ(bas, deg, Rest(v))
-    return SumQ(v) and MergeableFactorQ(bas, deg, First(v)) and MergeableFactorQ(bas, deg, Rest(v))
+            return eager_RationalQ(deg+v.exp) and (deg+v.exp>=0 or eager_RationalQ(deg) and deg>0)
+        return eager_SumQ(v.base) and IntegerQ(v.exp) and (eager_Not(IntegerQ(deg) or IntegerQ(deg/v.exp))) and MergeableFactorQ(bas, deg/v.exp, v.base)
+    elif eager_ProductQ(v):
+        return MergeableFactorQ(bas, deg, eager_First(v)) or MergeableFactorQ(bas, deg, eager_Rest(v))
+    return eager_SumQ(v) and MergeableFactorQ(bas, deg, eager_First(v)) and MergeableFactorQ(bas, deg, eager_Rest(v))
 
 def MergeFactor(bas, deg, v):
     # (* If MergeableFactorQ[bas,deg,v], MergeFactor[bas,deg,v] return the product of bas^deg and v,
     # but with bas^deg merged into the factor of v whose base equals bas. *)
     if bas == v:
         return bas**(deg + 1)
-    elif PowerQ(v):
+    elif eager_PowerQ(v):
         if bas == v.base:
             return bas**(deg + v.exp)
         return MergeFactor(bas, deg/v.exp, v.base**v.exp)
-    elif ProductQ(v):
-        if MergeableFactorQ(bas, deg, First(v)):
-            return MergeFactor(bas, deg, First(v))*Rest(v)
-        return First(v)*MergeFactor(bas, deg, Rest(v))
-    return MergeFactor(bas, deg, First(v)) + MergeFactor(bas, deg, Rest(v))
+    elif eager_ProductQ(v):
+        if MergeableFactorQ(bas, deg, eager_First(v)):
+            return MergeFactor(bas, deg, eager_First(v))*eager_Rest(v)
+        return eager_First(v)*MergeFactor(bas, deg, eager_Rest(v))
+    return MergeFactor(bas, deg, eager_First(v)) + MergeFactor(bas, deg, eager_Rest(v))
 
 def MergeFactors(u, v):
     # (* MergeFactors[u,v] returns the product of u and v, but with the mergeable factors of u merged into v. *)
-    if ProductQ(u):
-        return MergeFactors(Rest(u), MergeFactors(First(u), v))
-    elif PowerQ(u):
+    if eager_ProductQ(u):
+        return MergeFactors(eager_Rest(u), MergeFactors(eager_First(u), v))
+    elif eager_PowerQ(u):
         if MergeableFactorQ(u.base, u.exp, v):
             return MergeFactor(u.base, u.exp, v)
-        elif RationalQ(u.exp) and u.exp < -1 and MergeableFactorQ(u.base, -S(1), v):
+        elif eager_RationalQ(u.exp) and u.exp < -1 and MergeableFactorQ(u.base, -S(1), v):
             return MergeFactors(u.base**(u.exp + 1), MergeFactor(u.base, -S(1), v))
         return u*v
     elif MergeableFactorQ(u, S(1), v):
         return MergeFactor(u, S(1), v)
     return u*v
 
-def TrigSimplifyQ(u):
+def eager_TrigSimplifyQ(u):
     # (* TrigSimplifyQ[u] returns True if TrigSimplify[u] actually simplifies u; else False. *)
-    return ActivateTrig(u) != TrigSimplify(u)
+    return eager_ActivateTrig(u) != eager_TrigSimplify(u)
 
-def TrigSimplify(u):
+def eager_TrigSimplify(u):
     # (* TrigSimplify[u] returns a bottom-up trig simplification of u. *)
-    return ActivateTrig(TrigSimplifyRecur(u))
+    return eager_ActivateTrig(TrigSimplifyRecur(u))
 
 def TrigSimplifyRecur(u):
     if AtomQ(u):
@@ -3108,7 +3108,7 @@ def Smallest(num1, num2=None):
     if num2 is None:
         lst = num1
         num = lst[0]
-        for i in Rest(lst):
+        for i in eager_Rest(lst):
             num = Smallest(num, i)
         return num
     return Min(num1, num2)
@@ -3117,16 +3117,16 @@ def OrderedQ(l):
     return l == Sort(l)
 
 def MinimumDegree(deg1, deg2):
-    if RationalQ(deg1):
-        if RationalQ(deg2):
+    if eager_RationalQ(deg1):
+        if eager_RationalQ(deg2):
             return Min(deg1, deg2)
         return deg1
-    elif RationalQ(deg2):
+    elif eager_RationalQ(deg2):
         return deg2
 
-    deg = Simplify(deg1- deg2)
+    deg = eager_Simplify(deg1- deg2)
 
-    if RationalQ(deg):
+    if eager_RationalQ(deg):
         if deg > 0:
             return deg2
         return deg1
@@ -3138,29 +3138,29 @@ def PositiveFactors(u):
     # (* PositiveFactors[u] returns the positive factors of u *)
     if ZeroQ(u):
         return S(1)
-    elif RationalQ(u):
+    elif eager_RationalQ(u):
         return Abs(u)
     elif PositiveQ(u):
         return u
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         res = 1
         for i in u.args:
             res *= PositiveFactors(i)
         return res
     return 1
 
-def Sign(u):
+def eager_Sign(u):
     return sign(u)
 
 def NonpositiveFactors(u):
     # (* NonpositiveFactors[u] returns the nonpositive factors of u *)
     if ZeroQ(u):
         return u
-    elif RationalQ(u):
-        return Sign(u)
+    elif eager_RationalQ(u):
+        return eager_Sign(u)
     elif PositiveQ(u):
         return S(1)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         res = S(1)
         for i in u.args:
             res *= NonpositiveFactors(i)
@@ -3172,19 +3172,19 @@ def PolynomialInAuxQ(u, v, x):
         return True
     elif AtomQ(u):
         return u != x
-    elif PowerQ(u):
-        if PowerQ(v):
+    elif eager_PowerQ(u):
+        if eager_PowerQ(v):
             if u.base == v.base:
                 return PositiveIntegerQ(u.exp/v.exp)
         return PositiveIntegerQ(u.exp) and PolynomialInAuxQ(u.base, v, x)
-    elif SumQ(u) or ProductQ(u):
+    elif eager_SumQ(u) or eager_ProductQ(u):
         for i in u.args:
-            if Not(PolynomialInAuxQ(i, v, x)):
+            if eager_Not(PolynomialInAuxQ(i, v, x)):
                 return False
         return True
     return False
 
-def PolynomialInQ(u, v, x):
+def eager_PolynomialInQ(u, v, x):
     """
     If u is a polynomial in v(x), PolynomialInQ(u, v, x) returns True, else it returns False.
 
@@ -3202,45 +3202,45 @@ def PolynomialInQ(u, v, x):
     True
 
     """
-    return PolynomialInAuxQ(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+    return PolynomialInAuxQ(u, eager_NonfreeFactors(NonfreeTerms(v, x), x), x)
 
 def ExponentInAux(u, v, x):
     if u == v:
         return S(1)
     elif AtomQ(u):
         return S(0)
-    elif PowerQ(u):
-        if PowerQ(v):
+    elif eager_PowerQ(u):
+        if eager_PowerQ(v):
             if u.base == v.base:
                 return u.exp/v.exp
         return u.exp*ExponentInAux(u.base, v, x)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         return Add(*[ExponentInAux(i, v, x) for i in u.args])
     return Max(*[ExponentInAux(i, v, x) for i in u.args])
 
 def ExponentIn(u, v, x):
-    return ExponentInAux(u, NonfreeFactors(NonfreeTerms(v, x), x), x)
+    return ExponentInAux(u, eager_NonfreeFactors(NonfreeTerms(v, x), x), x)
 
 def PolynomialInSubstAux(u, v, x):
     if u == v:
         return x
     elif AtomQ(u):
         return u
-    elif PowerQ(u):
-        if PowerQ(v):
+    elif eager_PowerQ(u):
+        if eager_PowerQ(v):
             if u.base == v.base:
                 return x**(u.exp/v.exp)
         return PolynomialInSubstAux(u.base, v, x)**u.exp
     return u.func(*[PolynomialInSubstAux(i, v, x) for i in u.args])
 
-def PolynomialInSubst(u, v, x):
+def eager_PolynomialInSubst(u, v, x):
     # If u is a polynomial in v[x], PolynomialInSubst[u,v,x] returns the polynomial u in x.
     w = NonfreeTerms(v, x)
-    return ReplaceAll(PolynomialInSubstAux(u, NonfreeFactors(w, x), x), {x: x - FreeTerms(v, x)/FreeFactors(w, x)})
+    return eager_ReplaceAll(PolynomialInSubstAux(u, eager_NonfreeFactors(w, x), x), {x: x - FreeTerms(v, x)/eager_FreeFactors(w, x)})
 
-def Distrib(u, v):
+def eager_Distrib(u, v):
     # Distrib[u,v] returns the sum of u times each term of v.
-    if SumQ(v):
+    if eager_SumQ(v):
         return Add(*[u*i for i in v.args])
     return u*v
 
@@ -3248,9 +3248,9 @@ def DistributeDegree(u, m):
     # DistributeDegree[u,m] returns the product of the factors of u each raised to the mth degree.
     if AtomQ(u):
         return u**m
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         return u.base**(u.exp*m)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         return Mul(*[DistributeDegree(i, m) for i in u.args])
     return u**m
 
@@ -3278,11 +3278,11 @@ def FunctionOfPower(*args):
         return n
     elif u == x:
         return S(1)
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if u.base == x and IntegerQ(u.exp):
             if n is None:
                 return u.exp
-            return GCD(n, u.exp)
+            return eager_GCD(n, u.exp)
     tmp = n
     for i in u.args:
         tmp = FunctionOfPower(i, tmp, x)
@@ -3302,7 +3302,7 @@ def DivideDegreesOfFactors(u, n):
     a**(b/3)
 
     """
-    if ProductQ(u):
+    if eager_ProductQ(u):
         return Mul(*[LeadBase(i)**(LeadDegree(i)/n) for i in u.args])
     return LeadBase(u)**(LeadDegree(u)/n)
 
@@ -3312,57 +3312,57 @@ def MonomialFactor(u, x):
         if u == x:
             return [S(1), S(1)]
         return [S(0), u]
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if IntegerQ(u.exp):
             lst = MonomialFactor(u.base, x)
             return [lst[0]*u.exp, lst[1]**u.exp]
         elif u.base == x and FreeQ(u.exp, x):
             return [u.exp, S(1)]
         return [S(0), u]
-    elif ProductQ(u):
-        lst1 = MonomialFactor(First(u), x)
-        lst2 = MonomialFactor(Rest(u), x)
+    elif eager_ProductQ(u):
+        lst1 = MonomialFactor(eager_First(u), x)
+        lst2 = MonomialFactor(eager_Rest(u), x)
         return [lst1[0] + lst2[0], lst1[1]*lst2[1]]
-    elif SumQ(u):
+    elif eager_SumQ(u):
         lst = [MonomialFactor(i, x) for i in u.args]
         deg = lst[0][0]
-        for i in Rest(lst):
+        for i in eager_Rest(lst):
             deg = MinimumDegree(deg, i[0])
-        if ZeroQ(deg) or RationalQ(deg) and deg < 0:
+        if ZeroQ(deg) or eager_RationalQ(deg) and deg < 0:
             return [S(0), u]
         return [deg, Add(*[x**(i[0] - deg)*i[1] for i in lst])]
     return [S(0), u]
 
-def FullSimplify(expr):
-    return Simplify(expr)
+def eager_FullSimplify(expr):
+    return eager_Simplify(expr)
 
 def FunctionOfLinearSubst(u, a, b, x):
     if FreeQ(u, x):
         return u
-    elif LinearQ(u, x):
-        tmp = Coefficient(u, x, 1)
+    elif eager_LinearQ(u, x):
+        tmp = eager_Coefficient(u, x, 1)
         if tmp == b:
             tmp = S(1)
         else:
             tmp = tmp/b
-        return Coefficient(u, x, S(0)) - a*tmp + tmp*x
-    elif PowerQ(u):
+        return eager_Coefficient(u, x, S(0)) - a*tmp + tmp*x
+    elif eager_PowerQ(u):
         if FreeQ(u.base, x):
-            return E**(FullSimplify(FunctionOfLinearSubst(Log(u.base)*u.exp, a, b, x)))
+            return E**(eager_FullSimplify(FunctionOfLinearSubst(Log(u.base)*u.exp, a, b, x)))
     lst = MonomialFactor(u, x)
-    if ProductQ(u) and NonzeroQ(lst[0]):
-        if RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
+    if eager_ProductQ(u) and NonzeroQ(lst[0]):
+        if eager_RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
             return  -FunctionOfLinearSubst(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x)**lst[0]
         return FunctionOfLinearSubst(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x)**lst[0]
     return u.func(*[FunctionOfLinearSubst(i, a, b, x) for i in u.args])
 
 
-def FunctionOfLinear(*args):
+def eager_FunctionOfLinear(*args):
     # (* If u (x) is equivalent to an expression of the form f (a+b*x) and not the case that a==0 and
     # b==1, FunctionOfLinear[u,x] returns the list {f (x),a,b}; else it returns False. *)
     if len(args) == 2:
         u, x = args
-        lst = FunctionOfLinear(u, False, False, x, False)
+        lst = eager_FunctionOfLinear(u, False, False, x, False)
         if AtomQ(lst) or FalseQ(lst[0]) or (lst[0] == 0 and lst[1] == 1):
             return False
         return [FunctionOfLinearSubst(u, lst[0], lst[1], x), lst[0], lst[1]]
@@ -3371,33 +3371,33 @@ def FunctionOfLinear(*args):
         return [a, b]
     elif CalculusQ(u):
         return False
-    elif LinearQ(u, x):
+    elif eager_LinearQ(u, x):
         if FalseQ(a):
-            return [Coefficient(u, x, 0), Coefficient(u, x, 1)]
-        lst = CommonFactors([b, Coefficient(u, x, 1)])
-        if ZeroQ(Coefficient(u, x, 0)) and Not(flag):
+            return [eager_Coefficient(u, x, 0), eager_Coefficient(u, x, 1)]
+        lst = CommonFactors([b, eager_Coefficient(u, x, 1)])
+        if ZeroQ(eager_Coefficient(u, x, 0)) and eager_Not(flag):
             return [0, lst[0]]
-        elif ZeroQ(b*Coefficient(u, x, 0) - a*Coefficient(u, x, 1)):
+        elif ZeroQ(b*eager_Coefficient(u, x, 0) - a*eager_Coefficient(u, x, 1)):
             return [a/lst[1], lst[0]]
         return [0, 1]
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if FreeQ(u.base, x):
-            return FunctionOfLinear(Log(u.base)*u.exp, a, b, x, False)
+            return eager_FunctionOfLinear(Log(u.base)*u.exp, a, b, x, False)
     lst = MonomialFactor(u, x)
-    if ProductQ(u) and NonzeroQ(lst[0]):
+    if eager_ProductQ(u) and NonzeroQ(lst[0]):
         if False and IntegerQ(lst[0]) and lst[0] != -1 and FreeQ(lst[1], x):
-            if RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
-                return FunctionOfLinear(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x, False)
-            return FunctionOfLinear(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x, False)
+            if eager_RationalQ(LeadFactor(lst[1])) and LeadFactor(lst[1]) < 0:
+                return eager_FunctionOfLinear(DivideDegreesOfFactors(-lst[1], lst[0])*x, a, b, x, False)
+            return eager_FunctionOfLinear(DivideDegreesOfFactors(lst[1], lst[0])*x, a, b, x, False)
         return False
     lst = [a, b]
     for i in u.args:
-        lst = FunctionOfLinear(i, lst[0], lst[1], x, SumQ(u))
+        lst = eager_FunctionOfLinear(i, lst[0], lst[1], x, eager_SumQ(u))
         if AtomQ(lst):
             return False
     return lst
 
-def NormalizeIntegrand(u, x):
+def eager_NormalizeIntegrand(u, x):
     v = NormalizeLeadTermSigns(NormalizeIntegrandAux(u, x))
     if v == NormalizeLeadTermSigns(u):
         return u
@@ -3405,12 +3405,12 @@ def NormalizeIntegrand(u, x):
         return v
 
 def NormalizeIntegrandAux(u, x):
-    if SumQ(u):
+    if eager_SumQ(u):
         l = 0
         for i in u.args:
             l += NormalizeIntegrandAux(i, x)
         return l
-    if ProductQ(MergeMonomials(u, x)):
+    if eager_ProductQ(MergeMonomials(u, x)):
         l = 1
         for i in MergeMonomials(u, x).args:
             l *= NormalizeIntegrandFactor(i, x)
@@ -3419,28 +3419,28 @@ def NormalizeIntegrandAux(u, x):
         return NormalizeIntegrandFactor(MergeMonomials(u, x), x)
 
 def NormalizeIntegrandFactor(u, x):
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.exp, x):
             bas = NormalizeIntegrandFactorBase(u.base, x)
             deg = u.exp
-            if IntegerQ(deg) and SumQ(bas):
-                if all(MonomialQ(i, x) for i in bas.args):
-                    mi = MinimumMonomialExponent(bas, x)
+            if IntegerQ(deg) and eager_SumQ(bas):
+                if all(eager_MonomialQ(i, x) for i in bas.args):
+                    mi = eager_MinimumMonomialExponent(bas, x)
                     q = 0
                     for i in bas.args:
-                        q += Simplify(i/x**mi)
+                        q += eager_Simplify(i/x**mi)
                     return x**(mi*deg)*q**deg
                 else:
                     return bas**deg
             else:
                 return bas**deg
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.base, x):
             return u.base**NormalizeIntegrandFactorBase(u.exp, x)
     bas = NormalizeIntegrandFactorBase(u, x)
-    if SumQ(bas):
-        if all(MonomialQ(i, x) for i in bas.args):
-            mi = MinimumMonomialExponent(bas, x)
+    if eager_SumQ(bas):
+        if all(eager_MonomialQ(i, x) for i in bas.args):
+            mi = eager_MinimumMonomialExponent(bas, x)
             z = 0
             for j in bas.args:
                 z += j/x**mi
@@ -3454,33 +3454,33 @@ def NormalizeIntegrandFactorBase(expr, x):
     m = Wild('m', exclude=[x])
     u = Wild('u')
     match = expr.match(x**m*u)
-    if match and SumQ(u):
+    if match and eager_SumQ(u):
         l = 0
         for i in u.args:
             l += NormalizeIntegrandFactorBase((x**m*i), x)
         return l
-    if BinomialQ(expr, x):
-        if BinomialMatchQ(expr, x):
+    if eager_BinomialQ(expr, x):
+        if eager_BinomialMatchQ(expr, x):
             return expr
         else:
-            return ExpandToSum(expr, x)
-    elif TrinomialQ(expr, x):
-        if TrinomialMatchQ(expr, x):
+            return eager_ExpandToSum(expr, x)
+    elif eager_TrinomialQ(expr, x):
+        if eager_TrinomialMatchQ(expr, x):
             return expr
         else:
-            return ExpandToSum(expr, x)
-    elif ProductQ(expr):
+            return eager_ExpandToSum(expr, x)
+    elif eager_ProductQ(expr):
         l = 1
         for i in expr.args:
             l *= NormalizeIntegrandFactor(i, x)
         return l
-    elif PolynomialQ(expr, x) and Exponent(expr, x) <= 4:
-        return ExpandToSum(expr, x)
-    elif SumQ(expr):
+    elif PolynomialQ(expr, x) and eager_Exponent(expr, x) <= 4:
+        return eager_ExpandToSum(expr, x)
+    elif eager_SumQ(expr):
         w = Wild('w')
         m = Wild('m', exclude=[x])
         v = TogetherSimplify(expr)
-        if SumQ(v) or v.match(x**m*w) and SumQ(w) or LeafCount(v) > LeafCount(expr) + 2:
+        if eager_SumQ(v) or v.match(x**m*w) and eager_SumQ(w) or eager_LeafCount(v) > eager_LeafCount(expr) + 2:
             return UnifySum(expr, x)
         else:
             return NormalizeIntegrandFactorBase(v, x)
@@ -3488,10 +3488,10 @@ def NormalizeIntegrandFactorBase(expr, x):
         return expr
 
 def NormalizeTogether(u):
-    return NormalizeLeadTermSigns(Together(u))
+    return NormalizeLeadTermSigns(eager_Together(u))
 
 def NormalizeLeadTermSigns(u):
-    if ProductQ(u):
+    if eager_ProductQ(u):
         t = 1
         for i in u.args:
             lst = SignOfFactor(i)
@@ -3514,7 +3514,7 @@ def AbsorbMinusSign(expr, *x):
     match = expr.match(u*v**m)
     if match:
         if len(match) == 3:
-            if SumQ(match[v]) and OddQ(match[m]):
+            if eager_SumQ(match[v]) and OddQ(match[m]):
                 return match[u]*(-match[v])**match[m]
 
     return -expr
@@ -3522,12 +3522,12 @@ def AbsorbMinusSign(expr, *x):
 def NormalizeSumFactors(u):
     if AtomQ(u):
         return u
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         k = 1
         for i in u.args:
             k *= NormalizeSumFactors(i)
         return SignOfFactor(k)[0]*SignOfFactor(k)[1]
-    elif SumQ(u):
+    elif eager_SumQ(u):
         k = 0
         for i in u.args:
             k += NormalizeSumFactors(i)
@@ -3541,12 +3541,12 @@ def SignOfFactor(u):
     # instead returns a Relational whose bool() raises. NumericFactor can hand back a
     # value SymPy has not simplified to an obvious real (e.g. -(-1)^(3/4)+(-1)^(1/4),
     # which is Sqrt[2]); Less treats "not provably negative" as False, matching Rubi.
-    if RationalQ(u) and Less(u, 0) or SumQ(u) and Less(NumericFactor(First(u)), 0):
+    if eager_RationalQ(u) and Less(u, 0) or eager_SumQ(u) and Less(NumericFactor(eager_First(u)), 0):
         return [-1, -u]
-    elif IntegerPowerQ(u):
-        if SumQ(u.base) and Less(NumericFactor(First(u.base)), 0):
+    elif eager_IntegerPowerQ(u):
+        if eager_SumQ(u.base) and Less(NumericFactor(eager_First(u.base)), 0):
             return [(-1)**u.exp, (-u.base)**u.exp]
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         k = 1
         h = 1
         for i in u.args:
@@ -3555,17 +3555,17 @@ def SignOfFactor(u):
         return [k, h]
     return [1, u]
 
-def NormalizePowerOfLinear(u, x):
+def eager_NormalizePowerOfLinear(u, x):
     v = FactorSquareFree(u)
-    if PowerQ(v):
-        if LinearQ(v.base, x) and FreeQ(v.exp, x):
-            return ExpandToSum(v.base, x)**v.exp
+    if eager_PowerQ(v):
+        if eager_LinearQ(v.base, x) and FreeQ(v.exp, x):
+            return eager_ExpandToSum(v.base, x)**v.exp
 
-    return ExpandToSum(v, x)
+    return eager_ExpandToSum(v, x)
 
-def SimplifyIntegrand(u, x):
-    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(Simplify(u), x))
-    if 5*LeafCount(v) < 4*LeafCount(u):
+def eager_SimplifyIntegrand(u, x):
+    v = NormalizeLeadTermSigns(NormalizeIntegrandAux(eager_Simplify(u), x))
+    if 5*eager_LeafCount(v) < 4*eager_LeafCount(u):
         return v
     if v != NormalizeLeadTermSigns(u):
         return v
@@ -3573,23 +3573,23 @@ def SimplifyIntegrand(u, x):
         return u
 
 def SimplifyTerm(u, x):
-    v = Simplify(u)
-    w = Together(v)
-    if LeafCount(v) < LeafCount(w):
-        return NormalizeIntegrand(v, x)
+    v = eager_Simplify(u)
+    w = eager_Together(v)
+    if eager_LeafCount(v) < eager_LeafCount(w):
+        return eager_NormalizeIntegrand(v, x)
     else:
-        return NormalizeIntegrand(w, x)
+        return eager_NormalizeIntegrand(w, x)
 
 def TogetherSimplify(u):
-    v = Together(Simplify(Together(u)))
+    v = eager_Together(eager_Simplify(eager_Together(u)))
     return FixSimplify(v)
 
 def SmartSimplify(u):
-    v = Simplify(u)
+    v = eager_Simplify(u)
     w = factor(v)
-    if LeafCount(w) < LeafCount(v):
+    if eager_LeafCount(w) < eager_LeafCount(v):
         v = w
-    if Not(FalseQ(w == FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
+    if eager_Not(FalseQ(w == FractionalPowerOfSquareQ(v))) and FractionalPowerSubexpressionQ(u, w, Expand(w)):
         v = SubstForExpn(v, w, Expand(w))
     else:
         v = FactorNumericGcd(v)
@@ -3606,27 +3606,27 @@ def SubstForExpn(u, v, w):
         # a+2 instead of a^2).
         return u.func(*[SubstForExpn(i, v, w) for i in u.args])
 
-def ExpandToSum(u, *x):
+def eager_ExpandToSum(u, *x):
     if len(x) == 1:
         x = x[0]
         expr = 0
-        if PolyQ(S(u), x):
+        if eager_PolyQ(S(u), x):
             for t in ExponentList(u, x):
-                expr += Coeff(u, x, t)*x**t
+                expr += eager_Coeff(u, x, t)*x**t
             return expr
-        if BinomialQ(u, x):
+        if eager_BinomialQ(u, x):
             i = BinomialParts(u, x)
             expr += i[0] + i[1]*x**i[2]
             return expr
-        if TrinomialQ(u, x):
+        if eager_TrinomialQ(u, x):
             i = TrinomialParts(u, x)
             expr += i[0] + i[1]*x**i[3] + i[2]*x**(2*i[3])
             return expr
-        if GeneralizedBinomialMatchQ(u, x):
+        if eager_GeneralizedBinomialMatchQ(u, x):
             i = GeneralizedBinomialParts(u, x)
             expr += i[0]*x**i[3] + i[1]*x**i[2]
             return expr
-        if GeneralizedTrinomialMatchQ(u, x):
+        if eager_GeneralizedTrinomialMatchQ(u, x):
             i = GeneralizedTrinomialParts(u, x)
             expr += i[0]*x**i[4] + i[1]*x**i[3] + i[2]*x**(2*i[3]-i[4])
             return expr
@@ -3635,9 +3635,9 @@ def ExpandToSum(u, *x):
     else:
         v = x[0]
         x = x[1]
-        w = ExpandToSum(v, x)
+        w = eager_ExpandToSum(v, x)
         r = NonfreeTerms(w, x)
-        if SumQ(r):
+        if eager_SumQ(r):
             k = u*FreeTerms(w, x)
             for i in r.args:
                 k += MergeMonomials(u*i, x)
@@ -3646,7 +3646,7 @@ def ExpandToSum(u, *x):
             return u*FreeTerms(w, x) + MergeMonomials(u*r, x)
 
 def UnifySum(u, x):
-    if SumQ(u):
+    if eager_SumQ(u):
         t = 0
         lst = []
         for i in u.args:
@@ -3661,16 +3661,16 @@ def UnifyTerms(lst, x):
     if lst==[]:
         return lst
     else:
-        return UnifyTerm(First(lst), UnifyTerms(Rest(lst), x), x)
+        return UnifyTerm(eager_First(lst), UnifyTerms(eager_Rest(lst), x), x)
 
 def UnifyTerm(term, lst, x):
     if lst==[]:
         return [term]
-    tmp = Simplify(First(lst)/term)
+    tmp = eager_Simplify(eager_First(lst)/term)
     if FreeQ(tmp, x):
-        return Prepend(Rest(lst), [(1+tmp)*term])
+        return Prepend(eager_Rest(lst), [(1+tmp)*term])
     else:
-        return Prepend(UnifyTerm(term, Rest(lst), x), [First(lst)])
+        return Prepend(UnifyTerm(term, eager_Rest(lst), x), [eager_First(lst)])
 
 def CalculusQ(u):
     return False
@@ -3687,8 +3687,8 @@ def FunctionOfInverseLinear(*args):
         return lst
     elif u == x:
         return False
-    elif QuotientOfLinearsQ(u, x):
-        tmp = Drop(QuotientOfLinearsParts(u, x), 2)
+    elif eager_QuotientOfLinearsQ(u, x):
+        tmp = Drop(eager_QuotientOfLinearsParts(u, x), 2)
         if tmp[1] == 0:
             return False
         elif lst is None:
@@ -3712,10 +3712,10 @@ def PureFunctionOfSinhQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+    elif eager_HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return SinhQ(u) or CschQ(u)
     for i in u.args:
-        if Not(PureFunctionOfSinhQ(i, v, x)):
+        if eager_Not(PureFunctionOfSinhQ(i, v, x)):
             return False
     return True
 
@@ -3726,10 +3726,10 @@ def PureFunctionOfTanhQ(u, v , x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+    elif eager_HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return TanhQ(u) or CothQ(u)
     for i in u.args:
-        if Not(PureFunctionOfTanhQ(i, v, x)):
+        if eager_Not(PureFunctionOfTanhQ(i, v, x)):
             return False
     return True
 
@@ -3740,24 +3740,24 @@ def PureFunctionOfCoshQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+    elif eager_HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return CoshQ(u) or SechQ(u)
     for i in u.args:
-        if Not(PureFunctionOfCoshQ(i, v, x)):
+        if eager_Not(PureFunctionOfCoshQ(i, v, x)):
             return False
     return True
 
 def IntegerQuotientQ(u, v):
     # (* If u/v is an integer, IntegerQuotientQ[u,v] returns True; else it returns False. *)
-    return IntegerQ(Simplify(u/v))
+    return IntegerQ(eager_Simplify(u/v))
 
 def OddQuotientQ(u, v):
     # (* If u/v is odd, OddQuotientQ[u,v] returns True; else it returns False. *)
-    return OddQ(Simplify(u/v))
+    return OddQ(eager_Simplify(u/v))
 
 def EvenQuotientQ(u, v):
     # (* If u/v is even, EvenQuotientQ[u,v] returns True; else it returns False. *)
-    return EvenQ(Simplify(u/v))
+    return EvenQ(eager_Simplify(u/v))
 
 def FindTrigFactor(func1, func2, u, v, flag):
     # (* If func[w]^m is a factor of u where m is odd and w is an integer multiple of v,
@@ -3766,7 +3766,7 @@ def FindTrigFactor(func1, func2, u, v, flag):
     # FindTrigFactor[func1,func2,u,v,False] returns the list {w,u/func[w]^n}; else it returns False. *)
     if u == 1:
         return False
-    elif (Head(LeadBase(u)) == func1 or Head(LeadBase(u)) == func2) and OddQ(LeadDegree(u)) and IntegerQuotientQ(LeadBase(u).args[0], v) and (flag or NonzeroQ(LeadBase(u).args[0] - v)):
+    elif (eager_Head(LeadBase(u)) == func1 or eager_Head(LeadBase(u)) == func2) and OddQ(LeadDegree(u)) and IntegerQuotientQ(LeadBase(u).args[0], v) and (flag or NonzeroQ(LeadBase(u).args[0] - v)):
         return [LeadBase[u].args[0], RemainingFactors(u)]
     lst = FindTrigFactor(func1, func2, RemainingFactors(u), v, flag)
     if AtomQ(lst):
@@ -3779,19 +3779,19 @@ def FunctionOfSinhQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         if OddQuotientQ(u.args[0], v):
             # (* Basis: If m odd, Sinh[m*v]^n is a function of Sinh[v]. *)
             return SinhQ(u) or CschQ(u)
         # (* Basis: If m even, Cos[m*v]^n is a function of Sinh[v]. *)
         return CoshQ(u) or SechQ(u)
-    elif IntegerPowerQ(u):
-        if HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_IntegerPowerQ(u):
+        if eager_HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if EvenQ(u.exp):
                 # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Sinh[v]. *)
                 return True
             return FunctionOfSinhQ(u.base, v, x)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         if CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
             return FunctionOfSinhQ(Drop(u, 2), v, x)
         lst = FindTrigFactor(Sinh, Csch, u, v, False)
@@ -3815,16 +3815,16 @@ def FunctionOfCoshQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         # (* Basis: If m integer, Cosh[m*v]^n is a function of Cosh[v]. *)
         return CoshQ(u) or SechQ(u)
-    elif IntegerPowerQ(u):
-        if HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_IntegerPowerQ(u):
+        if eager_HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if EvenQ(u.exp):
                 # (* Basis: If m integer and n even, Hyper[m*v]^n is a function of Cosh[v]. *)
                 return True
             return FunctionOfCoshQ(u.base, v, x)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         lst = FindTrigFactor(Sinh, Csch, u, v, False)
         if ListQ(lst):
             # (* Basis: If m integer and n odd, Sinh[m*v]^n == Sinh[v]*u where u is a function of Cosh[v]. *)
@@ -3839,19 +3839,19 @@ def FunctionOfCoshQ(u, v, x):
 def OddHyperbolicPowerQ(u, v, x):
     if SinhQ(u) or CoshQ(u) or SechQ(u) or CschQ(u):
         return OddQuotientQ(u.args[0], v)
-    if PowerQ(u):
+    if eager_PowerQ(u):
         return OddQ(u.exp) and OddHyperbolicPowerQ(u.base, v, x)
-    if ProductQ(u):
-        if Not(EqQ(FreeFactors(u, x), 1)):
-            return OddHyperbolicPowerQ(NonfreeFactors(u, x), v, x)
+    if eager_ProductQ(u):
+        if eager_Not(eager_EqQ(eager_FreeFactors(u, x), 1)):
+            return OddHyperbolicPowerQ(eager_NonfreeFactors(u, x), v, x)
         lst = []
         for i in u.args:
-            if Not(FunctionOfTanhQ(i, v, x)):
+            if eager_Not(FunctionOfTanhQ(i, v, x)):
                 lst.append(i)
         if lst == []:
             return True
-        return Length(lst)==1 and OddHyperbolicPowerQ(lst[0], v, x)
-    if SumQ(u):
+        return eager_Length(lst)==1 and OddHyperbolicPowerQ(lst[0], v, x)
+    if eager_SumQ(u):
         return all(OddHyperbolicPowerQ(i, v, x) for i in u.args)
     return False
 
@@ -3862,21 +3862,21 @@ def FunctionOfTanhQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         return TanhQ(u) or CothQ(u) or EvenQuotientQ(u.args[0], v)
-    elif PowerQ(u):
-        if EvenQ(u.exp) and HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_PowerQ(u):
+        if EvenQ(u.exp) and eager_HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
-        elif EvenQ(u.args[1]) and SumQ(u.args[0]):
+        elif EvenQ(u.args[1]) and eager_SumQ(u.args[0]):
             return FunctionOfTanhQ(Expand(u.args[0]**2, v, x))
-    if ProductQ(u):
+    if eager_ProductQ(u):
         lst = []
         for i in u.args:
-            if Not(FunctionOfTanhQ(i, v, x)):
+            if eager_Not(FunctionOfTanhQ(i, v, x)):
                 lst.append(i)
         if lst == []:
             return True
-        return Length(lst)==2 and OddHyperbolicPowerQ(lst[0], v, x) and OddHyperbolicPowerQ(lst[1], v, x)
+        return eager_Length(lst)==2 and OddHyperbolicPowerQ(lst[0], v, x) and OddHyperbolicPowerQ(lst[1], v, x)
     return all(FunctionOfTanhQ(i, v, x) for i in u.args)
 
 def FunctionOfTanhWeight(u, v, x):
@@ -3902,18 +3902,18 @@ def FunctionOfTanhWeight(u, v, x):
         return S(0)
     elif CalculusQ(u):
         return S(0)
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         if TanhQ(u) and ZeroQ(u.args[0] - v):
             return S(1)
         elif CothQ(u) and ZeroQ(u.args[0] - v):
             return S(-1)
         return S(0)
-    elif PowerQ(u):
-        if EvenQ(u.exp) and HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_PowerQ(u):
+        if EvenQ(u.exp) and eager_HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if TanhQ(u.base) or CoshQ(u.base) or SechQ(u.base):
                 return S(1)
             return S(-1)
-    if ProductQ(u):
+    if eager_ProductQ(u):
         if all(FunctionOfTanhQ(i, v, x) for i in u.args):
             return Add(*[FunctionOfTanhWeight(i, v, x) for i in u.args])
         return S(0)
@@ -3926,29 +3926,29 @@ def FunctionOfHyperbolicQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         return True
     return all(FunctionOfHyperbolicQ(i, v, x) for i in u.args)
 
 def SmartNumerator(expr):
-    if PowerQ(expr):
+    if eager_PowerQ(expr):
         n = expr.exp
         u = expr.base
-        if RationalQ(n) and n < 0:
+        if eager_RationalQ(n) and n < 0:
             return SmartDenominator(u**(-n))
-    elif ProductQ(expr):
+    elif eager_ProductQ(expr):
         return Mul(*[SmartNumerator(i) for i in expr.args])
-    return Numerator(expr)
+    return eager_Numerator(expr)
 
 def SmartDenominator(expr):
-    if PowerQ(expr):
+    if eager_PowerQ(expr):
         u = expr.base
         n = expr.exp
-        if RationalQ(n) and n < 0:
+        if eager_RationalQ(n) and n < 0:
             return SmartNumerator(u**(-n))
-    elif ProductQ(expr):
+    elif eager_ProductQ(expr):
         return Mul(*[SmartDenominator(i) for i in expr.args])
-    return Denominator(expr)
+    return eager_Denominator(expr)
 
 # =============================================================================
 # Inert (deactivated) trigonometric / hyperbolic functions
@@ -3962,7 +3962,7 @@ from rubi_rules.utils.inert_functions import (  # noqa: E402
     _INERT_TO_ACTIVE, _INERT_TRIG_HEADS)
 
 
-def ActivateTrig(u):
+def eager_ActivateTrig(u):
     """Replace inert trig functions (``Function('sin')(...)``, ...) with the
     active SymPy trig functions (``sin(...)``, ...).
 
@@ -3975,14 +3975,14 @@ def ActivateTrig(u):
         u = u.replace(inert, active)
     return u
 
-def ExpandTrig(*args):
+def eager_ExpandTrig(*args):
     if len(args) == 2:
         u, x = args
-        return ActivateTrig(ExpandIntegrand(u, x))
+        return eager_ActivateTrig(eager_ExpandIntegrand(u, x))
     u, v, x = args
-    w = ExpandTrig(v, x)
-    z = ActivateTrig(u)
-    if SumQ(w):
+    w = eager_ExpandTrig(v, x)
+    z = eager_ActivateTrig(u)
+    if eager_SumQ(w):
         return w.func(*[z*i for i in w.args])
     return z*w
 
@@ -4017,7 +4017,7 @@ def SubstForTrig(u, sin_ , cos_, v, x):
     # (* SubstForTrig[u,sin,cos,v,x] returns the expression f (sin,cos,sin/cos,cos/sin,1/cos,1/sin). *)
     if AtomQ(u):
         return u
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         if u.args[0] == v or ZeroQ(u.args[0] - v):
             if SinQ(u):
                 return sin_
@@ -4030,9 +4030,9 @@ def SubstForTrig(u, sin_ , cos_, v, x):
             elif SecQ(u):
                 return 1/cos_
             return 1/sin_
-        r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v*x))), {x: v})
+        r = eager_ReplaceAll(TrigExpand(eager_Head(u)(eager_Simplify(u.args[0]/v*x))), {x: v})
         return r.func(*[SubstForTrig(i, sin_, cos_, v, x) for i in r.args])
-    if ProductQ(u) and CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+    if eager_ProductQ(u) and CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
         return sin(x)/2*SubstForTrig(Drop(u, 2), sin_, cos_, v, x)
     return u.func(*[SubstForTrig(i, sin_, cos_, v, x) for i in u.args])
 
@@ -4042,7 +4042,7 @@ def SubstForHyperbolic(u, sinh_, cosh_, v, x):
     # f (sinh,cosh,sinh/cosh,cosh/sinh,1/cosh,1/sinh). *)
     if AtomQ(u):
         return u
-    elif HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_HyperbolicQ(u) and IntegerQuotientQ(u.args[0], v):
         if u.args[0] == v or ZeroQ(u.args[0] - v):
             if SinhQ(u):
                 return sinh_
@@ -4055,13 +4055,13 @@ def SubstForHyperbolic(u, sinh_, cosh_, v, x):
             if SechQ(u):
                 return 1/cosh_
             return 1/sinh_
-        r = ReplaceAll(TrigExpand(Head(u)(Simplify(u.args[0]/v)*x)), {x: v})
+        r = eager_ReplaceAll(TrigExpand(eager_Head(u)(eager_Simplify(u.args[0]/v)*x)), {x: v})
         return r.func(*[SubstForHyperbolic(i, sinh_, cosh_, v, x) for i in r.args])
-    elif ProductQ(u) and CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
+    elif eager_ProductQ(u) and CoshQ(u.args[0]) and SinhQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
         return sinh(x)/2*SubstForHyperbolic(Drop(u, 2), sinh_, cosh_, v, x)
     return u.func(*[SubstForHyperbolic(i, sinh_, cosh_, v, x) for i in u.args])
 
-def InertTrigFreeQ(u):
+def eager_InertTrigFreeQ(u):
     # True when u contains no *inert* trig functions.  Active SymPy sin/cos/...
     # are not inert, so an ordinary trig integrand is inert-trig-free — which is
     # why the inert-trig fallback rules (guarded by Not(InertTrigFreeQ)) must NOT
@@ -4072,7 +4072,7 @@ def InertTrigFreeQ(u):
 def LCM(a, b):
     return lcm(a, b)
 
-def SubstForFractionalPowerOfLinear(u, x):
+def eager_SubstForFractionalPowerOfLinear(u, x):
     # (* If u has a subexpression of the form (a+b*x)^(m/n) where m and n>1 are integers,
     # SubstForFractionalPowerOfLinear[u,x] returns the list {v,n,a+b*x,1/b} where v is u
     # with subexpressions of the form (a+b*x)^(m/n) replaced by x^m and x replaced
@@ -4081,10 +4081,10 @@ def SubstForFractionalPowerOfLinear(u, x):
     if AtomQ(lst) or FalseQ(lst[1]):
         return False
     n = lst[0]
-    a = Coefficient(lst[1], x, 0)
-    b = Coefficient(lst[1], x, 1)
-    tmp = Simplify(x**(n-1)*SubstForFractionalPower(u, lst[1], n, -a/b + x**n/b, x))
-    return [NonfreeFactors(tmp, x), n, lst[1], FreeFactors(tmp, x)/b]
+    a = eager_Coefficient(lst[1], x, 0)
+    b = eager_Coefficient(lst[1], x, 1)
+    tmp = eager_Simplify(x**(n-1)*SubstForFractionalPower(u, lst[1], n, -a/b + x**n/b, x))
+    return [eager_NonfreeFactors(tmp, x), n, lst[1], eager_FreeFactors(tmp, x)/b]
 
 def FractionalPowerOfLinear(u, n, v, x):
     # If u has a subexpression of the form (a + b*x)**(m/n), FractionalPowerOfLinear(u, 1, False, x) returns [n, a + b*x], else it returns False.
@@ -4092,9 +4092,9 @@ def FractionalPowerOfLinear(u, n, v, x):
         return [n, v]
     elif CalculusQ(u):
         return False
-    elif FractionalPowerQ(u):
-        if LinearQ(u.base, x) and (FalseQ(v) or ZeroQ(u.base - v)):
-            return [LCM(Denominator(u.exp), n), u.base]
+    elif eager_FractionalPowerQ(u):
+        if eager_LinearQ(u.base, x) and (FalseQ(v) or ZeroQ(u.base - v)):
+            return [LCM(eager_Denominator(u.exp), n), u.base]
     lst = [n, v]
     for i in u.args:
         lst = FractionalPowerOfLinear(i, lst[0], lst[1], x)
@@ -4107,26 +4107,26 @@ def InverseFunctionOfLinear(u, x):
     # InverseFunctionOfLinear[u,x] returns g[a+b*x]; else it returns False. *)
     if AtomQ(u) or CalculusQ(u) or FreeQ(u, x):
         return False
-    elif InverseFunctionQ(u) and LinearQ(u.args[0], x):
+    elif eager_InverseFunctionQ(u) and eager_LinearQ(u.args[0], x):
         return u
     for i in u.args:
         tmp = InverseFunctionOfLinear(i, x)
-        if Not(AtomQ(tmp)):
+        if eager_Not(AtomQ(tmp)):
             return tmp
     return False
 
-def InertTrigQ(*args):
+def eager_InertTrigQ(*args):
     if len(args) == 1:
         f = args[0]
-        return Head(f) in _INERT_TRIG_HEADS
+        return eager_Head(f) in _INERT_TRIG_HEADS
     elif len(args) == 2:
         f, g = args
         if f == g:
-            return InertTrigQ(f)
+            return eager_InertTrigQ(f)
         return InertReciprocalQ(f, g) or InertReciprocalQ(g, f)
     else:
         f, g, h = args
-        return InertTrigQ(g, f) and InertTrigQ(g, h)
+        return eager_InertTrigQ(g, f) and eager_InertTrigQ(g, h)
 
 def InertReciprocalQ(f, g):
     return ((f.func is InertSin and g.func is InertCsc) or
@@ -4137,7 +4137,7 @@ _ACTIVE_TRIG_HEADS = [sin, cos, tan, cot, sec, csc,
                       sinh, cosh, tanh, coth, sech, csch]
 
 
-def DeactivateTrig(u, x):
+def eager_DeactivateTrig(u, x):
     # (* u is a function of trig functions of a linear function of x. *)
     # (* DeactivateTrig[u,x] returns u with the trig functions replaced with inert trig functions. *)
     # DeactivateTrig[(c+d x)^m (a+b trig[e+f x])^n, x] := (c+d x)^m (a+b DeactivateTrig[trig[e+f x],x])^n
@@ -4148,8 +4148,8 @@ def DeactivateTrig(u, x):
         m_ = Wild('m', exclude=[x]); n_ = Wild('n', exclude=[x])
         for TR in _ACTIVE_TRIG_HEADS:
             M = u.match((c_ + d_*x)**m_ * (a_ + b_*TR(e_ + f_*x))**n_)
-            if M is not None and M.get(d_) is not None and not EqQ(M[d_], 0):
-                inner = DeactivateTrig(TR(M[e_] + M[f_]*x), x)
+            if M is not None and M.get(d_) is not None and not eager_EqQ(M[d_], 0):
+                inner = eager_DeactivateTrig(TR(M[e_] + M[f_]*x), x)
                 return (M[c_] + M[d_]*x)**M[m_] * (M[a_] + M[b_]*inner)**M[n_]
     return UnifyInertTrigFunction(FixInertTrigFunction(DeactivateTrigAux(u, x), x), x)
 
@@ -4200,7 +4200,7 @@ def FixInertTrigFunction(u, x):
     for fa, fr in [(sec_, cos_), (csc_, sin_)]:
         if has(fa):
             M = _umatch(u, fa(v_)**m_ * fa(w_)**n_)
-            if M is not None and M[v_] != M[w_] and IntegersQ(M[m_], M[n_]):
+            if M is not None and M[v_] != M[w_] and eager_IntegersQ(M[m_], M[n_]):
                 return fr(M[v_])**(-M[m_]) * fr(M[w_])**(-M[n_])
 
     # u*TRIG[v]^m*(a+b*TRIG2[w])^n -> (ratio)^m * Fix(u*(a+b*TRIG2[w])^n)
@@ -4355,22 +4355,22 @@ def UnifyInertTrigFunction(u, x):
     # 1.1.2 (g sin)^p (a+b cos)^m   [a required]
     if has(sin_) and has(cos_):
         M = _umatch(u, (g_*sin_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[g_]*cos_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
     # 1.1.2 (g csc)^p (a+b cos)^m   [a required]
     if has(csc_) and has(cos_):
         M = _umatch(u, (g_*csc_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[g_]*sec_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
     # 1.1.3 (g cot)^p (a+b cos)^m   [a required]  (If[True] -> first branch)
     if has(cot_) and has(cos_):
         M = _umatch(u, (g_*cot_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (-M[g_]*tan_(am(M)))**M[p_] * (M[a_] - M[b_]*sin_(am(M)))**M[m_]
     # 1.1.3 (g tan)^p (a+b cos)^m   [a required]
     if has(tan_) and has(cos_):
         M = _umatch(u, (g_*tan_(e_ + f_*x))**p_ * (a_ + b_*cos_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (-M[g_]*cot_(ap(M)))**M[p_] * (M[a_] + M[b_]*sin_(ap(M)))**M[m_]
     # 1.2.1 (a+b cos)^m (c+d cos)^n
     if has(cos_):
@@ -4442,19 +4442,19 @@ def UnifyInertTrigFunction(u, x):
     # 1.7 (a+b (c cos)^n)^p   [single]
     if has(cos_) and not_mul:
         M = _umatch(u, (a_ + b_*(c_*cos_(e_ + f_*x))**n_)**p_)
-        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+        if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
             return (M[a_] + M[b_]*(M[c_]*sin_(ap(M)))**M[n_])**M[p_]
     # 1.7 (d TRIG)^m (a+b (c cos)^n)^p
     for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
                              (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
         if has(ftrig) and has(cos_):
             M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*cos_(e_ + f_*x))**n_)**p_)
-            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+            if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
                 return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(M[c_]*sin_(ap(M)))**M[n_])**M[p_]
     # 1.7 (a+b cos^n)^m (A+B cos^n)
     if has(cos_):
         M = _umatch(u, (a_ + b_*cos_(e_ + f_*x)**n_)**m_ * (A_ + B_*cos_(e_ + f_*x)**n_))
-        if M is not None and M[B_] != 0 and not (EqQ(M[a_], 0) and IntegerQ(M[m_])):
+        if M is not None and M[B_] != 0 and not (eager_EqQ(M[a_], 0) and IntegerQ(M[m_])):
             return (M[a_] + M[b_]*sin_(ap(M))**M[n_])**M[m_] * (M[A_] + M[B_]*sin_(ap(M))**M[n_])
 
     # ================= Cotangent to tangent =================
@@ -4486,22 +4486,22 @@ def UnifyInertTrigFunction(u, x):
     # 2.1.2 (d csc)^m (a+b cot)^n   [a required]
     if has(csc_) and has(cot_):
         M = _umatch(u, (d_*csc_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[d_]*sec_(am(M)))**M[m_] * (M[a_] - M[b_]*tan_(am(M)))**M[n_]
     # 2.1.2 (d sin)^m (a+b cot)^n   [a required]
     if has(sin_) and has(cot_):
         M = _umatch(u, (d_*sin_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[d_]*cos_(am(M)))**M[m_] * (M[a_] - M[b_]*tan_(am(M)))**M[n_]
     # 2.1.3 (d cos)^m (a+b cot)^n   [a required]
     if has(cos_) and has(cot_):
         M = _umatch(u, (d_*cos_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[d_]*sin_(ap(M)))**M[m_] * (M[a_] - M[b_]*tan_(ap(M)))**M[n_]
     # 2.1.3 (d sec)^m (a+b cot)^n   [a required]
     if has(sec_) and has(cot_):
         M = _umatch(u, (d_*sec_(e_ + f_*x))**m_ * (a_ + b_*cot_(e_ + f_*x))**n_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[d_]*csc_(ap(M)))**M[m_] * (M[a_] - M[b_]*tan_(ap(M)))**M[n_]
     # 2.2.1 (a+b cot)^m (c+d cot)^n
     if has(cot_):
@@ -4546,14 +4546,14 @@ def UnifyInertTrigFunction(u, x):
     # 2.7 (a+b (c cot)^n)^p   [single]
     if has(cot_) and not_mul:
         M = _umatch(u, (a_ + b_*(c_*cot_(e_ + f_*x))**n_)**p_)
-        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+        if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
             return (M[a_] + M[b_]*(-M[c_]*tan_(ap(M)))**M[n_])**M[p_]
     # 2.7 (d TRIG)^m (a+b (c cot)^n)^p
     for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
                              (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
         if has(ftrig) and has(cot_):
             M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*cot_(e_ + f_*x))**n_)**p_)
-            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+            if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
                 return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(-M[c_]*tan_(ap(M)))**M[n_])**M[p_]
 
     # ================= Cosecant to secant =================
@@ -4565,22 +4565,22 @@ def UnifyInertTrigFunction(u, x):
     # 3.1.2 (g sec)^p (a+b sec)^m   [a required]
     if has(sec_):
         M = _umatch(u, (g_*sec_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[g_]*csc_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_]
     # 3.1.3 (g sin)^p (a+b sec)^m   [a required]
     if has(sin_) and has(sec_):
         M = _umatch(u, (g_*sin_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[g_]*cos_(am(M)))**M[p_] * (M[a_] - M[b_]*csc_(am(M)))**M[m_]
     # 3.1.3 (g csc)^p (a+b sec)^m   [a required]
     if has(csc_) and has(sec_):
         M = _umatch(u, (g_*csc_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (M[g_]*sec_(am(M)))**M[p_] * (M[a_] - M[b_]*csc_(am(M)))**M[m_]
     # 3.1.4 (g tan)^p (a+b sec)^m   [a required]
     if has(tan_) and has(sec_):
         M = _umatch(u, (g_*tan_(e_ + f_*x))**p_ * (a_ + b_*sec_(e_ + f_*x))**m_)
-        if M is not None and not EqQ(M[a_], 0):
+        if M is not None and not eager_EqQ(M[a_], 0):
             return (-M[g_]*cot_(ap(M)))**M[p_] * (M[a_] + M[b_]*csc_(ap(M)))**M[m_]
     # 3.2.1 (a+b sec)^m (c+d sec)^n
     if has(sec_):
@@ -4630,15 +4630,15 @@ def UnifyInertTrigFunction(u, x):
     # 3.7 (a+b (c csc)^n)^p   [single]
     if has(csc_) and not_mul:
         M = _umatch(u, (a_ + b_*(c_*csc_(e_ + f_*x))**n_)**p_)
-        if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
+        if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
             return (M[a_] + M[b_]*(-M[c_]*sec_(ap(M)))**M[n_])**M[p_]
     # 3.7 (d TRIG)^m (a+b (c csc)^n)^p
     for ftrig, fres, sgn in [(cos_, sin_, 1), (sin_, cos_, -1), (cot_, tan_, -1),
                              (tan_, cot_, -1), (csc_, sec_, -1), (sec_, csc_, 1)]:
         if has(ftrig) and has(csc_):
             M = _umatch(u, (d_*ftrig(e_ + f_*x))**m_ * (a_ + b_*(c_*csc_(e_ + f_*x))**n_)**p_)
-            if M is not None and not (EqQ(M[a_], 0) and IntegerQ(M[p_])):
-                if ftrig is csc_ and (EqQ(M[n_], 2) and EqQ(M[p_], 1)):
+            if M is not None and not (eager_EqQ(M[a_], 0) and IntegerQ(M[p_])):
+                if ftrig is csc_ and (eager_EqQ(M[n_], 2) and eager_EqQ(M[p_], 1)):
                     continue
                 return (sgn*M[d_]*fres(ap(M)))**M[m_] * (M[a_] + M[b_]*(-M[c_]*sec_(ap(M)))**M[n_])**M[p_]
 
@@ -4650,8 +4650,8 @@ def DeactivateTrigAux(u, x):
     # corresponding *inert* trig markers (see ActivateTrig / InertSin ...).
     if AtomQ(u):
         return u
-    elif TrigQ(u) and LinearQ(u.args[0], x):
-        v = ExpandToSum(u.args[0], x)
+    elif eager_TrigQ(u) and eager_LinearQ(u.args[0], x):
+        v = eager_ExpandToSum(u.args[0], x)
         if SinQ(u):
             return InertSin(v)
         elif CosQ(u):
@@ -4663,8 +4663,8 @@ def DeactivateTrigAux(u, x):
         elif SecQ(u):
             return InertSec(v)
         return InertCsc(v)
-    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
-        v = ExpandToSum(I*u.args[0], x)
+    elif eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
+        v = eager_ExpandToSum(I*u.args[0], x)
         if SinhQ(u):
             return -I*InertSin(v)
         elif CoshQ(u):
@@ -4703,15 +4703,15 @@ def PowerOfInertTrigSumQ(u, func, x):
             return True
     return False
 
-def PiecewiseLinearQ(*args):
+def eager_PiecewiseLinearQ(*args):
     # (* If the derivative of u wrt x is a constant wrt x, PiecewiseLinearQ[u,x] returns True;
     # else it returns False. *)
     if len(args) == 3:
         u, v, x = args
-        return PiecewiseLinearQ(u, x) and PiecewiseLinearQ(v, x)
+        return eager_PiecewiseLinearQ(u, x) and eager_PiecewiseLinearQ(v, x)
 
     u, x = args
-    if LinearQ(u, x):
+    if eager_LinearQ(u, x):
         return True
 
     c_ = Wild('c', exclude=[x])
@@ -4720,13 +4720,13 @@ def PiecewiseLinearQ(*args):
     match = u.match(Log(c_*F_**v_))
     if match:
         if len(match) == 3:
-            if LinearQ(match[v_], x):
+            if eager_LinearQ(match[v_], x):
                 return True
     try:
         F = type(u)
         G = type(u.args[0])
         v = u.args[0].args[0]
-        if LinearQ(v, x):
+        if eager_LinearQ(v, x):
             if MemberQ([[atanh, tanh], [atanh, coth], [acoth, coth], [acoth, tanh], [atan, tan], [atan, cot], [acot, cot], [acot, tan]], [F, G]):
                 return True
     except:
@@ -4747,54 +4747,54 @@ def KnownTrigIntegrandQ(lst, u, x):
     match = u.match((a_ + b_*func_)**m_)
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     match = u.match((a_ + b_*func_)**m_*(A_ + B_*func_))
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     match = u.match(A_ + C_*func_**2)
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     match = u.match(A_ + B_*func_ + C_*func_**2)
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     match = u.match((a_ + b_*func_)**m_*(A_ + C_*func_**2))
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     match = u.match((a_ + b_*func_)**m_*(A_ + B_*func_ + C_*func_**2))
     if match:
         func = match[func_]
-        if LinearQ(func.args[0], x) and MemberQ(lst, func.func):
+        if eager_LinearQ(func.args[0], x) and MemberQ(lst, func.func):
             return True
 
     return False
 
-def KnownSineIntegrandQ(u, x):
+def eager_KnownSineIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sin, cos], u, x)
 
-def KnownTangentIntegrandQ(u, x):
+def eager_KnownTangentIntegrandQ(u, x):
     return KnownTrigIntegrandQ([tan], u, x)
 
-def KnownCotangentIntegrandQ(u, x):
+def eager_KnownCotangentIntegrandQ(u, x):
     return KnownTrigIntegrandQ([cot], u, x)
 
-def KnownSecantIntegrandQ(u, x):
+def eager_KnownSecantIntegrandQ(u, x):
     return KnownTrigIntegrandQ([sec, csc], u, x)
 
-def TryPureTanSubst(u, x):
+def eager_TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
     b_ = Wild('b', exclude=[x])
     c_ = Wild('c', exclude=[x])
@@ -4808,7 +4808,7 @@ def TryPureTanSubst(u, x):
                 if len(match) == 4:
                     G = match[G_]
                     if MemberQ([tan, cot, tanh, coth], G.func):
-                        if LinearQ(G.args[0], x):
+                        if eager_LinearQ(G.args[0], x):
                             return True
     except:
         pass
@@ -4816,9 +4816,9 @@ def TryPureTanSubst(u, x):
     return False
 
 def TryTanhSubst(u, x):
-    if LogQ(u):
+    if eager_LogQ(u):
         return False
-    elif not FalseQ(FunctionOfLinear(u, x)):
+    elif not FalseQ(eager_FunctionOfLinear(u, x)):
         return False
 
     a_ = Wild('a', exclude=[x])
@@ -4845,17 +4845,17 @@ def TryTanhSubst(u, x):
         if len(match) == 2:
             f, g = match[f_], match[g_]
             if SinhCoshQ(f) and SinhCoshQ(g):
-                if IntegersQ(f.args[0]/x, g.args[0]/x):
+                if eager_IntegersQ(f.args[0]/x, g.args[0]/x):
                     return False
 
     match = u.match(r_*(a_*s_**m_)**p_)
     if match:
         if len(match) == 5:
             r, a, s, m, p = [match[i] for i in [r_, a_, s_, m_, p_]]
-            if Not(m==2 and (s == Sech(x) or s == Csch(x))):
+            if eager_Not(m==2 and (s == Sech(x) or s == Csch(x))):
                 return False
 
-    if u != ExpandIntegrand(u, x):
+    if u != eager_ExpandIntegrand(u, x):
         return False
 
     return True
@@ -4878,7 +4878,7 @@ def TryPureTanhSubst(u, x):
         return False
 
     try:
-        if u != ExpandIntegrand(u, x):
+        if u != eager_ExpandIntegrand(u, x):
             return False
     except (ValueError, TypeError, AttributeError):
         pass
@@ -4888,9 +4888,9 @@ def TryPureTanhSubst(u, x):
 def AbsurdNumberGCD(*seq):
     # (* m, n, ... must be absurd numbers.  AbsurdNumberGCD[m,n,...] returns the gcd of m, n, ... *)
     lst = list(seq)
-    if Length(lst) == 1:
-        return First(lst)
-    return AbsurdNumberGCDList(FactorAbsurdNumber(First(lst)), FactorAbsurdNumber(AbsurdNumberGCD(*Rest(lst))))
+    if eager_Length(lst) == 1:
+        return eager_First(lst)
+    return AbsurdNumberGCDList(FactorAbsurdNumber(eager_First(lst)), FactorAbsurdNumber(AbsurdNumberGCD(*eager_Rest(lst))))
 
 def AbsurdNumberGCDList(lst1, lst2):
     # (* lst1 and lst2 must be absurd number prime factorization lists. *)
@@ -4901,19 +4901,19 @@ def AbsurdNumberGCDList(lst1, lst2):
         return Mul(*[i[0]**Min(i[1],0) for i in lst1])
     elif lst1[0][0] == lst2[0][0]:
         if lst1[0][1] <= lst2[0][1]:
-            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
-        return lst1[0][0]**lst2[0][1]*AbsurdNumberGCDList(Rest(lst1), Rest(lst2))
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(eager_Rest(lst1), eager_Rest(lst2))
+        return lst1[0][0]**lst2[0][1]*AbsurdNumberGCDList(eager_Rest(lst1), eager_Rest(lst2))
     elif lst1[0][0] < lst2[0][0]:
         if lst1[0][1] < 0:
-            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(Rest(lst1), lst2)
-        return AbsurdNumberGCDList(Rest(lst1), lst2)
+            return lst1[0][0]**lst1[0][1]*AbsurdNumberGCDList(eager_Rest(lst1), lst2)
+        return AbsurdNumberGCDList(eager_Rest(lst1), lst2)
     elif lst2[0][1] < 0:
-        return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, Rest(lst2))
-    return AbsurdNumberGCDList(lst1, Rest(lst2))
+        return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, eager_Rest(lst2))
+    return AbsurdNumberGCDList(lst1, eager_Rest(lst2))
 
 def ExpandTrigExpand(u, F, v, m, n, x):
     w = Expand(TrigExpand(F.xreplace({x: n*x}))**m).xreplace({x: v})
-    if SumQ(w):
+    if eager_SumQ(w):
         t = 0
         for i in w.args:
             t += u*i
@@ -4921,13 +4921,13 @@ def ExpandTrigExpand(u, F, v, m, n, x):
     else:
         return u*w
 
-def ExpandTrigReduce(*args):
+def eager_ExpandTrigReduce(*args):
     if len(args) == 3:
         u = args[0]
         v = args[1]
         x = args[2]
-        w = ExpandTrigReduce(v, x)
-        if SumQ(w):
+        w = eager_ExpandTrigReduce(v, x)
+        if eager_SumQ(w):
             t = 0
             for i in w.args:
                 t += u*i
@@ -4941,7 +4941,7 @@ def ExpandTrigReduce(*args):
 
 def ExpandTrigReduceAux(u, x):
     v = TrigReduce(u).expand()
-    if SumQ(v):
+    if eager_SumQ(v):
         t = 0
         for i in v.args:
             t += NormalizeTrig(i, x)
@@ -4954,9 +4954,9 @@ def NormalizeTrig(v, x):
     F = Wild('F')
     expr = a*F**n
     M = v.match(expr)
-    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and Exponent(M[F].args[0], x) > 0:
+    if M and len(M[F].args) == 1 and PolynomialQ(M[F].args[0], x) and eager_Exponent(M[F].args[0], x) > 0:
         u = M[F].args[0]
-        return M[a]*M[F].xreplace({u: ExpandToSum(u, x)})**M[n]
+        return M[a]*M[F].xreplace({u: eager_ExpandToSum(u, x)})**M[n]
     else:
         return v
 #=================================
@@ -4964,22 +4964,22 @@ def TrigToExp(expr):
     ex = expr.rewrite(sin, sym_exp).rewrite(cos, sym_exp).rewrite(tan, sym_exp).rewrite(sec, sym_exp).rewrite(csc, sym_exp).rewrite(cot, sym_exp)
     return ex
 
-def ExpandTrigToExp(u, *args):
+def eager_ExpandTrigToExp(u, *args):
     if len(args) == 1:
         x = args[0]
-        return ExpandTrigToExp(1, u, x)
+        return eager_ExpandTrigToExp(1, u, x)
     else:
         v = args[0]
         x = args[1]
         w = TrigToExp(v)
         k = 0
-        if SumQ(w):
+        if eager_SumQ(w):
             for i in w.args:
-                k += SimplifyIntegrand(u*i, x)
+                k += eager_SimplifyIntegrand(u*i, x)
             w = k
         else:
-            w = SimplifyIntegrand(u*w, x)
-        return ExpandIntegrand(FreeFactors(w, x), NonfreeFactors(w, x),x)
+            w = eager_SimplifyIntegrand(u*w, x)
+        return eager_ExpandIntegrand(eager_FreeFactors(w, x), eager_NonfreeFactors(w, x),x)
 #======================================
 def TrigReduce(i):
     """
@@ -4999,13 +4999,13 @@ def TrigReduce(i):
     sin(x) + cos(2*x)/2 + 1/2
 
     """
-    if SumQ(i):
+    if eager_SumQ(i):
         t = 0
         for k in i.args:
             t += TrigReduce(k)
         return t
-    if ProductQ(i):
-        if any(PowerQ(k) for k in i.args):
+    if eager_ProductQ(i):
+        if any(eager_PowerQ(k) for k in i.args):
             if (i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
                 return i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
             else:
@@ -5051,7 +5051,7 @@ def TrigReduce(i):
                 v = Match[v]
                 return i.subs(v*cosh(a)*cosh(b), v*S(1)/2*cosh(a + b) + cosh(a - b))
 
-    if PowerQ(i):
+    if eager_PowerQ(i):
         if i.has(sin, sinh):
             if (i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
                 return i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
@@ -5064,12 +5064,12 @@ def TrigReduce(i):
                 return i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos)
     return i
 
-def FunctionOfTrig(u, *args):
+def eager_FunctionOfTrig(u, *args):
     # If u is a function of trig functions of v where v is a linear function of x,
     # FunctionOfTrig[u,x] returns v; else it returns False.
     if len(args) == 1:
         x = args[0]
-        v = FunctionOfTrig(u, None, x)
+        v = eager_FunctionOfTrig(u, None, x)
         if v:
             return v
         else:
@@ -5081,27 +5081,27 @@ def FunctionOfTrig(u, *args):
                 return False
             else:
                 return v
-        if TrigQ(u) and LinearQ(u.args[0], x):
+        if eager_TrigQ(u) and eager_LinearQ(u.args[0], x):
             if v is None:
                 return u.args[0]
             else:
-                a = Coefficient(v, x, 0)
-                b = Coefficient(v, x, 1)
-                c = Coefficient(u.args[0], x, 0)
-                d = Coefficient(u.args[0], x, 1)
-                if ZeroQ(a*d - b*c) and RationalQ(b/d):
-                    return a/Numerator(b/d) + b*x/Numerator(b/d)
+                a = eager_Coefficient(v, x, 0)
+                b = eager_Coefficient(v, x, 1)
+                c = eager_Coefficient(u.args[0], x, 0)
+                d = eager_Coefficient(u.args[0], x, 1)
+                if ZeroQ(a*d - b*c) and eager_RationalQ(b/d):
+                    return a/eager_Numerator(b/d) + b*x/eager_Numerator(b/d)
                 else:
                     return False
-        if HyperbolicQ(u) and LinearQ(u.args[0], x):
+        if eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
             if v is None:
                 return I*u.args[0]
-            a = Coefficient(v, x, 0)
-            b = Coefficient(v, x, 1)
-            c = I*Coefficient(u.args[0], x, 0)
-            d = I*Coefficient(u.args[0], x, 1)
-            if ZeroQ(a*d - b*c) and RationalQ(b/d):
-                return a/Numerator(b/d) + b*x/Numerator(b/d)
+            a = eager_Coefficient(v, x, 0)
+            b = eager_Coefficient(v, x, 1)
+            c = I*eager_Coefficient(u.args[0], x, 0)
+            d = I*eager_Coefficient(u.args[0], x, 1)
+            if ZeroQ(a*d - b*c) and eager_RationalQ(b/d):
+                return a/eager_Numerator(b/d) + b*x/eager_Numerator(b/d)
             else:
                 return False
         if CalculusQ(u):
@@ -5109,7 +5109,7 @@ def FunctionOfTrig(u, *args):
         else:
             w = v
             for i in u.args:
-                w = FunctionOfTrig(i, w, x)
+                w = eager_FunctionOfTrig(i, w, x)
                 if FalseQ(w):
                     return False
             return w
@@ -5118,14 +5118,14 @@ def AlgebraicTrigFunctionQ(u, x):
     # If u is algebraic function of trig functions, AlgebraicTrigFunctionQ(u,x) returns True; else it returns False.
     if AtomQ(u):
         return True
-    elif TrigQ(u) and LinearQ(u.args[0], x):
+    elif eager_TrigQ(u) and eager_LinearQ(u.args[0], x):
         return True
-    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
+    elif eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
         return True
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if FreeQ(u.exp, x):
             return AlgebraicTrigFunctionQ(u.base, x)
-    elif ProductQ(u) or SumQ(u):
+    elif eager_ProductQ(u) or eager_SumQ(u):
         for i in u.args:
             if not AlgebraicTrigFunctionQ(i, x):
                 return False
@@ -5150,15 +5150,15 @@ def FunctionOfHyperbolic(u, *x):
             if u == x:
                 return False
             return v
-        if HyperbolicQ(u) and LinearQ(u.args[0], x):
+        if eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
             if v is None:
                 return u.args[0]
-            a = Coefficient(v, x, 0)
-            b = Coefficient(v, x, 1)
-            c = Coefficient(u.args[0], x, 0)
-            d = Coefficient(u.args[0], x, 1)
-            if ZeroQ(a*d - b*c) and RationalQ(b/d):
-                return a/Numerator(b/d) + b*x/Numerator(b/d)
+            a = eager_Coefficient(v, x, 0)
+            b = eager_Coefficient(v, x, 1)
+            c = eager_Coefficient(u.args[0], x, 0)
+            d = eager_Coefficient(u.args[0], x, 1)
+            if ZeroQ(a*d - b*c) and eager_RationalQ(b/d):
+                return a/eager_Numerator(b/d) + b*x/eager_Numerator(b/d)
             else:
                 return False
         if CalculusQ(u):
@@ -5169,14 +5169,14 @@ def FunctionOfHyperbolic(u, *x):
                 return False
         return w
 
-def FunctionOfQ(v, u, x, PureFlag=False):
+def eager_FunctionOfQ(v, u, x, PureFlag=False):
     # v is a function of x. If u is a function of v,  FunctionOfQ(v, u, x) returns True; else it returns False. *)
     if FreeQ(u, x):
         return False
     elif AtomQ(v):
         return True
-    elif ProductQ(v) and Not(EqQ(FreeFactors(v, x), 1)):
-        return FunctionOfQ(NonfreeFactors(v, x), u, x, PureFlag)
+    elif eager_ProductQ(v) and eager_Not(eager_EqQ(eager_FreeFactors(v, x), 1)):
+        return eager_FunctionOfQ(eager_NonfreeFactors(v, x), u, x, PureFlag)
     elif PureFlag:
         if SinQ(v) or CscQ(v):
             return PureFunctionOfSinQ(u, v.args[0], x)
@@ -5222,33 +5222,33 @@ def FunctionOfExpnQ(u, v, x):
             return 0
     if CalculusQ(u):
         return False
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.exp, x):
             if ZeroQ(u.base - v):
                 if IntegerQ(u.exp):
                     return u.exp
                 else:
                     return 1
-            if PowerQ(v):
+            if eager_PowerQ(v):
                 if FreeQ(v.exp, x) and ZeroQ(u.base-v.base):
-                    if RationalQ(v.exp):
-                        if RationalQ(u.exp) and IntegerQ(u.exp/v.exp) and (v.exp>0 or u.exp<0):
+                    if eager_RationalQ(v.exp):
+                        if eager_RationalQ(u.exp) and IntegerQ(u.exp/v.exp) and (v.exp>0 or u.exp<0):
                             return u.exp/v.exp
                         else:
                             return False
-                    if IntegerQ(Simplify(u.exp/v.exp)):
-                        return Simplify(u.exp/v.exp)
+                    if IntegerQ(eager_Simplify(u.exp/v.exp)):
+                        return eager_Simplify(u.exp/v.exp)
                     else:
                         return False
             return FunctionOfExpnQ(u.base, v, x)
-    if ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
-        return FunctionOfExpnQ(NonfreeFactors(u, x), v, x)
-    if ProductQ(u) and ProductQ(v):
-        deg1 = FunctionOfExpnQ(First(u), First(v), x)
+    if eager_ProductQ(u) and eager_Not(eager_EqQ(eager_FreeFactors(u, x), 1)):
+        return FunctionOfExpnQ(eager_NonfreeFactors(u, x), v, x)
+    if eager_ProductQ(u) and eager_ProductQ(v):
+        deg1 = FunctionOfExpnQ(eager_First(u), eager_First(v), x)
         if deg1==False:
             return False
-        deg2 = FunctionOfExpnQ(Rest(u), Rest(v), x);
-        if deg1==deg2 and FreeQ(Simplify(u/v^deg1), x):
+        deg2 = FunctionOfExpnQ(eager_Rest(u), eager_Rest(v), x);
+        if deg1==deg2 and FreeQ(eager_Simplify(u/v^deg1), x):
             return deg1
         else:
             return False
@@ -5257,7 +5257,7 @@ def FunctionOfExpnQ(u, v, x):
         if FunctionOfExpnQ(i, v, x) is False:
             return False
         lst.append(FunctionOfExpnQ(i, v, x))
-    return Apply(GCD, lst)
+    return eager_Apply(eager_GCD, lst)
 
 def PureFunctionOfSinQ(u, v, x):
     # If u is a pure function of Sin(v) and/or Csc(v), PureFunctionOfSinQ(u, v, x) returns True; else it returns False.
@@ -5265,10 +5265,10 @@ def PureFunctionOfSinQ(u, v, x):
         return u!=x
     if CalculusQ(u):
         return False
-    if TrigQ(u) and ZeroQ(u.args[0]-v):
+    if eager_TrigQ(u) and ZeroQ(u.args[0]-v):
         return SinQ(u) or CscQ(u)
     for i in u.args:
-        if Not(PureFunctionOfSinQ(i, v, x)):
+        if eager_Not(PureFunctionOfSinQ(i, v, x)):
             return False
     return True
 
@@ -5278,10 +5278,10 @@ def PureFunctionOfCosQ(u, v, x):
         return u!=x
     if CalculusQ(u):
         return False
-    if TrigQ(u) and ZeroQ(u.args[0]-v):
+    if eager_TrigQ(u) and ZeroQ(u.args[0]-v):
         return CosQ(u) or SecQ(u)
     for i in u.args:
-        if Not(PureFunctionOfCosQ(i, v, x)):
+        if eager_Not(PureFunctionOfCosQ(i, v, x)):
             return False
     return True
 
@@ -5291,10 +5291,10 @@ def PureFunctionOfTanQ(u, v, x):
         return u!=x
     if CalculusQ(u):
         return False
-    if TrigQ(u) and ZeroQ(u.args[0]-v):
+    if eager_TrigQ(u) and ZeroQ(u.args[0]-v):
         return TanQ(u) or CotQ(u)
     for i in u.args:
-        if Not(PureFunctionOfTanQ(i, v, x)):
+        if eager_Not(PureFunctionOfTanQ(i, v, x)):
             return False
     return True
 
@@ -5304,10 +5304,10 @@ def PureFunctionOfCotQ(u, v, x):
         return u!=x
     if CalculusQ(u):
         return False
-    if TrigQ(u) and ZeroQ(u.args[0]-v):
+    if eager_TrigQ(u) and ZeroQ(u.args[0]-v):
         return CotQ(u)
     for i in u.args:
-        if Not(PureFunctionOfCotQ(i, v, x)):
+        if eager_Not(PureFunctionOfCotQ(i, v, x)):
             return False
     return True
 
@@ -5317,16 +5317,16 @@ def FunctionOfCosQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         # Basis: If m integer, Cos[m*v]^n is a function of Cos[v]. *)
         return CosQ(u) or SecQ(u)
-    elif IntegerPowerQ(u):
-        if TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_IntegerPowerQ(u):
+        if eager_TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if EvenQ(u.exp):
                 # Basis: If m integer and n even, Trig[m*v]^n is a function of Cos[v]. *)
                 return True
             return FunctionOfCosQ(u.base, v, x)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         lst = FindTrigFactor(sin, csc, u, v, False)
         if ListQ(lst):
             # (* Basis: If m integer and n odd, Sin[m*v]^n == Sin[v]*u where u is a function of Cos[v]. *)
@@ -5344,19 +5344,19 @@ def FunctionOfSinQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         if OddQuotientQ(u.args[0], v):
             # Basis: If m odd, Sin[m*v]^n is a function of Sin[v].
             return SinQ(u) or CscQ(u)
         # Basis: If m even, Cos[m*v]^n is a function of Sin[v].
         return CosQ(u) or SecQ(u)
-    elif IntegerPowerQ(u):
-        if TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_IntegerPowerQ(u):
+        if eager_TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if EvenQ(u.exp):
                 # Basis: If m integer and n even, Hyper[m*v]^n is a function of Sin[v].
                 return True
             return FunctionOfSinQ(u.base, v, x)
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         if CosQ(u.args[0]) and SinQ(u.args[1]) and ZeroQ(u.args[0].args[0] - v/2) and ZeroQ(u.args[1].args[0] - v/2):
             return FunctionOfSinQ(Drop(u, 2), v, x)
         lst = FindTrigFactor(sin, csch, u, v, False)
@@ -5377,19 +5377,19 @@ def FunctionOfSinQ(u, v, x):
 def OddTrigPowerQ(u, v, x):
     if SinQ(u) or CosQ(u) or SecQ(u) or CscQ(u):
         return OddQuotientQ(u.args[0], v)
-    if PowerQ(u):
+    if eager_PowerQ(u):
         return OddQ(u.exp) and OddTrigPowerQ(u.base, v, x)
-    if ProductQ(u):
-        if not FreeFactors(u, x) == 1:
-            return OddTrigPowerQ(NonfreeFactors(u, x), v, x)
+    if eager_ProductQ(u):
+        if not eager_FreeFactors(u, x) == 1:
+            return OddTrigPowerQ(eager_NonfreeFactors(u, x), v, x)
         lst = []
         for i in u.args:
-            if Not(FunctionOfTanQ(i, v, x)):
+            if eager_Not(FunctionOfTanQ(i, v, x)):
                 lst.append(i)
         if lst == []:
             return True
-        return Length(lst)==1 and OddTrigPowerQ(lst[0], v, x)
-    if SumQ(u):
+        return eager_Length(lst)==1 and OddTrigPowerQ(lst[0], v, x)
+    if eager_SumQ(u):
         return all(OddTrigPowerQ(i, v, x) for i in u.args)
     return False
 
@@ -5400,21 +5400,21 @@ def FunctionOfTanQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         return TanQ(u) or CotQ(u) or EvenQuotientQ(u.args[0], v)
-    elif PowerQ(u):
-        if EvenQ(u.exp) and TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_PowerQ(u):
+        if EvenQ(u.exp) and eager_TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
-        elif EvenQ(u.exp) and SumQ(u.base):
+        elif EvenQ(u.exp) and eager_SumQ(u.base):
             return FunctionOfTanQ(Expand(u.base**2, v, x))
-    if ProductQ(u):
+    if eager_ProductQ(u):
         lst = []
         for i in u.args:
-            if Not(FunctionOfTanQ(i, v, x)):
+            if eager_Not(FunctionOfTanQ(i, v, x)):
                 lst.append(i)
         if lst == []:
             return True
-        return Length(lst)==2 and OddTrigPowerQ(lst[0], v, x) and OddTrigPowerQ(lst[1], v, x)
+        return eager_Length(lst)==2 and OddTrigPowerQ(lst[0], v, x) and OddTrigPowerQ(lst[1], v, x)
     return all(FunctionOfTanQ(i, v, x) for i in u.args)
 
 def FunctionOfTanWeight(u, v, x):
@@ -5425,18 +5425,18 @@ def FunctionOfTanWeight(u, v, x):
         return S(0)
     elif CalculusQ(u):
         return S(0)
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         if TanQ(u) and ZeroQ(u.args[0] - v):
             return S(1)
         elif CotQ(u) and ZeroQ(u.args[0] - v):
             return S(-1)
         return S(0)
-    elif PowerQ(u):
-        if EvenQ(u.exp) and TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
+    elif eager_PowerQ(u):
+        if EvenQ(u.exp) and eager_TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             if TanQ(u.base) or CosQ(u.base) or SecQ(u.base):
                 return S(1)
             return S(-1)
-    if ProductQ(u):
+    if eager_ProductQ(u):
         if all(FunctionOfTanQ(i, v, x) for i in u.args):
             return Add(*[FunctionOfTanWeight(i, v, x) for i in u.args])
         return S(0)
@@ -5448,7 +5448,7 @@ def FunctionOfTrigQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif TrigQ(u) and IntegerQuotientQ(u.args[0], v):
+    elif eager_TrigQ(u) and IntegerQuotientQ(u.args[0], v):
         return True
     return all(FunctionOfTrigQ(i, v, x) for i in u.args)
 
@@ -5457,7 +5457,7 @@ def FunctionOfDensePolynomialsQ(u, x):
     if FreeQ(u, x):
         return True
     if PolynomialQ(u, x):
-        return Length(ExponentList(u, x)) > 1
+        return eager_Length(ExponentList(u, x)) > 1
     return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
 def FunctionOfLog(u, *args):
@@ -5482,7 +5482,7 @@ def FunctionOfLog(u, *args):
         if CalculusQ(u):
             return False
         lst = BinomialParts(u.args[0], x)
-        if LogQ(u) and ListQ(lst) and ZeroQ(lst[0]):
+        if eager_LogQ(u) and ListQ(lst) and ZeroQ(lst[0]):
             if FalseQ(v) or u.args[0] == v:
                 return [x, u.args[0], lst[2]]
             else:
@@ -5498,7 +5498,7 @@ def FunctionOfLog(u, *args):
 
         return [u.func(*l), lst[1], lst[2]]
 
-def PowerVariableExpn(u, m, x):
+def eager_PowerVariableExpn(u, m, x):
     # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1,
     # PowerVariableExpn(u,m,x) returns the list {x**(m/g)*f((c*x)**(n/g)),g,c}; else it returns False.
     if IntegerQ(m):
@@ -5515,12 +5515,12 @@ def PowerVariableDegree(u, m, c, x):
         return [m, c]
     if AtomQ(u) or CalculusQ(u):
         return False
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.base/x, x):
             if ZeroQ(m) or m == u.exp and c == u.base/x:
                 return [u.exp, u.base/x]
-            if IntegerQ(u.exp) and IntegerQ(m) and GCD(m, u.exp)>1 and c==u.base/x:
-                return [GCD(m, u.exp), c]
+            if IntegerQ(u.exp) and IntegerQ(m) and eager_GCD(m, u.exp)>1 and c==u.base/x:
+                return [eager_GCD(m, u.exp), c]
             else:
                 return False
     lst = [m, c]
@@ -5536,22 +5536,22 @@ def PowerVariableDegree(u, m, c, x):
 def PowerVariableSubst(u, m, x):
     if FreeQ(u, x) or AtomQ(u) or CalculusQ(u):
         return u
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.base/x, x):
             return x**(u.exp/m)
-    if ProductQ(u):
+    if eager_ProductQ(u):
         l = 1
         for i in u.args:
             l *= (PowerVariableSubst(i, m, x))
         return l
-    if SumQ(u):
+    if eager_SumQ(u):
         l = 0
         for i in u.args:
             l += (PowerVariableSubst(i, m, x))
         return l
     return u
 
-def EulerIntegrandQ(expr, x):
+def eager_EulerIntegrandQ(expr, x):
     a = Wild('a', exclude=[x])
     b = Wild('b', exclude=[x])
     n = Wild('n', exclude=[x, 0])
@@ -5562,17 +5562,17 @@ def EulerIntegrandQ(expr, x):
     # Pattern 1
     M = expr.match((a*x + b*u**n)**p)
     if M:
-        if len(M) == 5 and FreeQ([M[a], M[b]], x) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+        if len(M) == 5 and FreeQ([M[a], M[b]], x) and IntegerQ(M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_Not(eager_RationalQ(M[p])) or NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x)):
             return True
     # Pattern 2
     M = expr.match(v**m*(a*x + b*u**n)**p)
     if M:
-        if len(M) == 6 and FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and IntegersQ(2*M[m], M[n] + 1/2) and QuadraticQ(M[u], x) and Not(RationalQ(M[p])) or NegativeIntegerQ(M[p]) and Not(BinomialQ(M[u], x)):
+        if len(M) == 6 and FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and eager_IntegersQ(2*M[m], M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_Not(eager_RationalQ(M[p])) or NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x)):
             return True
     # Pattern 3
     M = expr.match(u**n*v**p)
     if M:
-        if len(M) == 3 and NegativeIntegerQ(M[p]) and IntegerQ(M[n] + 1/2) and QuadraticQ(M[u], x) and QuadraticQ(M[v], x) and Not(BinomialQ(M[v], x)):
+        if len(M) == 3 and NegativeIntegerQ(M[p]) and IntegerQ(M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_QuadraticQ(M[v], x) and eager_Not(eager_BinomialQ(M[v], x)):
             return True
     else:
         return False
@@ -5588,38 +5588,38 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
         if AtomQ(tmp) or FalseQ(tmp[0]):
             return False
         tmp = tmp[0]
-        a = Coefficient(tmp, x, 0)
-        b = Coefficient(tmp, x, 1)
-        c = Coefficient(tmp, x, 2)
+        a = eager_Coefficient(tmp, x, 0)
+        b = eager_Coefficient(tmp, x, 1)
+        c = eager_Coefficient(tmp, x, 2)
         if ZeroQ(a) and ZeroQ(b) or ZeroQ(b**2-4*a*c):
             return False
-        if PosQ(c):
-            sqrt = Rt(c, S(2));
+        if eager_PosQ(c):
+            sqrt = eager_Rt(c, S(2));
             q = a*sqrt + b*x + sqrt*x**2
             r = b + 2*sqrt*x
-            return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-a+x**2)/r, x)*q/r**2), Simplify(sqrt*x + Sqrt(tmp)), 2]
-        if PosQ(a):
-            sqrt = Rt(a, S(2))
+            return [eager_Simplify(SquareRootOfQuadraticSubst(u, q/r, (-a+x**2)/r, x)*q/r**2), eager_Simplify(sqrt*x + Sqrt(tmp)), 2]
+        if eager_PosQ(a):
+            sqrt = eager_Rt(a, S(2))
             q = c*sqrt - b*x + sqrt*x**2
             r = c - x**2
-            return [Simplify(SquareRootOfQuadraticSubst(u, q/r, (-b+2*sqrt*x)/r, x)*q/r**2), Simplify((-sqrt+Sqrt(tmp))/x), 1]
-        sqrt = Rt(b**2 - 4*a*c, S(2))
+            return [eager_Simplify(SquareRootOfQuadraticSubst(u, q/r, (-b+2*sqrt*x)/r, x)*q/r**2), eager_Simplify((-sqrt+Sqrt(tmp))/x), 1]
+        sqrt = eager_Rt(b**2 - 4*a*c, S(2))
         r = c - x**2
-        return[Simplify(-sqrt*SquareRootOfQuadraticSubst(u, -sqrt*x/r, -(b*c+c*sqrt+(-b+sqrt)*x**2)/(2*c*r), x)*x/r**2), FullSimplify(2*c*Sqrt(tmp)/(b-sqrt+2*c*x)), 3]
+        return[eager_Simplify(-sqrt*SquareRootOfQuadraticSubst(u, -sqrt*x/r, -(b*c+c*sqrt+(-b+sqrt)*x**2)/(2*c*r), x)*x/r**2), eager_FullSimplify(2*c*Sqrt(tmp)/(b-sqrt+2*c*x)), 3]
     else:
         v = args[0]
         x = args[1]
         if AtomQ(u) or FreeQ(u, x):
             return [v]
-        if PowerQ(u):
+        if eager_PowerQ(u):
             if FreeQ(u.exp, x):
-                if FractionQ(u.exp) and Denominator(u.exp) == 2 and PolynomialQ(u.base, x) and Exponent(u.base, x) == 2:
+                if eager_FractionQ(u.exp) and eager_Denominator(u.exp) == 2 and PolynomialQ(u.base, x) and eager_Exponent(u.base, x) == 2:
                     if FalseQ(v) or u.base == v:
                         return [u.base]
                     else:
                         return False
                 return FunctionOfSquareRootOfQuadratic(u.base, v, x)
-        if ProductQ(u) or SumQ(u):
+        if eager_ProductQ(u) or eager_SumQ(u):
             lst = [v]
             lst1 = []
             for i in u.args:
@@ -5636,31 +5636,31 @@ def SquareRootOfQuadraticSubst(u, vv, xx, x):
         if u==x:
             return xx
         return u
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if FreeQ(u.exp, x):
-            if FractionQ(u.exp) and Denominator(u.exp)==2 and PolynomialQ(u.base, x) and Exponent(u.base, x)==2:
-                return vv**Numerator(u.exp)
+            if eager_FractionQ(u.exp) and eager_Denominator(u.exp)==2 and PolynomialQ(u.base, x) and eager_Exponent(u.base, x)==2:
+                return vv**eager_Numerator(u.exp)
             return SquareRootOfQuadraticSubst(u.base, vv, xx, x)**u.exp
-    elif SumQ(u):
+    elif eager_SumQ(u):
         t = 0
         for i in u.args:
             t += SquareRootOfQuadraticSubst(i, vv, xx, x)
         return t
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         t = 1
         for i in u.args:
             t *= SquareRootOfQuadraticSubst(i, vv, xx, x)
         return t
 
-def Divides(y, u, x):
+def eager_Divides(y, u, x):
     # If u divided by y is free of x, Divides[y,u,x] returns the quotient; else it returns False.
-    v = Simplify(u/y)
+    v = eager_Simplify(u/y)
     if FreeQ(v, x):
         return v
     else:
         return False
 
-def DerivativeDivides(y, u, x):
+def eager_DerivativeDivides(y, u, x):
     """
     If y not equal to x, y is easy to differentiate wrt x, and u divided by the derivative of y
     is free of x, DerivativeDivides[y,u,x] returns the quotient; else it returns False.
@@ -5670,7 +5670,7 @@ def DerivativeDivides(y, u, x):
 
     def f1(y, u, x):
         if PolynomialQ(y, x):
-            return PolynomialQ(u, x) and Exponent(u, x) == Exponent(y, x) - 1
+            return PolynomialQ(u, x) and eager_Exponent(u, x) == eager_Exponent(y, x) - 1
         else:
             return EasyDQ(y, x)
 
@@ -5681,11 +5681,11 @@ def DerivativeDivides(y, u, x):
         #return False
 
     elif f1(y, u, x):
-        v = D(y ,x)
-        if EqQ(v, 0):
+        v = eager_D(y ,x)
+        if eager_EqQ(v, 0):
             return False
         else:
-            v = Simplify(u/v)
+            v = eager_Simplify(u/v)
             if FreeQ(v, x):
                 return v
             else:
@@ -5701,26 +5701,26 @@ def EasyDQ(expr, x):
     M = expr.match(u*x**m)
     if M:
         return EasyDQ(M[u], x)
-    if AtomQ(expr) or FreeQ(expr, x) or Length(expr)==0:
+    if AtomQ(expr) or FreeQ(expr, x) or eager_Length(expr)==0:
         return True
     elif CalculusQ(expr):
         return False
-    elif Length(expr)==1:
+    elif eager_Length(expr)==1:
         return EasyDQ(expr.args[0], x)
-    elif BinomialQ(expr, x) or ProductOfLinearPowersQ(expr, x):
+    elif eager_BinomialQ(expr, x) or ProductOfLinearPowersQ(expr, x):
         return True
-    elif RationalFunctionQ(expr, x) and RationalFunctionExponents(expr, x)==[1, 1]:
+    elif eager_RationalFunctionQ(expr, x) and eager_RationalFunctionExponents(expr, x)==[1, 1]:
         return True
-    elif ProductQ(expr):
-        if FreeQ(First(expr), x):
-            return EasyDQ(Rest(expr), x)
-        elif FreeQ(Rest(expr), x):
-            return EasyDQ(First(expr), x)
+    elif eager_ProductQ(expr):
+        if FreeQ(eager_First(expr), x):
+            return EasyDQ(eager_Rest(expr), x)
+        elif FreeQ(eager_Rest(expr), x):
+            return EasyDQ(eager_First(expr), x)
         else:
             return False
-    elif SumQ(expr):
-        return EasyDQ(First(expr), x) and EasyDQ(Rest(expr), x)
-    elif Length(expr)==2:
+    elif eager_SumQ(expr):
+        return EasyDQ(eager_First(expr), x) and EasyDQ(eager_Rest(expr), x)
+    elif eager_Length(expr)==2:
         if FreeQ(expr.args[0], x):
             EasyDQ(expr.args[1], x)
         elif FreeQ(expr.args[1], x):
@@ -5734,9 +5734,9 @@ def ProductOfLinearPowersQ(u, x):
     v = Wild('v')
     n = Wild('n', exclude=[x])
     M = u.match(v**n)
-    return FreeQ(u, x) or M and LinearQ(M[v], x) or ProductQ(u) and ProductOfLinearPowersQ(First(u), x) and ProductOfLinearPowersQ(Rest(u), x)
+    return FreeQ(u, x) or M and eager_LinearQ(M[v], x) or eager_ProductQ(u) and ProductOfLinearPowersQ(eager_First(u), x) and ProductOfLinearPowersQ(eager_Rest(u), x)
 
-def Rt(u, n):
+def eager_Rt(u, n):
     return RtAux(TogetherSimplify(u), n)
 
 def NthRoot(u, n):
@@ -5768,97 +5768,97 @@ def NthRoot(u, n):
 
 def AtomBaseQ(u):
     # If u is an atom or an atom raised to an odd degree,  AtomBaseQ(u) returns True; else it returns False
-    return AtomQ(u) or PowerQ(u) and OddQ(u.args[1]) and AtomBaseQ(u.args[0])
+    return AtomQ(u) or eager_PowerQ(u) and OddQ(u.args[1]) and AtomBaseQ(u.args[0])
 
-def SumBaseQ(u):
+def eager_SumBaseQ(u):
     # If u is a sum or a sum raised to an odd degree,  SumBaseQ(u) returns True; else it returns False
-    return SumQ(u) or PowerQ(u) and OddQ(u.args[1]) and SumBaseQ(u.args[0])
+    return eager_SumQ(u) or eager_PowerQ(u) and OddQ(u.args[1]) and eager_SumBaseQ(u.args[0])
 
 def NegSumBaseQ(u):
     # If u is a sum or a sum raised to an odd degree whose lead term has a negative form,  NegSumBaseQ(u) returns True; else it returns False
-    return SumQ(u) and NegQ(First(u)) or PowerQ(u) and OddQ(u.args[1]) and NegSumBaseQ(u.args[0])
+    return eager_SumQ(u) and eager_NegQ(eager_First(u)) or eager_PowerQ(u) and OddQ(u.args[1]) and NegSumBaseQ(u.args[0])
 
 def AllNegTermQ(u):
     # If all terms of u have a negative form, AllNegTermQ(u) returns True; else it returns False
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if OddQ(u.exp):
             return AllNegTermQ(u.base)
-    if SumQ(u):
-        return NegQ(First(u)) and AllNegTermQ(Rest(u))
-    return NegQ(u)
+    if eager_SumQ(u):
+        return eager_NegQ(eager_First(u)) and AllNegTermQ(eager_Rest(u))
+    return eager_NegQ(u)
 
 def SomeNegTermQ(u):
     # If some term of u has a negative form,  SomeNegTermQ(u) returns True; else it returns False
-    if PowerQ(u):
+    if eager_PowerQ(u):
         if OddQ(u.exp):
             return SomeNegTermQ(u.base)
-    if SumQ(u):
-        return NegQ(First(u)) or SomeNegTermQ(Rest(u))
-    return NegQ(u)
+    if eager_SumQ(u):
+        return eager_NegQ(eager_First(u)) or SomeNegTermQ(eager_Rest(u))
+    return eager_NegQ(u)
 
 def TrigSquareQ(u):
     # If u is an expression of the form Sin(z)^2 or Cos(z)^2,  TrigSquareQ(u) returns True,  else it returns False
-    return PowerQ(u) and EqQ(u.args[1], 2) and MemberQ([sin, cos], Head(u.args[0]))
+    return eager_PowerQ(u) and eager_EqQ(u.args[1], 2) and MemberQ([sin, cos], eager_Head(u.args[0]))
 
 def RtAux(u, n):
-    if PowerQ(u):
+    if eager_PowerQ(u):
         return u.base**(u.exp/n)
-    if ComplexNumberQ(u):
+    if eager_ComplexNumberQ(u):
         a = Re(u)
         b = Im(u)
-        if Not(IntegerQ(a) and IntegerQ(b)) and IntegerQ(a/(a**2 + b**2)) and IntegerQ(b/(a**2 + b**2)):
+        if eager_Not(IntegerQ(a) and IntegerQ(b)) and IntegerQ(a/(a**2 + b**2)) and IntegerQ(b/(a**2 + b**2)):
             # Basis: a+b*I==1/(a/(a^2+b^2)-b/(a^2+b^2)*I)
             return S(1)/RtAux(a/(a**2 + b**2) - b/(a**2 + b**2)*I, n)
         else:
             return NthRoot(u, n)
-    if ProductQ(u):
-        lst = SplitProduct(PositiveQ, u)
+    if eager_ProductQ(u):
+        lst = eager_SplitProduct(PositiveQ, u)
         if ListQ(lst):
             return RtAux(lst[0], n)*RtAux(lst[1], n)
-        lst = SplitProduct(NegativeQ, u)
+        lst = eager_SplitProduct(NegativeQ, u)
         if ListQ(lst):
-            if EqQ(lst[0], -1):
+            if eager_EqQ(lst[0], -1):
                 v = lst[1]
-                if PowerQ(v):
+                if eager_PowerQ(v):
                     if NegativeQ(v.exp):
                         return 1/RtAux(-v.base**(-v.exp), n)
-                if ProductQ(v):
-                    if ListQ(SplitProduct(SumBaseQ, v)):
-                        lst = SplitProduct(AllNegTermQ, v)
+                if eager_ProductQ(v):
+                    if ListQ(eager_SplitProduct(eager_SumBaseQ, v)):
+                        lst = eager_SplitProduct(AllNegTermQ, v)
                         if ListQ(lst):
                             return RtAux(-lst[0], n)*RtAux(lst[1], n)
-                        lst = SplitProduct(NegSumBaseQ, v)
+                        lst = eager_SplitProduct(NegSumBaseQ, v)
                         if ListQ(lst):
                             return RtAux(-lst[0], n)*RtAux(lst[1], n)
-                        lst = SplitProduct(SomeNegTermQ, v)
+                        lst = eager_SplitProduct(SomeNegTermQ, v)
                         if ListQ(lst):
                             return RtAux(-lst[0], n)*RtAux(lst[1], n)
-                        lst = SplitProduct(SumBaseQ, v)
+                        lst = eager_SplitProduct(eager_SumBaseQ, v)
                         return RtAux(-lst[0], n)*RtAux(lst[1], n)
-                    lst = SplitProduct(AtomBaseQ, v)
+                    lst = eager_SplitProduct(AtomBaseQ, v)
                     if ListQ(lst):
                         return RtAux(-lst[0], n)*RtAux(lst[1], n)
                     else:
-                        return RtAux(-First(v), n)*RtAux(Rest(v), n)
+                        return RtAux(-eager_First(v), n)*RtAux(eager_Rest(v), n)
                 if OddQ(n):
                     return -RtAux(v, n)
                 else:
                     return NthRoot(u, n)
             else:
                 return RtAux(-lst[0], n)*RtAux(-lst[1], n)
-        lst = SplitProduct(AllNegTermQ, u)
-        if ListQ(lst) and ListQ(SplitProduct(SumBaseQ, lst[1])):
+        lst = eager_SplitProduct(AllNegTermQ, u)
+        if ListQ(lst) and ListQ(eager_SplitProduct(eager_SumBaseQ, lst[1])):
             return RtAux(-lst[0], n)*RtAux(-lst[1], n)
-        lst = SplitProduct(NegSumBaseQ, u)
-        if ListQ(lst) and ListQ(SplitProduct(NegSumBaseQ, lst[1])):
+        lst = eager_SplitProduct(NegSumBaseQ, u)
+        if ListQ(lst) and ListQ(eager_SplitProduct(NegSumBaseQ, lst[1])):
             return RtAux(-lst[0], n)*RtAux(-lst[1], n)
         return u.func(*[RtAux(i, n) for i in u.args])
     v = TrigSquare(u)
-    if Not(AtomQ(v)):
+    if eager_Not(AtomQ(v)):
         return RtAux(v, n)
     if OddQ(n) and NegativeQ(u):
         return -RtAux(-u, n)
-    if OddQ(n) and NegQ(u) and PosQ(-u):
+    if OddQ(n) and eager_NegQ(u) and eager_PosQ(-u):
         return -RtAux(-u, n)
     else:
         return NthRoot(u, n)
@@ -5866,14 +5866,14 @@ def RtAux(u, n):
 def TrigSquare(u):
     # If u is an expression of the form a-a*Sin(z)^2 or a-a*Cos(z)^2, TrigSquare(u) returns Cos(z)^2 or Sin(z)^2 respectively,
     # else it returns False.
-    if SumQ(u):
+    if eager_SumQ(u):
         for i in u.args:
-            v = SplitProduct(TrigSquareQ, i)
+            v = eager_SplitProduct(TrigSquareQ, i)
             if v == False or SplitSum(v, u) == False:
                 return False
-            lst = SplitSum(SplitProduct(TrigSquareQ, i))
+            lst = SplitSum(eager_SplitProduct(TrigSquareQ, i))
         if lst and ZeroQ(lst[1][2] + lst[1]):
-            if Head(lst[0][0].args[0]) == sin:
+            if eager_Head(lst[0][0].args[0]) == sin:
                 return lst[1]*cos(lst[1][1][1][1])**2
             return lst[1]*sin(lst[1][1][1][1])**2
         else:
@@ -5893,19 +5893,19 @@ def IntTerm(expr, x):
     m = Wild('m', exclude=[x, 0])
     v = Wild('v')
     M = expr.match(c/v)
-    if M and len(M) == 2 and FreeQ(M[c], x) and LinearQ(M[v], x):
-        return Simp(M[c]*Log(RemoveContent(M[v], x))/Coefficient(M[v], x, 1), x)
+    if M and len(M) == 2 and FreeQ(M[c], x) and eager_LinearQ(M[v], x):
+        return eager_Simp(M[c]*Log(RemoveContent(M[v], x))/eager_Coefficient(M[v], x, 1), x)
     M = expr.match(c*v**m)
-    if M and len(M) == 3 and NonzeroQ(M[m] + 1) and LinearQ(M[v], x):
-        return Simp(M[c]*M[v]**(M[m] + 1)/(Coefficient(M[v], x, 1)*(M[m] + 1)), x)
-    if SumQ(expr):
+    if M and len(M) == 3 and NonzeroQ(M[m] + 1) and eager_LinearQ(M[v], x):
+        return eager_Simp(M[c]*M[v]**(M[m] + 1)/(eager_Coefficient(M[v], x, 1)*(M[m] + 1)), x)
+    if eager_SumQ(expr):
         t = 0
         for i in expr.args:
             t += IntTerm(i, x)
         return t
     else:
         u = expr
-        return Dist(FreeFactors(u,x), Integral(NonfreeFactors(u, x), x), x)
+        return eager_Dist(eager_FreeFactors(u,x), Integral(eager_NonfreeFactors(u, x), x), x)
 
 def Map2(f, lst1, lst2):
     result = []
@@ -5920,7 +5920,7 @@ def ConstantFactor(u, x):
         return [u, S(1)]
     elif AtomQ(u):
         return [S(1), u]
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if FreeQ(u.exp, x):
             lst = ConstantFactor(u.base, x)
             if IntegerQ(u.exp):
@@ -5929,15 +5929,15 @@ def ConstantFactor(u, x):
             if tmp == 1:
                 return [S(1), u]
             return [tmp**u.exp, (NonpositiveFactors(lst[0])*lst[1])**u.exp]
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         lst = [ConstantFactor(i, x) for i in u.args]
-        return [Mul(*[First(i) for i in lst]), Mul(*[i[1] for i in lst])]
-    elif SumQ(u):
+        return [Mul(*[eager_First(i) for i in lst]), Mul(*[i[1] for i in lst])]
+    elif eager_SumQ(u):
         lst1 = [ConstantFactor(i, x) for i in u.args]
         if SameQ(*[i[1] for i in lst1]):
             return [Add(*[i[0] for i in lst1]), lst1[0][1]]
-        lst2 = CommonFactors([First(i) for i in lst1])
-        return [First(lst2), Add(*Map2(Mul, Rest(lst2), [i[1] for i in lst1]))]
+        lst2 = CommonFactors([eager_First(i) for i in lst1])
+        return [eager_First(lst2), Add(*Map2(Mul, eager_Rest(lst2), [i[1] for i in lst1]))]
     return [S(1), u]
 
 def SameQ(*args):
@@ -5965,23 +5965,23 @@ def CommonFactors(lst):
         if SameQ(*lst3):
             common = common*lst3[0]
             lst1 = [RemainingFactors(i) for i in lst1]
-        elif (all((LogQ(i) and IntegerQ(First(i)) and First(i) > 0) for i in lst3) and
-            all(RationalQ(i) for i in [FullSimplify(j/First(lst3)) for j in lst3])):
-            lst4 = [FullSimplify(j/First(lst3)) for j in lst3]
-            num = GCD(*lst4)
-            common = common*Log((First(lst3)[0])**num)
+        elif (all((eager_LogQ(i) and IntegerQ(eager_First(i)) and eager_First(i) > 0) for i in lst3) and
+            all(eager_RationalQ(i) for i in [eager_FullSimplify(j/eager_First(lst3)) for j in lst3])):
+            lst4 = [eager_FullSimplify(j/eager_First(lst3)) for j in lst3]
+            num = eager_GCD(*lst4)
+            common = common*Log((eager_First(lst3)[0])**num)
             lst2 = [lst2[i]*lst4[i]/num for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
         lst4 = [LeadDegree(i) for i in lst1]
-        if SameQ(*[LeadBase(i) for i in lst1]) and RationalQ(*lst4):
+        if SameQ(*[LeadBase(i) for i in lst1]) and eager_RationalQ(*lst4):
             num = Smallest(lst4)
             base = LeadBase(lst1[0])
             if num != 0:
                 common = common*base**num
             lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-        elif (Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
-            NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and FractionQ(lst4[1])):
+        elif (eager_Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
+            NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and eager_FractionQ(lst4[1])):
             num = Min(*lst4)
             base = LeadBase(lst1[1])
             if num != 0:
@@ -5989,8 +5989,8 @@ def CommonFactors(lst):
             lst2 = [lst2[0]*(-1)**lst4[0], lst2[1]]
             lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-        elif (Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
-            NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and FractionQ(lst4[0])):
+        elif (eager_Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
+            NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and eager_FractionQ(lst4[0])):
             num = Min(*lst4)
             base = LeadBase(lst1[0])
             if num != 0:
@@ -6008,7 +6008,7 @@ def CommonFactors(lst):
 def MostMainFactorPosition(lst):
     factor = S(1)
     num = 0
-    for i in range(0, Length(lst)):
+    for i in range(0, eager_Length(lst)):
         if FactorOrder(lst[i], factor) > 0:
             factor = lst[i]
             num = i
@@ -6016,7 +6016,7 @@ def MostMainFactorPosition(lst):
 
 SbaseS, SexponS = None, None
 SexponFlagS = False
-def FunctionOfExponentialQ(u, x):
+def eager_FunctionOfExponentialQ(u, x):
     # (* FunctionOfExponentialQ[u,x] returns True iff u is a function of F^v where F is a constant and v is linear in x, *)
     # (* and such an exponential explicitly occurs in u (i.e. not just implicitly in hyperbolic functions). *)
     global SbaseS, SexponS, SexponFlagS
@@ -6025,7 +6025,7 @@ def FunctionOfExponentialQ(u, x):
     res = FunctionOfExponentialTest(u, x)
     return res and SexponFlagS
 
-def FunctionOfExponential(u, x):
+def eager_FunctionOfExponential(u, x):
     global SbaseS, SexponS, SexponFlagS
     # (* u is a function of F^v where v is linear in x.  FunctionOfExponential[u,x] returns F^v. *)
     SbaseS, SexponS = None, None
@@ -6033,13 +6033,13 @@ def FunctionOfExponential(u, x):
     FunctionOfExponentialTest(u, x)
     return SbaseS**SexponS
 
-def FunctionOfExponentialFunction(u, x):
+def eager_FunctionOfExponentialFunction(u, x):
     global SbaseS, SexponS, SexponFlagS
     # (* u is a function of F^v where v is linear in x.  FunctionOfExponentialFunction[u,x] returns u with F^v replaced by x. *)
     SbaseS, SexponS = None, None
     SexponFlagS = False
     FunctionOfExponentialTest(u, x)
-    return SimplifyIntegrand(FunctionOfExponentialFunctionAux(u, x), x)
+    return eager_SimplifyIntegrand(FunctionOfExponentialFunctionAux(u, x), x)
 
 def FunctionOfExponentialFunctionAux(u, x):
     # (* u is a function of F^v where v is linear in x, and the fluid variables $base$=F and $expon$=v. *)
@@ -6047,13 +6047,13 @@ def FunctionOfExponentialFunctionAux(u, x):
     global SbaseS, SexponS, SexponFlagS
     if AtomQ(u):
         return u
-    elif PowerQ(u):
-        if FreeQ(u.base, x) and LinearQ(u.exp, x):
-            if ZeroQ(Coefficient(SexponS, x, 0)):
-                return u.base**Coefficient(u.exp, x, 0)*x**FullSimplify(Log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
-            return x**FullSimplify(Log(u.base)*Coefficient(u.exp, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
-    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
-        tmp = x**FullSimplify(Coefficient(u.args[0], x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
+    elif eager_PowerQ(u):
+        if FreeQ(u.base, x) and eager_LinearQ(u.exp, x):
+            if ZeroQ(eager_Coefficient(SexponS, x, 0)):
+                return u.base**eager_Coefficient(u.exp, x, 0)*x**eager_FullSimplify(Log(u.base)*eager_Coefficient(u.exp, x, 1)/(Log(SbaseS)*eager_Coefficient(SexponS, x, 1)))
+            return x**eager_FullSimplify(Log(u.base)*eager_Coefficient(u.exp, x, 1)/(Log(SbaseS)*eager_Coefficient(SexponS, x, 1)))
+    elif eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
+        tmp = x**eager_FullSimplify(eager_Coefficient(u.args[0], x, 1)/(Log(SbaseS)*eager_Coefficient(SexponS, x, 1)))
         if SinhQ(u):
             return tmp/2 - 1/(2*tmp)
         elif CoshQ(u):
@@ -6065,9 +6065,9 @@ def FunctionOfExponentialFunctionAux(u, x):
         elif SechQ(u):
             return 2/(tmp + 1/tmp)
         return 2/(tmp - 1/tmp)
-    if PowerQ(u):
-        if FreeQ(u.base, x) and SumQ(u.exp):
-            return FunctionOfExponentialFunctionAux(u.base**First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base**Rest(u.exp), x)
+    if eager_PowerQ(u):
+        if FreeQ(u.base, x) and eager_SumQ(u.exp):
+            return FunctionOfExponentialFunctionAux(u.base**eager_First(u.exp), x)*FunctionOfExponentialFunctionAux(u.base**eager_Rest(u.exp), x)
     return u.func(*[FunctionOfExponentialFunctionAux(i, x) for i in u.args])
 
 def FunctionOfExponentialTest(u, x):
@@ -6080,15 +6080,15 @@ def FunctionOfExponentialTest(u, x):
         return True
     elif u == x or CalculusQ(u):
         return False
-    elif PowerQ(u):
-        if FreeQ(u.base, x) and LinearQ(u.exp, x):
+    elif eager_PowerQ(u):
+        if FreeQ(u.base, x) and eager_LinearQ(u.exp, x):
             SexponFlagS = True
             return FunctionOfExponentialTestAux(u.base, u.exp, x)
-    elif HyperbolicQ(u) and LinearQ(u.args[0], x):
+    elif eager_HyperbolicQ(u) and eager_LinearQ(u.args[0], x):
         return FunctionOfExponentialTestAux(E, u.args[0], x)
-    if PowerQ(u):
-        if FreeQ(u.base, x) and SumQ(u.exp):
-            return FunctionOfExponentialTest(u.base**First(u.exp), x) and FunctionOfExponentialTest(u.base**Rest(u.exp), x)
+    if eager_PowerQ(u):
+        if FreeQ(u.base, x) and eager_SumQ(u.exp):
+            return FunctionOfExponentialTest(u.base**eager_First(u.exp), x) and FunctionOfExponentialTest(u.base**eager_Rest(u.exp), x)
     return all(FunctionOfExponentialTest(i, x) for i in u.args)
 
 def FunctionOfExponentialTestAux(base, expon, x):
@@ -6097,20 +6097,20 @@ def FunctionOfExponentialTestAux(base, expon, x):
         SbaseS = base
         SexponS = expon
         return True
-    tmp = FullSimplify(Log(base)*Coefficient(expon, x, 1)/(Log(SbaseS)*Coefficient(SexponS, x, 1)))
-    if Not(RationalQ(tmp)):
+    tmp = eager_FullSimplify(Log(base)*eager_Coefficient(expon, x, 1)/(Log(SbaseS)*eager_Coefficient(SexponS, x, 1)))
+    if eager_Not(eager_RationalQ(tmp)):
         return False
-    elif ZeroQ(Coefficient(SexponS, x, 0)) or NonzeroQ(tmp - FullSimplify(Log(base)*Coefficient(expon, x, 0)/(Log(SbaseS)*Coefficient(SexponS, x, 0)))):
+    elif ZeroQ(eager_Coefficient(SexponS, x, 0)) or NonzeroQ(tmp - eager_FullSimplify(Log(base)*eager_Coefficient(expon, x, 0)/(Log(SbaseS)*eager_Coefficient(SexponS, x, 0)))):
         if PositiveIntegerQ(base, SbaseS) and base < SbaseS:
             SbaseS = base
             SexponS = expon
             tmp = 1/tmp
-        SexponS = Coefficient(SexponS, x, 1)*x/Denominator(tmp)
-        if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
+        SexponS = eager_Coefficient(SexponS, x, 1)*x/eager_Denominator(tmp)
+        if tmp < 0 and eager_NegQ(eager_Coefficient(SexponS, x, 1)):
             SexponS = -SexponS
         return True
-    SexponS = SexponS/Denominator(tmp)
-    if tmp < 0 and NegQ(Coefficient(SexponS, x, 1)):
+    SexponS = SexponS/eager_Denominator(tmp)
+    if tmp < 0 and eager_NegQ(eager_Coefficient(SexponS, x, 1)):
         SexponS = -SexponS
     return True
 
@@ -6127,59 +6127,59 @@ def stdev(lst):
     return sd
 
 
-def If(cond, t, f):
+def eager_If(cond, t, f):
     # returns t if condition is true else f
     if cond:
         return t
     return f
 
-def IntQuadraticQ(a, b, c, d, e, m, p, x):
+def eager_IntQuadraticQ(a, b, c, d, e, m, p, x):
     # (* IntQuadraticQ[a,b,c,d,e,m,p,x] returns True iff (d+e*x)^m*(a+b*x+c*x^2)^p is integrable wrt x in terms of non-Appell functions. *)
-    return IntegerQ(p) or PositiveIntegerQ(m) or IntegersQ(2*m, 2*p) or IntegersQ(m, 4*p) or IntegersQ(m, p + S(1)/3) and (ZeroQ(c**2*d**2 - b*c*d*e + b**2*e**2 - 3*a*c*e**2) or ZeroQ(c**2*d**2 - b*c*d*e - 2*b**2*e**2 + 9*a*c*e**2))
+    return IntegerQ(p) or PositiveIntegerQ(m) or eager_IntegersQ(2*m, 2*p) or eager_IntegersQ(m, 4*p) or eager_IntegersQ(m, p + S(1)/3) and (ZeroQ(c**2*d**2 - b*c*d*e + b**2*e**2 - 3*a*c*e**2) or ZeroQ(c**2*d**2 - b*c*d*e - 2*b**2*e**2 + 9*a*c*e**2))
 
-def IntBinomialQ(*args):
+def eager_IntBinomialQ(*args):
     #(* IntBinomialQ(a,b,c,n,m,p,x) returns True iff (c*x)^m*(a+b*x^n)^p is integrable wrt x in terms of non-hypergeometric functions. *)
     if len(args) == 8:
         a, b, c, d, n, p, q, x = args
-        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or (ZeroQ(n-2) or ZeroQ(n-4)) and (IntegersQ(p,4*q) or IntegersQ(4*p,q)) or ZeroQ(n-2) and (IntegersQ(2*p,2*q) or IntegersQ(3*p,q) and ZeroQ(b*c+3*a*d) or IntegersQ(p,3*q) and ZeroQ(3*b*c+a*d))
+        return eager_IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or (ZeroQ(n-2) or ZeroQ(n-4)) and (eager_IntegersQ(p,4*q) or eager_IntegersQ(4*p,q)) or ZeroQ(n-2) and (eager_IntegersQ(2*p,2*q) or eager_IntegersQ(3*p,q) and ZeroQ(b*c+3*a*d) or eager_IntegersQ(p,3*q) and ZeroQ(3*b*c+a*d))
     elif len(args) == 7:
         a, b, c, n, m, p, x = args
-        return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
+        return IntegerQ(2*p) or IntegerQ((m+1)/n + p) or (ZeroQ(n - 2) or ZeroQ(n - 4)) and eager_IntegersQ(2*m, 4*p) or ZeroQ(n - 2) and IntegerQ(6*p) and (IntegerQ(m) or IntegerQ(m - p))
     elif len(args) == 10:
         a, b, c, d, e, m, n, p, q, x = args
-        return IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or ZeroQ(n-2) and IntegerQ(m) and IntegersQ(2*p,2*q) or ZeroQ(n-4) and (IntegersQ(m,p,2*q) or IntegersQ(m,2*p,q))
+        return eager_IntegersQ(p,q) or PositiveIntegerQ(p) or PositiveIntegerQ(q) or ZeroQ(n-2) and IntegerQ(m) and eager_IntegersQ(2*p,2*q) or ZeroQ(n-4) and (eager_IntegersQ(m,p,2*q) or eager_IntegersQ(m,2*p,q))
 
 def RectifyTangent(*args):
     # (* RectifyTangent(u,a,b,r,x) returns an expression whose derivative equals the derivative of r*ArcTan(a+b*Tan(u)) wrt x. *)
     if len(args) == 5:
         u, a, b, r, x = args
-        t1 = Together(a)
-        t2 = Together(b)
-        if (PureComplexNumberQ(t1) or (ProductQ(t1) and any(PureComplexNumberQ(i) for i in t1.args))) and (PureComplexNumberQ(t2) or ProductQ(t2) and any(PureComplexNumberQ(i) for i in t2.args)):
+        t1 = eager_Together(a)
+        t2 = eager_Together(b)
+        if (PureComplexNumberQ(t1) or (eager_ProductQ(t1) and any(PureComplexNumberQ(i) for i in t1.args))) and (PureComplexNumberQ(t2) or eager_ProductQ(t2) and any(PureComplexNumberQ(i) for i in t2.args)):
             c = a/I
             d = b/I
             if NegativeQ(d):
                 return RectifyTangent(u, -a, -b, -r, x)
-            e = SmartDenominator(Together(c + d*x))
+            e = SmartDenominator(eager_Together(c + d*x))
             c = c*e
             d = d*e
-            if EvenQ(Denominator(NumericFactor(Together(u)))):
-                return I*r*Log(RemoveContent(Simplify((c+e)**2+d**2)+Simplify((c+e)**2-d**2)*Cos(2*u)+Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2+d**2)+Simplify((c-e)**2-d**2)*Cos(2*u)+Simplify(2*(c-e)*d)*Sin(2*u),x))/4
-            return I*r*Log(RemoveContent(Simplify((c+e)**2)+Simplify(2*(c+e)*d)*Cos(u)*Sin(u)-Simplify((c+e)**2-d**2)*Sin(u)**2,x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)+Simplify(2*(c-e)*d)*Cos(u)*Sin(u)-Simplify((c-e)**2-d**2)*Sin(u)**2,x))/4
+            if EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+                return I*r*Log(RemoveContent(eager_Simplify((c+e)**2+d**2)+eager_Simplify((c+e)**2-d**2)*Cos(2*u)+eager_Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(eager_Simplify((c-e)**2+d**2)+eager_Simplify((c-e)**2-d**2)*Cos(2*u)+eager_Simplify(2*(c-e)*d)*Sin(2*u),x))/4
+            return I*r*Log(RemoveContent(eager_Simplify((c+e)**2)+eager_Simplify(2*(c+e)*d)*Cos(u)*Sin(u)-eager_Simplify((c+e)**2-d**2)*Sin(u)**2,x))/4 - I*r*Log(RemoveContent(eager_Simplify((c-e)**2)+eager_Simplify(2*(c-e)*d)*Cos(u)*Sin(u)-eager_Simplify((c-e)**2-d**2)*Sin(u)**2,x))/4
         elif NegativeQ(b):
             return RectifyTangent(u, -a, -b, -r, x)
-        elif EvenQ(Denominator(NumericFactor(Together(u)))):
-            return r*SimplifyAntiderivative(u,x) + r*ArcTan(Simplify((2*a*b*Cos(2*u)-(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2+(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
-        return r*SimplifyAntiderivative(u,x) - r*ArcTan(ActivateTrig(Simplify((a*b-2*a*b*cos(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*cos(u)**2+2*a*b*cos(u)*sin(u)))))
+        elif EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+            return r*SimplifyAntiderivative(u,x) + r*ArcTan(eager_Simplify((2*a*b*Cos(2*u)-(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2+(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
+        return r*SimplifyAntiderivative(u,x) - r*ArcTan(eager_ActivateTrig(eager_Simplify((a*b-2*a*b*cos(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*cos(u)**2+2*a*b*cos(u)*sin(u)))))
 
     u, a, b, x = args
-    t = Together(a)
-    if PureComplexNumberQ(t) or (ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args)):
+    t = eager_Together(a)
+    if PureComplexNumberQ(t) or (eager_ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args)):
         c = a/I
         if NegativeQ(c):
             return RectifyTangent(u, -a, -b, x)
         if ZeroQ(c - 1):
-            if EvenQ(Denominator(NumericFactor(Together(u)))):
+            if EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
                 return I*b*ArcTanh(Sin(2*u))/2
             return I*b*ArcTanh(2*cos(u)*sin(u))/2
         e = SmartDenominator(c)
@@ -6189,17 +6189,17 @@ def RectifyTangent(*args):
         return RectifyTangent(u, -a, -b, x)
     elif ZeroQ(a - 1):
         return b*SimplifyAntiderivative(u, x)
-    elif EvenQ(Denominator(NumericFactor(Together(u)))):
-        c =  Simplify((1 + a)/(1 - a))
+    elif EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+        c =  eager_Simplify((1 + a)/(1 - a))
         numr = SmartNumerator(c)
         denr = SmartDenominator(c)
         return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Sin(2*u)/(numr+denr*Cos(2*u)))),
     elif PositiveQ(a - 1):
-        c = Simplify(1/(a - 1))
+        c = eager_Simplify(1/(a - 1))
         numr = SmartNumerator(c)
         denr = SmartDenominator(c)
         return b*SimplifyAntiderivative(u,x) + b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Sin(u)**2))),
-    c = Simplify(a/(1 - a))
+    c = eager_Simplify(a/(1 - a))
     numr = SmartNumerator(c)
     denr = SmartDenominator(c)
     return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Cos(u)**2)))
@@ -6208,33 +6208,33 @@ def RectifyCotangent(*args):
     #(* RectifyCotangent[u,a,b,r,x] returns an expression whose derivative equals the derivative of r*ArcTan[a+b*Cot[u]] wrt x. *)
     if len(args) == 5:
         u, a, b, r, x = args
-        t1 = Together(a)
-        t2 = Together(b)
-        if (PureComplexNumberQ(t1) or (ProductQ(t1) and any(PureComplexNumberQ(i) for i in t1.args))) and (PureComplexNumberQ(t2) or ProductQ(t2) and any(PureComplexNumberQ(i) for i in t2.args)):
+        t1 = eager_Together(a)
+        t2 = eager_Together(b)
+        if (PureComplexNumberQ(t1) or (eager_ProductQ(t1) and any(PureComplexNumberQ(i) for i in t1.args))) and (PureComplexNumberQ(t2) or eager_ProductQ(t2) and any(PureComplexNumberQ(i) for i in t2.args)):
             c = a/I
             d = b/I
             if NegativeQ(d):
                 return RectifyTangent(u,-a,-b,-r,x)
-            e = SmartDenominator(Together(c + d*x))
+            e = SmartDenominator(eager_Together(c + d*x))
             c = c*e
             d = d*e
-            if EvenQ(Denominator(NumericFactor(Together(u)))):
-                return  I*r*Log(RemoveContent(Simplify((c+e)**2+d**2)-Simplify((c+e)**2-d**2)*Cos(2*u)+Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2+d**2)-Simplify((c-e)**2-d**2)*Cos(2*u)+Simplify(2*(c-e)*d)*Sin(2*u),x))/4
-            return I*r*Log(RemoveContent(Simplify((c+e)**2)-Simplify((c+e)**2-d**2)*Cos(u)**2+Simplify(2*(c+e)*d)*Cos(u)*Sin(u),x))/4 - I*r*Log(RemoveContent(Simplify((c-e)**2)-Simplify((c-e)**2-d**2)*Cos(u)**2+Simplify(2*(c-e)*d)*Cos(u)*Sin(u),x))/4
+            if EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+                return  I*r*Log(RemoveContent(eager_Simplify((c+e)**2+d**2)-eager_Simplify((c+e)**2-d**2)*Cos(2*u)+eager_Simplify(2*(c+e)*d)*Sin(2*u),x))/4 - I*r*Log(RemoveContent(eager_Simplify((c-e)**2+d**2)-eager_Simplify((c-e)**2-d**2)*Cos(2*u)+eager_Simplify(2*(c-e)*d)*Sin(2*u),x))/4
+            return I*r*Log(RemoveContent(eager_Simplify((c+e)**2)-eager_Simplify((c+e)**2-d**2)*Cos(u)**2+eager_Simplify(2*(c+e)*d)*Cos(u)*Sin(u),x))/4 - I*r*Log(RemoveContent(eager_Simplify((c-e)**2)-eager_Simplify((c-e)**2-d**2)*Cos(u)**2+eager_Simplify(2*(c-e)*d)*Cos(u)*Sin(u),x))/4
         elif NegativeQ(b):
             return RectifyCotangent(u,-a,-b,-r,x)
-        elif EvenQ(Denominator(NumericFactor(Together(u)))):
-            return -r*SimplifyAntiderivative(u,x) - r*ArcTan(Simplify((2*a*b*Cos(2*u)+(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2-(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
-        return -r*SimplifyAntiderivative(u,x) - r*ArcTan(ActivateTrig(Simplify((a*b-2*a*b*sin(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*sin(u)**2+2*a*b*cos(u)*sin(u)))))
+        elif EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+            return -r*SimplifyAntiderivative(u,x) - r*ArcTan(eager_Simplify((2*a*b*Cos(2*u)+(1+a**2-b**2)*Sin(2*u))/(a**2+(1+b)**2-(1+a**2-b**2)*Cos(2*u)+2*a*b*Sin(2*u))))
+        return -r*SimplifyAntiderivative(u,x) - r*ArcTan(eager_ActivateTrig(eager_Simplify((a*b-2*a*b*sin(u)**2+(1+a**2-b**2)*cos(u)*sin(u))/(b*(1+b)+(1+a**2-b**2)*sin(u)**2+2*a*b*cos(u)*sin(u)))))
 
     u, a, b, x = args
-    t = Together(a)
-    if PureComplexNumberQ(t) or (ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args)):
+    t = eager_Together(a)
+    if PureComplexNumberQ(t) or (eager_ProductQ(t) and any(PureComplexNumberQ(i) for i in t.args)):
         c = a/I
         if NegativeQ(c):
             return RectifyCotangent(u,-a,-b,x)
         elif ZeroQ(c - 1):
-            if EvenQ(Denominator(NumericFactor(Together(u)))):
+            if EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
                 return -I*b*ArcTanh(Sin(2*u))/2
             return -I*b*ArcTanh(2*Cos(u)*Sin(u))/2
         e = SmartDenominator(c)
@@ -6244,12 +6244,12 @@ def RectifyCotangent(*args):
         return RectifyCotangent(u,-a,-b,x)
     elif ZeroQ(a-1):
         return b*SimplifyAntiderivative(u,x)
-    elif EvenQ(Denominator(NumericFactor(Together(u)))):
-        c = Simplify(a - 1)
+    elif EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))):
+        c = eager_Simplify(a - 1)
         numr = SmartNumerator(c)
         denr = SmartDenominator(c)
         return b*SimplifyAntiderivative(u,x) - b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Cos(u)**2)))
-    c = Simplify(a/(1-a))
+    c = eager_Simplify(a/(1-a))
     numr = SmartNumerator(c)
     denr = SmartDenominator(c)
     return b*SimplifyAntiderivative(u,x) + b*ArcTan(NormalizeLeadTermSigns(denr*Cos(u)*Sin(u)/(numr+denr*Sin(u)**2)))
@@ -6262,14 +6262,14 @@ def Inequality(*args):
         r.append(f[i](e[i], e[i + 1]))
     return all(r)
 
-def Condition(r, c):
+def eager_Condition(r, c):
     # returns r if c is True
     if c:
         return r
     else:
         raise NotImplementedError('In Condition()')
 
-def Simp(u, x):
+def eager_Simp(u, x):
     return NormalizeSumFactors(SimpHelp(u, x))
 
 def SimpHelp(u, x):
@@ -6277,10 +6277,10 @@ def SimpHelp(u, x):
         return u
     elif FreeQ(u, x):
         v = SmartSimplify(u)
-        if LeafCount(v) <= LeafCount(u):
+        if eager_LeafCount(v) <= eager_LeafCount(u):
             return v
         return u
-    elif ProductQ(u):
+    elif eager_ProductQ(u):
         #m = MatchQ[Rest[u],a_.+n_*Pi+b_.*v_ /; FreeQ[{a,b},x] && Not[FreeQ[v,x]] && EqQ[n^2,1/4]]
         #if EqQ(First(u), S(1)/2) and m:
         #    if
@@ -6291,19 +6291,19 @@ def SimpHelp(u, x):
         #    Map[Function[1/2*#],Rest[u]],
         #  u]],
 
-        v = FreeFactors(u, x)
-        w = NonfreeFactors(u, x)
+        v = eager_FreeFactors(u, x)
+        w = eager_NonfreeFactors(u, x)
         v = NumericFactor(v)*SmartSimplify(NonnumericFactors(v)*x**2)/x**2
-        if ProductQ(w):
+        if eager_ProductQ(w):
             w = Mul(*[SimpHelp(i,x) for i in w.args])
         else:
             w = SimpHelp(w, x)
         w = FactorNumericGcd(w)
         v = MergeFactors(v, w)
-        if ProductQ(v):
+        if eager_ProductQ(v):
             return Mul(*[SimpFixFactor(i, x) for i in v.args])
         return v
-    elif SumQ(u):
+    elif eager_SumQ(u):
         Pi = pi
         a_ = Wild('a', exclude=[x])
         b_ = Wild('b', exclude=[x, 0])
@@ -6312,14 +6312,14 @@ def SimpHelp(u, x):
         match = u.match(pattern)
         m = False
         if match:
-            if EqQ(match[n_]**3, S(1)/16):
+            if eager_EqQ(match[n_]**3, S(1)/16):
                 m = True
         if m:
             return u
-        elif PolynomialQ(u, x) and Exponent(u, x) <= 0:
-            return SimpHelp(Coefficient(u, x, 0), x)
-        elif PolynomialQ(u, x) and Exponent(u, x) == 1 and Coefficient(u, x, 0) == 0:
-            return SimpHelp(Coefficient(u, x, 1), x)*x
+        elif PolynomialQ(u, x) and eager_Exponent(u, x) <= 0:
+            return SimpHelp(eager_Coefficient(u, x, 0), x)
+        elif PolynomialQ(u, x) and eager_Exponent(u, x) == 1 and eager_Coefficient(u, x, 0) == 0:
+            return SimpHelp(eager_Coefficient(u, x, 1), x)*x
 
         v = 0
         w = 0
@@ -6329,50 +6329,50 @@ def SimpHelp(u, x):
             else:
                 w = i + w
         v = SmartSimplify(v)
-        if SumQ(w):
+        if eager_SumQ(w):
             w = Add(*[SimpHelp(i, x) for i in w.args])
         else:
             w = SimpHelp(w, x)
         return v + w
     return u.func(*[SimpHelp(i, x) for i in u.args])
 
-def SplitProduct(func, u):
+def eager_SplitProduct(func, u):
     #(* If func[v] is True for a factor v of u, SplitProduct[func,u] returns {v, u/v} where v is the first such factor; else it returns False. *)
-    if ProductQ(u):
-        if func(First(u)):
-            return [First(u), Rest(u)]
-        lst = SplitProduct(func, Rest(u))
+    if eager_ProductQ(u):
+        if func(eager_First(u)):
+            return [eager_First(u), eager_Rest(u)]
+        lst = eager_SplitProduct(func, eager_Rest(u))
         if AtomQ(lst):
             return False
-        return [lst[0], First(u)*lst[1]]
+        return [lst[0], eager_First(u)*lst[1]]
     if func(u):
         return [u, 1]
     return False
 
 def SplitSum(func, u):
     # (* If func[v] is nonatomic for a term v of u, SplitSum[func,u] returns {func[v], u-v} where v is the first such term; else it returns False. *)
-    if SumQ(u):
-        if Not(AtomQ(func(First(u)))):
-            return [func(First(u)), Rest(u)]
-        lst = SplitSum(func, Rest(u))
+    if eager_SumQ(u):
+        if eager_Not(AtomQ(func(eager_First(u)))):
+            return [func(eager_First(u)), eager_Rest(u)]
+        lst = SplitSum(func, eager_Rest(u))
         if AtomQ(lst):
             return False
-        return [lst[0], First(u) + lst[1]]
-    elif Not(AtomQ(func(u))):
+        return [lst[0], eager_First(u) + lst[1]]
+    elif eager_Not(AtomQ(func(u))):
         return [func(u), 0]
     return False
 
-def SubstFor(*args):
+def eager_SubstFor(*args):
     if len(args) == 4:
         w, v, u, x = args
         # u is a function of v. SubstFor(w,v,u,x) returns w times u with v replaced by x.
-        return SimplifyIntegrand(w*SubstFor(v, u, x), x)
+        return eager_SimplifyIntegrand(w*eager_SubstFor(v, u, x), x)
     v, u, x = args
     # u is a function of v. SubstFor(v, u, x) returns u with v replaced by x.
     if AtomQ(v):
-        return Subst(u, v, x)
-    elif Not(EqQ(FreeFactors(v, x), 1)):
-        return SubstFor(NonfreeFactors(v, x), u, x/FreeFactors(v, x))
+        return eager_Subst(u, v, x)
+    elif eager_Not(eager_EqQ(eager_FreeFactors(v, x), 1)):
+        return eager_SubstFor(eager_NonfreeFactors(v, x), u, x/eager_FreeFactors(v, x))
     elif SinQ(v):
         return SubstForTrig(u, x, Sqrt(1 - x**2), v.args[0], x)
     elif CosQ(v):
@@ -6405,22 +6405,22 @@ def SubstForAux(u, v, x):
     if u==v:
         return x
     elif AtomQ(u):
-        if PowerQ(v):
+        if eager_PowerQ(v):
             if FreeQ(v.exp, x) and ZeroQ(u - v.base):
-                return x**Simplify(1/v.exp)
+                return x**eager_Simplify(1/v.exp)
         return u
-    elif PowerQ(u):
+    elif eager_PowerQ(u):
         if FreeQ(u.exp, x):
             if ZeroQ(u.base - v):
                 return x**u.exp
-            if PowerQ(v):
+            if eager_PowerQ(v):
                 if FreeQ(v.exp, x) and ZeroQ(u.base - v.base):
-                    return x**Simplify(u.exp/v.exp)
+                    return x**eager_Simplify(u.exp/v.exp)
             return SubstForAux(u.base, v, x)**u.exp
-    elif ProductQ(u) and Not(EqQ(FreeFactors(u, x), 1)):
-        return FreeFactors(u, x)*SubstForAux(NonfreeFactors(u, x), v, x)
-    elif ProductQ(u) and ProductQ(v):
-        return SubstForAux(First(u), First(v), x)
+    elif eager_ProductQ(u) and eager_Not(eager_EqQ(eager_FreeFactors(u, x), 1)):
+        return eager_FreeFactors(u, x)*SubstForAux(eager_NonfreeFactors(u, x), v, x)
+    elif eager_ProductQ(u) and eager_ProductQ(v):
+        return SubstForAux(eager_First(u), eager_First(v), x)
 
     return u.func(*[SubstForAux(i, v, x) for i in u.args])
 
@@ -6469,14 +6469,14 @@ def _TrigPowerOfLinearMatchQ(u, x):
     return False
 
 
-def FunctionOfTrigOfLinearQ(u, x):
+def eager_FunctionOfTrigOfLinearQ(u, x):
     # If u is an algebraic function of trig functions of a linear function of x,
     # FunctionOfTrigOfLinearQ[u,x] returns True; else it returns False.
     # Faithful port of Rubi's two-branch definition (see IntegrationUtilityFunctions.m):
     #   the structural MatchQ shortcut, OR (FunctionOfTrig non-False AND AlgebraicTrigFunctionQ).
     if _TrigPowerOfLinearMatchQ(u, x):
         return True
-    v = FunctionOfTrig(u, None, x)
+    v = eager_FunctionOfTrig(u, None, x)
     return v is not None and v is not False and bool(AlgebraicTrigFunctionQ(u, x))
 
 def ElementaryFunctionQ(u):
@@ -6485,7 +6485,7 @@ def ElementaryFunctionQ(u):
     # and all the arguments are elementary expressions; else it returns False.
     if AtomQ(u):
         return True
-    elif SumQ(u) or ProductQ(u) or PowerQ(u) or TrigQ(u) or HyperbolicQ(u) or InverseFunctionQ(u):
+    elif eager_SumQ(u) or eager_ProductQ(u) or eager_PowerQ(u) or eager_TrigQ(u) or eager_HyperbolicQ(u) or eager_InverseFunctionQ(u):
         for i in u.args:
             if not ElementaryFunctionQ(i):
                 return False
@@ -6499,27 +6499,27 @@ def UnsameQ(a, b):
 def _SimpFixFactor():
     replacer = ManyToOneReplacer()
 
-    pattern1 = Pattern(UtilityOperator(Pow(Add(Mul(Complex(S(0), c_), WildSymbol('a', optional_value=S(1))), Mul(Complex(S(0), d_), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda p: IntegerQ(p)))
+    pattern1 = Pattern(UtilityOperator(Pow(Add(Mul(eager_Complex(S(0), c_), WildSymbol('a', optional_value=S(1))), Mul(eager_Complex(S(0), d_), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda p: IntegerQ(p)))
     rule1 = _ReplacementRuleWrapped(pattern1, lambda b, c, x, a, p, d : Mul(Pow(I, p), SimpFixFactor(Pow(Add(Mul(a, c), Mul(b, d)), p), x)))
     replacer.add(rule1)
 
-    pattern2 = Pattern(UtilityOperator(Pow(Add(Mul(Complex(S(0), d_), WildSymbol('a', optional_value=S(1))), Mul(Complex(S(0), e_), WildSymbol('b', optional_value=S(1))), Mul(Complex(S(0), f_), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda p: IntegerQ(p)))
+    pattern2 = Pattern(UtilityOperator(Pow(Add(Mul(eager_Complex(S(0), d_), WildSymbol('a', optional_value=S(1))), Mul(eager_Complex(S(0), e_), WildSymbol('b', optional_value=S(1))), Mul(eager_Complex(S(0), f_), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda p: IntegerQ(p)))
     rule2 = _ReplacementRuleWrapped(pattern2, lambda b, c, x, f, a, p, e, d : Mul(Pow(I, p), SimpFixFactor(Pow(Add(Mul(a, d), Mul(b, e), Mul(c, f)), p), x)))
     replacer.add(rule2)
 
-    pattern3 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, r_)), Mul(WildSymbol('b', optional_value=S(1)), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)), _patched_custom_constraint_call(lambda c: AtomQ(c)), _patched_custom_constraint_call(lambda r: RationalQ(r)), _patched_custom_constraint_call(lambda r: Less(r, S(0))))
+    pattern3 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, r_)), Mul(WildSymbol('b', optional_value=S(1)), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)), _patched_custom_constraint_call(lambda c: AtomQ(c)), _patched_custom_constraint_call(lambda r: eager_RationalQ(r)), _patched_custom_constraint_call(lambda r: Less(r, S(0))))
     rule3 = _ReplacementRuleWrapped(pattern3, lambda b, c, r, n, x, a, p : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(a, Mul(Mul(b, Pow(Pow(c, r), S(-1))), Pow(x, n))), p), x)))
     replacer.add(rule3)
 
-    pattern4 = Pattern(UtilityOperator(Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, r_), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)), _patched_custom_constraint_call(lambda c: AtomQ(c)), _patched_custom_constraint_call(lambda r: RationalQ(r)), _patched_custom_constraint_call(lambda r: Less(r, S(0))))
+    pattern4 = Pattern(UtilityOperator(Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, r_), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)), _patched_custom_constraint_call(lambda c: AtomQ(c)), _patched_custom_constraint_call(lambda r: eager_RationalQ(r)), _patched_custom_constraint_call(lambda r: Less(r, S(0))))
     rule4 = _ReplacementRuleWrapped(pattern4, lambda b, c, r, n, x, a, p : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(Mul(a, Pow(Pow(c, r), S(-1))), Mul(b, Pow(x, n))), p), x)))
     replacer.add(rule4)
 
-    pattern5 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, WildSymbol('s', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, WildSymbol('r', optional_value=S(1))), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)), _patched_custom_constraint_call(lambda r, s: RationalQ(s, r)), _patched_custom_constraint_call(lambda r, s: Inequality(S(0), Less, s, LessEqual, r)), _patched_custom_constraint_call(lambda p, c, s: UnsameQ(Pow(c, Mul(s, p)), S(-1))))
+    pattern5 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, WildSymbol('s', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, WildSymbol('r', optional_value=S(1))), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)), _patched_custom_constraint_call(lambda r, s: eager_RationalQ(s, r)), _patched_custom_constraint_call(lambda r, s: Inequality(S(0), Less, s, LessEqual, r)), _patched_custom_constraint_call(lambda p, c, s: UnsameQ(Pow(c, Mul(s, p)), S(-1))))
     rule5 = _ReplacementRuleWrapped(pattern5, lambda b, c, r, n, x, a, p, s : Mul(Pow(c, Mul(s, p)), SimpFixFactor(Pow(Add(a, Mul(b, Pow(c, Add(r, Mul(S(-1), s))), Pow(x, n))), p), x)))
     replacer.add(rule5)
 
-    pattern6 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, WildSymbol('s', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, WildSymbol('r', optional_value=S(1))), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)), _patched_custom_constraint_call(lambda r, s: RationalQ(s, r)), _patched_custom_constraint_call(lambda s, r: Less(S(0), r, s)), _patched_custom_constraint_call(lambda p, c, r: UnsameQ(Pow(c, Mul(r, p)), S(-1))))
+    pattern6 = Pattern(UtilityOperator(Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(c_, WildSymbol('s', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(c_, WildSymbol('r', optional_value=S(1))), Pow(x_, WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)), _patched_custom_constraint_call(lambda r, s: eager_RationalQ(s, r)), _patched_custom_constraint_call(lambda s, r: Less(S(0), r, s)), _patched_custom_constraint_call(lambda p, c, r: UnsameQ(Pow(c, Mul(r, p)), S(-1))))
     rule6 = _ReplacementRuleWrapped(pattern6, lambda b, c, r, n, x, a, p, s : Mul(Pow(c, Mul(r, p)), SimpFixFactor(Pow(Add(Mul(a, Pow(c, Add(s, Mul(S(-1), r)))), Mul(b, Pow(x, n))), p), x)))
     replacer.add(rule6)
 
@@ -6540,11 +6540,11 @@ def _FixSimplify():
     cons1 = _patched_custom_constraint_call(cons_f1)
 
     def cons_f2(m):
-        return RationalQ(m)
+        return eager_RationalQ(m)
     cons2 = _patched_custom_constraint_call(cons_f2)
 
     def cons_f3(n):
-        return FractionQ(n)
+        return eager_FractionQ(n)
     cons3 = _patched_custom_constraint_call(cons_f3)
 
     def cons_f4(u):
@@ -6576,7 +6576,7 @@ def _FixSimplify():
     cons10 = _patched_custom_constraint_call(cons_f10)
 
     def cons_f11(n, m, a, b):
-        return RationalQ(a, b, m, n)
+        return eager_RationalQ(a, b, m, n)
     cons11 = _patched_custom_constraint_call(cons_f11)
 
     def cons_f12(a):
@@ -6604,7 +6604,7 @@ def _FixSimplify():
     cons17 = _patched_custom_constraint_call(cons_f17)
 
     def cons_f18(n):
-        return Not(IntegerQ(n))
+        return eager_Not(IntegerQ(n))
     cons18 = _patched_custom_constraint_call(cons_f18)
 
     def cons_f19(c, a, b, d):
@@ -6612,7 +6612,7 @@ def _FixSimplify():
     cons19 = _patched_custom_constraint_call(cons_f19)
 
     def cons_f20(a):
-        return Not(RationalQ(a))
+        return eager_Not(eager_RationalQ(a))
     cons20 = _patched_custom_constraint_call(cons_f20)
 
     def cons_f21(t):
@@ -6620,7 +6620,7 @@ def _FixSimplify():
     cons21 = _patched_custom_constraint_call(cons_f21)
 
     def cons_f22(n, m):
-        return RationalQ(m, n)
+        return eager_RationalQ(m, n)
     cons22 = _patched_custom_constraint_call(cons_f22)
 
     def cons_f23(n, m):
@@ -6628,7 +6628,7 @@ def _FixSimplify():
     cons23 = _patched_custom_constraint_call(cons_f23)
 
     def cons_f24(p, n, m):
-        return RationalQ(m, n, p)
+        return eager_RationalQ(m, n, p)
     cons24 = _patched_custom_constraint_call(cons_f24)
 
     def cons_f25(p, n, m):
@@ -6640,7 +6640,7 @@ def _FixSimplify():
     cons26 = _patched_custom_constraint_call(cons_f26)
 
     def cons_f27(w):
-        return Not(RationalQ(w))
+        return eager_Not(eager_RationalQ(w))
     cons27 = _patched_custom_constraint_call(cons_f27)
 
     def cons_f28(n):
@@ -6668,7 +6668,7 @@ def _FixSimplify():
     cons33 = _patched_custom_constraint_call(cons_f33)
 
     def cons_f34(p, n):
-        return IntegersQ(n, n/p)
+        return eager_IntegersQ(n, n/p)
     cons34 = _patched_custom_constraint_call(cons_f34)
 
     def cons_f35(a):
@@ -6679,53 +6679,53 @@ def _FixSimplify():
         return AtomQ(b)
     cons36 = _patched_custom_constraint_call(cons_f36)
 
-    pattern1 = Pattern(UtilityOperator((w_ + Complex(S(0), b_)*WildSymbol('v', optional_value=S(1)))**WildSymbol('n', optional_value=S(1))*Complex(S(0), a_)*WildSymbol('u', optional_value=S(1))), cons1)
+    pattern1 = Pattern(UtilityOperator((w_ + eager_Complex(S(0), b_)*WildSymbol('v', optional_value=S(1)))**WildSymbol('n', optional_value=S(1))*eager_Complex(S(0), a_)*WildSymbol('u', optional_value=S(1))), cons1)
     def replacement1(n, u, w, v, a, b):
-        return (S(-1))**(n/S(2) + S(1)/2)*a*u*FixSimplify((b*v - w*Complex(S(0), S(1)))**n)
+        return (S(-1))**(n/S(2) + S(1)/2)*a*u*FixSimplify((b*v - w*eager_Complex(S(0), S(1)))**n)
     rule1 = _ReplacementRuleWrapped(pattern1, replacement1)
     def With2(m, n, u, w, v):
-        z = u**(m/GCD(m, n))*v**(n/GCD(m, n))
+        z = u**(m/eager_GCD(m, n))*v**(n/eager_GCD(m, n))
         if Or(AbsurdNumberQ(z), SqrtNumberSumQ(z)):
             return True
         return False
     pattern2 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*v_**n_*WildSymbol('w', optional_value=S(1))), cons2, cons3, cons4, cons5, cons6, cons7, _patched_custom_constraint_call(With2))
     def replacement2(m, n, u, w, v):
-        z = u**(m/GCD(m, n))*v**(n/GCD(m, n))
-        return FixSimplify(w*z**GCD(m, n))
+        z = u**(m/eager_GCD(m, n))*v**(n/eager_GCD(m, n))
+        return FixSimplify(w*z**eager_GCD(m, n))
     rule2 = _ReplacementRuleWrapped(pattern2, replacement2)
     def With3(m, n, u, w, v):
-        z = u**(m/GCD(m, -n))*v**(n/GCD(m, -n))
+        z = u**(m/eager_GCD(m, -n))*v**(n/eager_GCD(m, -n))
         if Or(AbsurdNumberQ(z), SqrtNumberSumQ(z)):
             return True
         return False
     pattern3 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*v_**n_*WildSymbol('w', optional_value=S(1))), cons2, cons3, cons4, cons8, cons6, cons7, _patched_custom_constraint_call(With3))
     def replacement3(m, n, u, w, v):
-        z = u**(m/GCD(m, -n))*v**(n/GCD(m, -n))
-        return FixSimplify(w*z**GCD(m, -n))
+        z = u**(m/eager_GCD(m, -n))*v**(n/eager_GCD(m, -n))
+        return FixSimplify(w*z**eager_GCD(m, -n))
     rule3 = _ReplacementRuleWrapped(pattern3, replacement3)
     def With4(m, n, u, w, v):
-        z = v**(n/GCD(m, n))*(-u)**(m/GCD(m, n))
+        z = v**(n/eager_GCD(m, n))*(-u)**(m/eager_GCD(m, n))
         if Or(AbsurdNumberQ(z), SqrtNumberSumQ(z)):
             return True
         return False
     pattern4 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*v_**n_*WildSymbol('w', optional_value=S(1))), cons9, cons3, cons4, cons5, cons10, cons7, _patched_custom_constraint_call(With4))
     def replacement4(m, n, u, w, v):
-        z = v**(n/GCD(m, n))*(-u)**(m/GCD(m, n))
-        return FixSimplify(-w*z**GCD(m, n))
+        z = v**(n/eager_GCD(m, n))*(-u)**(m/eager_GCD(m, n))
+        return FixSimplify(-w*z**eager_GCD(m, n))
     rule4 = _ReplacementRuleWrapped(pattern4, replacement4)
     def With5(m, n, u, w, v):
-        z = v**(n/GCD(m, -n))*(-u)**(m/GCD(m, -n))
+        z = v**(n/eager_GCD(m, -n))*(-u)**(m/eager_GCD(m, -n))
         if Or(AbsurdNumberQ(z), SqrtNumberSumQ(z)):
             return True
         return False
     pattern5 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*v_**n_*WildSymbol('w', optional_value=S(1))), cons9, cons3, cons4, cons8, cons10, cons7, _patched_custom_constraint_call(With5))
     def replacement5(m, n, u, w, v):
-        z = v**(n/GCD(m, -n))*(-u)**(m/GCD(m, -n))
-        return FixSimplify(-w*z**GCD(m, -n))
+        z = v**(n/eager_GCD(m, -n))*(-u)**(m/eager_GCD(m, -n))
+        return FixSimplify(-w*z**eager_GCD(m, -n))
     rule5 = _ReplacementRuleWrapped(pattern5, replacement5)
     def With6(p, m, n, u, w, v, a, b):
         c = a**(m/p)*b**n
-        if RationalQ(c):
+        if eager_RationalQ(c):
             return True
         return False
     pattern6 = Pattern(UtilityOperator(a_**m_*(b_**n_*WildSymbol('v', optional_value=S(1)) + u_)**WildSymbol('p', optional_value=S(1))*WildSymbol('w', optional_value=S(1))), cons11, cons12, cons13, cons14, _patched_custom_constraint_call(With6))
@@ -6872,23 +6872,23 @@ def _SimplifyAntiderivative():
     rule9 = _ReplacementRuleWrapped(pattern9, lambda x, b, u, a : Add(Mul(Mul(Mul(S(1), b), Pow(a, S(1))), SimplifyAntiderivative(u, x)), Mul(S(1), SimplifyAntiderivative(Log(Sin(u)), x))))
     replacer.add(rule9)
 
-    pattern10 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern10 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule10 = _ReplacementRuleWrapped(pattern10, lambda x, u, a : RectifyTangent(u, a, S(1), x))
     replacer.add(rule10)
 
-    pattern11 = Pattern(UtilityOperator(ArcCot(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern11 = Pattern(UtilityOperator(ArcCot(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule11 = _ReplacementRuleWrapped(pattern11, lambda x, u, a : RectifyTangent(u, a, S(1), x))
     replacer.add(rule11)
 
-    pattern12 = Pattern(UtilityOperator(ArcCot(Mul(WildSymbol('a', optional_value=S(1)), Tanh(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern12 = Pattern(UtilityOperator(ArcCot(Mul(WildSymbol('a', optional_value=S(1)), Tanh(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule12 = _ReplacementRuleWrapped(pattern12, lambda x, u, a : Mul(S(1), SimplifyAntiderivative(ArcTan(Mul(a, Tanh(u))), x)))
     replacer.add(rule12)
 
-    pattern13 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern13 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule13 = _ReplacementRuleWrapped(pattern13, lambda x, u, a : RectifyTangent(u, Mul(I, a), Mul(S(1), I), x))
     replacer.add(rule13)
 
-    pattern14 = Pattern(UtilityOperator(ArcCoth(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern14 = Pattern(UtilityOperator(ArcCoth(Mul(WildSymbol('a', optional_value=S(1)), Tan(u_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule14 = _ReplacementRuleWrapped(pattern14, lambda x, u, a : RectifyTangent(u, Mul(I, a), Mul(S(1), I), x))
     replacer.add(rule14)
 
@@ -6900,23 +6900,23 @@ def _SimplifyAntiderivative():
     rule16 = _ReplacementRuleWrapped(pattern16, lambda x, u : SimplifyAntiderivative(u, x))
     replacer.add(rule16)
 
-    pattern17 = Pattern(UtilityOperator(ArcCot(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern17 = Pattern(UtilityOperator(ArcCot(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule17 = _ReplacementRuleWrapped(pattern17, lambda x, u, a : RectifyCotangent(u, a, S(1), x))
     replacer.add(rule17)
 
-    pattern18 = Pattern(UtilityOperator(ArcTan(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern18 = Pattern(UtilityOperator(ArcTan(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule18 = _ReplacementRuleWrapped(pattern18, lambda x, u, a : RectifyCotangent(u, a, S(1), x))
     replacer.add(rule18)
 
-    pattern19 = Pattern(UtilityOperator(ArcTan(Mul(Coth(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern19 = Pattern(UtilityOperator(ArcTan(Mul(Coth(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule19 = _ReplacementRuleWrapped(pattern19, lambda x, u, a : Mul(S(1), SimplifyAntiderivative(ArcTan(Mul(Tanh(u), Pow(a, S(1)))), x)))
     replacer.add(rule19)
 
-    pattern20 = Pattern(UtilityOperator(ArcCoth(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern20 = Pattern(UtilityOperator(ArcCoth(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule20 = _ReplacementRuleWrapped(pattern20, lambda x, u, a : RectifyCotangent(u, Mul(I, a), I, x))
     replacer.add(rule20)
 
-    pattern21 = Pattern(UtilityOperator(ArcTanh(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern21 = Pattern(UtilityOperator(ArcTanh(Mul(Cot(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda a: PositiveQ(Pow(a, S(2)))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule21 = _ReplacementRuleWrapped(pattern21, lambda x, u, a : RectifyCotangent(u, Mul(I, a), I, x))
     replacer.add(rule21)
 
@@ -6924,7 +6924,7 @@ def _SimplifyAntiderivative():
     rule22 = _ReplacementRuleWrapped(pattern22, lambda x, u : SimplifyAntiderivative(u, x))
     replacer.add(rule22)
 
-    pattern23 = Pattern(UtilityOperator(ArcTanh(Mul(Coth(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern23 = Pattern(UtilityOperator(ArcTanh(Mul(Coth(u_), WildSymbol('a', optional_value=S(1)))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule23 = _ReplacementRuleWrapped(pattern23, lambda x, u, a : SimplifyAntiderivative(ArcTanh(Mul(Tanh(u), Pow(a, S(1)))), x))
     replacer.add(rule23)
 
@@ -6932,35 +6932,35 @@ def _SimplifyAntiderivative():
     rule24 = _ReplacementRuleWrapped(pattern24, lambda x, u : SimplifyAntiderivative(u, x))
     replacer.add(rule24)
 
-    pattern25 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('c', optional_value=S(1)), Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Tan(u_))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern25 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('c', optional_value=S(1)), Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Tan(u_))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule25 = _ReplacementRuleWrapped(pattern25, lambda x, a, b, u, c : RectifyTangent(u, Mul(a, c), Mul(b, c), S(1), x))
     replacer.add(rule25)
 
-    pattern26 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('c', optional_value=S(1)), Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Tan(u_))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern26 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('c', optional_value=S(1)), Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Tan(u_))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule26 = _ReplacementRuleWrapped(pattern26, lambda x, a, b, u, c : RectifyTangent(u, Mul(I, a, c), Mul(I, b, c), Mul(S(1), I), x))
     replacer.add(rule26)
 
-    pattern27 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('c', optional_value=S(1)), Add(Mul(Cot(u_), WildSymbol('b', optional_value=S(1))), a_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern27 = Pattern(UtilityOperator(ArcTan(Mul(WildSymbol('c', optional_value=S(1)), Add(Mul(Cot(u_), WildSymbol('b', optional_value=S(1))), a_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule27 = _ReplacementRuleWrapped(pattern27, lambda x, a, b, u, c : RectifyCotangent(u, Mul(a, c), Mul(b, c), S(1), x))
     replacer.add(rule27)
 
-    pattern28 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('c', optional_value=S(1)), Add(Mul(Cot(u_), WildSymbol('b', optional_value=S(1))), a_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern28 = Pattern(UtilityOperator(ArcTanh(Mul(WildSymbol('c', optional_value=S(1)), Add(Mul(Cot(u_), WildSymbol('b', optional_value=S(1))), a_))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda c, a: PositiveQ(Mul(Pow(a, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda c, b: PositiveQ(Mul(Pow(b, S(2)), Pow(c, S(2))))), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule28 = _ReplacementRuleWrapped(pattern28, lambda x, a, b, u, c : RectifyCotangent(u, Mul(I, a, c), Mul(I, b, c), Mul(S(1), I), x))
     replacer.add(rule28)
 
-    pattern29 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Tan(u_)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Tan(u_), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
-    rule29 = _ReplacementRuleWrapped(pattern29, lambda x, a, b, u, c : If(EvenQ(Denominator(NumericFactor(Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), S(1)))))))
+    pattern29 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Tan(u_)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Tan(u_), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
+    rule29 = _ReplacementRuleWrapped(pattern29, lambda x, a, b, u, c : eager_If(EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u))), Mul(b, Sin(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2))), Mul(b, Cos(u), Sin(u))), S(1)))))))
     replacer.add(rule29)
 
-    pattern30 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Add(WildSymbol('d', optional_value=S(0)), Mul(WildSymbol('e', optional_value=S(1)), Tan(u_)))), Mul(WildSymbol('c', optional_value=S(1)), Pow(Add(WildSymbol('f', optional_value=S(0)), Mul(WildSymbol('g', optional_value=S(1)), Tan(u_))), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern30 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('b', optional_value=S(1)), Add(WildSymbol('d', optional_value=S(0)), Mul(WildSymbol('e', optional_value=S(1)), Tan(u_)))), Mul(WildSymbol('c', optional_value=S(1)), Pow(Add(WildSymbol('f', optional_value=S(0)), Mul(WildSymbol('g', optional_value=S(1)), Tan(u_))), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda b, x: FreeQ(b, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule30 = _ReplacementRuleWrapped(pattern30, lambda x, d, a, e, f, b, u, c, g : SimplifyAntiderivative(ArcTan(Add(a, Mul(b, d), Mul(c, Pow(f, S(2))), Mul(Add(Mul(b, e), Mul(S(2), c, f, g)), Tan(u)), Mul(c, Pow(g, S(2)), Pow(Tan(u), S(2))))), x))
     replacer.add(rule30)
 
-    pattern31 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Tan(u_), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
-    rule31 = _ReplacementRuleWrapped(pattern31, lambda x, c, u, a : If(EvenQ(Denominator(NumericFactor(Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), S(1)))))))
+    pattern31 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Tan(u_), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
+    rule31 = _ReplacementRuleWrapped(pattern31, lambda x, c, u, a : eager_If(EvenQ(eager_Denominator(NumericFactor(eager_Together(u)))), ArcTan(NormalizeTogether(Mul(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), Pow(Add(a, c, S(1), Mul(Add(a, Mul(S(1), c), S(1)), Cos(Mul(S(2), u)))), S(1))))), ArcTan(NormalizeTogether(Mul(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), Pow(Add(c, Mul(Add(a, Mul(S(1), c), S(1)), Pow(Cos(u), S(2)))), S(1)))))))
     replacer.add(rule31)
 
-    pattern32 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Add(WildSymbol('f', optional_value=S(0)), Mul(WildSymbol('g', optional_value=S(1)), Tan(u_))), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: ComplexFreeQ(u)))
+    pattern32 = Pattern(UtilityOperator(ArcTan(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(Add(WildSymbol('f', optional_value=S(0)), Mul(WildSymbol('g', optional_value=S(1)), Tan(u_))), S(2))))), x_), _patched_custom_constraint_call(lambda a, x: FreeQ(a, x)), _patched_custom_constraint_call(lambda c, x: FreeQ(c, x)), _patched_custom_constraint_call(lambda u: eager_ComplexFreeQ(u)))
     rule32 = _ReplacementRuleWrapped(pattern32, lambda x, a, f, u, c, g : SimplifyAntiderivative(ArcTan(Add(a, Mul(c, Pow(f, S(2))), Mul(Mul(S(2), c, f, g), Tan(u)), Mul(c, Pow(g, S(2)), Pow(Tan(u), S(2))))), x))
     replacer.add(rule32)
 
@@ -6970,7 +6970,7 @@ def _SimplifyAntiderivative():
 def SimplifyAntiderivative(expr, x):
     result = SimplifyAntiderivative_replacer.replace(UtilityOperator(expr, x))
     if isinstance(result, Operation) and result.head == UtilityOp:
-        if ProductQ(expr):
+        if eager_ProductQ(expr):
             u, c = S(1), S(1)
             for i in expr.args:
                 if FreeQ(i, x):
@@ -6979,29 +6979,29 @@ def SimplifyAntiderivative(expr, x):
                     u *= i
             if FreeQ(c, x) and c != S(1):
                 v = SimplifyAntiderivative(u, x)
-                if SumQ(v) and NonsumQ(u):
+                if eager_SumQ(v) and eager_NonsumQ(u):
                     return Add(*[c*i for i in v.args])
                 return c*v
-        elif LogQ(expr):
+        elif eager_LogQ(expr):
             F = expr.args[0]
-            if MemberQ([cot, sec, csc, coth, sech, csch], Head(F)):
+            if MemberQ([cot, sec, csc, coth, sech, csch], eager_Head(F)):
                 return -SimplifyAntiderivative(Log(1/F), x)
-        if MemberQ([Log, atan, acot], Head(expr)):
-            F = Head(expr)
+        if MemberQ([Log, atan, acot], eager_Head(expr)):
+            F = eager_Head(expr)
             G = expr.args[0]
-            if MemberQ([cot, sec, csc, coth, sech, csch], Head(G)):
+            if MemberQ([cot, sec, csc, coth, sech, csch], eager_Head(G)):
                 return -SimplifyAntiderivative(F(1/G), x)
-        if MemberQ([atanh, acoth], Head(expr)):
-            F = Head(expr)
+        if MemberQ([atanh, acoth], eager_Head(expr)):
+            F = eager_Head(expr)
             G = expr.args[0]
-            if MemberQ([cot, sec, csc, coth, sech, csch], Head(G)):
+            if MemberQ([cot, sec, csc, coth, sech, csch], eager_Head(G)):
                 return SimplifyAntiderivative(F(1/G), x)
         u = expr
         if FreeQ(u, x):
             return S(0)
-        elif LogQ(u):
+        elif eager_LogQ(u):
             return Log(RemoveContent(u.args[0], x))
-        elif SumQ(u):
+        elif eager_SumQ(u):
             return SimplifyAntiderivativeSum(Add(*[SimplifyAntiderivative(i, x) for i in u.args]), x)
         return u
     else:
@@ -7011,7 +7011,7 @@ def SimplifyAntiderivative(expr, x):
 def _TrigSimplifyAux():
     replacer = ManyToOneReplacer()
 
-    pattern1 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(v_, WildSymbol('m', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(v_, WildSymbol('n', optional_value=S(1))))), p_))), _patched_custom_constraint_call(lambda v: InertTrigQ(v)), _patched_custom_constraint_call(lambda p: IntegerQ(p)), _patched_custom_constraint_call(lambda n, m: RationalQ(m, n)), _patched_custom_constraint_call(lambda n, m: Less(m, n)))
+    pattern1 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(v_, WildSymbol('m', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(v_, WildSymbol('n', optional_value=S(1))))), p_))), _patched_custom_constraint_call(lambda v: eager_InertTrigQ(v)), _patched_custom_constraint_call(lambda p: IntegerQ(p)), _patched_custom_constraint_call(lambda n, m: eager_RationalQ(m, n)), _patched_custom_constraint_call(lambda n, m: Less(m, n)))
     rule1 = _ReplacementRuleWrapped(pattern1, lambda n, a, p, m, u, v, b : Mul(u, Pow(v, Mul(m, p)), Pow(TrigSimplifyAux(Add(a, Mul(b, Pow(v, Add(n, Mul(S(-1), m)))))), p)))
     replacer.add(rule1)
 
@@ -7063,68 +7063,68 @@ def _TrigSimplifyAux():
     rule13 = _ReplacementRuleWrapped(pattern13, lambda u, v, b, a : Mul(u, Add(Mul(S(1), Pow(a, S(-1))), Mul(S(-1), Mul(Sin(v), Pow(b, S(-1)))))))
     replacer.add(rule13)
 
-    pattern14 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern14 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule14 = _ReplacementRuleWrapped(pattern14, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Cot(v), n))), S(-1))))
     replacer.add(rule14)
 
-    pattern15 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern15 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule15 = _ReplacementRuleWrapped(pattern15, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Tan(v), n))), S(-1))))
     replacer.add(rule15)
 
-    pattern16 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))))), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern16 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))))), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule16 = _ReplacementRuleWrapped(pattern16, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Cos(v), n))), S(-1))))
     replacer.add(rule16)
 
-    pattern17 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern17 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule17 = _ReplacementRuleWrapped(pattern17, lambda n, a, u, v, b : Mul(u, Pow(Add(b, Mul(a, Pow(Sin(v), n))), S(-1))))
     replacer.add(rule17)
 
-    pattern18 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))))), S(-1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern18 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(a_, Mul(WildSymbol('b', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1))))), S(-1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule18 = _ReplacementRuleWrapped(pattern18, lambda n, a, u, v, b : Mul(u, Mul(Pow(Sin(v), n), Pow(Add(b, Mul(a, Pow(Cos(v), n))), S(-1)))))
     replacer.add(rule18)
 
-    pattern19 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: NonsumQ(a)))
+    pattern19 = Pattern(UtilityOperator(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), a_), S(-1)))), _patched_custom_constraint_call(lambda n: PositiveIntegerQ(n)), _patched_custom_constraint_call(lambda a: eager_NonsumQ(a)))
     rule19 = _ReplacementRuleWrapped(pattern19, lambda n, a, u, v, b : Mul(u, Mul(Pow(Cos(v), n), Pow(Add(b, Mul(a, Pow(Sin(v), n))), S(-1)))))
     replacer.add(rule19)
 
-    pattern20 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)))
+    pattern20 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('a', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)))
     rule20 = _ReplacementRuleWrapped(pattern20, lambda n, a, p, u, v, b : Mul(u, Pow(Sec(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Sin(v), n))), p)))
     replacer.add(rule20)
 
-    pattern21 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)))
+    pattern21 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)))
     rule21 = _ReplacementRuleWrapped(pattern21, lambda n, a, p, u, v, b : Mul(u, Pow(Csc(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Cos(v), n))), p)))
     replacer.add(rule21)
 
-    pattern22 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('b', optional_value=S(1)), Pow(sin(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('a', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)))
+    pattern22 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(WildSymbol('b', optional_value=S(1)), Pow(sin(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('a', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)))
     rule22 = _ReplacementRuleWrapped(pattern22, lambda n, a, p, u, v, b : Mul(u, Pow(Tan(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Cos(v), n))), p)))
     replacer.add(rule22)
 
-    pattern23 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(Pow(cos(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p: IntegersQ(n, p)))
+    pattern23 = Pattern(UtilityOperator(Mul(Pow(Add(Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(Pow(cos(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p: eager_IntegersQ(n, p)))
     rule23 = _ReplacementRuleWrapped(pattern23, lambda n, a, p, u, v, b : Mul(u, Pow(Cot(v), Mul(n, p)), Pow(Add(a, Mul(b, Pow(Sin(v), n))), p)))
     replacer.add(rule23)
 
-    pattern24 = Pattern(UtilityOperator(Mul(Pow(cos(v_), WildSymbol('m', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: IntegersQ(m, n, p)))
+    pattern24 = Pattern(UtilityOperator(Mul(Pow(cos(v_), WildSymbol('m', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: eager_IntegersQ(m, n, p)))
     rule24 = _ReplacementRuleWrapped(pattern24, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Cos(v), Add(m, Mul(S(-1), Mul(n, p)))), Pow(Add(c, Mul(b, Pow(Sin(v), n)), Mul(a, Pow(Cos(v), n))), p)))
     replacer.add(rule24)
 
-    pattern25 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(sec(v_), WildSymbol('m', optional_value=S(1))), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: IntegersQ(m, n, p)))
+    pattern25 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(sec(v_), WildSymbol('m', optional_value=S(1))), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(WildSymbol('c', optional_value=S(1)), Pow(sec(v_), WildSymbol('n', optional_value=S(1)))), Mul(WildSymbol('b', optional_value=S(1)), Pow(tan(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: eager_IntegersQ(m, n, p)))
     rule25 = _ReplacementRuleWrapped(pattern25, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Sec(v), Add(m, Mul(n, p))), Pow(Add(c, Mul(b, Pow(Sin(v), n)), Mul(a, Pow(Cos(v), n))), p)))
     replacer.add(rule25)
 
-    pattern26 = Pattern(UtilityOperator(Mul(Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(sin(v_), WildSymbol('m', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: IntegersQ(m, n, p)))
+    pattern26 = Pattern(UtilityOperator(Mul(Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)), Pow(sin(v_), WildSymbol('m', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, p, m: eager_IntegersQ(m, n, p)))
     rule26 = _ReplacementRuleWrapped(pattern26, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Sin(v), Add(m, Mul(S(-1), Mul(n, p)))), Pow(Add(c, Mul(b, Pow(Cos(v), n)), Mul(a, Pow(Sin(v), n))), p)))
     replacer.add(rule26)
 
-    pattern27 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WildSymbol('m', optional_value=S(1))), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p, m: IntegersQ(m, n, p)))
+    pattern27 = Pattern(UtilityOperator(Mul(Pow(csc(v_), WildSymbol('m', optional_value=S(1))), Pow(Add(WildSymbol('a', optional_value=S(0)), Mul(Pow(cot(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(Pow(csc(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('c', optional_value=S(1)))), WildSymbol('p', optional_value=S(1))), WildSymbol('u', optional_value=S(1)))), _patched_custom_constraint_call(lambda n, p, m: eager_IntegersQ(m, n, p)))
     rule27 = _ReplacementRuleWrapped(pattern27, lambda n, a, c, p, m, u, v, b : Mul(u, Pow(Csc(v), Add(m, Mul(n, p))), Pow(Add(c, Mul(b, Pow(Cos(v), n)), Mul(a, Pow(Sin(v), n))), p)))
     replacer.add(rule27)
 
-    pattern28 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('m', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(WildSymbol('b', optional_value=S(1)), Pow(sin(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, m: IntegersQ(m, n)))
-    rule28 = _ReplacementRuleWrapped(pattern28, lambda n, a, p, m, u, v, b : If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Cos(v), S('2')), Pow(Pow(Sin(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Sin(v), Add(m, n)))), Pow(Pow(Sin(v), m), S(-1))), p))))
+    pattern28 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(csc(v_), WildSymbol('m', optional_value=S(1))), WildSymbol('a', optional_value=S(1))), Mul(WildSymbol('b', optional_value=S(1)), Pow(sin(v_), WildSymbol('n', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, m: eager_IntegersQ(m, n)))
+    rule28 = _ReplacementRuleWrapped(pattern28, lambda n, a, p, m, u, v, b : eager_If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Cos(v), S('2')), Pow(Pow(Sin(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Sin(v), Add(m, n)))), Pow(Pow(Sin(v), m), S(-1))), p))))
     replacer.add(rule28)
 
-    pattern29 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(cos(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(WildSymbol('a', optional_value=S(1)), Pow(sec(v_), WildSymbol('m', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, m: IntegersQ(m, n)))
-    rule29 = _ReplacementRuleWrapped(pattern29, lambda n, a, p, m, u, v, b : If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Sin(v), S('2')), Pow(Pow(Cos(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Cos(v), Add(m, n)))), Pow(Pow(Cos(v), m), S(-1))), p))))
+    pattern29 = Pattern(UtilityOperator(Mul(WildSymbol('u', optional_value=S(1)), Pow(Add(Mul(Pow(cos(v_), WildSymbol('n', optional_value=S(1))), WildSymbol('b', optional_value=S(1))), Mul(WildSymbol('a', optional_value=S(1)), Pow(sec(v_), WildSymbol('m', optional_value=S(1))))), WildSymbol('p', optional_value=S(1))))), _patched_custom_constraint_call(lambda n, m: eager_IntegersQ(m, n)))
+    rule29 = _ReplacementRuleWrapped(pattern29, lambda n, a, p, m, u, v, b : eager_If(And(ZeroQ(Add(m, n, S(-2))), ZeroQ(Add(a, b))), Mul(u, Pow(Mul(a, Mul(Pow(Sin(v), S('2')), Pow(Pow(Cos(v), m), S(-1)))), p)), Mul(u, Pow(Mul(Add(a, Mul(b, Pow(Cos(v), Add(m, n)))), Pow(Pow(Cos(v), m), S(-1))), p))))
     replacer.add(rule29)
 
     pattern30 = Pattern(UtilityOperator(u_))
@@ -7149,42 +7149,42 @@ def Cancel(expr):
 def PolyLog(n, p, z=None):
     return polylog(n, p)
 
-def D(f, x):
+def eager_D(f, x):
     try:
         return f.diff(x)
     except ValueError:
         return Function('D')(f, x)
 
-def IntegralFreeQ(u):
+def eager_IntegralFreeQ(u):
     return FreeQ(u, Integral)
 
-def Dist(u, v, x):
+def eager_Dist(u, v, x):
     #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
-    w = Simp(u*x**2, x)/x**2
+    w = eager_Simp(u*x**2, x)/x**2
     if u == 1:
         return v
     elif u == 0:
         return 0
     elif NumericFactor(u) < 0 and NumericFactor(-u) > 0:
-        return -Dist(-u, v, x)
-    elif SumQ(v):
-        return Add(*[Dist(u, i, x) for i in v.args])
-    elif IntegralFreeQ(v):
-        return Simp(u*v, x)
-    elif w != u and FreeQ(w, x) and w == Simp(w, x) and w == Simp(w*x**2, x)/x**2:
-        return Dist(w, v, x)
+        return -eager_Dist(-u, v, x)
+    elif eager_SumQ(v):
+        return Add(*[eager_Dist(u, i, x) for i in v.args])
+    elif eager_IntegralFreeQ(v):
+        return eager_Simp(u*v, x)
+    elif w != u and FreeQ(w, x) and w == eager_Simp(w, x) and w == eager_Simp(w*x**2, x)/x**2:
+        return eager_Dist(w, v, x)
     else:
-        return Simp(u*v, x)
+        return eager_Simp(u*v, x)
 
 
-def Star(u, v):
+def eager_Star(u, v):
     # Rubi Star[u, v]: the product of u and v, with u distributed over the terms
     # of v (see IntegrationUtilityFunctions.m). Rubi co-opts Wolfram's otherwise
     # meaning-free \[Star] infix operator purely as a display-friendly product,
     # so the step-by-step output shows the natural "coefficient * integral"
     # structure. Semantically it is just multiplication with distribution.
     if isinstance(v, Add):
-        return Add(*[Star(u, term) for term in v.args])
+        return Add(*[eager_Star(u, term) for term in v.args])
     return u * v
 
 def PureFunctionOfCothQ(u, v, x):
@@ -7193,7 +7193,7 @@ def PureFunctionOfCothQ(u, v, x):
         return u != x
     elif CalculusQ(u):
         return False
-    elif HyperbolicQ(u) and ZeroQ(u.args[0] - v):
+    elif eager_HyperbolicQ(u) and ZeroQ(u.args[0] - v):
         return CothQ(u)
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
 
@@ -7258,7 +7258,7 @@ def Sum_doit(exp, args):
 
     """
     if not isinstance(args[2], (int, Integer)):
-        new_args = [args[0], args[1], Floor(args[2])]
+        new_args = [args[0], args[1], eager_Floor(args[2])]
         return Sum(exp, new_args).doit()
 
     return Sum(exp, args).doit()
@@ -7268,7 +7268,7 @@ def Sum_doit(exp, args):
 # sympy_wolfram.functions_eager and is imported at the top of this module.
 
 
-def Floor(x, a = None):
+def eager_Floor(x, a = None):
     if a is None:
         return floor(x)
     return a*floor(x/a)
@@ -7276,7 +7276,7 @@ def Floor(x, a = None):
 def Factor(var):
     return factor(var)
 
-def Rule(a, b):
+def eager_Rule(a, b):
     return {a: b}
 
 def Distribute(expr, *args):
@@ -7307,8 +7307,8 @@ class Discriminant(Function):
         except PolynomialError:
             return None  # stay unevaluated
 
-def Quotient(m, n):
-    return Floor(m/n)
+def eager_Quotient(m, n):
+    return eager_Floor(m/n)
 
 def process_trig(expr):
     """
@@ -7382,7 +7382,7 @@ def _ExpandIntegrand():
     def cons_f11(e, b, c, f, n, p, F, x, d, m):
         if not isinstance(x, Symbol):
             return False
-        return FreeQ(List(F, b, c, d, e, f, m, n, p), x)
+        return FreeQ(eager_List(F, b, c, d, e, f, m, n, p), x)
 
     cons11 = _patched_custom_constraint_call(cons_f11)
     def cons_f12(F, x):
@@ -7404,11 +7404,11 @@ def _ExpandIntegrand():
     def cons_f16(e, b, c, f, n, a, p, F, x, d, m):
         if not isinstance(x, Symbol):
             return False
-        return FreeQ(List(F, a, b, c, d, e, f, m, n, p), x)
+        return FreeQ(eager_List(F, a, b, c, d, e, f, m, n, p), x)
 
     cons16 = _patched_custom_constraint_call(cons_f16)
     def cons_f17(n, m):
-        return IntegersQ(m, n)
+        return eager_IntegersQ(m, n)
 
     cons17 = _patched_custom_constraint_call(cons_f17)
     def cons_f18(n):
@@ -7430,7 +7430,7 @@ def _ExpandIntegrand():
 
     cons21 = _patched_custom_constraint_call(cons_f21)
     def cons_f22(F):
-        return MemberQ(List(ArcSin, ArcCos, ArcSinh, ArcCosh), F)
+        return MemberQ(eager_List(ArcSin, ArcCos, ArcSinh, ArcCosh), F)
 
     cons22 = _patched_custom_constraint_call(cons_f22)
     def cons_f23(j, n):
@@ -7449,24 +7449,24 @@ def _ExpandIntegrand():
         if not isinstance(x, Symbol):
             return False
         def _cons_f_u(d, w, c, p, x):
-            return And(FreeQ(List(c, d), x), IntegerQ(p), Greater(p, m))
+            return And(FreeQ(eager_List(c, d), x), IntegerQ(p), Greater(p, m))
         cons_u = _patched_custom_constraint_call(_cons_f_u)
         pat = Pattern(UtilityOperator((c_ + x_*WildSymbol('d', optional_value=S(1)))**p_*WildSymbol('w', optional_value=S(1)), x_), cons_u)
         result_matchq = is_match(UtilityOperator(u, x), pat)
-        return Not(And(PositiveIntegerQ(m), result_matchq))
+        return eager_Not(And(PositiveIntegerQ(m), result_matchq))
 
     cons26 = _patched_custom_constraint_call(cons_f26)
     def cons_f27(b, v, n, a, x, u, m):
         if not isinstance(x, Symbol):
             return False
-        return And(FreeQ(List(a, b, m), x), NegativeIntegerQ(n), Not(IntegerQ(m)), PolynomialQ(u, x), PolynomialQ(v, x),\
-            RationalQ(m), Less(m, -1), GreaterEqual(Exponent(u, x), (-n - IntegerPart(m))*Exponent(v, x)))
+        return And(FreeQ(eager_List(a, b, m), x), NegativeIntegerQ(n), eager_Not(IntegerQ(m)), PolynomialQ(u, x), PolynomialQ(v, x),\
+            eager_RationalQ(m), Less(m, -1), GreaterEqual(eager_Exponent(u, x), (-n - IntegerPart(m))*eager_Exponent(v, x)))
     cons27 = _patched_custom_constraint_call(cons_f27)
     def cons_f28(v, n, x, u, m):
         if not isinstance(x, Symbol):
             return False
-        return And(FreeQ(List(a, b, m), x), NegativeIntegerQ(n), Not(IntegerQ(m)), PolynomialQ(u, x),\
-            PolynomialQ(v, x), GreaterEqual(Exponent(u, x), -n*Exponent(v, x)))
+        return And(FreeQ(eager_List(a, b, m), x), NegativeIntegerQ(n), eager_Not(IntegerQ(m)), PolynomialQ(u, x),\
+            PolynomialQ(v, x), GreaterEqual(eager_Exponent(u, x), -n*eager_Exponent(v, x)))
     cons28 = _patched_custom_constraint_call(cons_f28)
     def cons_f29(n):
         return PositiveIntegerQ(n/S(4))
@@ -7485,15 +7485,15 @@ def _ExpandIntegrand():
 
     cons32 = _patched_custom_constraint_call(cons_f32)
     def cons_f33(n, m):
-        return OddQ(n/GCD(m, n))
+        return OddQ(n/eager_GCD(m, n))
 
     cons33 = _patched_custom_constraint_call(cons_f33)
     def cons_f34(a, b):
-        return PosQ(a/b)
+        return eager_PosQ(a/b)
 
     cons34 = _patched_custom_constraint_call(cons_f34)
     def cons_f35(n, m, p):
-        return IntegersQ(m, n, p)
+        return eager_IntegersQ(m, n, p)
 
     cons35 = _patched_custom_constraint_call(cons_f35)
     def cons_f36(n, m, p):
@@ -7501,7 +7501,7 @@ def _ExpandIntegrand():
 
     cons36 = _patched_custom_constraint_call(cons_f36)
     def cons_f37(q, n, m, p):
-        return IntegersQ(m, n, p, q)
+        return eager_IntegersQ(m, n, p, q)
 
     cons37 = _patched_custom_constraint_call(cons_f37)
     def cons_f38(n, q, m, p):
@@ -7517,7 +7517,7 @@ def _ExpandIntegrand():
 
     cons40 = _patched_custom_constraint_call(cons_f40)
     def cons_f41(n, m):
-        return IntegersQ(m, n/S(2))
+        return eager_IntegersQ(m, n/S(2))
 
     cons41 = _patched_custom_constraint_call(cons_f41)
     def cons_f42(n, m):
@@ -7529,7 +7529,7 @@ def _ExpandIntegrand():
 
     cons43 = _patched_custom_constraint_call(cons_f43)
     def cons_f44(j, n, m):
-        return IntegersQ(m, n, j)
+        return eager_IntegersQ(m, n, j)
 
     cons44 = _patched_custom_constraint_call(cons_f44)
     def cons_f45(n, m):
@@ -7537,7 +7537,7 @@ def _ExpandIntegrand():
 
     cons45 = _patched_custom_constraint_call(cons_f45)
     def cons_f46(n, m, p):
-        return Not(And(Equal(m, n), Equal(p, S(-1))))
+        return eager_Not(And(Equal(m, n), Equal(p, S(-1))))
 
     cons46 = _patched_custom_constraint_call(cons_f46)
     def cons_f47(v, x):
@@ -7549,72 +7549,72 @@ def _ExpandIntegrand():
     def cons_f48(v, x):
         if not isinstance(x, Symbol):
             return False
-        return BinomialQ(v, x)
+        return eager_BinomialQ(v, x)
 
     cons48 = _patched_custom_constraint_call(cons_f48)
     def cons_f49(v, x, u):
         if not isinstance(x, Symbol):
             return False
-        return Inequality(Exponent(u, x), Equal, Exponent(v, x) + S(-1), GreaterEqual, S(2))
+        return Inequality(eager_Exponent(u, x), Equal, eager_Exponent(v, x) + S(-1), GreaterEqual, S(2))
 
     cons49 = _patched_custom_constraint_call(cons_f49)
     def cons_f50(v, x, u):
         if not isinstance(x, Symbol):
             return False
-        return GreaterEqual(Exponent(u, x), Exponent(v, x))
+        return GreaterEqual(eager_Exponent(u, x), eager_Exponent(v, x))
 
     cons50 = _patched_custom_constraint_call(cons_f50)
     def cons_f51(p):
-        return Not(IntegerQ(p))
+        return eager_Not(IntegerQ(p))
 
     cons51 = _patched_custom_constraint_call(cons_f51)
 
     def With2(e, b, c, f, n, a, g, h, x, d, m):
         tmp = a*h - b*g
         k = Symbol('k')
-        return f**(e*(c + d*x)**n)*SimplifyTerm(h**(-m)*tmp**m, x)/(g + h*x) + Sum_doit(f**(e*(c + d*x)**n)*(a + b*x)**(-k + m)*SimplifyTerm(b*h**(-k)*tmp**(k - 1), x), List(k, 1, m))
+        return f**(e*(c + d*x)**n)*SimplifyTerm(h**(-m)*tmp**m, x)/(g + h*x) + Sum_doit(f**(e*(c + d*x)**n)*(a + b*x)**(-k + m)*SimplifyTerm(b*h**(-k)*tmp**(k - 1), x), eager_List(k, 1, m))
     pattern2 = Pattern(UtilityOperator(f_**((x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))**WildSymbol('n', optional_value=S(1))*WildSymbol('e', optional_value=S(1)))*(x_*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**WildSymbol('m', optional_value=S(1))/(x_*WildSymbol('h', optional_value=S(1)) + WildSymbol('g', optional_value=S(0))), x_), cons3, cons4, cons5, cons6, cons7, cons8, cons9, cons10, cons1, cons2)
     rule2 = _ReplacementRuleWrapped(pattern2, With2)
     pattern3 = Pattern(UtilityOperator(F_**((x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)))*x_**WildSymbol('m', optional_value=S(1))*(e_ + x_*WildSymbol('f', optional_value=S(1)))**WildSymbol('p', optional_value=S(1)), x_), cons12, cons4, cons5, cons6, cons7, cons8, cons13, cons14, cons15, cons11)
     def replacement3(e, b, c, f, n, p, F, x, d, m):
-        return If(And(PositiveIntegerQ(m, p), LessEqual(m, p), Or(EqQ(n, S(1)), ZeroQ(-c*f + d*e))), ExpandLinearProduct(F**(b*(c + d*x)**n)*(e + f*x)**p, x**m, e, f, x), If(PositiveIntegerQ(p), Distribute(F**(b*(c + d*x)**n)*x**m*(e + f*x)**p, Plus, Times), ExpandIntegrand(F**(b*(c + d*x)**n), x**m*(e + f*x)**p, x)))
+        return eager_If(And(PositiveIntegerQ(m, p), LessEqual(m, p), Or(eager_EqQ(n, S(1)), ZeroQ(-c*f + d*e))), eager_ExpandLinearProduct(F**(b*(c + d*x)**n)*(e + f*x)**p, x**m, e, f, x), eager_If(PositiveIntegerQ(p), Distribute(F**(b*(c + d*x)**n)*x**m*(e + f*x)**p, Plus, Times), eager_ExpandIntegrand(F**(b*(c + d*x)**n), x**m*(e + f*x)**p, x)))
     rule3 = _ReplacementRuleWrapped(pattern3, replacement3)
     pattern4 = Pattern(UtilityOperator(F_**((x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))*x_**WildSymbol('m', optional_value=S(1))*(e_ + x_*WildSymbol('f', optional_value=S(1)))**WildSymbol('p', optional_value=S(1)), x_), cons12, cons3, cons4, cons5, cons6, cons7, cons8, cons13, cons14, cons15, cons16)
     def replacement4(e, b, c, f, n, a, p, F, x, d, m):
-        return If(And(PositiveIntegerQ(m, p), LessEqual(m, p), Or(EqQ(n, S(1)), ZeroQ(-c*f + d*e))), ExpandLinearProduct(F**(a + b*(c + d*x)**n)*(e + f*x)**p, x**m, e, f, x), If(PositiveIntegerQ(p), Distribute(F**(a + b*(c + d*x)**n)*x**m*(e + f*x)**p, Plus, Times), ExpandIntegrand(F**(a + b*(c + d*x)**n), x**m*(e + f*x)**p, x)))
+        return eager_If(And(PositiveIntegerQ(m, p), LessEqual(m, p), Or(eager_EqQ(n, S(1)), ZeroQ(-c*f + d*e))), eager_ExpandLinearProduct(F**(a + b*(c + d*x)**n)*(e + f*x)**p, x**m, e, f, x), eager_If(PositiveIntegerQ(p), Distribute(F**(a + b*(c + d*x)**n)*x**m*(e + f*x)**p, Plus, Times), eager_ExpandIntegrand(F**(a + b*(c + d*x)**n), x**m*(e + f*x)**p, x)))
     rule4 = _ReplacementRuleWrapped(pattern4, replacement4)
     def With5(b, v, c, n, a, F, u, x, d, m):
-        if not isinstance(x, Symbol) or not (FreeQ([F, a, b, c, d], x) and IntegersQ(m, n) and n < 0):
+        if not isinstance(x, Symbol) or not (FreeQ([F, a, b, c, d], x) and eager_IntegersQ(m, n) and n < 0):
             return False
-        w = ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x)
-        w = ReplaceAll(w, Rule(x, F**v))
-        if SumQ(w):
+        w = eager_ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x)
+        w = eager_ReplaceAll(w, eager_Rule(x, F**v))
+        if eager_SumQ(w):
             return True
         return False
     pattern5 = Pattern(UtilityOperator((F_**v_*WildSymbol('b', optional_value=S(1)) + a_)**WildSymbol('m', optional_value=S(1))*(F_**v_*WildSymbol('d', optional_value=S(1)) + c_)**n_*WildSymbol('u', optional_value=S(1)), x_), cons12, cons3, cons4, cons5, cons6, cons17, cons18, _patched_custom_constraint_call(With5))
     def replacement5(b, v, c, n, a, F, u, x, d, m):
-        w = ReplaceAll(ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x), Rule(x, F**v))
+        w = eager_ReplaceAll(eager_ExpandIntegrand((a + b*x)**m*(c + d*x)**n, x), eager_Rule(x, F**v))
         return w.func(*[u*i for i in w.args])
     rule5 = _ReplacementRuleWrapped(pattern5, replacement5)
     def With6(e, b, c, f, n, a, x, u, d, m):
         if not isinstance(x, Symbol) or not (FreeQ([a, b, c, d, e, f, m, n], x) and PolynomialQ(u,x)):
             return False
-        v = ExpandIntegrand(u*(a + b*x)**m, x)
-        if SumQ(v):
+        v = eager_ExpandIntegrand(u*(a + b*x)**m, x)
+        if eager_SumQ(v):
             return True
         return False
     pattern6 = Pattern(UtilityOperator(f_**((x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))**WildSymbol('n', optional_value=S(1))*WildSymbol('e', optional_value=S(1)))*u_*(x_*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**WildSymbol('m', optional_value=S(1)), x_), cons3, cons4, cons5, cons6, cons7, cons8, cons13, cons14, cons19, _patched_custom_constraint_call(With6))
     def replacement6(e, b, c, f, n, a, x, u, d, m):
-        v = ExpandIntegrand(u*(a + b*x)**m, x)
+        v = eager_ExpandIntegrand(u*(a + b*x)**m, x)
         return Distribute(f**(e*(c + d*x)**n)*v, Plus, Times)
     rule6 = _ReplacementRuleWrapped(pattern6, replacement6)
     pattern7 = Pattern(UtilityOperator(u_*(x_*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**WildSymbol('m', optional_value=S(1))*Log((x_**WildSymbol('n', optional_value=S(1))*WildSymbol('e', optional_value=S(1)) + WildSymbol('d', optional_value=S(0)))**WildSymbol('p', optional_value=S(1))*WildSymbol('c', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons7, cons13, cons14, cons15, cons19)
     def replacement7(e, b, c, n, a, p, x, u, d, m):
-        return ExpandIntegrand(Log(c*(d + e*x**n)**p), u*(a + b*x)**m, x)
+        return eager_ExpandIntegrand(Log(c*(d + e*x**n)**p), u*(a + b*x)**m, x)
     rule7 = _ReplacementRuleWrapped(pattern7, replacement7)
     pattern8 = Pattern(UtilityOperator(f_**((x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))**WildSymbol('n', optional_value=S(1))*WildSymbol('e', optional_value=S(1)))*u_, x_), cons5, cons6, cons7, cons8, cons14, cons19)
     def replacement8(e, c, f, n, x, u, d):
-        return If(EqQ(n, S(1)), ExpandIntegrand(f**(e*(c + d*x)**n), u, x), ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x))
+        return eager_If(eager_EqQ(n, S(1)), eager_ExpandIntegrand(f**(e*(c + d*x)**n), u, x), eager_ExpandLinearProduct(f**(e*(c + d*x)**n), u, c, d, x))
     rule8 = _ReplacementRuleWrapped(pattern8, replacement8)
     # pattern9 = Pattern(UtilityOperator(F_**u_*(G_*u_*WildSymbol('b', optional_value=S(1)) + a_)**WildSymbol('n', optional_value=S(1)), x_), cons3, cons4, cons17, cons20)
     # def replacement9(b, G, n, a, F, u, x, m):
@@ -7622,7 +7622,7 @@ def _ExpandIntegrand():
     # rule9 = _ReplacementRuleWrapped(pattern9, replacement9)
     pattern10 = Pattern(UtilityOperator(u_*(WildSymbol('a', optional_value=S(0)) + WildSymbol('b', optional_value=S(1))*Log(((x_*WildSymbol('f', optional_value=S(1)) + WildSymbol('e', optional_value=S(0)))**WildSymbol('p', optional_value=S(1))*WildSymbol('d', optional_value=S(1)))**WildSymbol('q', optional_value=S(1))*WildSymbol('c', optional_value=S(1))))**n_, x_), cons3, cons4, cons5, cons6, cons7, cons8, cons14, cons15, cons21, cons19)
     def replacement10(e, b, c, f, n, a, p, x, u, d, q):
-        return ExpandLinearProduct((a + b*Log(c*(d*(e + f*x)**p)**q))**n, u, e, f, x)
+        return eager_ExpandLinearProduct((a + b*Log(c*(d*(e + f*x)**p)**q))**n, u, e, f, x)
     rule10 = _ReplacementRuleWrapped(pattern10, replacement10)
     # pattern11 = Pattern(UtilityOperator(u_*(F_*(x_*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**n_, x_), cons3, cons4, cons5, cons6, cons14, cons19, cons22)
     # def replacement11(b, c, n, a, F, u, x, d):
@@ -7630,36 +7630,36 @@ def _ExpandIntegrand():
     # rule11 = _ReplacementRuleWrapped(pattern11, replacement11)
     pattern12 = Pattern(UtilityOperator(WildSymbol('u', optional_value=S(1))/(x_**n_*WildSymbol('a', optional_value=S(1)) + sqrt(c_ + x_**j_*WildSymbol('d', optional_value=S(1)))*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons14, cons23)
     def replacement12(b, c, n, a, x, u, d, j):
-        return ExpandIntegrand(u*(a*x**n - b*sqrt(c + d*x**(S(2)*n)))/(-b**S(2)*c + x**(S(2)*n)*(a**S(2) - b**S(2)*d)), x)
+        return eager_ExpandIntegrand(u*(a*x**n - b*sqrt(c + d*x**(S(2)*n)))/(-b**S(2)*c + x**(S(2)*n)*(a**S(2) - b**S(2)*d)), x)
     rule12 = _ReplacementRuleWrapped(pattern12, replacement12)
     pattern13 = Pattern(UtilityOperator((a_ + x_*WildSymbol('b', optional_value=S(1)))**m_/(c_ + x_*WildSymbol('d', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons1)
     def replacement13(b, c, a, x, d, m):
-        if RationalQ(a, b, c, d):
-            return ExpandExpression((a + b*x)**m/(c + d*x), x)
+        if eager_RationalQ(a, b, c, d):
+            return eager_ExpandExpression((a + b*x)**m/(c + d*x), x)
         else:
             tmp = a*d - b*c
             k = Symbol("k")
-            return Sum_doit((a + b*x)**(-k + m)*SimplifyTerm(b*d**(-k)*tmp**(k + S(-1)), x), List(k, S(1), m)) + SimplifyTerm(d**(-m)*tmp**m, x)/(c + d*x)
+            return Sum_doit((a + b*x)**(-k + m)*SimplifyTerm(b*d**(-k)*tmp**(k + S(-1)), x), eager_List(k, S(1), m)) + SimplifyTerm(d**(-m)*tmp**m, x)/(c + d*x)
 
     rule13 = _ReplacementRuleWrapped(pattern13, replacement13)
     pattern14 = Pattern(UtilityOperator((A_ + x_*WildSymbol('B', optional_value=S(1)))*(a_ + x_*WildSymbol('b', optional_value=S(1)))**WildSymbol('m', optional_value=S(1))/(c_ + x_*WildSymbol('d', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons24, cons25, cons1)
     def replacement14(b, B, A, c, a, x, d, m):
-        if RationalQ(a, b, c, d, A, B):
-            return ExpandExpression((A + B*x)*(a + b*x)**m/(c + d*x), x)
+        if eager_RationalQ(a, b, c, d, A, B):
+            return eager_ExpandExpression((A + B*x)*(a + b*x)**m/(c + d*x), x)
         else:
             tmp1 = (A*d - B*c)/d
-            tmp2 = ExpandIntegrand((a + b*x)**m/(c + d*x), x)
-            tmp2 = If(SumQ(tmp2), tmp2.func(*[SimplifyTerm(tmp1*i, x) for i in tmp2.args]), SimplifyTerm(tmp1*tmp2, x))
+            tmp2 = eager_ExpandIntegrand((a + b*x)**m/(c + d*x), x)
+            tmp2 = eager_If(eager_SumQ(tmp2), tmp2.func(*[SimplifyTerm(tmp1*i, x) for i in tmp2.args]), SimplifyTerm(tmp1*tmp2, x))
             return SimplifyTerm(B/d, x)*(a + b*x)**m + tmp2
     rule14 = _ReplacementRuleWrapped(pattern14, replacement14)
 
     def With15(b, a, x, u, m):
-        tmp1 = ExpandLinearProduct((a + b*x)**m, u, a, b, x)
+        tmp1 = eager_ExpandLinearProduct((a + b*x)**m, u, a, b, x)
         if not IntegerQ(m):
             return tmp1
         else:
-            tmp2 = ExpandExpression(u*(a + b*x)**m, x)
-            if SumQ(tmp2) and LessEqual(LeafCount(tmp2), LeafCount(tmp1) + S(2)):
+            tmp2 = eager_ExpandExpression(u*(a + b*x)**m, x)
+            if eager_SumQ(tmp2) and LessEqual(eager_LeafCount(tmp2), eager_LeafCount(tmp1) + S(2)):
                 return tmp2
             else:
                 return tmp1
@@ -7668,92 +7668,92 @@ def _ExpandIntegrand():
     pattern16 = Pattern(UtilityOperator(u_*v_**n_*(a_ + x_*WildSymbol('b', optional_value=S(1)))**m_, x_), cons27)
     def replacement16(b, v, n, a, x, u, m):
         s = PolynomialQuotientRemainder(u, v**(-n)*(a+b*x)**(-IntegerPart(m)), x)
-        return ExpandIntegrand((a + b*x)**FractionalPart(m)*s[0], x) + ExpandIntegrand(v**n*(a + b*x)**m*s[1], x)
+        return eager_ExpandIntegrand((a + b*x)**FractionalPart(m)*s[0], x) + eager_ExpandIntegrand(v**n*(a + b*x)**m*s[1], x)
     rule16 = _ReplacementRuleWrapped(pattern16, replacement16)
 
     pattern17 = Pattern(UtilityOperator(u_*v_**n_*(a_ + x_*WildSymbol('b', optional_value=S(1)))**m_, x_), cons28)
     def replacement17(b, v, n, a, x, u, m):
         s = PolynomialQuotientRemainder(u, v**(-n),x)
-        return ExpandIntegrand((a + b*x)**(m)*s[0], x) + ExpandIntegrand(v**n*(a + b*x)**m*s[1], x)
+        return eager_ExpandIntegrand((a + b*x)**(m)*s[0], x) + eager_ExpandIntegrand(v**n*(a + b*x)**m*s[1], x)
     rule17 = _ReplacementRuleWrapped(pattern17, replacement17)
 
     def With18(b, n, a, x, u):
-        r = Numerator(Rt(-a/b, S(2)))
-        s = Denominator(Rt(-a/b, S(2)))
+        r = eager_Numerator(eager_Rt(-a/b, S(2)))
+        s = eager_Denominator(eager_Rt(-a/b, S(2)))
         return r/(S(2)*a*(r + s*u**(n/S(2)))) + r/(S(2)*a*(r - s*u**(n/S(2))))
     pattern18 = Pattern(UtilityOperator(S(1)/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons29)
     rule18 = _ReplacementRuleWrapped(pattern18, With18)
     def With19(b, n, a, x, u):
         k = Symbol("k")
-        r = Numerator(Rt(-a/b, n))
-        s = Denominator(Rt(-a/b, n))
-        return Sum_doit(r/(a*n*(-(-1)**(2*k/n)*s*u + r)), List(k, 1, n))
+        r = eager_Numerator(eager_Rt(-a/b, n))
+        s = eager_Denominator(eager_Rt(-a/b, n))
+        return Sum_doit(r/(a*n*(-(-1)**(2*k/n)*s*u + r)), eager_List(k, 1, n))
     pattern19 = Pattern(UtilityOperator(S(1)/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons30, cons31)
     rule19 = _ReplacementRuleWrapped(pattern19, With19)
     def With20(b, n, a, x, u, m):
         k = Symbol("k")
-        g = GCD(m, n)
-        r = Numerator(Rt(a/b, n/GCD(m, n)))
-        s = Denominator(Rt(a/b, n/GCD(m, n)))
-        return If(CoprimeQ(g + m, n), Sum_doit((-1)**(-2*k*m/n)*r*(-r/s)**(m/g)/(a*n*((-1)**(2*g*k/n)*s*u**g + r)), List(k, 1, n/g)), Sum_doit((-1)**(2*k*(g + m)/n)*r*(-r/s)**(m/g)/(a*n*((-1)**(2*g*k/n)*r + s*u**g)), List(k, 1, n/g)))
+        g = eager_GCD(m, n)
+        r = eager_Numerator(eager_Rt(a/b, n/eager_GCD(m, n)))
+        s = eager_Denominator(eager_Rt(a/b, n/eager_GCD(m, n)))
+        return eager_If(CoprimeQ(g + m, n), Sum_doit((-1)**(-2*k*m/n)*r*(-r/s)**(m/g)/(a*n*((-1)**(2*g*k/n)*s*u**g + r)), eager_List(k, 1, n/g)), Sum_doit((-1)**(2*k*(g + m)/n)*r*(-r/s)**(m/g)/(a*n*((-1)**(2*g*k/n)*r + s*u**g)), eager_List(k, 1, n/g)))
     pattern20 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons17, cons32, cons33, cons34)
     rule20 = _ReplacementRuleWrapped(pattern20, With20)
     def With21(b, n, a, x, u, m):
         k = Symbol("k")
-        g = GCD(m, n)
-        r = Numerator(Rt(-a/b, n/GCD(m, n)))
-        s = Denominator(Rt(-a/b, n/GCD(m, n)))
-        return If(Equal(n/g, S(2)), s/(S(2)*b*(r + s*u**g)) - s/(S(2)*b*(r - s*u**g)), If(CoprimeQ(g + m, n), Sum_doit((S(-1))**(-S(2)*k*m/n)*r*(r/s)**(m/g)/(a*n*(-(S(-1))**(S(2)*g*k/n)*s*u**g + r)), List(k, S(1), n/g)), Sum_doit((S(-1))**(S(2)*k*(g + m)/n)*r*(r/s)**(m/g)/(a*n*((S(-1))**(S(2)*g*k/n)*r - s*u**g)), List(k, S(1), n/g))))
+        g = eager_GCD(m, n)
+        r = eager_Numerator(eager_Rt(-a/b, n/eager_GCD(m, n)))
+        s = eager_Denominator(eager_Rt(-a/b, n/eager_GCD(m, n)))
+        return eager_If(Equal(n/g, S(2)), s/(S(2)*b*(r + s*u**g)) - s/(S(2)*b*(r - s*u**g)), eager_If(CoprimeQ(g + m, n), Sum_doit((S(-1))**(-S(2)*k*m/n)*r*(r/s)**(m/g)/(a*n*(-(S(-1))**(S(2)*g*k/n)*s*u**g + r)), eager_List(k, S(1), n/g)), Sum_doit((S(-1))**(S(2)*k*(g + m)/n)*r*(r/s)**(m/g)/(a*n*((S(-1))**(S(2)*g*k/n)*r - s*u**g)), eager_List(k, S(1), n/g))))
     pattern21 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons17, cons32)
     rule21 = _ReplacementRuleWrapped(pattern21, With21)
     def With22(b, c, n, a, x, u, d, m):
         k = Symbol("k")
-        r = Numerator(Rt(-a/b, n))
-        s = Denominator(Rt(-a/b, n))
-        return Sum_doit((c*r + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), List(k, 1, n))
+        r = eager_Numerator(eager_Rt(-a/b, n))
+        s = eager_Denominator(eager_Rt(-a/b, n))
+        return Sum_doit((c*r + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), eager_List(k, 1, n))
     pattern22 = Pattern(UtilityOperator((c_ + u_**WildSymbol('m', optional_value=S(1))*WildSymbol('d', optional_value=S(1)))/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons17, cons32)
     rule22 = _ReplacementRuleWrapped(pattern22, With22)
     def With23(e, b, c, n, a, p, x, u, d, m):
         k = Symbol("k")
-        r = Numerator(Rt(-a/b, n))
-        s = Denominator(Rt(-a/b, n))
-        return Sum_doit((c*r + (-1)**(-2*k*p/n)*e*r*(r/s)**p + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), List(k, 1, n))
+        r = eager_Numerator(eager_Rt(-a/b, n))
+        s = eager_Denominator(eager_Rt(-a/b, n))
+        return Sum_doit((c*r + (-1)**(-2*k*p/n)*e*r*(r/s)**p + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), eager_List(k, 1, n))
     pattern23 = Pattern(UtilityOperator((u_**p_*WildSymbol('e', optional_value=S(1)) + u_**WildSymbol('m', optional_value=S(1))*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons7, cons35, cons36)
     rule23 = _ReplacementRuleWrapped(pattern23, With23)
     def With24(e, b, c, f, n, a, p, x, u, d, q, m):
         k = Symbol("k")
-        r = Numerator(Rt(-a/b, n))
-        s = Denominator(Rt(-a/b, n))
-        return Sum_doit((c*r + (-1)**(-2*k*q/n)*f*r*(r/s)**q + (-1)**(-2*k*p/n)*e*r*(r/s)**p + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), List(k, 1, n))
+        r = eager_Numerator(eager_Rt(-a/b, n))
+        s = eager_Denominator(eager_Rt(-a/b, n))
+        return Sum_doit((c*r + (-1)**(-2*k*q/n)*f*r*(r/s)**q + (-1)**(-2*k*p/n)*e*r*(r/s)**p + (-1)**(-2*k*m/n)*d*r*(r/s)**m)/(a*n*(-(-1)**(2*k/n)*s*u + r)), eager_List(k, 1, n))
     pattern24 = Pattern(UtilityOperator((u_**p_*WildSymbol('e', optional_value=S(1)) + u_**q_*WildSymbol('f', optional_value=S(1)) + u_**WildSymbol('m', optional_value=S(1))*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))/(a_ + u_**n_*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons7, cons8, cons37, cons38)
     rule24 = _ReplacementRuleWrapped(pattern24, With24)
     def With25(c, n, a, p, x, u):
         q = Symbol('q')
-        return ReplaceAll(ExpandIntegrand(c**(-p), (c*x - q)**p*(c*x + q)**p, x), List(Rule(q, Rt(-a*c, S(2))), Rule(x, u**(n/S(2)))))
+        return eager_ReplaceAll(eager_ExpandIntegrand(c**(-p), (c*x - q)**p*(c*x + q)**p, x), eager_List(eager_Rule(q, eager_Rt(-a*c, S(2))), eager_Rule(x, u**(n/S(2)))))
     pattern25 = Pattern(UtilityOperator((a_ + u_**WildSymbol('n', optional_value=S(1))*WildSymbol('c', optional_value=S(1)))**p_, x_), cons3, cons5, cons39, cons40)
     rule25 = _ReplacementRuleWrapped(pattern25, With25)
     def With26(c, n, a, p, x, u, m):
         q = Symbol('q')
-        return ReplaceAll(ExpandIntegrand(c**(-p), x**m*(c*x**(n/S(2)) - q)**p*(c*x**(n/S(2)) + q)**p, x), List(Rule(q, Rt(-a*c, S(2))), Rule(x, u)))
+        return eager_ReplaceAll(eager_ExpandIntegrand(c**(-p), x**m*(c*x**(n/S(2)) - q)**p*(c*x**(n/S(2)) + q)**p, x), eager_List(eager_Rule(q, eager_Rt(-a*c, S(2))), eager_Rule(x, u)))
     pattern26 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*(u_**WildSymbol('n', optional_value=S(1))*WildSymbol('c', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**p_, x_), cons3, cons5, cons41, cons40, cons32, cons42)
     rule26 = _ReplacementRuleWrapped(pattern26, With26)
     def With27(b, c, n, a, p, x, u, j):
         q = Symbol('q')
-        return ReplaceAll(ExpandIntegrand(S(4)**(-p)*c**(-p), (b + S(2)*c*x - q)**p*(b + S(2)*c*x + q)**p, x), List(Rule(q, Rt(-S(4)*a*c + b**S(2), S(2))), Rule(x, u**n)))
+        return eager_ReplaceAll(eager_ExpandIntegrand(S(4)**(-p)*c**(-p), (b + S(2)*c*x - q)**p*(b + S(2)*c*x + q)**p, x), eager_List(eager_Rule(q, eager_Rt(-S(4)*a*c + b**S(2), S(2))), eager_Rule(x, u**n)))
     pattern27 = Pattern(UtilityOperator((u_**WildSymbol('j', optional_value=S(1))*WildSymbol('c', optional_value=S(1)) + u_**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**p_, x_), cons3, cons4, cons5, cons30, cons23, cons40, cons43)
     rule27 = _ReplacementRuleWrapped(pattern27, With27)
     def With28(b, c, n, a, p, x, u, j, m):
         q = Symbol('q')
-        return ReplaceAll(ExpandIntegrand(S(4)**(-p)*c**(-p), x**m*(b + S(2)*c*x**n - q)**p*(b + S(2)*c*x**n + q)**p, x), List(Rule(q, Rt(-S(4)*a*c + b**S(2), S(2))), Rule(x, u)))
+        return eager_ReplaceAll(eager_ExpandIntegrand(S(4)**(-p)*c**(-p), x**m*(b + S(2)*c*x**n - q)**p*(b + S(2)*c*x**n + q)**p, x), eager_List(eager_Rule(q, eager_Rt(-S(4)*a*c + b**S(2), S(2))), eager_Rule(x, u)))
     pattern28 = Pattern(UtilityOperator(u_**WildSymbol('m', optional_value=S(1))*(u_**WildSymbol('j', optional_value=S(1))*WildSymbol('c', optional_value=S(1)) + u_**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0)))**p_, x_), cons3, cons4, cons5, cons44, cons23, cons40, cons45, cons46, cons43)
     rule28 = _ReplacementRuleWrapped(pattern28, With28)
     def With29(b, c, n, a, x, u, d, j):
-        q = Rt(-a/b, S(2))
+        q = eager_Rt(-a/b, S(2))
         return -(c - d*q)/(S(2)*b*q*(q + u**n)) - (c + d*q)/(S(2)*b*q*(q - u**n))
     pattern29 = Pattern(UtilityOperator((u_**WildSymbol('n', optional_value=S(1))*WildSymbol('d', optional_value=S(1)) + WildSymbol('c', optional_value=S(0)))/(a_ + u_**WildSymbol('j', optional_value=S(1))*WildSymbol('b', optional_value=S(1))), x_), cons3, cons4, cons5, cons6, cons14, cons23)
     rule29 = _ReplacementRuleWrapped(pattern29, With29)
     def With30(e, b, c, f, n, a, g, x, u, d, j):
-        q = Rt(-S(4)*a*c + b**S(2), S(2))
+        q = eager_Rt(-S(4)*a*c + b**S(2), S(2))
         r = TogetherSimplify((-b*e*g + S(2)*c*(d + e*f))/q)
         return (e*g - r)/(b + 2*c*u**n + q) + (e*g + r)/(b + 2*c*u**n - q)
     pattern30 = Pattern(UtilityOperator(((u_**WildSymbol('n', optional_value=S(1))*WildSymbol('g', optional_value=S(1)) + WildSymbol('f', optional_value=S(0)))*WildSymbol('e', optional_value=S(1)) + WildSymbol('d', optional_value=S(0)))/(u_**WildSymbol('j', optional_value=S(1))*WildSymbol('c', optional_value=S(1)) + u_**WildSymbol('n', optional_value=S(1))*WildSymbol('b', optional_value=S(1)) + WildSymbol('a', optional_value=S(0))), x_), cons3, cons4, cons5, cons6, cons7, cons8, cons9, cons14, cons23, cons43)
@@ -7761,30 +7761,30 @@ def _ExpandIntegrand():
     def With31(v, x, u):
         lst = CoefficientList(u, x)
         i = Symbol('i')
-        return x**Exponent(u, x)*lst[-1]/v + Sum_doit(x**(i - 1)*Part(lst, i), List(i, 1, Exponent(u, x)))/v
+        return x**eager_Exponent(u, x)*lst[-1]/v + Sum_doit(x**(i - 1)*eager_Part(lst, i), eager_List(i, 1, eager_Exponent(u, x)))/v
     pattern31 = Pattern(UtilityOperator(u_/v_, x_), cons19, cons47, cons48, cons49)
     rule31 = _ReplacementRuleWrapped(pattern31, With31)
     pattern32 = Pattern(UtilityOperator(u_/v_, x_), cons19, cons47, cons50)
     def replacement32(v, x, u):
-        return PolynomialDivide(u, v, x)
+        return eager_PolynomialDivide(u, v, x)
     rule32 = _ReplacementRuleWrapped(pattern32, replacement32)
     pattern33 = Pattern(UtilityOperator(u_*(x_*WildSymbol('a', optional_value=S(1)))**p_, x_), cons51, cons19)
     def replacement33(x, a, u, p):
-        return ExpandToSum((a*x)**p, u, x)
+        return eager_ExpandToSum((a*x)**p, u, x)
     rule33 = _ReplacementRuleWrapped(pattern33, replacement33)
     pattern34 = Pattern(UtilityOperator(v_**p_*WildSymbol('u', optional_value=S(1)), x_), cons51)
     def replacement34(v, x, u, p):
-        return ExpandIntegrand(NormalizeIntegrand(v**p, x), u, x)
+        return eager_ExpandIntegrand(eager_NormalizeIntegrand(v**p, x), u, x)
     rule34 = _ReplacementRuleWrapped(pattern34, replacement34)
     pattern35 = Pattern(UtilityOperator(u_, x_))
     def replacement35(x, u):
-        return ExpandExpression(u, x)
+        return eager_ExpandExpression(u, x)
     rule35 = _ReplacementRuleWrapped(pattern35, replacement35)
     return [ rule2,rule3, rule4, rule5, rule6, rule7, rule8, rule10, rule12, rule13, rule14, rule15, rule16, rule17, rule18, rule19, rule20, rule21, rule22, rule23, rule24, rule25, rule26, rule27, rule28, rule29, rule30, rule31, rule32, rule33, rule34, rule35]
 
 def _RemoveContentAux():
     def cons_f1(b, a):
-        return IntegersQ(a, b)
+        return eager_IntegersQ(a, b)
 
     cons1 = _patched_custom_constraint_call(cons_f1)
 
@@ -7794,12 +7794,12 @@ def _RemoveContentAux():
     cons2 = _patched_custom_constraint_call(cons_f2)
 
     def cons_f3(m):
-        return RationalQ(m)
+        return eager_RationalQ(m)
 
     cons3 = _patched_custom_constraint_call(cons_f3)
 
     def cons_f4(m, n):
-        return RationalQ(m, n)
+        return eager_RationalQ(m, n)
 
     cons4 = _patched_custom_constraint_call(cons_f4)
 
@@ -7814,7 +7814,7 @@ def _RemoveContentAux():
     cons6 = _patched_custom_constraint_call(cons_f6)
 
     def cons_f7(m, n, p):
-        return RationalQ(m, n, p)
+        return eager_RationalQ(m, n, p)
 
     cons7 = _patched_custom_constraint_call(cons_f7)
 
@@ -7825,7 +7825,7 @@ def _RemoveContentAux():
 
     pattern1 = Pattern(UtilityOperator(a_**m_*WildSymbol('u', optional_value=S(1)) + b_*WildSymbol('v', optional_value=S(1)), x_), cons1, cons2, cons3)
     def replacement1(v, x, a, u, m, b):
-        return If(Greater(m, S(1)), RemoveContentAux(a**(m + S(-1))*u - v, x), RemoveContentAux(-a**(-m + S(1))*v + u, x))
+        return eager_If(Greater(m, S(1)), RemoveContentAux(a**(m + S(-1))*u - v, x), RemoveContentAux(-a**(-m + S(1))*v + u, x))
     rule1 = _ReplacementRuleWrapped(pattern1, replacement1)
     pattern2 = Pattern(UtilityOperator(a_**WildSymbol('m', optional_value=S(1))*WildSymbol('u', optional_value=S(1)) + a_**WildSymbol('n', optional_value=S(1))*WildSymbol('v', optional_value=S(1)), x_), cons6, cons4, cons5)
     def replacement2(n, v, x, u, m, a):
@@ -7837,7 +7837,7 @@ def _RemoveContentAux():
     rule3 = _ReplacementRuleWrapped(pattern3, replacement3)
     pattern4 = Pattern(UtilityOperator(u_, x_))
     def replacement4(u, x):
-        return If(And(SumQ(u), NegQ(First(u))), -u, u)
+        return eager_If(And(eager_SumQ(u), eager_NegQ(eager_First(u))), -u, u)
     rule4 = _ReplacementRuleWrapped(pattern4, replacement4)
     return [rule1, rule2, rule3, rule4, ]
 

@@ -210,8 +210,8 @@ class ExpandToSum(MathematicaExpr):
         # Delegate to the eager implementation, which collects into canonical
         # a + b*x + c*x**2 form (plain sympy.expand does NOT combine terms like
         # x - I*x, so the result would not match the a+b*x+c*x**2 rule patterns).
-        from .utility_functions import ExpandToSum as _ExpandToSum
-        return _ExpandToSum(*self.args)
+        from .utility_functions import eager_ExpandToSum
+        return eager_ExpandToSum(*self.args)
 
 
 # =============================================================================
@@ -238,8 +238,8 @@ class ExpandIntegrand(MathematicaExpr):
         # descent with geometrically growing coefficients that the exact-match cycle
         # detector cannot see -- so x/(a+b*x)^2 timed out and x^2/(a+b*x)^2 "solved"
         # to a junk form carrying 1073741824*b**30.
-        from .utility_functions import ExpandIntegrand as _ExpandIntegrand
-        return _ExpandIntegrand(*self.args)
+        from .utility_functions import eager_ExpandIntegrand
+        return eager_ExpandIntegrand(*self.args)
 
 
 # =============================================================================
@@ -257,9 +257,9 @@ class Coeff(MathematicaExpr):
         # Delegate to the eager utility, which handles a symbolic n (via
         # Util_Coefficient) -- `u.coeff(x, int(n))` crashed on symbolic n
         # ('Cannot convert symbols to int').
-        from .utility_functions import Coeff as _Coeff
+        from .utility_functions import eager_Coeff
         u, x, n = self.args
-        return _Coeff(u, x, n)
+        return eager_Coeff(u, x, n)
 
 
 # =============================================================================
@@ -283,11 +283,11 @@ class Expon(MathematicaExpr):
         # Delegate to the Mathematica-faithful Exponent (Together already folded in),
         # which -- unlike the old Poly-based code that returned 0 on any non-polynomial
         # (Sqrt[x]+x, 1/x+x, Sin[x] x^2, ...) -- gives the true max/min power of x.
-        from sympy_wolfram.functions_eager import Exponent as _Exponent
+        from sympy_wolfram.functions_eager import eager_Exponent
         args = self.args
         u, x = args[0], args[1]
         order_func = args[2] if len(args) >= 3 else None
-        return _Exponent(u, x, order_func)
+        return eager_Exponent(u, x, order_func)
 
 
 # =============================================================================
@@ -383,8 +383,8 @@ class FunctionOfExponential(MathematicaExpr):
         return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
 
     def _evaluate(self, **kwargs):
-        from .utility_functions import FunctionOfExponential as _f
-        return _f(*self.args)
+        from .utility_functions import eager_FunctionOfExponential
+        return eager_FunctionOfExponential(*self.args)
 
 
 class FunctionOfExponentialFunction(MathematicaExpr):
@@ -397,8 +397,8 @@ class FunctionOfExponentialFunction(MathematicaExpr):
         return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
 
     def _evaluate(self, **kwargs):
-        from .utility_functions import FunctionOfExponentialFunction as _f
-        return _f(*self.args)
+        from .utility_functions import eager_FunctionOfExponentialFunction
+        return eager_FunctionOfExponentialFunction(*self.args)
 
 
 # =============================================================================
@@ -485,8 +485,8 @@ class SubstFor(MathematicaExpr):
         # is wrong when v has a free factor: SubstFor[b*x, x, x] must be x/b (the
         # eager one factors it out), not x — the missing 1/b silently multiplied
         # many symbolic-coefficient results by the linear coefficient.
-        from .utility_functions import SubstFor as _SubstFor
-        return _SubstFor(*self.args)
+        from .utility_functions import eager_SubstFor
+        return eager_SubstFor(*self.args)
 
 
 # Backward-compatible alias (user listed 'SubstrFor'; Rubi calls it 'SubstFor')
@@ -523,8 +523,8 @@ class Dist(MathematicaExpr):
             if getattr(v, 'is_Add', False):
                 return sympy.Add(*[u * t for t in v.args])
             return u * v
-        from .utility_functions import Dist as _Dist
-        return _Dist(*self.args)
+        from .utility_functions import eager_Dist
+        return eager_Dist(*self.args)
 
 
 class Star(MathematicaExpr):
@@ -543,8 +543,8 @@ class Star(MathematicaExpr):
     def __new__(cls, u, v):
         return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(v))
     def _evaluate(self, **kwargs):
-        from .utility_functions import Star as _Star
-        return _Star(*self.args)
+        from .utility_functions import eager_Star
+        return eager_Star(*self.args)
 
 
 class WFApply(MathematicaExpr):
@@ -605,8 +605,8 @@ class SimplifyIntegrand(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import SimplifyIntegrand as _SimplifyIntegrand
-        return _SimplifyIntegrand(*self.args)
+        from .utility_functions import eager_SimplifyIntegrand
+        return eager_SimplifyIntegrand(*self.args)
 
 
 class FreeFactors(MathematicaExpr):
@@ -614,8 +614,8 @@ class FreeFactors(MathematicaExpr):
     def __new__(cls, u, x):
         return Expr.__new__(cls, u, x)
     def _evaluate(self, **kwargs):
-        from .utility_functions import FreeFactors as _FreeFactors
-        return _FreeFactors(*self.args)
+        from .utility_functions import eager_FreeFactors
+        return eager_FreeFactors(*self.args)
 
 
 class NonfreeFactors(MathematicaExpr):
@@ -623,8 +623,8 @@ class NonfreeFactors(MathematicaExpr):
     def __new__(cls, u, x):
         return Expr.__new__(cls, u, x)
     def _evaluate(self, **kwargs):
-        from .utility_functions import NonfreeFactors as _NonfreeFactors
-        return _NonfreeFactors(*self.args)
+        from .utility_functions import eager_NonfreeFactors
+        return eager_NonfreeFactors(*self.args)
 
 
 class ActivateTrig(MathematicaExpr):
@@ -632,8 +632,8 @@ class ActivateTrig(MathematicaExpr):
     def __new__(cls, u):
         return Expr.__new__(cls, u)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ActivateTrig as _ActivateTrig
-        return _ActivateTrig(self.args[0])
+        from .utility_functions import eager_ActivateTrig
+        return eager_ActivateTrig(self.args[0])
 
 
 class DeactivateTrig(MathematicaExpr):
@@ -642,8 +642,8 @@ class DeactivateTrig(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import DeactivateTrig as _DeactivateTrig
-        return _DeactivateTrig(*self.args)
+        from .utility_functions import eager_DeactivateTrig
+        return eager_DeactivateTrig(*self.args)
 
 
 class ExpandTrig(MathematicaExpr):
@@ -652,8 +652,8 @@ class ExpandTrig(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ExpandTrig as _ExpandTrig
-        return _ExpandTrig(*self.args)
+        from .utility_functions import eager_ExpandTrig
+        return eager_ExpandTrig(*self.args)
 
 
 class ExpandTrigReduce(MathematicaExpr):
@@ -662,8 +662,8 @@ class ExpandTrigReduce(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ExpandTrigReduce as _ExpandTrigReduce
-        return _ExpandTrigReduce(*self.args)
+        from .utility_functions import eager_ExpandTrigReduce
+        return eager_ExpandTrigReduce(*self.args)
 
 
 class DerivativeDivides(MathematicaExpr):
@@ -672,8 +672,8 @@ class DerivativeDivides(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import DerivativeDivides as _DerivativeDivides
-        return _DerivativeDivides(*self.args)
+        from .utility_functions import eager_DerivativeDivides
+        return eager_DerivativeDivides(*self.args)
 
 
 class BinomialDegree(MathematicaExpr):
@@ -681,8 +681,8 @@ class BinomialDegree(MathematicaExpr):
     def __new__(cls, u, x):
         return Expr.__new__(cls, u, x)
     def _evaluate(self, **kwargs):
-        from .utility_functions import BinomialDegree as _BinomialDegree
-        return _BinomialDegree(*self.args)
+        from .utility_functions import eager_BinomialDegree
+        return eager_BinomialDegree(*self.args)
 
 
 class TrinomialDegree(MathematicaExpr):
@@ -690,8 +690,8 @@ class TrinomialDegree(MathematicaExpr):
     def __new__(cls, u, x):
         return Expr.__new__(cls, u, x)
     def _evaluate(self, **kwargs):
-        from .utility_functions import TrinomialDegree as _TrinomialDegree
-        return _TrinomialDegree(*self.args)
+        from .utility_functions import eager_TrinomialDegree
+        return eager_TrinomialDegree(*self.args)
 
 
 # Part, First, Rest are standard Wolfram functions — their deferred nodes now live in
@@ -703,8 +703,8 @@ class Numer(MathematicaExpr):
     def __new__(cls, u):
         return Expr.__new__(cls, u)
     def _evaluate(self, **kwargs):
-        from .utility_functions import Numer as _Numer
-        return _Numer(self.args[0])
+        from .utility_functions import eager_Numer
+        return eager_Numer(self.args[0])
 
 
 class Denom(MathematicaExpr):
@@ -712,8 +712,8 @@ class Denom(MathematicaExpr):
     def __new__(cls, u):
         return Expr.__new__(cls, u)
     def _evaluate(self, **kwargs):
-        from .utility_functions import Denom as _Denom
-        return _Denom(self.args[0])
+        from .utility_functions import eager_Denom
+        return eager_Denom(self.args[0])
 
 
 
@@ -730,8 +730,8 @@ class NormalizePowerOfLinear(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import NormalizePowerOfLinear as _NormalizePowerOfLinear
-        return _NormalizePowerOfLinear(*self.args)
+        from .utility_functions import eager_NormalizePowerOfLinear
+        return eager_NormalizePowerOfLinear(*self.args)
 
 
 class NormalizeIntegrand(MathematicaExpr):
@@ -740,8 +740,8 @@ class NormalizeIntegrand(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import NormalizeIntegrand as _NormalizeIntegrand
-        return _NormalizeIntegrand(*self.args)
+        from .utility_functions import eager_NormalizeIntegrand
+        return eager_NormalizeIntegrand(*self.args)
 
 
 # Exponent is a standard Wolfram function — its deferred node now lives in
@@ -754,8 +754,8 @@ class ExpandLinearProduct(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ExpandLinearProduct as _ExpandLinearProduct
-        return _ExpandLinearProduct(*self.args)
+        from .utility_functions import eager_ExpandLinearProduct
+        return eager_ExpandLinearProduct(*self.args)
 
 
 class Divides(MathematicaExpr):
@@ -764,8 +764,8 @@ class Divides(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import Divides as _Divides
-        return _Divides(*self.args)
+        from .utility_functions import eager_Divides
+        return eager_Divides(*self.args)
 
 
 class RationalFunctionExpand(MathematicaExpr):
@@ -774,8 +774,8 @@ class RationalFunctionExpand(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import RationalFunctionExpand as _RationalFunctionExpand
-        return _RationalFunctionExpand(*self.args)
+        from .utility_functions import eager_RationalFunctionExpand
+        return eager_RationalFunctionExpand(*self.args)
 
 
 class PowerVariableExpn(MathematicaExpr):
@@ -784,8 +784,8 @@ class PowerVariableExpn(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import PowerVariableExpn as _PowerVariableExpn
-        return _PowerVariableExpn(*self.args)
+        from .utility_functions import eager_PowerVariableExpn
+        return eager_PowerVariableExpn(*self.args)
 
 
 class FunctionOfLinear(MathematicaExpr):
@@ -794,8 +794,8 @@ class FunctionOfLinear(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import FunctionOfLinear as _FunctionOfLinear
-        return _FunctionOfLinear(*self.args)
+        from .utility_functions import eager_FunctionOfLinear
+        return eager_FunctionOfLinear(*self.args)
 
 
 class SplitProduct(MathematicaExpr):
@@ -804,8 +804,8 @@ class SplitProduct(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import SplitProduct as _SplitProduct
-        return _SplitProduct(*self.args)
+        from .utility_functions import eager_SplitProduct
+        return eager_SplitProduct(*self.args)
 
 
 class Rt(MathematicaExpr):
@@ -832,8 +832,8 @@ class Rt(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import Rt as _Rt
-        return _Rt(*self.args)
+        from .utility_functions import eager_Rt
+        return eager_Rt(*self.args)
 
 
 class PolyGCD(MathematicaExpr):
@@ -842,8 +842,8 @@ class PolyGCD(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import PolyGCD as _PolyGCD
-        return _PolyGCD(*self.args)
+        from .utility_functions import eager_PolyGCD
+        return eager_PolyGCD(*self.args)
 
 
 class GeneralizedTrinomialDegree(MathematicaExpr):
@@ -852,8 +852,8 @@ class GeneralizedTrinomialDegree(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import GeneralizedTrinomialDegree as _GeneralizedTrinomialDegree
-        return _GeneralizedTrinomialDegree(*self.args)
+        from .utility_functions import eager_GeneralizedTrinomialDegree
+        return eager_GeneralizedTrinomialDegree(*self.args)
 
 
 class ExpandTrigToExp(MathematicaExpr):
@@ -862,8 +862,8 @@ class ExpandTrigToExp(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ExpandTrigToExp as _ExpandTrigToExp
-        return _ExpandTrigToExp(*self.args)
+        from .utility_functions import eager_ExpandTrigToExp
+        return eager_ExpandTrigToExp(*self.args)
 
 
 # =============================================================================
@@ -879,8 +879,8 @@ class MinimumMonomialExponent(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import MinimumMonomialExponent as _f
-        return _f(*self.args)
+        from .utility_functions import eager_MinimumMonomialExponent
+        return eager_MinimumMonomialExponent(*self.args)
 
 
 class Distrib(MathematicaExpr):
@@ -889,8 +889,8 @@ class Distrib(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import Distrib as _f
-        return _f(*self.args)
+        from .utility_functions import eager_Distrib
+        return eager_Distrib(*self.args)
 
 
 # Apart is a standard Wolfram function — its deferred node now lives in
@@ -903,8 +903,8 @@ class ExpandExpression(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import ExpandExpression as _f
-        return _f(*self.args)
+        from .utility_functions import eager_ExpandExpression
+        return eager_ExpandExpression(*self.args)
 
 
 class FunctionOfTrig(MathematicaExpr):
@@ -913,8 +913,8 @@ class FunctionOfTrig(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import FunctionOfTrig as _f
-        return _f(*self.args)
+        from .utility_functions import eager_FunctionOfTrig
+        return eager_FunctionOfTrig(*self.args)
 
 
 class PolynomialInSubst(MathematicaExpr):
@@ -923,8 +923,8 @@ class PolynomialInSubst(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import PolynomialInSubst as _f
-        return _f(*self.args)
+        from .utility_functions import eager_PolynomialInSubst
+        return eager_PolynomialInSubst(*self.args)
 
 
 class QuotientOfLinearsParts(MathematicaExpr):
@@ -933,8 +933,8 @@ class QuotientOfLinearsParts(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import QuotientOfLinearsParts as _f
-        return _f(*self.args)
+        from .utility_functions import eager_QuotientOfLinearsParts
+        return eager_QuotientOfLinearsParts(*self.args)
 
 
 class SubstForFractionalPowerOfLinear(MathematicaExpr):
@@ -943,8 +943,8 @@ class SubstForFractionalPowerOfLinear(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import SubstForFractionalPowerOfLinear as _f
-        return _f(*self.args)
+        from .utility_functions import eager_SubstForFractionalPowerOfLinear
+        return eager_SubstForFractionalPowerOfLinear(*self.args)
 
 
 class TrigSimplify(MathematicaExpr):
@@ -953,8 +953,8 @@ class TrigSimplify(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import TrigSimplify as _f
-        return _f(*self.args)
+        from .utility_functions import eager_TrigSimplify
+        return eager_TrigSimplify(*self.args)
 
 
 class RationalFunctionExponents(MathematicaExpr):
@@ -963,8 +963,8 @@ class RationalFunctionExponents(MathematicaExpr):
         safe = [sympy.sympify(a) for a in args]
         return Expr.__new__(cls, *safe)
     def _evaluate(self, **kwargs):
-        from .utility_functions import RationalFunctionExponents as _f
-        return _f(*self.args)
+        from .utility_functions import eager_RationalFunctionExponents
+        return eager_RationalFunctionExponents(*self.args)
 
 
 # Denominator is a standard Wolfram function — its deferred node now lives in

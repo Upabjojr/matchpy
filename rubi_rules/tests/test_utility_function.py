@@ -1,98 +1,98 @@
 
-from rubi_rules.utils.utility_functions import (Set, With, Module,
-                                                Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, List, Log,
-                                                PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, IntegersQ,
-                                                ComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
-                                                FractionOrNegativeQ, NegQ, Equal, Unequal, IntPart,
-                                                FracPart, RationalQ, ProductQ, SumQ, NonsumQ, First, Rest,
-                                                SqrtNumberQ, LinearQ, Sqrt, ArcCosh, Coefficient,
-                                                Denominator, Hypergeometric2F1, Not, Simplify, FractionalPart, IntegerPart,
-                                                AppellF1, PolynomialQuotient, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos,
+from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Module,
+                                                eager_Scan, MapAnd, FalseQ, ZeroQ, NegativeQ, NonzeroQ, FreeQ, eager_List, Log,
+                                                PositiveQ, PositiveIntegerQ, NegativeIntegerQ, IntegerQ, eager_IntegersQ,
+                                                eager_ComplexNumberQ, RealNumericQ, PositiveOrZeroQ,
+                                                eager_FractionOrNegativeQ, eager_NegQ, Equal, Unequal, eager_IntPart,
+                                                eager_FracPart, eager_RationalQ, eager_ProductQ, eager_SumQ, eager_NonsumQ, eager_First, eager_Rest,
+                                                eager_SqrtNumberQ, eager_LinearQ, Sqrt, ArcCosh, eager_Coefficient,
+                                                eager_Denominator, eager_Hypergeometric2F1, eager_Not, eager_Simplify, FractionalPart, IntegerPart,
+                                                AppellF1, eager_PolynomialQuotient, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCos,
                                                 Sinh, Coth, LessEqual, Less, Greater,
-                                                GreaterEqual, FractionQ, IntLinearcQ, Expand, IndependentQ, PowerQ,
-                                                IntegerPowerQ, FractionalPowerQ, AtomQ, ExpQ, LogQ,
-                                                Head, MemberQ, TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, HyperbolicQ,
-                                                SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, InverseTrigQ, SinhCoshQ,
-                                                LeafCount, Numerator, NumberQ, NumericQ, Length, ListQ, Im, Re,
-                                                InverseHyperbolicQ, InverseFunctionQ, EqQ, FractionalPowerFreeQ,
-                                                ComplexFreeQ, PolynomialQ, FactorSquareFree, PowerOfLinearQ, Exponent,
-                                                QuadraticQ, LinearPairQ, BinomialParts, TrinomialParts, PolyQ, EvenQ, OddQ,
-                                                PerfectSquareQ, NiceSqrtAuxQ, NiceSqrtQ, Together, PosAux, PosQ,
-                                                CoefficientList, ReplaceAll, ExpandLinearProduct, GCD, ContentFactor,
+                                                GreaterEqual, eager_FractionQ, IntLinearcQ, Expand, eager_IndependentQ, eager_PowerQ,
+                                                eager_IntegerPowerQ, eager_FractionalPowerQ, AtomQ, ExpQ, eager_LogQ,
+                                                eager_Head, MemberQ, eager_TrigQ, SinQ, CosQ, TanQ, CotQ, SecQ, CscQ, eager_HyperbolicQ,
+                                                SinhQ, CoshQ, TanhQ, CothQ, SechQ, CschQ, eager_InverseTrigQ, SinhCoshQ,
+                                                eager_LeafCount, eager_Numerator, NumberQ, NumericQ, eager_Length, ListQ, Im, Re,
+                                                eager_InverseHyperbolicQ, eager_InverseFunctionQ, eager_EqQ, eager_FractionalPowerFreeQ,
+                                                eager_ComplexFreeQ, PolynomialQ, FactorSquareFree, eager_PowerOfLinearQ, eager_Exponent,
+                                                eager_QuadraticQ, eager_LinearPairQ, BinomialParts, TrinomialParts, eager_PolyQ, EvenQ, OddQ,
+                                                eager_PerfectSquareQ, NiceSqrtAuxQ, eager_NiceSqrtQ, eager_Together, PosAux, eager_PosQ,
+                                                CoefficientList, eager_ReplaceAll, eager_ExpandLinearProduct, eager_GCD, ContentFactor,
                                                 NumericFactor, NonnumericFactors, MakeAssocList, GensymSubst, KernelSubst,
-                                                ExpandExpression, Apart, SmartApart, MatchQ, PolynomialQuotientRemainder,
-                                                FreeFactors, NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms,
+                                                eager_ExpandExpression, eager_Apart, SmartApart, MatchQ, PolynomialQuotientRemainder,
+                                                eager_FreeFactors, eager_NonfreeFactors, RemoveContentAux, RemoveContent, FreeTerms,
                                                 NonfreeTerms, ExpandAlgebraicFunction, CollectReciprocals, ExpandCleanup,
-                                                AlgebraicFunctionQ, Coeff, LeadTerm, RemainingTerms, LeadFactor,
-                                                RemainingFactors, LeadBase, LeadDegree, Numer, Denom, Expon,
-                                                MergeMonomials, PolynomialDivide, BinomialQ, TrinomialQ,
-                                                GeneralizedBinomialQ, GeneralizedTrinomialQ, FactorSquareFreeList,
-                                                PerfectPowerTest, SquareFreeFactorTest, RationalFunctionQ,
+                                                eager_AlgebraicFunctionQ, eager_Coeff, LeadTerm, RemainingTerms, LeadFactor,
+                                                RemainingFactors, LeadBase, LeadDegree, eager_Numer, eager_Denom, eager_Expon,
+                                                MergeMonomials, eager_PolynomialDivide, eager_BinomialQ, eager_TrinomialQ,
+                                                eager_GeneralizedBinomialQ, eager_GeneralizedTrinomialQ, FactorSquareFreeList,
+                                                PerfectPowerTest, SquareFreeFactorTest, eager_RationalFunctionQ,
                                                 RationalFunctionFactors, NonrationalFunctionFactors, Reverse,
-                                                RationalFunctionExponents, RationalFunctionExpand, ExpandIntegrand, SimplerQ,
-                                                SimplerSqrtQ, SumSimplerQ, BinomialDegree, TrinomialDegree,
-                                                CancelCommonFactors, SimplerIntegrandQ, GeneralizedBinomialDegree,
-                                                GeneralizedBinomialParts, GeneralizedTrinomialDegree,
-                                                GeneralizedTrinomialParts, MonomialQ, MonomialSumQ, MinimumMonomialExponent,
-                                                MonomialExponent, LinearMatchQ, PowerOfLinearMatchQ, QuadraticMatchQ,
-                                                CubicMatchQ, BinomialMatchQ, TrinomialMatchQ, GeneralizedBinomialMatchQ,
-                                                GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ,
+                                                eager_RationalFunctionExponents, eager_RationalFunctionExpand, eager_ExpandIntegrand, eager_SimplerQ,
+                                                eager_SimplerSqrtQ, eager_SumSimplerQ, eager_BinomialDegree, eager_TrinomialDegree,
+                                                CancelCommonFactors, eager_SimplerIntegrandQ, GeneralizedBinomialDegree,
+                                                GeneralizedBinomialParts, eager_GeneralizedTrinomialDegree,
+                                                GeneralizedTrinomialParts, eager_MonomialQ, MonomialSumQ, eager_MinimumMonomialExponent,
+                                                MonomialExponent, eager_LinearMatchQ, eager_PowerOfLinearMatchQ, eager_QuadraticMatchQ,
+                                                CubicMatchQ, eager_BinomialMatchQ, eager_TrinomialMatchQ, eager_GeneralizedBinomialMatchQ,
+                                                eager_GeneralizedTrinomialMatchQ, QuotientOfLinearsMatchQ, PolynomialTermQ,
                                                 PolynomialTerms, NonpolynomialTerms, PseudoBinomialParts,
-                                                NormalizePseudoBinomial, PseudoBinomialPairQ, PseudoBinomialQ,
-                                                PolynomialGCD, PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors,
-                                                QuotientOfLinearsP, QuotientOfLinearsParts, QuotientOfLinearsQ, Flatten,
+                                                eager_NormalizePseudoBinomial, eager_PseudoBinomialPairQ, PseudoBinomialQ,
+                                                PolynomialGCD, eager_PolyGCD, AlgebraicFunctionFactors, NonalgebraicFunctionFactors,
+                                                QuotientOfLinearsP, eager_QuotientOfLinearsParts, eager_QuotientOfLinearsQ, Flatten,
                                                 Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors,
                                                 SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger,
                                                 FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower,
                                                 SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears,
-                                                SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ,
-                                                FractionalPowerSubexpressionQ, Apply, FactorNumericGcd, MergeableFactorQ,
-                                                MergeFactor, MergeFactors, TrigSimplifyQ, TrigSimplify, TrigSimplifyRecur,
-                                                Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, Sign,
-                                                NonpositiveFactors, PolynomialInAuxQ, PolynomialInQ, ExponentInAux, ExponentIn,
-                                                PolynomialInSubstAux, PolynomialInSubst, Distrib, DistributeDegree,
-                                                FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, FullSimplify,
-                                                FunctionOfLinearSubst, FunctionOfLinear, NormalizeIntegrand,
+                                                eager_SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ,
+                                                FractionalPowerSubexpressionQ, eager_Apply, FactorNumericGcd, MergeableFactorQ,
+                                                MergeFactor, MergeFactors, eager_TrigSimplifyQ, eager_TrigSimplify, TrigSimplifyRecur,
+                                                Order, FactorOrder, Smallest, OrderedQ, MinimumDegree, PositiveFactors, eager_Sign,
+                                                NonpositiveFactors, PolynomialInAuxQ, eager_PolynomialInQ, ExponentInAux, ExponentIn,
+                                                PolynomialInSubstAux, eager_PolynomialInSubst, eager_Distrib, DistributeDegree,
+                                                FunctionOfPower, DivideDegreesOfFactors, MonomialFactor, eager_FullSimplify,
+                                                FunctionOfLinearSubst, eager_FunctionOfLinear, eager_NormalizeIntegrand,
                                                 NormalizeIntegrandAux, NormalizeIntegrandFactor, NormalizeIntegrandFactorBase,
                                                 NormalizeTogether, NormalizeLeadTermSigns, AbsorbMinusSign,
-                                                NormalizeSumFactors, SignOfFactor, NormalizePowerOfLinear,
-                                                SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify,
-                                                SubstForExpn, ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ,
+                                                NormalizeSumFactors, SignOfFactor, eager_NormalizePowerOfLinear,
+                                                eager_SimplifyIntegrand, SimplifyTerm, TogetherSimplify, SmartSimplify,
+                                                SubstForExpn, eager_ExpandToSum, UnifySum, UnifyTerms, UnifyTerm, CalculusQ,
                                                 FunctionOfInverseLinear, PureFunctionOfSinhQ, PureFunctionOfTanhQ,
                                                 PureFunctionOfCoshQ, IntegerQuotientQ, OddQuotientQ, EvenQuotientQ,
                                                 FindTrigFactor, FunctionOfSinhQ, FunctionOfCoshQ, OddHyperbolicPowerQ,
                                                 FunctionOfTanhQ, FunctionOfTanhWeight, FunctionOfHyperbolicQ, SmartNumerator,
-                                                SmartDenominator, ActivateTrig, ExpandTrig, TrigExpand,
-                                                SubstForTrig, SubstForHyperbolic, InertTrigFreeQ, LCM,
-                                                SubstForFractionalPowerOfLinear, FractionalPowerOfLinear,
-                                                InverseFunctionOfLinear, InertTrigQ, InertReciprocalQ, DeactivateTrig,
+                                                SmartDenominator, eager_ActivateTrig, eager_ExpandTrig, TrigExpand,
+                                                SubstForTrig, SubstForHyperbolic, eager_InertTrigFreeQ, LCM,
+                                                eager_SubstForFractionalPowerOfLinear, FractionalPowerOfLinear,
+                                                InverseFunctionOfLinear, eager_InertTrigQ, InertReciprocalQ, eager_DeactivateTrig,
                                                 FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ,
-                                                PiecewiseLinearQ, KnownTrigIntegrandQ, KnownSineIntegrandQ,
-                                                KnownTangentIntegrandQ, KnownCotangentIntegrandQ, KnownSecantIntegrandQ,
-                                                TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD,
-                                                AbsurdNumberGCDList, ExpandTrigExpand, ExpandTrigReduce, ExpandTrigReduceAux,
-                                                NormalizeTrig, TrigToExp, ExpandTrigToExp, TrigReduce, FunctionOfTrig,
-                                                AlgebraicTrigFunctionQ, FunctionOfHyperbolic, FunctionOfQ, FunctionOfExpnQ,
+                                                eager_PiecewiseLinearQ, KnownTrigIntegrandQ, eager_KnownSineIntegrandQ,
+                                                eager_KnownTangentIntegrandQ, eager_KnownCotangentIntegrandQ, eager_KnownSecantIntegrandQ,
+                                                eager_TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD,
+                                                AbsurdNumberGCDList, ExpandTrigExpand, eager_ExpandTrigReduce, ExpandTrigReduceAux,
+                                                NormalizeTrig, TrigToExp, eager_ExpandTrigToExp, TrigReduce, eager_FunctionOfTrig,
+                                                AlgebraicTrigFunctionQ, FunctionOfHyperbolic, eager_FunctionOfQ, FunctionOfExpnQ,
                                                 PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ,
                                                 FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ,
                                                 FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ,
-                                                FunctionOfLog, PowerVariableExpn, PowerVariableDegree, PowerVariableSubst,
-                                                EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst,
-                                                Divides, EasyDQ, ProductOfLinearPowersQ, Rt, NthRoot, AtomBaseQ, SumBaseQ,
+                                                FunctionOfLog, eager_PowerVariableExpn, PowerVariableDegree, PowerVariableSubst,
+                                                eager_EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst,
+                                                eager_Divides, EasyDQ, ProductOfLinearPowersQ, eager_Rt, NthRoot, AtomBaseQ, eager_SumBaseQ,
                                                 NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare,
                                                 IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors,
-                                                MostMainFactorPosition, FunctionOfExponentialQ, FunctionOfExponential,
-                                                FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux,
-                                                FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent,
-                                                Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor,
-                                                SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ,
-                                                ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor, Tanh,
-                                                DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify,
+                                                MostMainFactorPosition, eager_FunctionOfExponentialQ, eager_FunctionOfExponential,
+                                                eager_FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux,
+                                                FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, eager_If, eager_IntQuadraticQ, eager_IntBinomialQ, RectifyTangent, RectifyCotangent,
+                                                Inequality, eager_Condition, eager_Simp, SimpHelp, eager_SplitProduct, SplitSum, eager_SubstFor,
+                                                SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, eager_FunctionOfTrigOfLinearQ,
+                                                ElementaryFunctionQ, eager_Complex, UnsameQ, _SimpFixFactor, Tanh,
+                                                eager_DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify,
                                                 _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, PureFunctionOfCothQ,
                                                 _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
-                                                TrigSimplifyAux, Cancel, Part, PolyLog, D, Dist, IntegralFreeQ, Sum_doit,
-                                                PolynomialRemainder, CoprimeQ, Distribute, ProductLog,
-                                                Floor, PolyGamma, process_trig, ExponentList)
+                                                TrigSimplifyAux, Cancel, eager_Part, PolyLog, eager_D, eager_Dist, eager_IntegralFreeQ, Sum_doit,
+                                                eager_PolynomialRemainder, CoprimeQ, Distribute, ProductLog,
+                                                eager_Floor, PolyGamma, process_trig, ExponentList)
 # TODO - Add tests for: Int, PureComplexNumberQ, EllipticPi, # ArcCot, ArcCoth, Tanh, Cosh, Sech, Subst,
 # SqrtNumberSumQ, Sin, Cos, Tan, Cot, Sec, Csc, Csch, TrigHyperbolicFreeQ,
 # InverseFunctionFreeQ, RealQ,
@@ -144,7 +144,7 @@ def test_PosQ_LinearQ_cached_values_match_rubi():
     -- a known, pre-existing divergence unrelated to caching.
     """
     from sympy import sqrt, Rational
-    from rubi_rules.utils.utility_functions import PosQ, LinearQ
+    from rubi_rules.utils.utility_functions import eager_PosQ, eager_LinearQ
     xx, aa, bb, cc, dd = (Symbol(s) for s in 'x a b c d'.split())
     # `==` not `is`: PosAux returns a SymPy Boolean for numeric inputs (3 > 0), a
     # Python bool for symbolic ones.
@@ -152,12 +152,12 @@ def test_PosQ_LinearQ_cached_values_match_rubi():
                     (aa**2, True), (S(3), True), (S(-3), False), (aa/bb, True),
                     (sqrt(aa), True), ((aa + bb)**2, True), (-(aa + bb)**2, False),
                     (-xx, False), ((cc/dd)**Rational(1, 3), True)]:
-        assert bool(PosQ(u)) == want, (u, PosQ(u), want)
-        assert bool(PosQ(u)) == want  # second call hits the cache -> same verdict
+        assert bool(eager_PosQ(u)) == want, (u, eager_PosQ(u), want)
+        assert bool(eager_PosQ(u)) == want  # second call hits the cache -> same verdict
     for u, want in [(aa, False), (3*xx + bb, True), (xx**2, False),
                     (aa + bb*xx, True), (sqrt(xx), False)]:
-        assert bool(LinearQ(u, xx)) == want, (u, LinearQ(u, xx), want)
-        assert bool(LinearQ(u, xx)) == want
+        assert bool(eager_LinearQ(u, xx)) == want, (u, eager_LinearQ(u, xx), want)
+        assert bool(eager_LinearQ(u, xx)) == want
 
 
 def test_ZeroQ_numeric_pretest_is_sound():
@@ -192,7 +192,7 @@ def test_ZeroQ_numeric_pretest_is_sound():
 # sympy_wolfram/tests/test_mathematica_functions.py.
 
 def test_List():
-    assert List(a, b, c) == [a, b, c]
+    assert eager_List(a, b, c) == [a, b, c]
 
 
 def test_PositiveIntegerQ():
@@ -206,40 +206,40 @@ def test_NegativeIntegerQ():
     assert not NegativeIntegerQ(S(0))
 
 def test_IntegersQ():
-    assert IntegersQ(S(1), S(0))
-    assert not IntegersQ(S(-1.9), S(1))
-    assert not IntegersQ(S(0.0), S(0))
-    assert IntegersQ(S(-1), S(0), S(2))
+    assert eager_IntegersQ(S(1), S(0))
+    assert not eager_IntegersQ(S(-1.9), S(1))
+    assert not eager_IntegersQ(S(0.0), S(0))
+    assert eager_IntegersQ(S(-1), S(0), S(2))
 
 def test_FracPart():
-    assert FracPart(S(10)) == 0
-    assert FracPart(S(10)+0.5) == 10.5
+    assert eager_FracPart(S(10)) == 0
+    assert eager_FracPart(S(10)+0.5) == 10.5
 
 def test_IntPart():
-    assert IntPart(m*n) == 0
-    assert IntPart(S(10)) == 10
-    assert IntPart(1 + m) == 1
+    assert eager_IntPart(m*n) == 0
+    assert eager_IntPart(S(10)) == 10
+    assert eager_IntPart(1 + m) == 1
 
 def test_NegQ():
-    assert NegQ(-S(3))
-    assert not NegQ(S(0))
-    assert not NegQ(S(0))
+    assert eager_NegQ(-S(3))
+    assert not eager_NegQ(S(0))
+    assert not eager_NegQ(S(0))
 
 def test_RationalQ():
-    assert RationalQ(S(5)/6)
-    assert RationalQ(S(5)/6, S(4)/5)
-    assert not RationalQ(Sqrt(1.6))
-    assert not RationalQ(Sqrt(1.6), S(5)/6)
-    assert not RationalQ(log(2))
+    assert eager_RationalQ(S(5)/6)
+    assert eager_RationalQ(S(5)/6, S(4)/5)
+    assert not eager_RationalQ(Sqrt(1.6))
+    assert not eager_RationalQ(Sqrt(1.6), S(5)/6)
+    assert not eager_RationalQ(log(2))
 
 def test_ArcCosh():
     assert ArcCosh(x) == acosh(x)
 
 def test_LinearQ():
-    assert not LinearQ(a, x)
-    assert LinearQ(3*x + y**2, x)
-    assert not LinearQ(3*x + y**2, y)
-    assert not LinearQ(S(3), x)
+    assert not eager_LinearQ(a, x)
+    assert eager_LinearQ(3*x + y**2, x)
+    assert not eager_LinearQ(3*x + y**2, y)
+    assert not eager_LinearQ(S(3), x)
 
 def test_Sqrt():
     assert Sqrt(x) == sqrt(x)
@@ -251,11 +251,11 @@ def test_Util_Coefficient():
     assert Util_Coefficient(a + b*x + c*x**3, x, 4).doit() == 0
 
 def test_Coefficient():
-    assert Coefficient(7 + 2*x + 4*x**3, x, 1) == 2
-    assert Coefficient(a + b*x + c*x**3, x, 0) == a
-    assert Coefficient(a + b*x + c*x**3, x, 4) == 0
-    assert Coefficient(b*x + c*x**3, x, 3) == c
-    assert Coefficient(x, x, -1) == 0
+    assert eager_Coefficient(7 + 2*x + 4*x**3, x, 1) == 2
+    assert eager_Coefficient(a + b*x + c*x**3, x, 0) == a
+    assert eager_Coefficient(a + b*x + c*x**3, x, 4) == 0
+    assert eager_Coefficient(b*x + c*x**3, x, 3) == c
+    assert eager_Coefficient(x, x, -1) == 0
 
 # First/Rest/Numerator/Denominator/Part/Apart/Simplify are standard Wolfram functions
 # that now live in sympy_wolfram; their behaviour tests moved to
@@ -264,7 +264,7 @@ def test_Coefficient():
 # below, since that scenario is Rubi-specific.
 
 def test_Hypergeometric2F1():
-    assert Hypergeometric2F1(1, 2, 3, x) == hyper((1, 2), (3,), x)
+    assert eager_Hypergeometric2F1(1, 2, 3, x) == hyper((1, 2), (3,), x)
 
 def test_ArcTan():
     assert ArcTan(x) == atan(x)
@@ -272,7 +272,7 @@ def test_ArcTan():
 
 def test_Not():
     a = 10
-    assert Not(a == 2)
+    assert eager_Not(a == 2)
 
 def test_FractionalPart():
     assert FractionalPart(S(3.0)) == 0
@@ -307,13 +307,13 @@ def test_LessEqual():
     assert not LessEqual(3, 2, 1)
 
 def test_With():
-    assert With(Set(x, 3), x + y) == 3 + y
-    assert With(List(Set(x, 3), Set(y, c)), x + y) == 3 + c
+    assert eager_With(eager_Set(x, 3), x + y) == 3 + y
+    assert eager_With(eager_List(eager_Set(x, 3), eager_Set(y, c)), x + y) == 3 + c
 
 def test_Module():
     # Same as With
-    assert Module(Set(x, 3), x + y) == 3 + y
-    assert Module(List(Set(x, 3), Set(y, c)), x + y) == 3 + c
+    assert eager_Module(eager_Set(x, 3), x + y) == 3 + y
+    assert eager_Module(eager_List(eager_Set(x, 3), eager_Set(y, c)), x + y) == 3 + c
 
 def test_Less():
     assert Less(1, 2, 3)
@@ -333,14 +333,14 @@ def test_Unequal():
     assert not Unequal(1, 1)
 
 def test_FractionQ():
-    assert not FractionQ(S('3'))
-    assert FractionQ(S('3')/S('2'))
+    assert not eager_FractionQ(S('3'))
+    assert eager_FractionQ(S('3')/S('2'))
 
 def test_Expand():
     assert Expand((1 + x)**10) == x**10 + 10*x**9 + 45*x**8 + 120*x**7 + 210*x**6 + 252*x**5 + 210*x**4 + 120*x**3 + 45*x**2 + 10*x + 1
 
 def test_Scan():
-    assert list(Scan(sin, [a, b])) == [sin(a), sin(b)]
+    assert list(eager_Scan(sin, [a, b])) == [sin(a), sin(b)]
 
 def test_MapAnd():
     assert MapAnd(PositiveQ, [S(1), S(2), S(3), S(0)]) == False
@@ -351,8 +351,8 @@ def test_FalseQ():
     assert FalseQ(False) == True
 
 def test_ComplexNumberQ():
-    assert ComplexNumberQ(1 + I*2, I) == True
-    assert ComplexNumberQ(a + b, I) == False
+    assert eager_ComplexNumberQ(1 + I*2, I) == True
+    assert eager_ComplexNumberQ(a + b, I) == False
 
 def test_Re():
     assert Re(1 + I) == 1
@@ -371,10 +371,10 @@ def test_RealNumericQ():
     assert RealNumericQ(-S(1)) == True
 
 def test_FractionOrNegativeQ():
-    assert FractionOrNegativeQ(S(1)/2) == True
-    assert FractionOrNegativeQ(-S(1)) == True
-    assert FractionOrNegativeQ(-S(1)/2) == True
-    assert FractionOrNegativeQ(S(1)) == False
+    assert eager_FractionOrNegativeQ(S(1)/2) == True
+    assert eager_FractionOrNegativeQ(-S(1)) == True
+    assert eager_FractionOrNegativeQ(-S(1)/2) == True
+    assert eager_FractionOrNegativeQ(S(1)) == False
 
 def test_NegativeQ():
     assert NegativeQ(-S(1)) == True
@@ -382,39 +382,39 @@ def test_NegativeQ():
     assert NegativeQ(oo) == False
 
 def test_ProductQ():
-    assert ProductQ(a*b) == True
-    assert ProductQ(a + b) == False
+    assert eager_ProductQ(a*b) == True
+    assert eager_ProductQ(a + b) == False
 
 def test_SumQ():
-    assert SumQ(a*b) == False
-    assert SumQ(a + b) == True
+    assert eager_SumQ(a*b) == False
+    assert eager_SumQ(a + b) == True
 
 def test_NonsumQ():
-    assert NonsumQ(a*b) == True
-    assert NonsumQ(a + b) == False
+    assert eager_NonsumQ(a*b) == True
+    assert eager_NonsumQ(a + b) == False
 
 def test_SqrtNumberQ():
-    assert SqrtNumberQ(sqrt(2)) == True
+    assert eager_SqrtNumberQ(sqrt(2)) == True
 
 def test_IntLinearcQ():
     assert IntLinearcQ(1, 2, 3, 4, 5, 6, x) == True
     assert IntLinearcQ(S(1)/100, S(2)/100, S(3)/100, S(4)/100, S(5)/100, S(6)/100, x) == False
 
 def test_IndependentQ():
-    assert IndependentQ(a + b*x, x) == False
-    assert IndependentQ(a + b, x) == True
+    assert eager_IndependentQ(a + b*x, x) == False
+    assert eager_IndependentQ(a + b, x) == True
 
 def test_PowerQ():
-    assert PowerQ(a**b) == True
-    assert PowerQ(a + b) == False
+    assert eager_PowerQ(a**b) == True
+    assert eager_PowerQ(a + b) == False
 
 def test_IntegerPowerQ():
-    assert IntegerPowerQ(a**2) == True
-    assert IntegerPowerQ(a**0.5) == False
+    assert eager_IntegerPowerQ(a**2) == True
+    assert eager_IntegerPowerQ(a**0.5) == False
 
 def test_FractionalPowerQ():
-    assert FractionalPowerQ(a**(S(2)/S(3)))
-    assert FractionalPowerQ(a**sqrt(2)) == False
+    assert eager_FractionalPowerQ(a**(S(2)/S(3)))
+    assert eager_FractionalPowerQ(a**sqrt(2)) == False
 
 def test_AtomQ():
     assert AtomQ(x)
@@ -426,12 +426,12 @@ def test_ExpQ():
     assert not ExpQ(2**E)
 
 def test_LogQ():
-    assert LogQ(log(x))
-    assert not LogQ(sin(x) + log(x))
+    assert eager_LogQ(log(x))
+    assert not eager_LogQ(sin(x) + log(x))
 
 def test_Head():
-    assert Head(sin(x)) == sin
-    assert Head(log(x**3 + 3)) == log
+    assert eager_Head(sin(x)) == sin
+    assert eager_Head(log(x**3 + 3)) == log
 
 # test_MemberQ (plain membership) and the MemberQ head-wildcard assertions moved to
 # sympy_wolfram/tests/test_mathematica_functions.py (MemberQ now lives in that layer).
@@ -444,13 +444,13 @@ def test_TrigQ_InverseTrigQ_head_wildcard_matches_by_class():
     never fired. Plain MemberQ head-matching is covered in the sympy_wolfram tests."""
     from sympy_matching.wild import HeadRef
     from sympy import asin
-    assert TrigQ(HeadRef(sin))
-    assert InverseTrigQ(HeadRef(asin))
+    assert eager_TrigQ(HeadRef(sin))
+    assert eager_InverseTrigQ(HeadRef(asin))
 
 def test_TrigQ():
-    assert TrigQ(sin(x))
-    assert TrigQ(tan(x**2 + 2))
-    assert not TrigQ(sin(x) + tan(x))
+    assert eager_TrigQ(sin(x))
+    assert eager_TrigQ(tan(x**2 + 2))
+    assert not eager_TrigQ(sin(x) + tan(x))
 
 def test_SinQ():
     assert SinQ(sin(x))
@@ -477,10 +477,10 @@ def test_CscQ():
     assert CscQ(csc(x))
 
 def test_HyperbolicQ():
-    assert HyperbolicQ(sinh(x))
-    assert HyperbolicQ(cosh(x))
-    assert HyperbolicQ(tanh(x))
-    assert not HyperbolicQ(sinh(x) + cosh(x) + tanh(x))
+    assert eager_HyperbolicQ(sinh(x))
+    assert eager_HyperbolicQ(cosh(x))
+    assert eager_HyperbolicQ(tanh(x))
+    assert not eager_HyperbolicQ(sinh(x) + cosh(x) + tanh(x))
 
 def test_SinhQ():
     assert SinhQ(sinh(x))
@@ -507,9 +507,9 @@ def test_CschQ():
     assert CschQ(csch(x))
 
 def test_InverseTrigQ():
-    assert InverseTrigQ(acot(x))
-    assert InverseTrigQ(asec(x))
-    assert not InverseTrigQ(acsc(x) + asec(x))
+    assert eager_InverseTrigQ(acot(x))
+    assert eager_InverseTrigQ(asec(x))
+    assert not eager_InverseTrigQ(acsc(x) + asec(x))
 
 def test_SinhCoshQ():
     assert not SinhCoshQ(sin(x))
@@ -518,29 +518,29 @@ def test_SinhCoshQ():
     assert SinhCoshQ(csch(x))
 
 def test_LeafCount():
-    assert LeafCount(1 + a + x**2) == 6
+    assert eager_LeafCount(1 + a + x**2) == 6
 
 def test_Length():
-    assert Length(a + b) == 2
-    assert Length(sin(a)*cos(a)) == 2
+    assert eager_Length(a + b) == 2
+    assert eager_Length(sin(a)*cos(a)) == 2
 
 def test_ListQ():
     assert ListQ([1, 2])
     assert not ListQ(a)
 
 def test_InverseHyperbolicQ():
-    assert InverseHyperbolicQ(acosh(a))
+    assert eager_InverseHyperbolicQ(acosh(a))
 
 def test_InverseFunctionQ():
-    assert InverseFunctionQ(log(a))
-    assert InverseFunctionQ(acos(a))
-    assert not InverseFunctionQ(a)
-    assert InverseFunctionQ(acosh(a))
-    assert InverseFunctionQ(polylog(a, b))
+    assert eager_InverseFunctionQ(log(a))
+    assert eager_InverseFunctionQ(acos(a))
+    assert not eager_InverseFunctionQ(a)
+    assert eager_InverseFunctionQ(acosh(a))
+    assert eager_InverseFunctionQ(polylog(a, b))
 
 def test_EqQ():
-    assert EqQ(a, a)
-    assert not EqQ(a, b)
+    assert eager_EqQ(a, a)
+    assert not eager_EqQ(a, b)
 
 
 def test_EqQ_head_wildcard_identity():
@@ -550,12 +550,12 @@ def test_EqQ_head_wildcard_identity():
     Regression for FHW rules gated on a specific head."""
     from sympy_matching.wild import HeadRef
     from sympy import sin, cos, tan
-    assert EqQ(HeadRef(sin), HeadRef(sin))
-    assert EqQ(HeadRef(tan), HeadRef(tan))
-    assert not EqQ(HeadRef(sin), HeadRef(cos))
+    assert eager_EqQ(HeadRef(sin), HeadRef(sin))
+    assert eager_EqQ(HeadRef(tan), HeadRef(tan))
+    assert not eager_EqQ(HeadRef(sin), HeadRef(cos))
     # ordinary EqQ unaffected
-    assert EqQ(a + b, b + a)
-    assert not EqQ(x, 2 * x)
+    assert eager_EqQ(a + b, b + a)
+    assert not eager_EqQ(x, 2 * x)
 
 def test_FactorSquareFree():
     assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
@@ -574,12 +574,12 @@ def test_SquareFreeFactorTest():
     assert SquareFreeFactorTest(x**5 - x**3 - x**2 + 1, x) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
 
 def test_ComplexFreeQ():
-    assert ComplexFreeQ(a)
-    assert not ComplexFreeQ(a + 2*I)
+    assert eager_ComplexFreeQ(a)
+    assert not eager_ComplexFreeQ(a + 2*I)
 
 def test_FractionalPowerFreeQ():
-    assert not FractionalPowerFreeQ(x**(S(2)/3))
-    assert FractionalPowerFreeQ(x)
+    assert not eager_FractionalPowerFreeQ(x**(S(2)/3))
+    assert eager_FractionalPowerFreeQ(x)
 
 # ExponentList is Rubi-specific and stays here; Exponent itself moved to
 # sympy_wolfram (behaviour tested in test_mathematica_functions.py).
@@ -591,20 +591,20 @@ def test_ExponentList():
     assert ExponentList(x**3, x) == [3]
 
 def test_Expon():
-    assert Expon(x**2+2*x+1, x) == 2
+    assert eager_Expon(x**2+2*x+1, x) == 2
 
 def test_QuadraticQ():
-    assert not QuadraticQ([x**2+x+1, 5*x**2], x)
-    assert QuadraticQ([x**2+x+1, 5*x**2+3*x+6], x)
-    assert not QuadraticQ(x**2+1+x**3, x)
-    assert QuadraticQ(x**2+1+x, x)
-    assert not QuadraticQ(x**2, x)
-    assert not QuadraticQ(sin(x), x)
-    assert not QuadraticQ([sin(x), cos(x)], x)
+    assert not eager_QuadraticQ([x**2+x+1, 5*x**2], x)
+    assert eager_QuadraticQ([x**2+x+1, 5*x**2+3*x+6], x)
+    assert not eager_QuadraticQ(x**2+1+x**3, x)
+    assert eager_QuadraticQ(x**2+1+x, x)
+    assert not eager_QuadraticQ(x**2, x)
+    assert not eager_QuadraticQ(sin(x), x)
+    assert not eager_QuadraticQ([sin(x), cos(x)], x)
 
 def test_BinomialQ():
-    assert BinomialQ(x**9, x)
-    assert not BinomialQ((1 + x)**3, x)
+    assert eager_BinomialQ(x**9, x)
+    assert not eager_BinomialQ((1 + x)**3, x)
 
 def test_BinomialParts():
     assert BinomialParts(2 + x*(9*x), x) == [2, 9, 2]
@@ -613,9 +613,9 @@ def test_BinomialParts():
     assert BinomialParts(2 + x, x) == [2, 1, 1]
 
 def test_BinomialDegree():
-    assert BinomialDegree(b + 2*c*x**n, x) == n
-    assert BinomialDegree(2 + x*(9*x), x) == 2
-    assert BinomialDegree(x**9, x) == 9
+    assert eager_BinomialDegree(b + 2*c*x**n, x) == n
+    assert eager_BinomialDegree(2 + x*(9*x), x) == 2
+    assert eager_BinomialDegree(x**9, x) == 9
 
 def test_PolynomialQ():
     assert not PolynomialQ(x*(-1 + x**2), (1 + x)**(S(1)/2))
@@ -628,12 +628,12 @@ def test_PolynomialQ():
     assert not PolynomialQ(sqrt(x), x)
 
 def test_PolyQ():
-    assert PolyQ(-2*a*d**3*e**2 + x**6*(a*e**5 - b*d*e**4 + c*d**2*e**3)\
+    assert eager_PolyQ(-2*a*d**3*e**2 + x**6*(a*e**5 - b*d*e**4 + c*d**2*e**3)\
         + x**4*(-2*a*d*e**4 + 2*b*d**2*e**3 - 2*c*d**3*e**2) + x**2*(2*a*d**2*e**3 - 2*b*d**3*e**2), x)
-    assert not PolyQ(1/sqrt(a + b*x**2 - c*x**4), x**2)
-    assert PolyQ(x, x, 1)
-    assert PolyQ(x**2, x, 2)
-    assert not PolyQ(x**3, x, 2)
+    assert not eager_PolyQ(1/sqrt(a + b*x**2 - c*x**4), x**2)
+    assert eager_PolyQ(x, x, 1)
+    assert eager_PolyQ(x**2, x, 2)
+    assert not eager_PolyQ(x**3, x, 2)
 
 def test_EvenQ():
     assert EvenQ(S(2))
@@ -644,28 +644,28 @@ def test_OddQ():
     assert not OddQ(S(2))
 
 def test_PerfectSquareQ():
-    assert PerfectSquareQ(S(4))
-    assert PerfectSquareQ(a**S(2)*b**S(4))
-    assert not PerfectSquareQ(S(1)/3)
+    assert eager_PerfectSquareQ(S(4))
+    assert eager_PerfectSquareQ(a**S(2)*b**S(4))
+    assert not eager_PerfectSquareQ(S(1)/3)
 
 def test_NiceSqrtQ():
-    assert NiceSqrtQ(S(1)/3)
-    assert not NiceSqrtQ(-S(1))
-    assert NiceSqrtQ(pi**2)
-    assert NiceSqrtQ(pi**2*sin(4)**4)
-    assert not NiceSqrtQ(pi**2*sin(4)**3)
+    assert eager_NiceSqrtQ(S(1)/3)
+    assert not eager_NiceSqrtQ(-S(1))
+    assert eager_NiceSqrtQ(pi**2)
+    assert eager_NiceSqrtQ(pi**2*sin(4)**4)
+    assert not eager_NiceSqrtQ(pi**2*sin(4)**3)
 
 def test_Together():
-    assert Together(1/a + b/2) == (a*b + 2)/(2*a)
+    assert eager_Together(1/a + b/2) == (a*b + 2)/(2*a)
 
 def test_PosQ():
     #assert not PosQ((b*e - c*d)/(c*e))
-    assert not PosQ(S(0))
-    assert PosQ(S(1))
-    assert PosQ(pi)
-    assert PosQ(pi**3)
-    assert PosQ((-pi)**4)
-    assert PosQ(sin(1)**2*pi**4)
+    assert not eager_PosQ(S(0))
+    assert eager_PosQ(S(1))
+    assert eager_PosQ(pi)
+    assert eager_PosQ(pi**3)
+    assert eager_PosQ((-pi)**4)
+    assert eager_PosQ(sin(1)**2*pi**4)
 
 def test_NumericQ():
     assert NumericQ(sin(cos(2)))
@@ -698,21 +698,21 @@ def test_CoefficientList():
     assert CoefficientList(sqrt(x), x) == []
 
 def test_ReplaceAll():
-    assert ReplaceAll(x, {x: a}) == a
-    assert ReplaceAll(a*x, {x: a + b}) == a*(a + b)
-    assert ReplaceAll(a*x, {a: b, x: a + b}) == b*(a + b)
+    assert eager_ReplaceAll(x, {x: a}) == a
+    assert eager_ReplaceAll(a*x, {x: a + b}) == a*(a + b)
+    assert eager_ReplaceAll(a*x, {a: b, x: a + b}) == b*(a + b)
 
 def test_ExpandLinearProduct():
-    assert ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
-    assert ExpandLinearProduct((a + b*x)**n, x**3, a, b, x) == -a**3*(a + b*x)**n/b**3 + 3*a**2*(a + b*x)**(n + 1)/b**3 - 3*a*(a + b*x)**(n + 2)/b**3 + (a + b*x)**(n + 3)/b**3
+    assert eager_ExpandLinearProduct(log(x), x**2, a, b, x) == a**2*log(x)/b**2 - 2*a*(a + b*x)*log(x)/b**2 + (a + b*x)**2*log(x)/b**2
+    assert eager_ExpandLinearProduct((a + b*x)**n, x**3, a, b, x) == -a**3*(a + b*x)**n/b**3 + 3*a**2*(a + b*x)**(n + 1)/b**3 - 3*a*(a + b*x)**(n + 2)/b**3 + (a + b*x)**(n + 3)/b**3
 
 def test_PolynomialDivide():
-    assert PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
-    assert PolynomialDivide(x + x**2, x, x) == x + 1
-    assert PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
-    assert PolynomialDivide((a + b*x)**3, x**3, x) == a*(a**2 + 3*a*b*x + 3*b**2*x**2)/x**3 + b**3
-    assert PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
-    assert PolynomialDivide(x**6, (a + b*x)**2, x) == -a**5*(5*a + 6*b*x)/(b**6*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
+    assert eager_PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
+    assert eager_PolynomialDivide(x + x**2, x, x) == x + 1
+    assert eager_PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
+    assert eager_PolynomialDivide((a + b*x)**3, x**3, x) == a*(a**2 + 3*a*b*x + 3*b**2*x**2)/x**3 + b**3
+    assert eager_PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
+    assert eager_PolynomialDivide(x**6, (a + b*x)**2, x) == -a**5*(5*a + 6*b*x)/(b**6*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -724,14 +724,14 @@ def test_PolynomialQuotientRemainder():
     assert PolynomialQuotientRemainder(x**2, x+a, x) == [-a + x, a**2]
 
 def test_FreeFactors():
-    assert FreeFactors(a, x) == a
-    assert FreeFactors(x + a, x) == 1
-    assert FreeFactors(a*b*x, x) == a*b
+    assert eager_FreeFactors(a, x) == a
+    assert eager_FreeFactors(x + a, x) == 1
+    assert eager_FreeFactors(a*b*x, x) == a*b
 
 def test_NonfreeFactors():
-    assert NonfreeFactors(a, x) == 1
-    assert NonfreeFactors(x + a, x) == x + a
-    assert NonfreeFactors(a*b*x, x) == x
+    assert eager_NonfreeFactors(a, x) == 1
+    assert eager_NonfreeFactors(x + a, x) == x + a
+    assert eager_NonfreeFactors(a*b*x, x) == x
 
 def test_FreeTerms():
     assert FreeTerms(a, x) == a
@@ -760,49 +760,49 @@ def test_ExpandCleanup():
     assert ExpandCleanup(b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
 
 def test_AlgebraicFunctionQ():
-    assert not AlgebraicFunctionQ(1/(a + c*x**(2*n)), x)
-    assert AlgebraicFunctionQ(a, x) == True
-    assert AlgebraicFunctionQ(a*b, x) == True
-    assert AlgebraicFunctionQ(x**2, x) == True
-    assert AlgebraicFunctionQ(x**2*a, x) == True
-    assert AlgebraicFunctionQ(x**2 + a, x) == True
-    assert AlgebraicFunctionQ(sin(x), x) == False
-    assert AlgebraicFunctionQ([], x) == True
-    assert AlgebraicFunctionQ([a, a*b], x) == True
-    assert AlgebraicFunctionQ([sin(x)], x) == False
+    assert not eager_AlgebraicFunctionQ(1/(a + c*x**(2*n)), x)
+    assert eager_AlgebraicFunctionQ(a, x) == True
+    assert eager_AlgebraicFunctionQ(a*b, x) == True
+    assert eager_AlgebraicFunctionQ(x**2, x) == True
+    assert eager_AlgebraicFunctionQ(x**2*a, x) == True
+    assert eager_AlgebraicFunctionQ(x**2 + a, x) == True
+    assert eager_AlgebraicFunctionQ(sin(x), x) == False
+    assert eager_AlgebraicFunctionQ([], x) == True
+    assert eager_AlgebraicFunctionQ([a, a*b], x) == True
+    assert eager_AlgebraicFunctionQ([sin(x)], x) == False
 
 def test_MonomialQ():
-    assert not MonomialQ(2*x**7 + 6, x)
-    assert MonomialQ(2*x**7, x)
-    assert not MonomialQ(2*x**7 + 5*x**3, x)
-    assert not MonomialQ([2*x**7 + 6, 2*x**7], x)
-    assert MonomialQ([2*x**7, 5*x**3], x)
+    assert not eager_MonomialQ(2*x**7 + 6, x)
+    assert eager_MonomialQ(2*x**7, x)
+    assert not eager_MonomialQ(2*x**7 + 5*x**3, x)
+    assert not eager_MonomialQ([2*x**7 + 6, 2*x**7], x)
+    assert eager_MonomialQ([2*x**7, 5*x**3], x)
 
 def test_MonomialSumQ():
     assert MonomialSumQ(2*x**7 + 6, x) == True
     assert MonomialSumQ(x**2 + x**3 + 5*x, x) == True
 
 def test_MinimumMonomialExponent():
-    assert MinimumMonomialExponent(x**2 + 5*x**2 + 3*x**5, x) == 2
-    assert MinimumMonomialExponent(x**2 + 5*x**2 + 1, x) == 0
+    assert eager_MinimumMonomialExponent(x**2 + 5*x**2 + 3*x**5, x) == 2
+    assert eager_MinimumMonomialExponent(x**2 + 5*x**2 + 1, x) == 0
 
 def test_MonomialExponent():
     assert MonomialExponent(3*x**7, x) == 7
     assert not MonomialExponent(3+x**3, x)
 
 def test_LinearMatchQ():
-    assert LinearMatchQ(2 + 3*x, x)
-    assert LinearMatchQ(3*x, x)
-    assert not LinearMatchQ(3*x**2, x)
+    assert eager_LinearMatchQ(2 + 3*x, x)
+    assert eager_LinearMatchQ(3*x, x)
+    assert not eager_LinearMatchQ(3*x**2, x)
 
 def test_SimplerQ():
     a1, b1 = symbols('a1 b1')
-    assert SimplerQ(a1, b1)
+    assert eager_SimplerQ(a1, b1)
 
-    assert SimplerQ(2*a, a + 2)
-    assert SimplerQ(2, x)
-    assert not SimplerQ(x**2, x)
-    assert SimplerQ(2*x, x + 2 + 6*x**3)
+    assert eager_SimplerQ(2*a, a + 2)
+    assert eager_SimplerQ(2, x)
+    assert not eager_SimplerQ(x**2, x)
+    assert eager_SimplerQ(2*x, x + 2 + 6*x**3)
 
 def test_GeneralizedTrinomialParts():
     assert not GeneralizedTrinomialParts((7 + 2*x**6 + 3*x**12), x)
@@ -810,12 +810,12 @@ def test_GeneralizedTrinomialParts():
     assert not GeneralizedTrinomialParts(2*x + 3*x + 4*x, x)
 
 def test_TrinomialQ():
-    assert TrinomialQ((7 + 2*x**6 + 3*x**12), x)
-    assert not TrinomialQ(x**2, x)
+    assert eager_TrinomialQ((7 + 2*x**6 + 3*x**12), x)
+    assert not eager_TrinomialQ(x**2, x)
 
 def test_GeneralizedTrinomialDegree():
-    assert not GeneralizedTrinomialDegree((7 + 2*x**6 + 3*x**12), x)
-    assert GeneralizedTrinomialDegree(x**2 + x**3 + x**4, x) == 1
+    assert not eager_GeneralizedTrinomialDegree((7 + 2*x**6 + 3*x**12), x)
+    assert eager_GeneralizedTrinomialDegree(x**2 + x**3 + x**4, x) == 1
 
 def test_GeneralizedBinomialParts():
     assert GeneralizedBinomialParts(3*x*(3 + x**6), x) == [9, 3, 7, 1]
@@ -826,15 +826,15 @@ def test_GeneralizedBinomialDegree():
     assert GeneralizedBinomialDegree((3*x + x**7), x) == 6
 
 def test_PowerOfLinearQ():
-    assert PowerOfLinearQ((6*x), x)
-    assert not PowerOfLinearQ((3 + 6*x**3), x)
-    assert PowerOfLinearQ((3 + 6*x)**3, x)
+    assert eager_PowerOfLinearQ((6*x), x)
+    assert not eager_PowerOfLinearQ((3 + 6*x**3), x)
+    assert eager_PowerOfLinearQ((3 + 6*x)**3, x)
 
 def test_LinearPairQ():
-    assert not LinearPairQ(6*x**2 + 4, 3*x**2 + 2, x)
-    assert LinearPairQ(6*x + 4, 3*x + 2, x)
-    assert not LinearPairQ(6*x, 3*x + 2, x)
-    assert LinearPairQ(6*x, 3*x, x)
+    assert not eager_LinearPairQ(6*x**2 + 4, 3*x**2 + 2, x)
+    assert eager_LinearPairQ(6*x + 4, 3*x + 2, x)
+    assert not eager_LinearPairQ(6*x, 3*x + 2, x)
+    assert eager_LinearPairQ(6*x, 3*x, x)
 
 def test_LeadTerm():
     assert LeadTerm(a*b*c) == a*b*c
@@ -865,20 +865,20 @@ def test_LeadDegree():
     assert LeadDegree(a**b*c) == b
 
 def test_Numer():
-    assert Numer(a/b) == a
-    assert Numer(a**(-2)) == 1
-    assert Numer(a**(-2)*a/b) == 1
+    assert eager_Numer(a/b) == a
+    assert eager_Numer(a**(-2)) == 1
+    assert eager_Numer(a**(-2)*a/b) == 1
 
 def test_Denom():
-    assert Denom(a/b) == b
-    assert Denom(a**(-2)) == a**2
-    assert Denom(a**(-2)*a/b) == a*b
+    assert eager_Denom(a/b) == b
+    assert eager_Denom(a**(-2)) == a**2
+    assert eager_Denom(a**(-2)*a/b) == a*b
 
 def test_Coeff():
-    assert Coeff(7 + 2*x + 4*x**3, x, 1) == 2
-    assert Coeff(a + b*x + c*x**3, x, 0) == a
-    assert Coeff(a + b*x + c*x**3, x, 4) == 0
-    assert Coeff(b*x + c*x**3, x, 3) == c
+    assert eager_Coeff(7 + 2*x + 4*x**3, x, 1) == 2
+    assert eager_Coeff(a + b*x + c*x**3, x, 0) == a
+    assert eager_Coeff(a + b*x + c*x**3, x, 4) == 0
+    assert eager_Coeff(b*x + c*x**3, x, 3) == c
 
 def test_MergeMonomials():
     assert MergeMonomials(x**2*(1 + 1*x)**3*(1 + 1*x)**n, x) == x**2*(x + 1)**(n + 3)
@@ -886,12 +886,12 @@ def test_MergeMonomials():
     assert MergeMonomials(b**2/a**3, x) == b**2/a**3
 
 def test_RationalFunctionQ():
-    assert RationalFunctionQ(a, x)
-    assert RationalFunctionQ(x**2, x)
-    assert RationalFunctionQ(x**3 + x**4, x)
-    assert RationalFunctionQ(x**3*S(2), x)
-    assert not RationalFunctionQ(x**3 + x**(0.5), x)
-    assert not RationalFunctionQ(x**(S(2)/3)*(a + b*x)**2, x)
+    assert eager_RationalFunctionQ(a, x)
+    assert eager_RationalFunctionQ(x**2, x)
+    assert eager_RationalFunctionQ(x**3 + x**4, x)
+    assert eager_RationalFunctionQ(x**3*S(2), x)
+    assert not eager_RationalFunctionQ(x**3 + x**(0.5), x)
+    assert not eager_RationalFunctionQ(x**(S(2)/3)*(a + b*x)**2, x)
 
 # Apart moved to sympy_wolfram (behaviour tested there). It used to gate on Rubi's
 # RationalFunctionQ; the relocated version uses SymPy's is_rational_function. This test
@@ -901,7 +901,7 @@ def test_Apart_guard_matches_RationalFunctionQ():
     cases = [1/(x*(x + 1)), x + sqrt(x), sin(x)/(x + 1),
              x**3/(a + b*x), 1/x + x, (a + b*x)/(c + x**2)]
     for u in cases:
-        assert bool(RationalFunctionQ(u, x)) == bool(u.is_rational_function(x))
+        assert bool(eager_RationalFunctionQ(u, x)) == bool(u.is_rational_function(x))
 
 def test_RationalFunctionFactors():
     assert RationalFunctionFactors(a, x) == a
@@ -919,18 +919,18 @@ def test_Reverse():
     assert Reverse(a**b) == b**a
 
 def test_RationalFunctionExponents():
-    assert RationalFunctionExponents(sqrt(x), x) == [0, 0]
-    assert RationalFunctionExponents(a, x) == [0, 0]
-    assert RationalFunctionExponents(x, x) == [1, 0]
-    assert RationalFunctionExponents(x**(-1), x)== [0, 1]
-    assert RationalFunctionExponents(x**(-1)*a, x) == [0, 1]
-    assert RationalFunctionExponents(x**(-1) + a, x) == [1, 1]
+    assert eager_RationalFunctionExponents(sqrt(x), x) == [0, 0]
+    assert eager_RationalFunctionExponents(a, x) == [0, 0]
+    assert eager_RationalFunctionExponents(x, x) == [1, 0]
+    assert eager_RationalFunctionExponents(x**(-1), x)== [0, 1]
+    assert eager_RationalFunctionExponents(x**(-1)*a, x) == [0, 1]
+    assert eager_RationalFunctionExponents(x**(-1) + a, x) == [1, 1]
 
 def test_PolynomialGCD():
     assert PolynomialGCD(x**2 - 1, x**2 - 3*x + 2) == x - 1
 
 def test_PolyGCD():
-    assert PolyGCD(x**2 - 1, x**2 - 3*x + 2, x) == x - 1
+    assert eager_PolyGCD(x**2 - 1, x**2 - 3*x + 2, x) == x - 1
 
 def test_AlgebraicFunctionFactors():
     assert AlgebraicFunctionFactors(sin(x)*x, x) == x
@@ -952,21 +952,21 @@ def test_QuotientOfLinearsP():
     assert QuotientOfLinearsP(1 + x, x)
 
 def test_QuotientOfLinearsParts():
-    assert QuotientOfLinearsParts((b*x)/(c), x) == [0, b/c, 1, 0]
-    assert QuotientOfLinearsParts((b*x)/(c + x), x) == [0, b, c, 1]
-    assert QuotientOfLinearsParts((b*x)/(c + d*x), x) == [0, b, c, d]
-    assert QuotientOfLinearsParts((a + b*x)/(c + d*x), x) == [a, b, c, d]
-    assert QuotientOfLinearsParts(x**2 + a, x) == [a + x**2, 0, 1, 0]
-    assert QuotientOfLinearsParts(a/x, x) == [a, 0, 0, 1]
-    assert QuotientOfLinearsParts(1/x, x) == [1, 0, 0, 1]
-    assert QuotientOfLinearsParts(a*x + 1, x) == [1, a, 1, 0]
-    assert QuotientOfLinearsParts(x, x) == [0, 1, 1, 0]
-    assert QuotientOfLinearsParts(a, x) == [a, 0, 1, 0]
+    assert eager_QuotientOfLinearsParts((b*x)/(c), x) == [0, b/c, 1, 0]
+    assert eager_QuotientOfLinearsParts((b*x)/(c + x), x) == [0, b, c, 1]
+    assert eager_QuotientOfLinearsParts((b*x)/(c + d*x), x) == [0, b, c, d]
+    assert eager_QuotientOfLinearsParts((a + b*x)/(c + d*x), x) == [a, b, c, d]
+    assert eager_QuotientOfLinearsParts(x**2 + a, x) == [a + x**2, 0, 1, 0]
+    assert eager_QuotientOfLinearsParts(a/x, x) == [a, 0, 0, 1]
+    assert eager_QuotientOfLinearsParts(1/x, x) == [1, 0, 0, 1]
+    assert eager_QuotientOfLinearsParts(a*x + 1, x) == [1, a, 1, 0]
+    assert eager_QuotientOfLinearsParts(x, x) == [0, 1, 1, 0]
+    assert eager_QuotientOfLinearsParts(a, x) == [a, 0, 1, 0]
 
 def test_QuotientOfLinearsQ():
-    assert not QuotientOfLinearsQ((a + x), x)
-    assert QuotientOfLinearsQ((a + x)/(x), x)
-    assert QuotientOfLinearsQ((a + b*x)/(x), x)
+    assert not eager_QuotientOfLinearsQ((a + x), x)
+    assert eager_QuotientOfLinearsQ((a + x)/(x), x)
+    assert eager_QuotientOfLinearsQ((a + b*x)/(x), x)
 
 def test_Flatten():
     assert Flatten([a, b, [c, [d, e]]]) == [a, b, c, d, e]
@@ -1027,19 +1027,19 @@ def test_Prepend():
     assert Prepend([1, 2, 3], [4, 5]) == [4, 5, 1, 2, 3]
 
 def test_SumSimplerQ():
-    assert not SumSimplerQ(S(4 + x),S(3 + x**3))
-    assert SumSimplerQ(S(4 + x), S(3 - x))
+    assert not eager_SumSimplerQ(S(4 + x),S(3 + x**3))
+    assert eager_SumSimplerQ(S(4 + x), S(3 - x))
 
 def test_SumSimplerAuxQ():
     assert SumSimplerAuxQ(S(4 + x), S(3 - x))
     assert not SumSimplerAuxQ(S(4), S(3))
 
 def test_SimplerSqrtQ():
-    assert SimplerSqrtQ(S(2), S(16*x**3))
-    assert not SimplerSqrtQ(S(x*2), S(16))
-    assert not SimplerSqrtQ(S(-4), S(16))
-    assert SimplerSqrtQ(S(4), S(16))
-    assert not SimplerSqrtQ(S(4), S(0))
+    assert eager_SimplerSqrtQ(S(2), S(16*x**3))
+    assert not eager_SimplerSqrtQ(S(x*2), S(16))
+    assert not eager_SimplerSqrtQ(S(-4), S(16))
+    assert eager_SimplerSqrtQ(S(4), S(16))
+    assert not eager_SimplerSqrtQ(S(4), S(0))
 
 def test_TrinomialParts():
     assert TrinomialParts((1 + 5*x**3)**2, x) == [1, 10, 25, 3]
@@ -1048,9 +1048,9 @@ def test_TrinomialParts():
     assert not TrinomialParts(1 + 5*x**3 + 2*x**5, x)
 
 def test_TrinomialDegree():
-    assert TrinomialDegree((7 + 2*x**6)**2, x) == 6
-    assert TrinomialDegree(1 + 5*x**3 + 2*x**6, x) == 3
-    assert not TrinomialDegree(1 + 5*x**3 + 2*x**5, x)
+    assert eager_TrinomialDegree((7 + 2*x**6)**2, x) == 6
+    assert eager_TrinomialDegree(1 + 5*x**3 + 2*x**6, x) == 3
+    assert not eager_TrinomialDegree(1 + 5*x**3 + 2*x**5, x)
 
 def test_CubicMatchQ():
     assert not CubicMatchQ(S(3 + x**6), x)
@@ -1060,39 +1060,39 @@ def test_CubicMatchQ():
     assert CubicMatchQ(S(3 + x**3 + 2*x), x)
 
 def test_BinomialMatchQ():
-    assert BinomialMatchQ(x, x)
-    assert BinomialMatchQ(2 + 3*x**5, x)
-    assert BinomialMatchQ(3*x**5, x)
-    assert BinomialMatchQ(3*x, x)
-    assert not BinomialMatchQ(x + x**2 + x**3, x)
+    assert eager_BinomialMatchQ(x, x)
+    assert eager_BinomialMatchQ(2 + 3*x**5, x)
+    assert eager_BinomialMatchQ(3*x**5, x)
+    assert eager_BinomialMatchQ(3*x, x)
+    assert not eager_BinomialMatchQ(x + x**2 + x**3, x)
 
 def test_TrinomialMatchQ():
-    assert not TrinomialMatchQ((5 + 2*x**6)**2, x)
-    assert not TrinomialMatchQ((7 + 8*x**6), x)
-    assert TrinomialMatchQ((7 + 2*x**6 + 3*x**3), x)
-    assert TrinomialMatchQ(b*x**2 + c*x**4, x)
+    assert not eager_TrinomialMatchQ((5 + 2*x**6)**2, x)
+    assert not eager_TrinomialMatchQ((7 + 8*x**6), x)
+    assert eager_TrinomialMatchQ((7 + 2*x**6 + 3*x**3), x)
+    assert eager_TrinomialMatchQ(b*x**2 + c*x**4, x)
 
 def test_GeneralizedBinomialMatchQ():
-    assert not GeneralizedBinomialMatchQ((1 + x**4), x)
-    assert GeneralizedBinomialMatchQ((3*x + x**7), x)
+    assert not eager_GeneralizedBinomialMatchQ((1 + x**4), x)
+    assert eager_GeneralizedBinomialMatchQ((3*x + x**7), x)
 
 def test_QuadraticMatchQ():
-    assert not QuadraticMatchQ((a + b*x)*(c + d*x), x)
-    assert QuadraticMatchQ(x**2 + x, x)
-    assert QuadraticMatchQ(x**2+1+x, x)
-    assert QuadraticMatchQ(x**2, x)
+    assert not eager_QuadraticMatchQ((a + b*x)*(c + d*x), x)
+    assert eager_QuadraticMatchQ(x**2 + x, x)
+    assert eager_QuadraticMatchQ(x**2+1+x, x)
+    assert eager_QuadraticMatchQ(x**2, x)
 
 def test_PowerOfLinearMatchQ():
-    assert PowerOfLinearMatchQ(x, x)
-    assert not PowerOfLinearMatchQ(S(6)**3, x)
-    assert not PowerOfLinearMatchQ(S(6 + 3*x**2)**3, x)
-    assert PowerOfLinearMatchQ(S(6 + 3*x)**3, x)
+    assert eager_PowerOfLinearMatchQ(x, x)
+    assert not eager_PowerOfLinearMatchQ(S(6)**3, x)
+    assert not eager_PowerOfLinearMatchQ(S(6 + 3*x**2)**3, x)
+    assert eager_PowerOfLinearMatchQ(S(6 + 3*x)**3, x)
 
 def test_GeneralizedTrinomialMatchQ():
-    assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**12, x)
-    assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**3, x)
-    assert not GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**5, x)
-    assert GeneralizedTrinomialMatchQ(x**2 + x**3 + x**4, x)
+    assert not eager_GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**12, x)
+    assert not eager_GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**3, x)
+    assert not eager_GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**5, x)
+    assert eager_GeneralizedTrinomialMatchQ(x**2 + x**3 + x**4, x)
 
 def test_QuotientOfLinearsMatchQ():
     assert QuotientOfLinearsMatchQ((1 + x)*(3 + 4*x**2)/(2 + 4*x), x)
@@ -1126,12 +1126,12 @@ def test_PseudoBinomialParts():
     assert PseudoBinomialParts(3 + 7*(x)**5, x) == [3, 1, 0, 7**(S(1)/S(5)), 5]
 
 def test_PseudoBinomialPairQ():
-    assert not PseudoBinomialPairQ(3 + 5*(x)**6,3 + (x)**6, x)
-    assert not PseudoBinomialPairQ(3 + 5*(1 + x)**6,3 + (1 + x)**6, x)
+    assert not eager_PseudoBinomialPairQ(3 + 5*(x)**6,3 + (x)**6, x)
+    assert not eager_PseudoBinomialPairQ(3 + 5*(1 + x)**6,3 + (1 + x)**6, x)
 
 def test_NormalizePseudoBinomial():
-    assert NormalizePseudoBinomial(3 + 5*(1 + x)**6, x) == 3+(5**(S(1)/S(6))+5**(S(1)/S(6))*x)**S(6)
-    assert NormalizePseudoBinomial(3 + 5*(x)**6, x) == 3+5*x**6
+    assert eager_NormalizePseudoBinomial(3 + 5*(1 + x)**6, x) == 3+(5**(S(1)/S(6))+5**(S(1)/S(6))*x)**S(6)
+    assert eager_NormalizePseudoBinomial(3 + 5*(x)**6, x) == 3+5*x**6
 
 def test_CancelCommonFactors():
     assert CancelCommonFactors(S(x*y*S(6))**S(6), S(x*y*S(6))) == [46656*x**6*y**6, 6*x*y]
@@ -1139,9 +1139,9 @@ def test_CancelCommonFactors():
     assert CancelCommonFactors(S(6), S(3)) == [6, 3]
 
 def test_SimplerIntegrandQ():
-    assert SimplerIntegrandQ(S(5), 4*x, x)
-    assert not SimplerIntegrandQ(S(x + 5*x**3), S(x**2 + 3*x), x)
-    assert SimplerIntegrandQ(S(x + 8), S(x**2 + 3*x), x)
+    assert eager_SimplerIntegrandQ(S(5), 4*x, x)
+    assert not eager_SimplerIntegrandQ(S(x + 5*x**3), S(x**2 + 3*x), x)
+    assert eager_SimplerIntegrandQ(S(x + 8), S(x**2 + 3*x), x)
 
 def test_Drop():
     assert Drop([1, 2, 3, 4, 5, 6], [2, 4]) == [1, 5, 6]
@@ -1183,17 +1183,17 @@ def test_FactorNumericGcd():
     assert FactorNumericGcd(log(x) + x**S(2)) == log(x) + x**S(2)
 
 def test_Apply():
-    assert Apply(List, [a, b, c]) == [a, b, c]
+    assert eager_Apply(eager_List, [a, b, c]) == [a, b, c]
 
 def test_TrigSimplify():
-    assert TrigSimplify(a*sin(x)**2 + a*cos(x)**2 + v) == a + v
-    assert TrigSimplify(a*sec(x)**2 - a*tan(x)**2 + v) == a + v
-    assert TrigSimplify(a*csc(x)**2 - a*cot(x)**2 + v) == a + v
-    assert TrigSimplify(S(1) - sin(x)**2) == cos(x)**2
-    assert TrigSimplify(1 + tan(x)**2) == sec(x)**2
-    assert TrigSimplify(1 + cot(x)**2) == csc(x)**2
-    assert TrigSimplify(-S(1) + sec(x)**2) == tan(x)**2
-    assert TrigSimplify(-1 + csc(x)**2) == cot(x)**2
+    assert eager_TrigSimplify(a*sin(x)**2 + a*cos(x)**2 + v) == a + v
+    assert eager_TrigSimplify(a*sec(x)**2 - a*tan(x)**2 + v) == a + v
+    assert eager_TrigSimplify(a*csc(x)**2 - a*cot(x)**2 + v) == a + v
+    assert eager_TrigSimplify(S(1) - sin(x)**2) == cos(x)**2
+    assert eager_TrigSimplify(1 + tan(x)**2) == sec(x)**2
+    assert eager_TrigSimplify(1 + cot(x)**2) == csc(x)**2
+    assert eager_TrigSimplify(-S(1) + sec(x)**2) == tan(x)**2
+    assert eager_TrigSimplify(-1 + csc(x)**2) == cot(x)**2
 
 def test_MergeFactors():
     assert simplify(MergeFactors(b/(a - c)**3 , 8*c**3*(b*x + c)**(S(3)/2)/(3*b**4) - 24*c**2*(b*x + c)**(S(5)/2)/(5*b**4) + \
@@ -1253,17 +1253,17 @@ def test_NonpositiveFactors():
     assert NonpositiveFactors(-log(2)) == -1
 
 def test_Sign():
-    assert Sign(S(0)) == 0
-    assert Sign(S(1)) == 1
-    assert Sign(-S(1)) == -1
+    assert eager_Sign(S(0)) == 0
+    assert eager_Sign(S(1)) == 1
+    assert eager_Sign(-S(1)) == -1
 
 def test_PolynomialInQ():
     v = log(x)
-    assert PolynomialInQ(S(1), v, x)
-    assert PolynomialInQ(v, v, x)
-    assert PolynomialInQ(1 + v**2, v, x)
-    assert PolynomialInQ(1 + a*v**2, v, x)
-    assert not PolynomialInQ(sqrt(v), v, x)
+    assert eager_PolynomialInQ(S(1), v, x)
+    assert eager_PolynomialInQ(v, v, x)
+    assert eager_PolynomialInQ(1 + v**2, v, x)
+    assert eager_PolynomialInQ(1 + a*v**2, v, x)
+    assert not eager_PolynomialInQ(sqrt(v), v, x)
 
 
 def test_ExponentIn():
@@ -1275,12 +1275,12 @@ def test_ExponentIn():
 
 def test_PolynomialInSubst():
     v = log(x)
-    assert PolynomialInSubst(S(1) + log(x)**3, log(x), x) == 1 + x**3
-    assert PolynomialInSubst(S(1) + log(x), log(x), x) == x + 1
+    assert eager_PolynomialInSubst(S(1) + log(x)**3, log(x), x) == 1 + x**3
+    assert eager_PolynomialInSubst(S(1) + log(x), log(x), x) == x + 1
 
 def test_Distrib():
-    assert Distrib(x, a) == x*a
-    assert Distrib(x, a + b) == a*x + b*x
+    assert eager_Distrib(x, a) == x*a
+    assert eager_Distrib(x, a + b) == a*x + b*x
 
 def test_DistributeDegree():
     assert DistributeDegree(x, m) == x**m
@@ -1306,10 +1306,10 @@ def test_MonomialFactor():
     assert MonomialFactor(log(x)*x, x) == [1, log(x)]
 
 def test_NormalizeIntegrand():
-    assert NormalizeIntegrand((x**2 + 8), x) == x**2 + 8
-    assert NormalizeIntegrand((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
-    assert NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
-    assert NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
+    assert eager_NormalizeIntegrand((x**2 + 8), x) == x**2 + 8
+    assert eager_NormalizeIntegrand((x**2 + 3*x)**2, x) == x**2*(x + 3)**2
+    assert eager_NormalizeIntegrand(a**2*(a + b*x)**2, x) == a**2*(a + b*x)**2
+    assert eager_NormalizeIntegrand(b**2/(a**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2)
 
 def test_NormalizeIntegrandAux():
     v = (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) - (6*A*a**2*c**2 - 10*A*a*b**2*c - 8*A*a*b*c**2*x + 2*A*b**4 + 2*A*b**3*c*x + 5*B*a**2*b*c + 4*B*a**2*c**2*x - B*a*b**3 - B*a*b**2*c*x)/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
@@ -1355,12 +1355,12 @@ def test_SignOfFactor_complex_numeric_factor():
     assert rest == u
 
 def test_NormalizePowerOfLinear():
-    assert NormalizePowerOfLinear((x + 3)**5, x) == (x + 3)**5
-    assert NormalizePowerOfLinear(((x + 3)**2) + 3, x) == x**2 + 6*x + 12
+    assert eager_NormalizePowerOfLinear((x + 3)**5, x) == (x + 3)**5
+    assert eager_NormalizePowerOfLinear(((x + 3)**2) + 3, x) == x**2 + 6*x + 12
 
 def test_SimplifyIntegrand():
-    assert SimplifyIntegrand((x**2 + 3)**2, x) == (x**2 + 3)**2
-    assert SimplifyIntegrand(x**2 + 3 + (x**6) + 6, x) == x**6 + x**2 + 9
+    assert eager_SimplifyIntegrand((x**2 + 3)**2, x) == (x**2 + 3)**2
+    assert eager_SimplifyIntegrand(x**2 + 3 + (x**6) + 6, x) == x**6 + x**2 + 9
 
 def test_SimplifyTerm():
     assert SimplifyTerm(a**2/b**2, x) == a**2/b**2
@@ -1379,12 +1379,12 @@ def test_ExpandToSum():
     cc = 1
     pp = -S.Half
     bb = 3
-    assert nsimplify(ExpandToSum(Pq - Pqq*x**qq - Pqq*(aa*x**(-2*nn + qq)*(-2*nn + qq + 1) + bb*x**(-nn + qq)*(nn*(pp - 1) + qq + 1))/(cc*(2*nn*pp + qq + 1)), x) - \
+    assert nsimplify(eager_ExpandToSum(Pq - Pqq*x**qq - Pqq*(aa*x**(-2*nn + qq)*(-2*nn + qq + 1) + bb*x**(-nn + qq)*(nn*(pp - 1) + qq + 1))/(cc*(2*nn*pp + qq + 1)), x) - \
         (d**3 + x**4*(3*d*e**2 - 2.4*e**3) + x**2*(3*d**2*e - 1.2*e**3))) == 0
-    assert ExpandToSum(x**2 + 3*x + 3, x**3 + 3, x) == x**3*(x**2 + 3*x + 3) + 3*x**2 + 9*x + 9
-    assert ExpandToSum(x**3 + 6, x) == x**3 + 6
-    assert ExpandToSum(S(x**2 + 3*x + 3)*3, x) == 3*x**2 + 9*x + 9
-    assert ExpandToSum((a + b*x), x) == a + b*x
+    assert eager_ExpandToSum(x**2 + 3*x + 3, x**3 + 3, x) == x**3*(x**2 + 3*x + 3) + 3*x**2 + 9*x + 9
+    assert eager_ExpandToSum(x**3 + 6, x) == x**3 + 6
+    assert eager_ExpandToSum(S(x**2 + 3*x + 3)*3, x) == 3*x**2 + 9*x + 9
+    assert eager_ExpandToSum((a + b*x), x) == a + b*x
 
 def test_UnifySum():
     assert UnifySum((3 + x + 6*x**3 + sin(x)), x) == 6*x**3 + x + sin(x) + 3
@@ -1514,9 +1514,9 @@ def test_SubstForHyperbolic():
 
 def test_SubstForFractionalPowerOfLinear():
     u = a + b*x
-    assert not SubstForFractionalPowerOfLinear(u, x)
-    assert not SubstForFractionalPowerOfLinear(u**(S(2)), x)
-    assert SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
+    assert not eager_SubstForFractionalPowerOfLinear(u, x)
+    assert not eager_SubstForFractionalPowerOfLinear(u**(S(2)), x)
+    assert eager_SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
 
 def test_InverseFunctionOfLinear():
     u = a + b*x
@@ -1528,25 +1528,25 @@ def test_InertTrigQ():
     # active SymPy trig functions.
     from rubi_rules.utils.utility_functions import InertSin, InertCos, InertCsc
     isin, icos, icsc = InertSin(x), InertCos(x), InertCsc(x)
-    assert not InertTrigQ(isin, icsc, InertCos(h))
-    assert InertTrigQ(isin, icsc)          # sin/csc reciprocal pair
-    assert not InertTrigQ(isin, icos)
-    assert InertTrigQ(icos)
+    assert not eager_InertTrigQ(isin, icsc, InertCos(h))
+    assert eager_InertTrigQ(isin, icsc)          # sin/csc reciprocal pair
+    assert not eager_InertTrigQ(isin, icos)
+    assert eager_InertTrigQ(icos)
     # active SymPy trig is not inert
-    assert not InertTrigQ(sin(x))
-    assert not InertTrigQ(cos(x))
+    assert not eager_InertTrigQ(sin(x))
+    assert not eager_InertTrigQ(cos(x))
 
 def test_InertTrigFreeQ():
     from rubi_rules.utils.utility_functions import InertSin
-    assert InertTrigFreeQ(x)
-    assert InertTrigFreeQ(exp(x)*x)
+    assert eager_InertTrigFreeQ(x)
+    assert eager_InertTrigFreeQ(exp(x)*x)
     # active SymPy trig is inert-trig-free (that is the whole point of the fix)
-    assert InertTrigFreeQ(sin(x))
-    assert InertTrigFreeQ(x*sin(x))
-    assert InertTrigFreeQ(x*sin(x**2 + x))
+    assert eager_InertTrigFreeQ(sin(x))
+    assert eager_InertTrigFreeQ(x*sin(x))
+    assert eager_InertTrigFreeQ(x*sin(x**2 + x))
     # inert markers ARE detected
-    assert not InertTrigFreeQ(InertSin(x))
-    assert not InertTrigFreeQ(x*InertSin(x))
+    assert not eager_InertTrigFreeQ(InertSin(x))
+    assert not eager_InertTrigFreeQ(x*InertSin(x))
 
 def test_PowerOfInertTrigSumQ():
     func = sin
@@ -1554,12 +1554,12 @@ def test_PowerOfInertTrigSumQ():
     assert PowerOfInertTrigSumQ((1 + 2*(S(3)*func(x**2))**3 + 4*(S(5)*func(x**2))**S(3))**2, func, x)
 
 def test_PiecewiseLinearQ():
-    assert PiecewiseLinearQ(a + b*x, x)
-    assert not PiecewiseLinearQ(Log(c*sin(a)**S(3)), x)
-    assert not PiecewiseLinearQ(x**3, x)
-    assert PiecewiseLinearQ(atanh(tanh(a + b*x)), x)
-    assert PiecewiseLinearQ(tanh(atanh(a + b*x)), x)
-    assert not PiecewiseLinearQ(coth(atanh(a + b*x)), x)
+    assert eager_PiecewiseLinearQ(a + b*x, x)
+    assert not eager_PiecewiseLinearQ(Log(c*sin(a)**S(3)), x)
+    assert not eager_PiecewiseLinearQ(x**3, x)
+    assert eager_PiecewiseLinearQ(atanh(tanh(a + b*x)), x)
+    assert eager_PiecewiseLinearQ(tanh(atanh(a + b*x)), x)
+    assert not eager_PiecewiseLinearQ(coth(atanh(a + b*x)), x)
 
 def test_KnownTrigIntegrandQ():
     func = sin(a + b*x)
@@ -1573,21 +1573,21 @@ def test_KnownTrigIntegrandQ():
     assert not KnownTrigIntegrandQ([cos], (a + b*func)**m, x)
 
 def test_KnownSineIntegrandQ():
-    assert KnownSineIntegrandQ((a + b*sin(a + b*x))**m, x)
+    assert eager_KnownSineIntegrandQ((a + b*sin(a + b*x))**m, x)
 
 def test_KnownTangentIntegrandQ():
-    assert KnownTangentIntegrandQ((a + b*tan(a + b*x))**m, x)
+    assert eager_KnownTangentIntegrandQ((a + b*tan(a + b*x))**m, x)
 
 def test_KnownCotangentIntegrandQ():
-    assert KnownCotangentIntegrandQ((a + b*cot(a + b*x))**m, x)
+    assert eager_KnownCotangentIntegrandQ((a + b*cot(a + b*x))**m, x)
 
 def test_KnownSecantIntegrandQ():
-    assert KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)
+    assert eager_KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)
 
 def test_TryPureTanSubst():
-    assert TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x)
-    assert TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x)
-    assert not TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x)
+    assert eager_TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x)
+    assert eager_TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x)
+    assert not eager_TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x)
 
 def test_TryPureTanhSubst():
     assert not TryPureTanhSubst(log(x), x)
@@ -1603,21 +1603,21 @@ def test_TryTanhSubst():
     assert not TryTanhSubst(a*(b*sech(x)**3)**c, x)
 
 def test_GeneralizedBinomialQ():
-    assert GeneralizedBinomialQ(a*x**q + b*x**n, x)
-    assert not GeneralizedBinomialQ(a*x**q, x)
+    assert eager_GeneralizedBinomialQ(a*x**q + b*x**n, x)
+    assert not eager_GeneralizedBinomialQ(a*x**q, x)
 
 def test_GeneralizedTrinomialQ():
-    assert not GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
-    assert not GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
+    assert not eager_GeneralizedTrinomialQ(7 + 2*x**6 + 3*x**12, x)
+    assert not eager_GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
 
 def test_SubstForFractionalPowerOfQuotientOfLinears():
     assert SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
 
 def test_SubstForFractionalPowerQ():
-    assert SubstForFractionalPowerQ(x, sin(x), x)
-    assert SubstForFractionalPowerQ(x**2, sin(x), x)
-    assert not SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)
-    assert SubstForFractionalPowerQ(sin(x)**(S(3)/2), sin(x), x)
+    assert eager_SubstForFractionalPowerQ(x, sin(x), x)
+    assert eager_SubstForFractionalPowerQ(x**2, sin(x), x)
+    assert not eager_SubstForFractionalPowerQ(x**(S(3)/2), sin(x), x)
+    assert eager_SubstForFractionalPowerQ(sin(x)**(S(3)/2), sin(x), x)
 
 def test_AbsurdNumberGCD():
     assert AbsurdNumberGCD(S(4)) == 4
@@ -1669,15 +1669,15 @@ def test_PowerVariableDegree():
     assert PowerVariableDegree(S(4), 0, 2*x, x) == [0, 2*x]
 
 def test_PowerVariableExpn():
-    assert not PowerVariableExpn((x)**3, 2, x)
-    assert not PowerVariableExpn((2*x)**3, 2, x)
-    assert PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
+    assert not eager_PowerVariableExpn((x)**3, 2, x)
+    assert not eager_PowerVariableExpn((2*x)**3, 2, x)
+    assert eager_PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
 
 def test_FunctionOfQ():
-    assert FunctionOfQ(x**2, sqrt(-exp(2*x**2) + 1)*exp(x**2),x)
-    assert not FunctionOfQ(S(x**3), x*2, x)
-    assert FunctionOfQ(S(a), x*2, x)
-    assert FunctionOfQ(S(3*x), x*2, x)
+    assert eager_FunctionOfQ(x**2, sqrt(-exp(2*x**2) + 1)*exp(x**2),x)
+    assert not eager_FunctionOfQ(S(x**3), x*2, x)
+    assert eager_FunctionOfQ(S(a), x*2, x)
+    assert eager_FunctionOfQ(S(3*x), x*2, x)
 
 
 # FunctionOfQ(v, u, x, PureFlag): "is u a function of v?". The values below were
@@ -1706,14 +1706,14 @@ _FUNCTION_OF_Q_CASES = [
 def test_FunctionOfQ_matches_rubi_pure_flag():
     A = c + d*x
     for build_v, build_u, pure, expected in _FUNCTION_OF_Q_CASES:
-        got = bool(FunctionOfQ(build_v(A), build_u(A), x, pure))
+        got = bool(eager_FunctionOfQ(build_v(A), build_u(A), x, pure))
         assert got == expected, (build_v(A), build_u(A), pure, got, expected)
 
 
 def test_FunctionOfQ_atom_and_exp_cases():
     """Non-trig cases, also Pi-verified."""
-    assert FunctionOfQ(x, x**2 + x, x, True) is True
-    assert FunctionOfQ(exp(x), a + b*exp(x), x, False) is True
+    assert eager_FunctionOfQ(x, x**2 + x, x, True) is True
+    assert eager_FunctionOfQ(exp(x), a + b*exp(x), x, False) is True
 
 
 def test_FunctionOfQ_sech_squared_is_a_function_of_tanh_but_not_purely():
@@ -1721,8 +1721,8 @@ def test_FunctionOfQ_sech_squared_is_a_function_of_tanh_but_not_purely():
     future change to the pure/non-pure split cannot silently drift from Rubi."""
     A = c + d*x
     u = 1/(a + b*sech(A)**2)
-    assert FunctionOfQ(tanh(A), u, x, PureFlag=True) is False
-    assert FunctionOfQ(tanh(A), u, x, PureFlag=False) is True
+    assert eager_FunctionOfQ(tanh(A), u, x, PureFlag=True) is False
+    assert eager_FunctionOfQ(tanh(A), u, x, PureFlag=False) is True
 
 def test_ExpandTrigExpand():
     assert ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
@@ -1733,12 +1733,12 @@ def test_TrigToExp():
     assert TrigToExp(cos(x)) == exp(I*x)/2 + exp(-I*x)/2
     assert TrigToExp(cos(x)*tan(x**2)) == I*(exp(I*x)/2 + exp(-I*x)/2)*(-exp(I*x**2) + exp(-I*x**2))/(exp(I*x**2) + exp(-I*x**2))
     assert TrigToExp(cos(x) + sin(x)**2) == -(exp(I*x) - exp(-I*x))**2/4 + exp(I*x)/2 + exp(-I*x)/2
-    assert Simplify(TrigToExp(cos(x)*tan(x**S(2))*sin(x)**S(2))-(-I*(exp(I*x)/S(2) + exp(-I*x)/S(2))*(exp(I*x) - exp(-I*x))**S(2)*(-exp(I*x**S(2)) + exp(-I*x**S(2)))/(S(4)*(exp(I*x**S(2)) + exp(-I*x**S(2)))))) == 0
+    assert eager_Simplify(TrigToExp(cos(x)*tan(x**S(2))*sin(x)**S(2))-(-I*(exp(I*x)/S(2) + exp(-I*x)/S(2))*(exp(I*x) - exp(-I*x))**S(2)*(-exp(I*x**S(2)) + exp(-I*x**S(2)))/(S(4)*(exp(I*x**S(2)) + exp(-I*x**S(2)))))) == 0
 
 def test_ExpandTrigReduce():
-    assert ExpandTrigReduce(2*cos(3 + x)**3, x) == 3*cos(x + 3)/2 + cos(3*x + 9)/2
-    assert ExpandTrigReduce(2*sin(x)**3+cos(2 + x), x) == 3*sin(x)/2 - sin(3*x)/2 + cos(x + 2)
-    assert ExpandTrigReduce(cos(x + 3)**2, x) == cos(2*x + 6)/2 + S.Half
+    assert eager_ExpandTrigReduce(2*cos(3 + x)**3, x) == 3*cos(x + 3)/2 + cos(3*x + 9)/2
+    assert eager_ExpandTrigReduce(2*sin(x)**3+cos(2 + x), x) == 3*sin(x)/2 - sin(3*x)/2 + cos(x + 2)
+    assert eager_ExpandTrigReduce(cos(x + 3)**2, x) == cos(2*x + 6)/2 + S.Half
 
 def test_NormalizeTrig():
     assert NormalizeTrig(S(2*sin(2 + x)), x) == 2*sin(x + 2)
@@ -1754,11 +1754,11 @@ def test_FunctionOfTrigQ():
     assert FunctionOfTrigQ(sin(t), v, x)
 
 def test_RationalFunctionExpand():
-    assert RationalFunctionExpand(x**S(5)*(e + f*x)**n/(a + b*x**S(3)), x) == -a*x**2*(e + f*x)**n/(b*(a + b*x**3)) +\
+    assert eager_RationalFunctionExpand(x**S(5)*(e + f*x)**n/(a + b*x**S(3)), x) == -a*x**2*(e + f*x)**n/(b*(a + b*x**3)) +\
         e**2*(e + f*x)**n/(b*f**2) - 2*e*(e + f*x)**(n + 1)/(b*f**2) + (e + f*x)**(n + 2)/(b*f**2)
-    assert RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x + (- x + 2)/(2*x**2 + 1) - 2
-    assert RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
-    assert RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
+    assert eager_RationalFunctionExpand(x**S(3)*(S(2)*x + 2)**S(2)/(2*x**2 + 1), x) == 2*x**3 + 4*x**2 + x + (- x + 2)/(2*x**2 + 1) - 2
+    assert eager_RationalFunctionExpand((a + b*x + c*x**4)*log(x)**3, x) == a*log(x)**3 + b*x*log(x)**3 + c*x**4*log(x)**3
+    assert eager_RationalFunctionExpand(a + b*x + c*x**4, x) == a + b*x + c*x**4
 
 def test_SameQ():
     assert SameQ(1, 1, 1)
@@ -1785,28 +1785,28 @@ def test_CommonFactors():
 
 def test_FunctionOfLinear():
     f = sin(a + b*x)
-    assert FunctionOfLinear(f, x) == [sin(x), a, b]
-    assert FunctionOfLinear(a + b*x, x) == [x, a, b]
-    assert not FunctionOfLinear(a, x)
+    assert eager_FunctionOfLinear(f, x) == [sin(x), a, b]
+    assert eager_FunctionOfLinear(a + b*x, x) == [x, a, b]
+    assert not eager_FunctionOfLinear(a, x)
 
 def test_FunctionOfExponentialQ():
-    assert FunctionOfExponentialQ(exp(x + exp(x) + exp(exp(x))), x)
-    assert FunctionOfExponentialQ(a**(a + b*x), x)
-    assert FunctionOfExponentialQ(a**(b*x), x)
-    assert not FunctionOfExponentialQ(a**sin(a + b*x), x)
+    assert eager_FunctionOfExponentialQ(exp(x + exp(x) + exp(exp(x))), x)
+    assert eager_FunctionOfExponentialQ(a**(a + b*x), x)
+    assert eager_FunctionOfExponentialQ(a**(b*x), x)
+    assert not eager_FunctionOfExponentialQ(a**sin(a + b*x), x)
 
 def test_FunctionOfExponential():
-    assert FunctionOfExponential(a**(a + b*x), x)
+    assert eager_FunctionOfExponential(a**(a + b*x), x)
 
 def test_FunctionOfExponentialFunction():
-    assert FunctionOfExponentialFunction(a**(a + b*x), x) == x
-    assert FunctionOfExponentialFunction(S(2)*a**(a + b*x), x) == 2*x
+    assert eager_FunctionOfExponentialFunction(a**(a + b*x), x) == x
+    assert eager_FunctionOfExponentialFunction(S(2)*a**(a + b*x), x) == 2*x
 
 def test_FunctionOfTrig():
-    assert FunctionOfTrig(sin(x + 1), x + 1, x) == x + 1
-    assert FunctionOfTrig(sin(x), x) == x
-    assert not FunctionOfTrig(cos(x**2 + 1), x)
-    assert FunctionOfTrig(sin(a+b*x)**3, x) == a+b*x
+    assert eager_FunctionOfTrig(sin(x + 1), x + 1, x) == x + 1
+    assert eager_FunctionOfTrig(sin(x), x) == x
+    assert not eager_FunctionOfTrig(cos(x**2 + 1), x)
+    assert eager_FunctionOfTrig(sin(a+b*x)**3, x) == a+b*x
 
 def test_AlgebraicTrigFunctionQ():
     assert AlgebraicTrigFunctionQ(sin(x + 3), x)
@@ -1817,9 +1817,9 @@ def test_AlgebraicTrigFunctionQ():
     assert not AlgebraicTrigFunctionQ(sinh(x**2 + 1)**2, x)
 
 def test_FunctionOfHyperbolic():
-    assert FunctionOfTrig(sin(x + 1), x + 1, x) == x + 1
-    assert FunctionOfTrig(sin(x), x) == x
-    assert not FunctionOfTrig(cos(x**2 + 1), x)
+    assert eager_FunctionOfTrig(sin(x + 1), x + 1, x) == x + 1
+    assert eager_FunctionOfTrig(sin(x), x) == x
+    assert not eager_FunctionOfTrig(cos(x**2 + 1), x)
 
 def test_FunctionOfExpnQ():
     assert FunctionOfExpnQ(x, x, x) == 1
@@ -1892,13 +1892,13 @@ def test_FunctionOfLog():
     assert not FunctionOfLog(2*sin(x)*2,x)
 
 def test_EulerIntegrandQ():
-    assert EulerIntegrandQ((2*x + 3*((x + 1)**3)**(S(3)/2))**(-3), x)
-    assert not EulerIntegrandQ((2*x + (2*x**2)**2)**3, x)
-    assert not EulerIntegrandQ(3*x**2 + 5*x + 1, x)
+    assert eager_EulerIntegrandQ((2*x + 3*((x + 1)**3)**(S(3)/2))**(-3), x)
+    assert not eager_EulerIntegrandQ((2*x + (2*x**2)**2)**3, x)
+    assert not eager_EulerIntegrandQ(3*x**2 + 5*x + 1, x)
 
 def test_Divides():
-    assert not Divides(x, a*x**2, x)
-    assert Divides(x, a*x, x) == a
+    assert not eager_Divides(x, a*x**2, x)
+    assert eager_Divides(x, a*x, x) == a
 
 def test_EasyDQ():
     assert EasyDQ(3*x**2, x)
@@ -1914,12 +1914,12 @@ def test_ProductOfLinearPowersQ():
 
 def test_Rt():
     b = symbols('b')
-    assert Rt(-b**2, 4) == (-b**2)**(S(1)/S(4))
-    assert Rt(x**2, 2) == x
-    assert Rt(S(2 + 3*I), S(8)) == (2 + 3*I)**(S(1)/8)
-    assert Rt(x**2 + 4 + 4*x, 2) == x + 2
-    assert Rt(S(8), S(3)) == 2
-    assert Rt(S(16807), S(5)) == 7
+    assert eager_Rt(-b**2, 4) == (-b**2)**(S(1)/S(4))
+    assert eager_Rt(x**2, 2) == x
+    assert eager_Rt(S(2 + 3*I), S(8)) == (2 + 3*I)**(S(1)/8)
+    assert eager_Rt(x**2 + 4 + 4*x, 2) == x + 2
+    assert eager_Rt(S(8), S(3)) == 2
+    assert eager_Rt(S(16807), S(5)) == 7
 
 
 def test_Rt_matches_mathematica():
@@ -1928,22 +1928,22 @@ def test_Rt_matches_mathematica():
     Mathematica's own no-assumptions evaluation."""
     aa, bb, cc = symbols('aa bb cc')
     # numeric: simplest nth root, sign handling for odd/even n
-    assert Rt(S(-8), 3) == -2                      # Mathematica: -2
-    assert Rt(S(-27), 3) == -3
-    assert Rt(S(-4), 2) == 2*I                     # even n, negative -> principal complex
-    assert Rt(S(12), 2) == 2*sqrt(3)
-    assert Rt(S(-12), 2) == 2*I*sqrt(3)
-    assert Rt(Rational(1, 4), 2) == Rational(1, 2)
+    assert eager_Rt(S(-8), 3) == -2                      # Mathematica: -2
+    assert eager_Rt(S(-27), 3) == -3
+    assert eager_Rt(S(-4), 2) == 2*I                     # even n, negative -> principal complex
+    assert eager_Rt(S(12), 2) == 2*sqrt(3)
+    assert eager_Rt(S(-12), 2) == 2*I*sqrt(3)
+    assert eager_Rt(Rational(1, 4), 2) == Rational(1, 2)
     # symbolic: pull perfect powers out of products/powers
-    assert Rt(9*aa**2, 2) == 3*aa
-    assert Rt(aa**2*bb**4, 2) == aa*bb**2
-    assert Rt(8*aa**3, 3) == 2*aa
-    assert Rt(-8*aa**3, 3) == -2*aa
-    assert Rt((aa + bb)**2, 2) == aa + bb
-    assert Rt(-aa**3, 3) == -aa
-    assert Rt(bb**2/aa**2, 2) == bb/aa
+    assert eager_Rt(9*aa**2, 2) == 3*aa
+    assert eager_Rt(aa**2*bb**4, 2) == aa*bb**2
+    assert eager_Rt(8*aa**3, 3) == 2*aa
+    assert eager_Rt(-8*aa**3, 3) == -2*aa
+    assert eager_Rt((aa + bb)**2, 2) == aa + bb
+    assert eager_Rt(-aa**3, 3) == -aa
+    assert eager_Rt(bb**2/aa**2, 2) == bb/aa
     # sign distributed across factors (Mathematica: Sqrt[-a]*Sqrt[b]*Sqrt[c])
-    assert Rt(-aa*bb*cc, 2) == sqrt(-aa)*sqrt(bb)*sqrt(cc)
+    assert eager_Rt(-aa*bb*cc, 2) == sqrt(-aa)*sqrt(bb)*sqrt(cc)
 
 
 def test_NthRoot():
@@ -1973,13 +1973,13 @@ def test_Rt_deferred_class():
     is a wildcard at import time -- and .doit() must delegate to the eager Rt at fire
     time, once n is a concrete integer."""
     from rubi_rules.utils.rubi_utils import Rt as RtNode
-    from rubi_rules.utils.utility_functions import Rt as RtEager
+    from rubi_rules.utils.utility_functions import eager_Rt
     from sympy_wolfram.objects import MathematicaExpr
     aa, bb = symbols('aa bb')
     node = RtNode(aa/bb, 2)
     assert isinstance(node, MathematicaExpr)           # unevaluated node
     assert node.func is RtNode
-    assert node.doit() == RtEager(aa/bb, 2) == sqrt(aa)/sqrt(bb)
+    assert node.doit() == eager_Rt(aa/bb, 2) == sqrt(aa)/sqrt(bb)
     # numeric evaluation through the node matches the eager function
     assert RtNode(S(8), 3).doit() == 2
     assert RtNode(S(-8), 3).doit() == -2
@@ -1992,10 +1992,10 @@ def test_AtomBaseQ():
     assert not AtomBaseQ(sin(x))
 
 def test_SumBaseQ():
-    assert not SumBaseQ((x + 1)**2)
-    assert SumBaseQ((x + 1)**3)
-    assert SumBaseQ(3*x+3)
-    assert not SumBaseQ(x)
+    assert not eager_SumBaseQ((x + 1)**2)
+    assert eager_SumBaseQ((x + 1)**3)
+    assert eager_SumBaseQ(3*x+3)
+    assert not eager_SumBaseQ(x)
 
 def test_NegSumBaseQ():
     assert not NegSumBaseQ(-x + 1)
@@ -2022,20 +2022,20 @@ def test_Inequality():
     assert Inequality(S('0'), Less, S('1'), LessEqual, S('5'))
 
 def test_SplitProduct():
-    assert SplitProduct(OddQ, S(3)*x) == [3, x]
-    assert not SplitProduct(OddQ, S(2)*x)
+    assert eager_SplitProduct(OddQ, S(3)*x) == [3, x]
+    assert not eager_SplitProduct(OddQ, S(2)*x)
 
 def test_SplitSum():
-    assert SplitSum(FracPart, sin(x)) == [sin(x), 0]
-    assert SplitSum(FracPart, sin(x) + S(2)) == [sin(x), S(2)]
+    assert SplitSum(eager_FracPart, sin(x)) == [sin(x), 0]
+    assert SplitSum(eager_FracPart, sin(x) + S(2)) == [sin(x), S(2)]
 
 def test_Complex():
-    assert Complex(a, b) == a + I*b
+    assert eager_Complex(a, b) == a + I*b
 
 def test_SimpFixFactor():
     assert SimpFixFactor((a*c + b*c)**S(4), x) == (a*c + b*c)**4
-    assert SimpFixFactor((a*Complex(0, c) + b*Complex(0, d))**S(3), x) == -I*(a*c + b*d)**3
-    assert SimpFixFactor((a*Complex(0, d) + b*Complex(0, e) + c*Complex(0, f))**S(2), x) == -(a*d + b*e + c*f)**2
+    assert SimpFixFactor((a*eager_Complex(0, c) + b*eager_Complex(0, d))**S(3), x) == -I*(a*c + b*d)**3
+    assert SimpFixFactor((a*eager_Complex(0, d) + b*eager_Complex(0, e) + c*eager_Complex(0, f))**S(2), x) == -(a*d + b*e + c*f)**2
     assert SimpFixFactor((a + b*x**(-1/S(2))*x**S(3))**S(3), x) == (a + b*x**(S(5)/2))**3
     assert SimpFixFactor((a*c + b*c**S(2)*x**S(2))**S(3), x) == c**3*(a + b*c*x**2)**3
     assert SimpFixFactor((a*c**S(2) + b*c**S(1)*x**S(2))**S(3), x) == c**3*(a*c + b*x**2)**3
@@ -2048,15 +2048,15 @@ def test_SimplifyAntiderivative():
     assert SimplifyAntiderivative(a*cos(x)**2 + a*sin(x)**2 + v, x) == a*cos(x)**2 + a*sin(x)**2
 
 def test_FixSimplify():
-    assert FixSimplify(x*Complex(0, a)*(v*Complex(0, b) + w)**S(3)) == a*x*(b*v - I*w)**3
+    assert FixSimplify(x*eager_Complex(0, a)*(v*eager_Complex(0, b) + w)**S(3)) == a*x*(b*v - I*w)**3
 
 def test_TrigSimplifyAux():
     assert TrigSimplifyAux(a*cos(x)**2 + a*sin(x)**2 + v) == a + v
     assert TrigSimplifyAux(x**2) == x**2
 
 def test_SubstFor():
-    assert SubstFor(x**2 + 1, tanh(x), x) == tanh(x)
-    assert SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
+    assert eager_SubstFor(x**2 + 1, tanh(x), x) == tanh(x)
+    assert eager_SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
 
 def test_FresnelS():
     assert  FresnelS(oo) == S.Half
@@ -2094,65 +2094,65 @@ def test_PureFunctionOfCothQ():
     assert not PureFunctionOfCothQ(sin(v), v, x)
 
 def test_ExpandIntegrand():
-    assert ExpandIntegrand(sqrt(a + b*x**S(2) + c*x**S(4)), (f*x)**(S(3)/2)*(d + e*x**S(2)), x) == \
+    assert eager_ExpandIntegrand(sqrt(a + b*x**S(2) + c*x**S(4)), (f*x)**(S(3)/2)*(d + e*x**S(2)), x) == \
         d*(f*x)**(S(3)/2)*sqrt(a + b*x**2 + c*x**4) + e*(f*x)**(S(7)/2)*sqrt(a + b*x**2 + c*x**4)/f**2
-    assert ExpandIntegrand((6*A*a*c - 2*A*b**2 + B*a*b - 2*c*x*(A*b - 2*B*a))/(x**2*(a + b*x + c*x**2)), x) == \
+    assert eager_ExpandIntegrand((6*A*a*c - 2*A*b**2 + B*a*b - 2*c*x*(A*b - 2*B*a))/(x**2*(a + b*x + c*x**2)), x) == \
         (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) + (-6*A*a**2*c**2 + 10*A*a*b**2*c - 2*A*b**4 - 5*B*a**2*b*c + B*a*b**3 + x*(8*A*a*b*c**2 - 2*A*b**3*c - 4*B*a**2*c**2 + B*a*b**2*c))/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
-    assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
-    assert ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
-    assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
-    assert ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
-    assert simplify(ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) - (B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x)))) == 0
-    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(S(5)/2)
-    assert ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
-    assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
-    assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
-    assert simplify(ExpandIntegrand((S(1) - S(1)*x**S(2))**(-S(3)), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
-    assert ExpandIntegrand(-S(1), 1/((-q - x)**3*(q - x)**3), x) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
-    assert ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
-    assert ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
-    assert ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
-    assert ExpandIntegrand((d + e*(f + g*x))/(2 + 3*x + 1*x**2), x) == (-2*d - 2*e*f + 4*e*g)/(2*x + 4) + (2*d + 2*e*f - 2*e*g)/(2*x + 2)
-    assert ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
-    assert simplify(ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
-    assert simplify(ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
-    assert simplify(ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x)) == simplify(1/(2*b*(u + sqrt(-(a + c*u**4)/b))) - 1/(2*b*(-u + sqrt(-(a + c*u**4)/b))))
-    assert simplify(ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
-    assert ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
-    assert ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
-    assert simplify(ExpandIntegrand((x)*(a + b*x)**m*Log(c*(d + e*x**n)**p), x) - (-a*(a + b*x)**m*log(c*(d + e*x**n)**p)/b + (a + b*x)**(m + S(1))*log(c*(d + e*x**n)**p)/b)) == 0
-    assert simplify(ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
-    assert simplify(ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) - (f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x)))) == 0
+    assert eager_ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
+    assert eager_ExpandIntegrand((x)*(a + b*x)**2*f**(e*(c + d*x)**n), x) == a**2*f**(e*(c + d*x)**n)*x + 2*a*b*f**(e*(c + d*x)**n)*x**2 + b**2*f**(e*(c + d*x)**n)*x**3
+    assert eager_ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
+    assert eager_ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
+    assert simplify(eager_ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) - (B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x)))) == 0
+    assert eager_ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(S(5)/2)
+    assert eager_ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
+    assert eager_ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
+    assert eager_ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
+    assert simplify(eager_ExpandIntegrand((S(1) - S(1)*x**S(2))**(-S(3)), x) - (-S(3)/(8*(x**2 - 1)) + S(3)/(16*(x + 1)**2) + S(1)/(S(8)*(x + 1)**3) + S(3)/(S(16)*(x - 1)**2) - S(1)/(S(8)*(x - 1)**3))) == 0
+    assert eager_ExpandIntegrand(-S(1), 1/((-q - x)**3*(q - x)**3), x) == 1/(8*q**3*(q + x)**3) - 1/(8*q**3*(-q + x)**3) - 3/(8*q**4*(-q**2 + x**2)) + 3/(16*q**4*(q + x)**2) + 3/(16*q**4*(-q + x)**2)
+    assert eager_ExpandIntegrand((1 + 1*x)**(3)/(2 + 1*x), x) == x**2 + x + 1 - 1/(x + 2)
+    assert eager_ExpandIntegrand((c + d*x**1 + e*x**2)/(1 - x**3), x) == (c - (-1)**(S(1)/3)*d + (-1)**(S(2)/3)*e)/(-3*(-1)**(S(2)/3)*x + 3) + (c + (-1)**(S(2)/3)*d - (-1)**(S(1)/3)*e)/(3*(-1)**(S(1)/3)*x + 3) + (c + d + e)/(-3*x + 3)
+    assert eager_ExpandIntegrand((c + d*x**1 + e*x**2 + f*x**3)/(1 - x**4), x) == (c + I*d - e - I*f)/(4*I*x + 4) + (c - I*d - e + I*f)/(-4*I*x + 4) + (c - d + e - f)/(4*x + 4) + (c + d + e + f)/(-4*x + 4)
+    assert eager_ExpandIntegrand((d + e*(f + g*x))/(2 + 3*x + 1*x**2), x) == (-2*d - 2*e*f + 4*e*g)/(2*x + 4) + (2*d + 2*e*f - 2*e*g)/(2*x + 2)
+    assert eager_ExpandIntegrand(x/(a*x**3 + b*Sqrt(c + d*x**6)), x) == a*x**4/(-b**2*c + x**6*(a**2 - b**2*d)) + b*x*sqrt(c + d*x**6)/(b**2*c + x**6*(-a**2 + b**2*d))
+    assert simplify(eager_ExpandIntegrand(x**1*(1 - x**4)**(-2), x) - (x/(S(4)*(x**2 + 1)) + x/(S(4)*(x**2 + 1)**2) - x/(S(4)*(x**2 - 1)) + x/(S(4)*(x**2 - 1)**2))) == 0
+    assert simplify(eager_ExpandIntegrand((-1 + x**S(6))**(-3), x) - (S(3)/(S(8)*(x**6 - 1)) - S(3)/(S(16)*(x**S(3) + S(1))**S(2)) - S(1)/(S(8)*(x**S(3) + S(1))**S(3)) - S(3)/(S(16)*(x**S(3) - S(1))**S(2)) + S(1)/(S(8)*(x**S(3) - S(1))**S(3)))) == 0
+    assert simplify(eager_ExpandIntegrand(u**1*(a + b*u**2 + c*u**4)**(-1), x)) == simplify(1/(2*b*(u + sqrt(-(a + c*u**4)/b))) - 1/(2*b*(-u + sqrt(-(a + c*u**4)/b))))
+    assert simplify(eager_ExpandIntegrand((1 + 1*u + 1*u**2)**(-2), x) - (S(1)/(S(2)*(-u - 1)*(-u**2 - u - 1)) + S(1)/(S(4)*(-u - 1)*(u + sqrt(-u - 1))**2) + S(1)/(S(4)*(-u - 1)*(u - sqrt(-u - 1))**2))) == 0
+    assert eager_ExpandIntegrand(x*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == -e*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f
+    assert eager_ExpandIntegrand(x*f**(e*(c + d*x)*S(1)), x) == f**(e*(c + d*x))*x
+    assert simplify(eager_ExpandIntegrand((x)*(a + b*x)**m*Log(c*(d + e*x**n)**p), x) - (-a*(a + b*x)**m*log(c*(d + e*x**n)**p)/b + (a + b*x)**(m + S(1))*log(c*(d + e*x**n)**p)/b)) == 0
+    assert simplify(eager_ExpandIntegrand(u*(a + b*F**v)**S(2)*(c + d*F**v)**S(-3), x) - (b**2*u/(d**2*(F**v*d + c)) + 2*b*u*(a*d - b*c)/(d**2*(F**v*d + c)**2) + u*(a*d - b*c)**2/(d**2*(F**v*d + c)**3))) == 0
+    assert simplify(eager_ExpandIntegrand((S(1) + 1*x)**S(2)*f**(e*(1 + S(1)*x)**n)/(g + h*x), x) - (f**(e*(x + 1)**n)*(x + 1)/h + f**(e*(x + 1)**n)*(-g + h)/h**2 + f**(e*(x + 1)**n)*(g - h)**2/(h**2*(g + h*x)))) == 0
 
-    assert ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == 4*a**2*c**2/(a + b*x)**2 - 4*a*c**2/(a + b*x) + c**2
-    assert simplify(ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
-    assert ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
-    assert ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
-    assert ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
-    assert ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
-    assert ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
-    assert ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (c - d - I*e)/(4*I*x + 4) + (c - d + I*e)/(-4*I*x + 4) + (c + d - e)/(4*x + 4) + (c + d + e)/(-4*x + 4)
-    assert simplify(ExpandIntegrand((a + b*x)**2/(c + d*x), x) - (b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x)))) == 0
-    assert ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
-    assert ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
-    assert simplify(ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) - (f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x)))) == 0
+    assert eager_ExpandIntegrand((a*c - b*c*x)**2/(a + b*x)**2, x) == 4*a**2*c**2/(a + b*x)**2 - 4*a*c**2/(a + b*x) + c**2
+    assert simplify(eager_ExpandIntegrand(x**2*(1 - 1*x**2)**(-2), x) - (1/(S(2)*(x**2 - 1)) + 1/(S(4)*(x + 1)**2) + 1/(S(4)*(x - 1)**2))) == 0
+    assert eager_ExpandIntegrand((a + x)**2, x) == a**2 + 2*a*x + x**2
+    assert eager_ExpandIntegrand((a + b*x)**S(2)/x**3, x) == a**2/x**3 + 2*a*b/x**2 + b**2/x
+    assert eager_ExpandIntegrand(1/(x**2*(a + b*x)**2), x) == b**2/(a**2*(a + b*x)**2) + 1/(a**2*x**2) + 2*b**2/(a**3*(a + b*x)) - 2*b/(a**3*x)
+    assert eager_ExpandIntegrand((1 + x)**3/x, x) == x**2 + 3*x + 3 + 1/x
+    assert eager_ExpandIntegrand((1 + 2*(3 + 4*x**2))/(2 + 3*x**2 + 1*x**4), x) == 18/(2*x**2 + 4) - 2/(2*x**2 + 2)
+    assert eager_ExpandIntegrand((c + d*x**2 + e*x**3)/(1 - 1*x**4), x) == (c - d - I*e)/(4*I*x + 4) + (c - d + I*e)/(-4*I*x + 4) + (c + d - e)/(4*x + 4) + (c + d + e)/(-4*x + 4)
+    assert simplify(eager_ExpandIntegrand((a + b*x)**2/(c + d*x), x) - (b*(a + b*x)/d + b*(a*d - b*c)/d**2 + (a*d - b*c)**2/(d**2*(c + d*x)))) == 0
+    assert eager_ExpandIntegrand(x**2*(a + b*Log(c*(d*(e + f*x)**p)**q))**n, x) == e**2*(a + b*log(c*(d*(e + f*x)**p)**q))**n/f**2 - 2*e*(a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)/f**2 + (a + b*log(c*(d*(e + f*x)**p)**q))**n*(e + f*x)**2/f**2
+    assert eager_ExpandIntegrand(x*(1 + 2*x)**3*log(2*(1 + 1*x**2)**1), x) == 8*x**4*log(2*x**2 + 2) + 12*x**3*log(2*x**2 + 2) + 6*x**2*log(2*x**2 + 2) + x*log(2*x**2 + 2)
+    assert simplify(eager_ExpandIntegrand((1 + 1*x)**S(3)*f**(e*(1 + 1*x)**n)/(g + h*x), x) - (f**(e*(x + 1)**n)*(x + 1)**2/h + f**(e*(x + 1)**n)*(-g + h)*(x + 1)/h**2 + f**(e*(x + 1)**n)*(-g + h)**2/h**3 - f**(e*(x + 1)**n)*(g - h)**3/(h**3*(g + h*x)))) == 0
 
 def test_Dist():
-    assert Dist(x, a + b, x) == a*x + b*x
-    assert Dist(x, Integral(a + b , x), x) == x*Integral(a + b, x)
-    assert Dist(3*x,(a+b), x) - Dist(2*x, (a+b), x) == a*x + b*x
-    assert Dist(3*x,(a+b), x) + Dist(2*x, (a+b), x) == 5*a*x + 5*b*x
-    assert Dist(x, c*Integral((a + b), x), x) == c*x*Integral(a + b, x)
+    assert eager_Dist(x, a + b, x) == a*x + b*x
+    assert eager_Dist(x, Integral(a + b , x), x) == x*Integral(a + b, x)
+    assert eager_Dist(3*x,(a+b), x) - eager_Dist(2*x, (a+b), x) == a*x + b*x
+    assert eager_Dist(3*x,(a+b), x) + eager_Dist(2*x, (a+b), x) == 5*a*x + 5*b*x
+    assert eager_Dist(x, c*Integral((a + b), x), x) == c*x*Integral(a + b, x)
 
 def test_IntegralFreeQ():
-    assert not IntegralFreeQ(Integral(a, x))
-    assert IntegralFreeQ(a + b)
+    assert not eager_IntegralFreeQ(Integral(a, x))
+    assert eager_IntegralFreeQ(a + b)
 
 def test_DerivativeDivides():
-    assert not DerivativeDivides(x, x, x)
-    assert not DerivativeDivides(a, x + y, b)
-    assert DerivativeDivides(a + x, a, x) == a
-    assert DerivativeDivides(a + b, x + y, b) == x + y
+    assert not eager_DerivativeDivides(x, x, x)
+    assert not eager_DerivativeDivides(a, x + y, b)
+    assert eager_DerivativeDivides(a + x, a, x) == a
+    assert eager_DerivativeDivides(a + b, x + y, b) == x + y
 
 def test_LogIntegral():
     from rubi_rules.utils.utility_functions import LogIntegral
@@ -2209,9 +2209,9 @@ def test_ProductLog():
 def test_PolynomialQuotient():
     # value-equal to log(...)/((a+b x)(c+d x)); the consolidated eager uses sympy.quo
     # (as the deferred node the rules already used), which expands the denominator.
-    got = PolynomialQuotient(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e)
+    got = eager_PolynomialQuotient(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e)
     assert (got - log((-a*d + b*c)/(b*(c + d*x)))/((a + b*x)*(c + d*x))).simplify() == 0
-    assert PolynomialQuotient(x**2, x + a, x) == -a + x
+    assert eager_PolynomialQuotient(x**2, x + a, x) == -a + x
 
 
 def test_PolynomialQuotient_rational_laurent():
@@ -2219,38 +2219,38 @@ def test_PolynomialQuotient_rational_laurent():
     polynomial, NOT return 0. Cross-checked vs real Rubi (ssh pi):
     PolynomialQuotient[(A+Bx)/x^2, a+b x^2, x] = (A+Bx)/(a x^2)."""
     A, B = symbols('A B')
-    assert PolynomialQuotient((A + B*x)/x**2, a + b*x**2, x) == (A + B*x)/(a*x**2)
-    assert PolynomialQuotient((A + B*x)/x, a + b*x**2, x) == A/(a*x)
+    assert eager_PolynomialQuotient((A + B*x)/x**2, a + b*x**2, x) == (A + B*x)/(a*x**2)
+    assert eager_PolynomialQuotient((A + B*x)/x, a + b*x**2, x) == A/(a*x)
     # denominator shares q -> quotient absorbs everything (value = (A+Bx)/(a+bx^2)^2,
     # returned with the denominator expanded), remainder 0
-    got = PolynomialQuotient((A + B*x)/(a + b*x**2), a + b*x**2, x)
+    got = eager_PolynomialQuotient((A + B*x)/(a + b*x**2), a + b*x**2, x)
     assert (got - (A + B*x)/(a + b*x**2)**2).simplify() == 0
 
 
 def test_PolynomialRemainder():
-    assert PolynomialRemainder(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e) == 0
-    assert PolynomialRemainder(x**2, x + a, x) == a**2
+    assert eager_PolynomialRemainder(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e) == 0
+    assert eager_PolynomialRemainder(x**2, x + a, x) == a**2
 
 
 def test_PolynomialRemainder_rational_laurent():
     """PolynomialRemainder[(A+Bx)/x^2, a+b x^2, x] = -b(A+Bx)/a (p reduced mod q, since
     x^2 == -a/b mod (a+b x^2) so x^-2 == -b/a). Cross-checked vs real Rubi (ssh pi)."""
     A, B = symbols('A B')
-    assert PolynomialRemainder((A + B*x)/x**2, a + b*x**2, x) == -A*b/a - B*b*x/a
-    assert PolynomialRemainder((A + B*x)/x, a + b*x**2, x) == B - A*b*x/a
-    assert PolynomialRemainder((A + B*x)/(a + b*x**2), a + b*x**2, x) == 0
+    assert eager_PolynomialRemainder((A + B*x)/x**2, a + b*x**2, x) == -A*b/a - B*b*x/a
+    assert eager_PolynomialRemainder((A + B*x)/x, a + b*x**2, x) == B - A*b*x/a
+    assert eager_PolynomialRemainder((A + B*x)/(a + b*x**2), a + b*x**2, x) == 0
 
 def test_Floor():
-    assert Floor(S(7.5)) == 7
-    assert Floor(S(15.5), S(6)) == 12
+    assert eager_Floor(S(7.5)) == 7
+    assert eager_Floor(S(15.5), S(6)) == 12
 
 def test_Factor():
     from rubi_rules.utils.utility_functions import Factor
     assert Factor(a*b + a*c) == a*(b + c)
 
 def test_Rule():
-    from rubi_rules.utils.utility_functions import Rule
-    assert Rule(x, S(5)) == {x: 5}
+    from rubi_rules.utils.utility_functions import eager_Rule
+    assert eager_Rule(x, S(5)) == {x: 5}
 
 def test_Distribute():
     assert Distribute((a + b)*c + (a + b)*d, Add) == c*(a + b) + d*(a + b)
@@ -2273,11 +2273,11 @@ def test_DeactivateTrig():
     # co-functions into the primary family the way Rubi does (Pi-verified via the
     # DeactivateTrig battery): sec -> csc with a +pi/2 argument shift.
     from rubi_rules.utils.utility_functions import InertCsc
-    assert DeactivateTrig(sec(a + b*x), x) == InertCsc(a + b*x + pi/2)
+    assert eager_DeactivateTrig(sec(a + b*x), x) == InertCsc(a + b*x + pi/2)
 
 def test_Quotient():
-    from rubi_rules.utils.utility_functions import Quotient
-    assert Quotient(17, 5) == 3
+    from rubi_rules.utils.utility_functions import eager_Quotient
+    assert eager_Quotient(17, 5) == 3
 
 def test_process_trig():
     assert process_trig(x*cot(x)) == x/tan(x)
@@ -2316,67 +2316,67 @@ def _meq(got, expected):
 _MMA_PREDICATES = [
     (lambda: _U.IntegerQ(S(7)), True),
     (lambda: _U.IntegerQ(Rational(7, 2)), False),
-    (lambda: _U.RationalQ(Rational(3, 4)), True),
-    (lambda: _U.FractionQ(Rational(3, 4)), True),
-    (lambda: _U.FractionQ(S(3)), False),
+    (lambda: _U.eager_RationalQ(Rational(3, 4)), True),
+    (lambda: _U.eager_FractionQ(Rational(3, 4)), True),
+    (lambda: _U.eager_FractionQ(S(3)), False),
     (lambda: _U.EvenQ(S(6)), True),
     (lambda: _U.OddQ(S(5)), True),
-    (lambda: _U.SumQ(a + b), True),
-    (lambda: _U.ProductQ(2 * a), True),
-    (lambda: _U.PowerQ(a**2), True),
-    (lambda: _U.IntegerPowerQ(a**2), True),
-    (lambda: _U.FractionalPowerQ(a**Rational(1, 2)), True),
-    (lambda: _U.LinearQ(2 + 3 * x, x), True),
-    (lambda: _U.LinearQ(x**2, x), False),
-    (lambda: _U.QuadraticQ(1 + x + x**2, x), True),
-    (lambda: _U.BinomialQ(1 + x**3, x), True),
-    (lambda: _U.TrinomialQ(1 + x**2 + x**4, x), True),
+    (lambda: _U.eager_SumQ(a + b), True),
+    (lambda: _U.eager_ProductQ(2 * a), True),
+    (lambda: _U.eager_PowerQ(a**2), True),
+    (lambda: _U.eager_IntegerPowerQ(a**2), True),
+    (lambda: _U.eager_FractionalPowerQ(a**Rational(1, 2)), True),
+    (lambda: _U.eager_LinearQ(2 + 3 * x, x), True),
+    (lambda: _U.eager_LinearQ(x**2, x), False),
+    (lambda: _U.eager_QuadraticQ(1 + x + x**2, x), True),
+    (lambda: _U.eager_BinomialQ(1 + x**3, x), True),
+    (lambda: _U.eager_TrinomialQ(1 + x**2 + x**4, x), True),
     (lambda: _U.PolynomialQ(1 + x + x**5, x), True),
-    (lambda: _U.PolyQ(1 + x**2, x, S(2)), True),
-    (lambda: _U.PolyQ(x**3 + 1, x, S(3)), True),
-    (lambda: _U.TrigQ(sin(x)), True),
-    (lambda: _U.TrigQ(exp(x)), False),
-    (lambda: _U.HyperbolicQ(sinh(x)), True),
-    (lambda: _U.InverseTrigQ(asin(x)), True),
-    (lambda: _U.InverseHyperbolicQ(asinh(x)), True),
-    (lambda: _U.LogQ(log(x)), True),
+    (lambda: _U.eager_PolyQ(1 + x**2, x, S(2)), True),
+    (lambda: _U.eager_PolyQ(x**3 + 1, x, S(3)), True),
+    (lambda: _U.eager_TrigQ(sin(x)), True),
+    (lambda: _U.eager_TrigQ(exp(x)), False),
+    (lambda: _U.eager_HyperbolicQ(sinh(x)), True),
+    (lambda: _U.eager_InverseTrigQ(asin(x)), True),
+    (lambda: _U.eager_InverseHyperbolicQ(asinh(x)), True),
+    (lambda: _U.eager_LogQ(log(x)), True),
     (lambda: _U.AtomQ(x), True),
     (lambda: _U.AtomQ(a + b), False),
-    (lambda: _U.ComplexNumberQ(2 + 3 * I), True),
-    (lambda: _U.IntegersQ(S(2), S(3)), True),
-    (lambda: _U.IntegersQ(S(2), Rational(3, 2)), False),
-    (lambda: _U.SqrtNumberQ(sqrt(2)), True),
+    (lambda: _U.eager_ComplexNumberQ(2 + 3 * I), True),
+    (lambda: _U.eager_IntegersQ(S(2), S(3)), True),
+    (lambda: _U.eager_IntegersQ(S(2), Rational(3, 2)), False),
+    (lambda: _U.eager_SqrtNumberQ(sqrt(2)), True),
     (lambda: _U.NumberQ(S(3)), True),
     (lambda: _U.NumericQ(pi), True),
-    (lambda: _U.RationalFunctionQ((1 + x) / (1 + x**2), x), True),
-    (lambda: _U.AlgebraicFunctionQ(sqrt(1 + x), x), True),
-    (lambda: _U.MonomialQ(3 * x**2, x), True),
-    (lambda: _U.LinearMatchQ(2 + 3 * x, x), True),
-    (lambda: _U.QuadraticMatchQ(1 + x + x**2, x), True),
-    (lambda: _U.BinomialMatchQ(1 + x**3, x), True),
+    (lambda: _U.eager_RationalFunctionQ((1 + x) / (1 + x**2), x), True),
+    (lambda: _U.eager_AlgebraicFunctionQ(sqrt(1 + x), x), True),
+    (lambda: _U.eager_MonomialQ(3 * x**2, x), True),
+    (lambda: _U.eager_LinearMatchQ(2 + 3 * x, x), True),
+    (lambda: _U.eager_QuadraticMatchQ(1 + x + x**2, x), True),
+    (lambda: _U.eager_BinomialMatchQ(1 + x**3, x), True),
     (lambda: _U.AbsurdNumberQ(sqrt(2)), True),
-    (lambda: _U.SumSimplerQ(x - 1, S(1)), True),
-    (lambda: _U.PosQ(a), True),
-    (lambda: _U.NegQ(-a), True),
-    (lambda: _U.NiceSqrtQ(S(4)), True),
-    (lambda: _U.NiceSqrtQ(S(2)), True),
-    (lambda: _U.PiecewiseLinearQ(2 + 3 * x, x), True),
-    (lambda: _U.QuotientOfLinearsQ((1 + x) / (2 + x), x), True),
-    (lambda: _U.InertTrigFreeQ(x**2), True),
+    (lambda: _U.eager_SumSimplerQ(x - 1, S(1)), True),
+    (lambda: _U.eager_PosQ(a), True),
+    (lambda: _U.eager_NegQ(-a), True),
+    (lambda: _U.eager_NiceSqrtQ(S(4)), True),
+    (lambda: _U.eager_NiceSqrtQ(S(2)), True),
+    (lambda: _U.eager_PiecewiseLinearQ(2 + 3 * x, x), True),
+    (lambda: _U.eager_QuotientOfLinearsQ((1 + x) / (2 + x), x), True),
+    (lambda: _U.eager_InertTrigFreeQ(x**2), True),
     (lambda: _U.PolynomialTermQ(3 * x**2, x), True),
-    (lambda: _U.PerfectSquareQ(S(9)), True),
-    (lambda: _U.PerfectSquareQ(x**2), True),
+    (lambda: _U.eager_PerfectSquareQ(S(9)), True),
+    (lambda: _U.eager_PerfectSquareQ(x**2), True),
     (lambda: _U.CalculusQ(x**2), False),
     (lambda: _U.SqrtNumberSumQ(1 + sqrt(2)), True),
     (lambda: _U.SqrtNumberSumQ(1 + x), False),
-    (lambda: _U.TrigSimplifyQ(x**2), False),
-    (lambda: _U.TrigHyperbolicFreeQ(x**2, x), True),
-    (lambda: _U.TrigHyperbolicFreeQ(sin(x), x), False),
-    (lambda: _U.InverseFunctionFreeQ(x**2, x), True),
-    (lambda: _U.InverseFunctionFreeQ(asin(x), x), False),
-    (lambda: _U.FunctionOfExponentialQ(exp(x) + exp(2 * x), x), True),
-    (lambda: _U.FunctionOfTrigOfLinearQ(sin(1 + 2 * x), x), True),
-    (lambda: _U.FunctionOfTrigOfLinearQ(x**2, x), False),
+    (lambda: _U.eager_TrigSimplifyQ(x**2), False),
+    (lambda: _U.eager_TrigHyperbolicFreeQ(x**2, x), True),
+    (lambda: _U.eager_TrigHyperbolicFreeQ(sin(x), x), False),
+    (lambda: _U.eager_InverseFunctionFreeQ(x**2, x), True),
+    (lambda: _U.eager_InverseFunctionFreeQ(asin(x), x), False),
+    (lambda: _U.eager_FunctionOfExponentialQ(exp(x) + exp(2 * x), x), True),
+    (lambda: _U.eager_FunctionOfTrigOfLinearQ(sin(1 + 2 * x), x), True),
+    (lambda: _U.eager_FunctionOfTrigOfLinearQ(x**2, x), False),
     (lambda: _U.SomeNegTermQ(-a + b), True),
     (lambda: _U.MergeableFactorQ(x, S(2), x), True),
     (lambda: _U.MergeableFactorQ(x, S(2), a), False),
@@ -2394,16 +2394,16 @@ _MMA_RENAMED = [
 ]
 
 _MMA_EXPRESSIONS = [
-    (lambda: _U.Coeff(a + b * x + c * x**2, x, 2), c),
-    (lambda: _U.Coeff(a + b * x, x, 0), a),
-    (lambda: _U.Coeff(2 + 3 * x + 4 * x**2 + 5 * x**3, x, 3), S(5)),
-    (lambda: _U.Coefficient(3 + 5 * x + 7 * x**2, x, 1), S(5)),
-    (lambda: _U.Numerator((a + b) / c), a + b),
-    (lambda: _U.Numerator((a + b) / (c - d)), a + b),
-    (lambda: _U.Denominator((a + b) / (c * d)), c * d),
-    (lambda: _U.Denominator(a / (b**2 * c)), b**2 * c),
-    (lambda: _U.Numer((a + b) / c), a + b),
-    (lambda: _U.Denom(a / (b * c)), b * c),
+    (lambda: _U.eager_Coeff(a + b * x + c * x**2, x, 2), c),
+    (lambda: _U.eager_Coeff(a + b * x, x, 0), a),
+    (lambda: _U.eager_Coeff(2 + 3 * x + 4 * x**2 + 5 * x**3, x, 3), S(5)),
+    (lambda: _U.eager_Coefficient(3 + 5 * x + 7 * x**2, x, 1), S(5)),
+    (lambda: _U.eager_Numerator((a + b) / c), a + b),
+    (lambda: _U.eager_Numerator((a + b) / (c - d)), a + b),
+    (lambda: _U.eager_Denominator((a + b) / (c * d)), c * d),
+    (lambda: _U.eager_Denominator(a / (b**2 * c)), b**2 * c),
+    (lambda: _U.eager_Numer((a + b) / c), a + b),
+    (lambda: _U.eager_Denom(a / (b * c)), b * c),
     (lambda: _U.SmartNumerator(a / b), a),
     (lambda: _U.SmartDenominator(a / b**2), b**2),
     (lambda: _U.NumericFactor(6 * x * y), S(6)),
@@ -2411,25 +2411,25 @@ _MMA_EXPRESSIONS = [
     (lambda: _U.NumericFactor(2 * a + 4 * b), S(2)),
     (lambda: _U.NumericFactor(-3 * x), S(-3)),
     (lambda: _U.NumericFactor(-2 * a - 6 * b), S(-2)),
-    (lambda: _U.Expon(a + b * x**2 + c * x**5, x), S(5)),
-    (lambda: _U.Expon(x**7 + x**2, x), S(7)),
-    (lambda: _U.LeafCount(a * x**2 + b), S(7)),
-    (lambda: _U.ExpandToSum((2 * x + 1) * (x - 3), x), 2 * x**2 - 5 * x - 3),
-    (lambda: _U.ExpandIntegrand(1 / (x * (x + 1)), x), 1 / x - 1 / (1 + x)),
-    (lambda: _U.Together(1 / x + 1 / (x + 1)), (1 + 2 * x) / (x * (1 + x))),
-    (lambda: _U.Together(1 / a + 1 / b + 1 / c), (a * b + a * c + b * c) / (a * b * c)),
-    (lambda: _U.Rt(S(27), S(3)), S(3)),
-    (lambda: _U.Rt(S(9), S(2)), S(3)),
-    (lambda: _U.Rt(S(-27), S(3)), S(-3)),
-    (lambda: _U.Rt(x**2, S(2)), x),
-    (lambda: _U.Rt(x**4, S(2)), x**2),
-    (lambda: _U.Rt(S(16), S(4)), S(2)),
-    (lambda: _U.Simplify(sin(x)**2 + cos(x)**2), S(1)),
-    (lambda: _U.Sign(S(5)), S(1)),
-    (lambda: _U.FreeFactors(a * b * x, x), a * b),
-    (lambda: _U.NonfreeFactors(a * b * x, x), x),
-    (lambda: _U.FreeFactors(a**2 * x**3, x), a**2),
-    (lambda: _U.NonfreeFactors(a**2 * x**3, x), x**3),
+    (lambda: _U.eager_Expon(a + b * x**2 + c * x**5, x), S(5)),
+    (lambda: _U.eager_Expon(x**7 + x**2, x), S(7)),
+    (lambda: _U.eager_LeafCount(a * x**2 + b), S(7)),
+    (lambda: _U.eager_ExpandToSum((2 * x + 1) * (x - 3), x), 2 * x**2 - 5 * x - 3),
+    (lambda: _U.eager_ExpandIntegrand(1 / (x * (x + 1)), x), 1 / x - 1 / (1 + x)),
+    (lambda: _U.eager_Together(1 / x + 1 / (x + 1)), (1 + 2 * x) / (x * (1 + x))),
+    (lambda: _U.eager_Together(1 / a + 1 / b + 1 / c), (a * b + a * c + b * c) / (a * b * c)),
+    (lambda: _U.eager_Rt(S(27), S(3)), S(3)),
+    (lambda: _U.eager_Rt(S(9), S(2)), S(3)),
+    (lambda: _U.eager_Rt(S(-27), S(3)), S(-3)),
+    (lambda: _U.eager_Rt(x**2, S(2)), x),
+    (lambda: _U.eager_Rt(x**4, S(2)), x**2),
+    (lambda: _U.eager_Rt(S(16), S(4)), S(2)),
+    (lambda: _U.eager_Simplify(sin(x)**2 + cos(x)**2), S(1)),
+    (lambda: _U.eager_Sign(S(5)), S(1)),
+    (lambda: _U.eager_FreeFactors(a * b * x, x), a * b),
+    (lambda: _U.eager_NonfreeFactors(a * b * x, x), x),
+    (lambda: _U.eager_FreeFactors(a**2 * x**3, x), a**2),
+    (lambda: _U.eager_NonfreeFactors(a**2 * x**3, x), x**3),
     (lambda: _U.FreeTerms(a + b * x + c, x), a + c),
     (lambda: _U.NonfreeTerms(a + b * x + c, x), b * x),
     (lambda: _U.LeadTerm(a + b + c), a),
@@ -2439,32 +2439,32 @@ _MMA_EXPRESSIONS = [
     (lambda: _U.LeadBase(a**3), a),
     (lambda: _U.BinomialParts(3 + 5 * x**2, x), [S(3), S(5), S(2)]),
     (lambda: _U.BinomialParts(5 - 2 * x**3, x), [S(5), S(-2), S(3)]),
-    (lambda: _U.BinomialDegree(3 + 5 * x**4, x), S(4)),
+    (lambda: _U.eager_BinomialDegree(3 + 5 * x**4, x), S(4)),
     (lambda: _U.TrinomialParts(1 + 2 * x**2 + 3 * x**4, x), [S(1), S(2), S(3), S(2)]),
     (lambda: _U.TrinomialParts(2 + 3 * x**3 + 4 * x**6, x), [S(2), S(3), S(4), S(3)]),
-    (lambda: _U.TrinomialDegree(1 + x**2 + x**4, x), S(2)),
+    (lambda: _U.eager_TrinomialDegree(1 + x**2 + x**4, x), S(2)),
     (lambda: _U.GeneralizedBinomialParts(a * x + b * x**3, x), [a, b, S(3), S(1)]),
-    (lambda: _U.PolynomialQuotient(x**2 - 1, x - 1, x), 1 + x),
-    (lambda: _U.PolynomialQuotient(x**3 - 1, x - 1, x), 1 + x + x**2),
-    (lambda: _U.PolynomialRemainder(x**2 + 1, x - 1, x), S(2)),
-    (lambda: _U.PolynomialRemainder(x**3 + x + 1, x**2 + 1, x), S(1)),
+    (lambda: _U.eager_PolynomialQuotient(x**2 - 1, x - 1, x), 1 + x),
+    (lambda: _U.eager_PolynomialQuotient(x**3 - 1, x - 1, x), 1 + x + x**2),
+    (lambda: _U.eager_PolynomialRemainder(x**2 + 1, x - 1, x), S(2)),
+    (lambda: _U.eager_PolynomialRemainder(x**3 + x + 1, x**2 + 1, x), S(1)),
     (lambda: _U.RemoveContent(6 * x + 9, x), 3 + 2 * x),
     (lambda: _U.Discriminant(a + b * x + c * x**2, x), b**2 - 4 * a * c),
     (lambda: _U.Discriminant(x**2 + 2 * x + 5, x), S(-16)),
     (lambda: _U.CoefficientList(1 + 2 * x + 3 * x**2, x), [S(1), S(2), S(3)]),
-    (lambda: _U.MinimumMonomialExponent(x**2 + x**3, x), S(2)),
-    (lambda: _U.ExpandTrigReduce(sin(x) * cos(x), x), sin(2 * x) / 2),
-    (lambda: _U.NormalizeIntegrand(x / x**2, x), 1 / x),
-    (lambda: _U.SimplifyIntegrand(x / x**2, x), 1 / x),
-    (lambda: _U.SimplifyIntegrand((x**2 - 1) / (x - 1), x), 1 + x),
-    (lambda: _U.IntPart(Rational(7, 2)), S(3)),
-    (lambda: _U.FracPart(Rational(7, 2)), Rational(1, 2)),
-    (lambda: _U.ExpandTrig(sin(2 * x), x), sin(2 * x)),
+    (lambda: _U.eager_MinimumMonomialExponent(x**2 + x**3, x), S(2)),
+    (lambda: _U.eager_ExpandTrigReduce(sin(x) * cos(x), x), sin(2 * x) / 2),
+    (lambda: _U.eager_NormalizeIntegrand(x / x**2, x), 1 / x),
+    (lambda: _U.eager_SimplifyIntegrand(x / x**2, x), 1 / x),
+    (lambda: _U.eager_SimplifyIntegrand((x**2 - 1) / (x - 1), x), 1 + x),
+    (lambda: _U.eager_IntPart(Rational(7, 2)), S(3)),
+    (lambda: _U.eager_FracPart(Rational(7, 2)), Rational(1, 2)),
+    (lambda: _U.eager_ExpandTrig(sin(2 * x), x), sin(2 * x)),
     (lambda: _U.NormalizeTogether(1 / x + 1 / (x + 1)), (1 + 2 * x) / (x * (1 + x))),
     (lambda: _U.SmartSimplify(sin(x)**2 + cos(x)**2), S(1)),
-    (lambda: _U.ExpandExpression((x + 1) * (x + 2), x), 2 + 3 * x + x**2),
+    (lambda: _U.eager_ExpandExpression((x + 1) * (x + 2), x), 2 + 3 * x + x**2),
     (lambda: _U.NormalizeSumFactors(2 * a + 2 * b), 2 * a + 2 * b),
-    (lambda: _U.Simp(2 * x + 3 * x, x), 5 * x),
+    (lambda: _U.eager_Simp(2 * x + 3 * x, x), 5 * x),
     (lambda: _U.SmartApart(1 / (x * (x + 1)), x), 1 / x - 1 / (x + 1)),
     (lambda: _U.FactorAbsurdNumber(S(12)), [(2, 2), (3, 1)]),
     (lambda: _U.AbsurdNumberGCD(S(4), S(6)), S(2)),
@@ -2475,10 +2475,10 @@ _MMA_EXPRESSIONS = [
 # Regression guards for bugs found & fixed via Mathematica cross-checking.
 _MMA_BUGFIXES = [
     # IntPart/FracPart: Mathematica truncates toward zero (was floor-based).
-    (lambda: _U.IntPart(Rational(-7, 2)), S(-3)),              # was -4
-    (lambda: _U.FracPart(Rational(-7, 2)), Rational(-1, 2)),   # was 1/2
-    (lambda: _U.IntPart(Rational(-5, 3)), S(-1)),
-    (lambda: _U.FracPart(Rational(-5, 3)), Rational(-2, 3)),
+    (lambda: _U.eager_IntPart(Rational(-7, 2)), S(-3)),              # was -4
+    (lambda: _U.eager_FracPart(Rational(-7, 2)), Rational(-1, 2)),   # was 1/2
+    (lambda: _U.eager_IntPart(Rational(-5, 3)), S(-1)),
+    (lambda: _U.eager_FracPart(Rational(-5, 3)), Rational(-2, 3)),
     (lambda: _U.IntegerPart(S(-3.6)), S(-3)),                  # was -4
     (lambda: _U.IntegerPart(Rational(-7, 2)), S(-3)),
     (lambda: _U.FractionalPart(Rational(-7, 2)), Rational(-1, 2)),
@@ -2551,11 +2551,11 @@ def test_Simplify_resolves_deferred_nodes_no_recursion():
     # sympy.simplify: a product of unevaluated ones like Coeff(6x+4,x,0)*Coeff(6x+4,x,4)
     # (= 4*0 = 0) otherwise drives sympy's nc_simplify into a RecursionError.
     from rubi_rules.utils.rubi_utils import Coeff as _DCoeff
-    from rubi_rules.utils.utility_functions import Simplify as _Simplify
+    from rubi_rules.utils.utility_functions import eager_Simplify
     xx = Symbol('x')
-    assert _Simplify(_DCoeff(6*xx + 4, xx, 0) * _DCoeff(6*xx + 4, xx, 4)) == 0
+    assert eager_Simplify(_DCoeff(6*xx + 4, xx, 0) * _DCoeff(6*xx + 4, xx, 4)) == 0
     # ordinary expressions still simplify normally
-    assert _Simplify((xx**2 - 1) / (xx - 1)) == xx + 1
+    assert eager_Simplify((xx**2 - 1) / (xx - 1)) == xx + 1
 
 
 # NOTE: IntHide's end-to-end integration behaviour needs the full rule set, so its
@@ -2578,14 +2578,14 @@ def test_deferred_Coeff_symbolic_n_delegates():
     # n ('Cannot convert symbols to int') -- aborting the DFS for e.g.
     # x^3*(a+b*atanh(c*x)). It must delegate to the eager Coeff (which handles it).
     from rubi_rules.utils.rubi_utils import Coeff as _Coeff
-    from rubi_rules.utils.utility_functions import Coeff as _EagerCoeff
+    from rubi_rules.utils.utility_functions import eager_Coeff
     aa, bb, cc, xx, nn = symbols('a b c x n')
     expr = aa + bb*xx + cc*xx**3
     # concrete n still works
     assert _Coeff(expr, xx, 3).doit() == cc
     assert _Coeff(expr, xx, 0).doit() == aa
     # symbolic n no longer crashes; matches the eager utility
-    assert _Coeff(expr, xx, nn).doit() == _EagerCoeff(expr, xx, nn)
+    assert _Coeff(expr, xx, nn).doit() == eager_Coeff(expr, xx, nn)
 
 
 def test_comparisons_on_non_real_do_not_crash():
@@ -2611,17 +2611,17 @@ def test_PosAux_robust_to_nan_and_non_real():
     1/((d+e*x)*(c*(d+e*x)^2)) and x^6/(3*x^4+2). Must not raise; sign of an
     undeterminable numeric value is treated as not-positive (rule just doesn't apply)."""
     from sympy import S, I, root
-    from rubi_rules.utils.utility_functions import PosAux, PosQ
+    from rubi_rules.utils.utility_functions import PosAux, eager_PosQ
     crash_vals = [S.NaN,
                   -3*root(6, 4)*(1 + I)**3 + 6*root(6, 4)*(1 + I)]  # from x^6/(3x^4+2)
     for v in crash_vals:
         PosAux(v)   # must not raise
-        PosQ(v)     # must not raise
+        eager_PosQ(v)     # must not raise
     assert PosAux(S.NaN) is False
     # normal behaviour preserved (symbols positive; negatives negative)
     aa = Symbol('a')
-    assert bool(PosQ(aa)) is True
-    assert bool(PosQ(-aa)) is False
+    assert bool(eager_PosQ(aa)) is True
+    assert bool(eager_PosQ(-aa)) is False
 
 
 def test_Simplify_robust_to_boolean_from_non_binomial():
@@ -2630,13 +2630,13 @@ def test_Simplify_robust_to_boolean_from_non_binomial():
     # `BinomialDegree(u1,x) - BinomialDegree(u2,x)`, whose doit/simplify hits a
     # BooleanFalse inside arithmetic ('BooleanFalse has no as_coeff_Mul'). Simplify
     # must swallow that and ZeroQ/EqQ must return a plain bool, not crash.
-    from rubi_rules.utils.utility_functions import Simplify as _S, ZeroQ as _Z, EqQ as _E
+    from rubi_rules.utils.utility_functions import eager_Simplify, ZeroQ as _Z, eager_EqQ
     from rubi_rules.utils.rubi_utils import BinomialDegree as _BD
     xx, aa, bb = Symbol('x'), Symbol('a'), Symbol('b')
     expr = _BD(exp(xx), xx) - _BD(aa + bb*exp(xx), xx)
-    _S(expr)  # must not raise
+    eager_Simplify(expr)  # must not raise
     assert _Z(expr) in (True, False)
-    assert _E(_BD(exp(xx), xx), _BD(aa + bb*exp(xx), xx)) in (True, False)
+    assert eager_EqQ(_BD(exp(xx), xx), _BD(aa + bb*exp(xx), xx)) in (True, False)
 
 
 def test_MinimumMonomialExponent_skips_non_monomial_terms():
@@ -2645,10 +2645,10 @@ def test_MinimumMonomialExponent_skips_non_monomial_terms():
     # Previously `n - MonomialExponent(...)` raised `Zero - None` TypeError, which
     # aborted the whole DFS search for e.g. Int[(a+b*E^x)^n*E^x, x].
     aa, bb, xx = Symbol('a'), Symbol('b'), Symbol('x')
-    assert _U.MinimumMonomialExponent(aa + bb*exp(xx), xx) == 0
+    assert _U.eager_MinimumMonomialExponent(aa + bb*exp(xx), xx) == 0
     # ordinary monomial sums still give the smallest exponent
-    assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 3*xx**5, xx) == 2
-    assert _U.MinimumMonomialExponent(xx**2 + 5*xx**2 + 1, xx) == 0
+    assert _U.eager_MinimumMonomialExponent(xx**2 + 5*xx**2 + 3*xx**5, xx) == 2
+    assert _U.eager_MinimumMonomialExponent(xx**2 + 5*xx**2 + 1, xx) == 0
 
 
 def test_WFApply_applies_a_bound_wildcard_head():
@@ -2796,14 +2796,14 @@ def test_RationalFunctionExponents_matches_mathematica():
     xx = Symbol('x')
     for expr_fn, expected in _RFE_CASES:
         e = expr_fn(xx)
-        assert list(RationalFunctionExponents(e, xx)) == expected, e
+        assert list(eager_RationalFunctionExponents(e, xx)) == expected, e
 
 
 def test_RationalFunctionExponents_always_returns_a_pair():
     """The list-repetition bug showed up as a 4- or 6-element result."""
     xx = Symbol('x')
     for expr_fn, _ in _RFE_CASES:
-        assert len(RationalFunctionExponents(expr_fn(xx), xx)) == 2
+        assert len(eager_RationalFunctionExponents(expr_fn(xx), xx)) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -2816,17 +2816,17 @@ def test_RationalFunctionExponents_always_returns_a_pair():
 def test_PowerOfLinearQ_on_a_constant_does_not_crash():
     """1 matches u**m as m=0 with u UNBOUND, so Match[u] used to raise."""
     xx = Symbol('x')
-    assert PowerOfLinearQ(S(1), xx) is False
+    assert eager_PowerOfLinearQ(S(1), xx) is False
 
 
 def test_PowerOfLinearQ_still_recognises_a_power_of_a_linear():
     xx = Symbol('x')
-    assert PowerOfLinearQ((2 + 3*xx)**4, xx) is True
+    assert eager_PowerOfLinearQ((2 + 3*xx)**4, xx) is True
 
 
 def test_PowerOfLinearQ_rejects_a_non_linear_base():
     xx = Symbol('x')
-    assert PowerOfLinearQ((1 + xx**2)**3, xx) is False
+    assert eager_PowerOfLinearQ((1 + xx**2)**3, xx) is False
 
 
 def test_GeneralizedBinomialMatchQ_rejects_a_single_monomial():
@@ -2834,8 +2834,8 @@ def test_GeneralizedBinomialMatchQ_rejects_a_single_monomial():
     DIFFER. Without that, -3*x/2 slipped through on a spurious -x/2 + -x split
     (q == n == 1) and GeneralizedBinomialParts was then handed a non-binomial."""
     xx = Symbol('x')
-    assert GeneralizedBinomialMatchQ(Rational(-3, 2)*xx, xx) is False
-    assert GeneralizedBinomialMatchQ(3*xx, xx) is False
+    assert eager_GeneralizedBinomialMatchQ(Rational(-3, 2)*xx, xx) is False
+    assert eager_GeneralizedBinomialMatchQ(3*xx, xx) is False
 
 
 def test_GeneralizedBinomialParts_on_a_single_monomial_is_False():
@@ -2856,7 +2856,7 @@ def test_GeneralizedBinomialParts_uses_the_same_wildcards_as_its_gate():
     had rejected (b=0, leaving n unbound) and raise KeyError."""
     xx = Symbol('x')
     for expr in (Rational(-3, 2)*xx, 3*xx**5 + 2*xx**2, xx**3, S(4)):
-        gated = GeneralizedBinomialMatchQ(expr, xx)
+        gated = eager_GeneralizedBinomialMatchQ(expr, xx)
         parts = GeneralizedBinomialParts(expr, xx)      # must never raise
         assert gated is True or parts is False, (expr, gated, parts)
 
@@ -2872,10 +2872,10 @@ def test_GeneralizedBinomialParts_uses_the_same_wildcards_as_its_gate():
 
 def test_deferred_ExpandIntegrand_matches_eager():
     from rubi_rules.utils.rubi_utils import ExpandIntegrand as Deferred
-    from rubi_rules.utils.utility_functions import ExpandIntegrand as Eager
+    from rubi_rules.utils.utility_functions import eager_ExpandIntegrand
     xx, a, b = Symbol('x'), Symbol('a'), Symbol('b')
     for u in [xx/(a + b*xx)**2, xx**2/(a + b*xx)**2, 1/(xx*(a + b*xx))]:
-        assert Deferred(u, xx).doit() == Eager(u, xx), u
+        assert Deferred(u, xx).doit() == eager_ExpandIntegrand(u, xx), u
 
 
 def test_deferred_ExpandIntegrand_does_partial_fractions_not_denominator_expansion():
@@ -2892,10 +2892,10 @@ def test_deferred_ExpandIntegrand_does_partial_fractions_not_denominator_expansi
 def test_deferred_ExpandIntegrand_three_arg_still_expands_product():
     """The 3-arg form (u, v, x) legitimately expands u*v; delegation preserves it."""
     from rubi_rules.utils.rubi_utils import ExpandIntegrand as Deferred
-    from rubi_rules.utils.utility_functions import ExpandIntegrand as Eager
+    from rubi_rules.utils.utility_functions import eager_ExpandIntegrand
     xx = Symbol('x')
     u, v = (xx + 1), (xx + 2)
-    assert Deferred(u, v, xx).doit() == Eager(u, v, xx)
+    assert Deferred(u, v, xx).doit() == eager_ExpandIntegrand(u, v, xx)
 
 
 # ---------------------------------------------------------------------------
@@ -2909,10 +2909,10 @@ def test_deferred_ExpandIntegrand_three_arg_still_expands_product():
 
 def test_DeactivateTrig_sech_becomes_inert_sec_of_imaginary_argument():
     """Pi-verified: DeactivateTrig[Sech^2/(a+b Sech^2)] = sec[I z]^2/(a+b sec[I z]^2)."""
-    from rubi_rules.utils.utility_functions import DeactivateTrig, InertSec
+    from rubi_rules.utils.utility_functions import eager_DeactivateTrig, InertSec
     xx, a, b, c, d = symbols('x a b c d')
     u = sech(c + d*xx)**2/(a + b*sech(c + d*xx)**2)
-    dz = DeactivateTrig(u, xx)
+    dz = eager_DeactivateTrig(u, xx)
     # the sech factor became InertSec of I*(c+d*x)
     import sympy as _sp
     inert = [t for t in dz.atoms(_sp.Function) if t.func is InertSec]

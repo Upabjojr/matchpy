@@ -58,8 +58,8 @@ class PolynomialQuotient(MathematicaExpr):
         # handles the RATIONAL-p case Rubi relies on (Pq*(c x)^m with m<0). The old inline
         # sympy.quo(...) here returned 0 on such inputs -- e.g.
         # PolynomialQuotient[(A+Bx)/x^2, a+b x^2] -> 0 -- silently zeroing whole integrals.
-        from sympy_wolfram.functions_eager import PolynomialQuotient as _PQ
-        return _PQ(*self.args)
+        from sympy_wolfram.functions_eager import eager_PolynomialQuotient
+        return eager_PolynomialQuotient(*self.args)
 
 
 class PolynomialRemainder(MathematicaExpr):
@@ -72,8 +72,8 @@ class PolynomialRemainder(MathematicaExpr):
         # Delegate to the eager helper (see functions_eager.PolynomialRemainder), which
         # reduces a RATIONAL p modulo q; the old inline sympy.rem(...) returned the whole
         # input p on such Rubi inputs, breaking the rules that use the remainder's coeffs.
-        from sympy_wolfram.functions_eager import PolynomialRemainder as _PR
-        return _PR(*self.args)
+        from sympy_wolfram.functions_eager import eager_PolynomialRemainder
+        return eager_PolynomialRemainder(*self.args)
 
 
 class Rule(MathematicaExpr):
@@ -136,7 +136,7 @@ class Numerator(MathematicaExpr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        return _eager.Numerator(self.args[0])
+        return _eager.eager_Numerator(self.args[0])
 
 
 class Together(MathematicaExpr):
@@ -327,7 +327,7 @@ class LeafCount(MathematicaExpr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        return Integer(_eager.LeafCount(self.args[0]))
+        return Integer(_eager.eager_LeafCount(self.args[0]))
 
 
 class Length(MathematicaExpr):
@@ -337,7 +337,7 @@ class Length(MathematicaExpr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        return Integer(_eager.Length(self.args[0]))
+        return Integer(_eager.eager_Length(self.args[0]))
 
 
 class Not(MathematicaExpr):
@@ -347,7 +347,7 @@ class Not(MathematicaExpr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        return _eager.Not(self.args[0])
+        return _eager.eager_Not(self.args[0])
 
 
 class Complex(MathematicaExpr):
@@ -358,7 +358,7 @@ class Complex(MathematicaExpr):
     """
 
     def __new__(cls, re, im):
-        return _eager.Complex(re, im)
+        return _eager.eager_Complex(re, im)
 
     def _evaluate(self, **kwargs):
         return self
@@ -372,7 +372,7 @@ class Denominator(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
-        return _eager.Denominator(*self.args)
+        return _eager.eager_Denominator(*self.args)
 
 
 class First(MathematicaExpr):
@@ -384,7 +384,7 @@ class First(MathematicaExpr):
         return Expr.__new__(cls, expr, d)
 
     def _evaluate(self, **kwargs):
-        return _eager.First(*self.args)
+        return _eager.eager_First(*self.args)
 
 
 class Rest(MathematicaExpr):
@@ -394,7 +394,7 @@ class Rest(MathematicaExpr):
         return Expr.__new__(cls, expr)
 
     def _evaluate(self, **kwargs):
-        return _eager.Rest(self.args[0])
+        return _eager.eager_Rest(self.args[0])
 
 
 class Part(MathematicaExpr):
@@ -404,7 +404,7 @@ class Part(MathematicaExpr):
         return Expr.__new__(cls, expr, *indices)
 
     def _evaluate(self, **kwargs):
-        return _eager.Part(*self.args)
+        return _eager.eager_Part(*self.args)
 
 
 class Exponent(MathematicaExpr):
@@ -415,7 +415,7 @@ class Exponent(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
-        return _eager.Exponent(*self.args)
+        return _eager.eager_Exponent(*self.args)
 
 
 class Apart(MathematicaExpr):
@@ -426,4 +426,4 @@ class Apart(MathematicaExpr):
         return Expr.__new__(cls, *safe)
 
     def _evaluate(self, **kwargs):
-        return _eager.Apart(*self.args)
+        return _eager.eager_Apart(*self.args)

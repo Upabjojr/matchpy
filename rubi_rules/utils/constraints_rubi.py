@@ -34,13 +34,13 @@ class EqQ(MathematicaConstraint):
         self._u = self.args[0]
         self._v = self.args[1] if len(self.args) >= 2 else None
     def check(self, **kwargs):
-        from .utility_functions import EqQ as _EqQ
+        from .utility_functions import eager_EqQ
         if len(self.args) != 2:
             return None
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _EqQ(u, v)
+        return eager_EqQ(u, v)
     def __repr__(self):
         return f"EqQ({self._u}, {self._v})"
 
@@ -231,10 +231,10 @@ class PosQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import PosQ as _PosQ
+        from .utility_functions import eager_PosQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _PosQ(u)
+        return eager_PosQ(u)
     def __repr__(self):
         return f"PosQ({self._u})"
 
@@ -243,10 +243,10 @@ class NegQ(MathematicaConstraint):
     def __init__(self, u, v=None):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import NegQ as _NegQ
+        from .utility_functions import eager_NegQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _NegQ(u)
+        return eager_NegQ(u)
     def __repr__(self):
         return f"NegQ({self._u})"
 
@@ -257,9 +257,9 @@ class HalfIntegerQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import Denominator
+        from .utility_functions import eager_Denominator
         for i in u:
-            if isinstance(i, Rational) and Denominator(i) == 2:
+            if isinstance(i, Rational) and eager_Denominator(i) == 2:
                 continue
             return False
         return True
@@ -271,11 +271,11 @@ class FractionQ(MathematicaConstraint):
     def __init__(self, *args):
         self._vars = self.args
     def check(self, **kwargs):
-        from .utility_functions import FractionQ as _FractionQ
+        from .utility_functions import eager_FractionQ
         sk = self._resolve_all(kwargs)
         for a in self._vars:
             expr = self._resolve(a, sk)
-            if not _FractionQ(expr):
+            if not eager_FractionQ(expr):
                 return False
         return True
     def __repr__(self):
@@ -286,10 +286,10 @@ class ComplexNumberQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import ComplexNumberQ as _ComplexNumberQ
+        from .utility_functions import eager_ComplexNumberQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _ComplexNumberQ(u)
+        return eager_ComplexNumberQ(u)
     def __repr__(self):
         return f"ComplexNumberQ({self._u})"
 
@@ -310,10 +310,10 @@ class FractionOrNegativeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import FractionOrNegativeQ as _FractionOrNegativeQ
+        from .utility_functions import eager_FractionOrNegativeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _FractionOrNegativeQ(u)
+        return eager_FractionOrNegativeQ(u)
     def __repr__(self):
         return f"FractionOrNegativeQ({self._u})"
 
@@ -322,10 +322,10 @@ class SqrtNumberQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import SqrtNumberQ as _SqrtNumberQ
+        from .utility_functions import eager_SqrtNumberQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _SqrtNumberQ(u)
+        return eager_SqrtNumberQ(u)
     def __repr__(self):
         return f"SqrtNumberQ({self._u})"
 
@@ -334,10 +334,10 @@ class PowerQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import PowerQ as _PowerQ
+        from .utility_functions import eager_PowerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _PowerQ(u)
+        return eager_PowerQ(u)
     def __repr__(self):
         return f"PowerQ({self._u})"
 
@@ -346,10 +346,10 @@ class ProductQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import ProductQ as _ProductQ
+        from .utility_functions import eager_ProductQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _ProductQ(u)
+        return eager_ProductQ(u)
     def __repr__(self):
         return f"ProductQ({self._u})"
 
@@ -358,10 +358,10 @@ class SumQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import SumQ as _SumQ
+        from .utility_functions import eager_SumQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _SumQ(u)
+        return eager_SumQ(u)
     def __repr__(self):
         return f"SumQ({self._u})"
 
@@ -370,10 +370,10 @@ class NonsumQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import NonsumQ as _NonsumQ
+        from .utility_functions import eager_NonsumQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _NonsumQ(u)
+        return eager_NonsumQ(u)
     def __repr__(self):
         return f"NonsumQ({self._u})"
 
@@ -382,10 +382,10 @@ class IntegerPowerQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import IntegerPowerQ as _IntegerPowerQ
+        from .utility_functions import eager_IntegerPowerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _IntegerPowerQ(u)
+        return eager_IntegerPowerQ(u)
     def __repr__(self):
         return f"IntegerPowerQ({self._u})"
 
@@ -394,10 +394,10 @@ class FractionalPowerQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import FractionalPowerQ as _FractionalPowerQ
+        from .utility_functions import eager_FractionalPowerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _FractionalPowerQ(u)
+        return eager_FractionalPowerQ(u)
     def __repr__(self):
         return f"FractionalPowerQ({self._u})"
 
@@ -406,10 +406,10 @@ class ComplexFreeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import ComplexFreeQ as _ComplexFreeQ
+        from .utility_functions import eager_ComplexFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _ComplexFreeQ(u)
+        return eager_ComplexFreeQ(u)
     def __repr__(self):
         return f"ComplexFreeQ({self._u})"
 
@@ -418,10 +418,10 @@ class FractionalPowerFreeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import FractionalPowerFreeQ as _FractionalPowerFreeQ
+        from .utility_functions import eager_FractionalPowerFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _FractionalPowerFreeQ(u)
+        return eager_FractionalPowerFreeQ(u)
     def __repr__(self):
         return f"FractionalPowerFreeQ({self._u})"
 
@@ -430,10 +430,10 @@ class IntegralFreeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import IntegralFreeQ as _IntegralFreeQ
+        from .utility_functions import eager_IntegralFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _IntegralFreeQ(u)
+        return eager_IntegralFreeQ(u)
     def __repr__(self):
         return f"IntegralFreeQ({self._u})"
 
@@ -442,10 +442,10 @@ class NiceSqrtQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import NiceSqrtQ as _NiceSqrtQ
+        from .utility_functions import eager_NiceSqrtQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _NiceSqrtQ(u)
+        return eager_NiceSqrtQ(u)
     def __repr__(self):
         return f"NiceSqrtQ({self._u})"
 
@@ -454,10 +454,10 @@ class InverseFunctionQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import InverseFunctionQ as _InverseFunctionQ
+        from .utility_functions import eager_InverseFunctionQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InverseFunctionQ(u)
+        return eager_InverseFunctionQ(u)
     def __repr__(self):
         return f"InverseFunctionQ({self._u})"
 
@@ -466,10 +466,10 @@ class InertTrigQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import InertTrigQ as _InertTrigQ
+        from .utility_functions import eager_InertTrigQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InertTrigQ(u)
+        return eager_InertTrigQ(u)
     def __repr__(self):
         return f"InertTrigQ({self._u})"
 
@@ -478,10 +478,10 @@ class InertTrigFreeQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import InertTrigFreeQ as _InertTrigFreeQ
+        from .utility_functions import eager_InertTrigFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InertTrigFreeQ(u)
+        return eager_InertTrigFreeQ(u)
     def __repr__(self):
         return f"InertTrigFreeQ({self._u})"
 
@@ -490,10 +490,10 @@ class PerfectSquareQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import PerfectSquareQ as _PerfectSquareQ
+        from .utility_functions import eager_PerfectSquareQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _PerfectSquareQ(u)
+        return eager_PerfectSquareQ(u)
     def __repr__(self):
         return f"PerfectSquareQ({self._u})"
 
@@ -502,10 +502,10 @@ class TrigQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import TrigQ as _TrigQ
+        from .utility_functions import eager_TrigQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _TrigQ(u)
+        return eager_TrigQ(u)
     def __repr__(self):
         return f"TrigQ({self._u})"
 
@@ -514,10 +514,10 @@ class HyperbolicQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import HyperbolicQ as _HyperbolicQ
+        from .utility_functions import eager_HyperbolicQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _HyperbolicQ(u)
+        return eager_HyperbolicQ(u)
     def __repr__(self):
         return f"HyperbolicQ({self._u})"
 
@@ -526,10 +526,10 @@ class InverseTrigQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import InverseTrigQ as _InverseTrigQ
+        from .utility_functions import eager_InverseTrigQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InverseTrigQ(u)
+        return eager_InverseTrigQ(u)
     def __repr__(self):
         return f"InverseTrigQ({self._u})"
 
@@ -538,10 +538,10 @@ class InverseHyperbolicQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import InverseHyperbolicQ as _InverseHyperbolicQ
+        from .utility_functions import eager_InverseHyperbolicQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InverseHyperbolicQ(u)
+        return eager_InverseHyperbolicQ(u)
     def __repr__(self):
         return f"InverseHyperbolicQ({self._u})"
 
@@ -550,10 +550,10 @@ class LogQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import LogQ as _LogQ
+        from .utility_functions import eager_LogQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _LogQ(u)
+        return eager_LogQ(u)
     def __repr__(self):
         return f"LogQ({self._u})"
 
@@ -567,10 +567,10 @@ class IntegersQ(MathematicaConstraint):
     def __init__(self, *args):
         self._vars = self.args
     def check(self, **kwargs):
-        from .utility_functions import IntegersQ as _IntegersQ
+        from .utility_functions import eager_IntegersQ
         sk = self._resolve_all(kwargs)
         exprs = [self._resolve(a, sk) for a in self._vars]
-        return _IntegersQ(*exprs)
+        return eager_IntegersQ(*exprs)
     def __repr__(self):
         return f"IntegersQ({', '.join(str(a) for a in self._vars)})"
 
@@ -580,10 +580,10 @@ class RationalQ(MathematicaConstraint):
     def __init__(self, *args):
         self._vars = self.args
     def check(self, **kwargs):
-        from .utility_functions import RationalQ as _RationalQ
+        from .utility_functions import eager_RationalQ
         sk = self._resolve_all(kwargs)
         exprs = [self._resolve(a, sk) for a in self._vars]
-        return _RationalQ(*exprs)
+        return eager_RationalQ(*exprs)
     def __repr__(self):
         return f"RationalQ({', '.join(str(a) for a in self._vars)})"
 
@@ -599,13 +599,13 @@ class PolyQ(MathematicaConstraint):
         self._x = self.args[1]
         self._n = self.args[2] if len(self.args) > 2 else None
     def check(self, **kwargs):
-        from .utility_functions import PolyQ as _PolyQ
+        from .utility_functions import eager_PolyQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         if self._n is not None:
             n = self._resolve(self._n, sk)
-            return _PolyQ(u, self._x, n)
-        return _PolyQ(u, self._x)
+            return eager_PolyQ(u, self._x, n)
+        return eager_PolyQ(u, self._x)
     def __repr__(self):
         if self._n is not None:
             return f"PolyQ({self._u}, {self._x}, {self._n})"
@@ -617,10 +617,10 @@ class LinearQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import LinearQ as _LinearQ
+        from .utility_functions import eager_LinearQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _LinearQ(u, self._x)
+        return eager_LinearQ(u, self._x)
     def __repr__(self):
         return f"LinearQ({self._u}, {self._x})"
 
@@ -630,10 +630,10 @@ class QuadraticQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import QuadraticQ as _QuadraticQ
+        from .utility_functions import eager_QuadraticQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _QuadraticQ(u, self._x)
+        return eager_QuadraticQ(u, self._x)
     def __repr__(self):
         return f"QuadraticQ({self._u}, {self._x})"
 
@@ -644,13 +644,13 @@ class BinomialQ(MathematicaConstraint):
         self._x = self.args[1]
         self._n = self.args[2] if len(self.args) > 2 else None
     def check(self, **kwargs):
-        from .utility_functions import BinomialQ as _BinomialQ
+        from .utility_functions import eager_BinomialQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         if self._n is not None:
             n = self._resolve(self._n, sk)
-            return _BinomialQ(u, self._x, n)
-        return _BinomialQ(u, self._x)
+            return eager_BinomialQ(u, self._x, n)
+        return eager_BinomialQ(u, self._x)
     def __repr__(self):
         if self._n is not None:
             return f"BinomialQ({self._u}, {self._x}, {self._n})"
@@ -662,10 +662,10 @@ class TrinomialQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import TrinomialQ as _TrinomialQ
+        from .utility_functions import eager_TrinomialQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _TrinomialQ(u, self._x)
+        return eager_TrinomialQ(u, self._x)
     def __repr__(self):
         return f"TrinomialQ({self._u}, {self._x})"
 
@@ -675,10 +675,10 @@ class LinearMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import LinearMatchQ as _LinearMatchQ
+        from .utility_functions import eager_LinearMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _LinearMatchQ(u, self._x)
+        return eager_LinearMatchQ(u, self._x)
     def __repr__(self):
         return f"LinearMatchQ({self._u}, {self._x})"
 
@@ -688,10 +688,10 @@ class QuadraticMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import QuadraticMatchQ as _QuadraticMatchQ
+        from .utility_functions import eager_QuadraticMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _QuadraticMatchQ(u, self._x)
+        return eager_QuadraticMatchQ(u, self._x)
     def __repr__(self):
         return f"QuadraticMatchQ({self._u}, {self._x})"
 
@@ -701,10 +701,10 @@ class BinomialMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import BinomialMatchQ as _BinomialMatchQ
+        from .utility_functions import eager_BinomialMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _BinomialMatchQ(u, self._x)
+        return eager_BinomialMatchQ(u, self._x)
     def __repr__(self):
         return f"BinomialMatchQ({self._u}, {self._x})"
 
@@ -714,10 +714,10 @@ class TrinomialMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import TrinomialMatchQ as _TrinomialMatchQ
+        from .utility_functions import eager_TrinomialMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _TrinomialMatchQ(u, self._x)
+        return eager_TrinomialMatchQ(u, self._x)
     def __repr__(self):
         return f"TrinomialMatchQ({self._u}, {self._x})"
 
@@ -727,10 +727,10 @@ class MonomialQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import MonomialQ as _MonomialQ
+        from .utility_functions import eager_MonomialQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _MonomialQ(u, self._x)
+        return eager_MonomialQ(u, self._x)
     def __repr__(self):
         return f"MonomialQ({self._u}, {self._x})"
 
@@ -740,10 +740,10 @@ class GeneralizedBinomialQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import GeneralizedBinomialQ as _GeneralizedBinomialQ
+        from .utility_functions import eager_GeneralizedBinomialQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _GeneralizedBinomialQ(u, self._x)
+        return eager_GeneralizedBinomialQ(u, self._x)
     def __repr__(self):
         return f"GeneralizedBinomialQ({self._u}, {self._x})"
 
@@ -753,10 +753,10 @@ class GeneralizedBinomialMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import GeneralizedBinomialMatchQ as _GeneralizedBinomialMatchQ
+        from .utility_functions import eager_GeneralizedBinomialMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _GeneralizedBinomialMatchQ(u, self._x)
+        return eager_GeneralizedBinomialMatchQ(u, self._x)
     def __repr__(self):
         return f"GeneralizedBinomialMatchQ({self._u}, {self._x})"
 
@@ -766,10 +766,10 @@ class GeneralizedTrinomialQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import GeneralizedTrinomialQ as _GeneralizedTrinomialQ
+        from .utility_functions import eager_GeneralizedTrinomialQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _GeneralizedTrinomialQ(u, self._x)
+        return eager_GeneralizedTrinomialQ(u, self._x)
     def __repr__(self):
         return f"GeneralizedTrinomialQ({self._u}, {self._x})"
 
@@ -779,10 +779,10 @@ class GeneralizedTrinomialMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import GeneralizedTrinomialMatchQ as _GeneralizedTrinomialMatchQ
+        from .utility_functions import eager_GeneralizedTrinomialMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _GeneralizedTrinomialMatchQ(u, self._x)
+        return eager_GeneralizedTrinomialMatchQ(u, self._x)
     def __repr__(self):
         return f"GeneralizedTrinomialMatchQ({self._u}, {self._x})"
 
@@ -792,10 +792,10 @@ class InverseFunctionFreeQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import InverseFunctionFreeQ as _InverseFunctionFreeQ
+        from .utility_functions import eager_InverseFunctionFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _InverseFunctionFreeQ(u, self._x)
+        return eager_InverseFunctionFreeQ(u, self._x)
     def __repr__(self):
         return f"InverseFunctionFreeQ({self._u}, {self._x})"
 
@@ -805,10 +805,10 @@ class TrigHyperbolicFreeQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import TrigHyperbolicFreeQ as _TrigHyperbolicFreeQ
+        from .utility_functions import eager_TrigHyperbolicFreeQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _TrigHyperbolicFreeQ(u, self._x)
+        return eager_TrigHyperbolicFreeQ(u, self._x)
     def __repr__(self):
         return f"TrigHyperbolicFreeQ({self._u}, {self._x})"
 
@@ -818,10 +818,10 @@ class RationalFunctionQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import RationalFunctionQ as _RationalFunctionQ
+        from .utility_functions import eager_RationalFunctionQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _RationalFunctionQ(u, self._x)
+        return eager_RationalFunctionQ(u, self._x)
     def __repr__(self):
         return f"RationalFunctionQ({self._u}, {self._x})"
 
@@ -832,10 +832,10 @@ class AlgebraicFunctionQ(MathematicaConstraint):
         self._x = self.args[1]
         self._flag_ = flag_
     def check(self, **kwargs):
-        from .utility_functions import AlgebraicFunctionQ as _AlgebraicFunctionQ
+        from .utility_functions import eager_AlgebraicFunctionQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _AlgebraicFunctionQ(u, self._x, self._flag_)
+        return eager_AlgebraicFunctionQ(u, self._x, self._flag_)
     def __repr__(self):
         return f"AlgebraicFunctionQ({self._u}, {self._x})"
 
@@ -845,10 +845,10 @@ class IndependentQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import IndependentQ as _IndependentQ
+        from .utility_functions import eager_IndependentQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _IndependentQ(u, self._x)
+        return eager_IndependentQ(u, self._x)
     def __repr__(self):
         return f"IndependentQ({self._u}, {self._x})"
 
@@ -858,10 +858,10 @@ class QuotientOfLinearsQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import QuotientOfLinearsQ as _QuotientOfLinearsQ
+        from .utility_functions import eager_QuotientOfLinearsQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _QuotientOfLinearsQ(u, self._x)
+        return eager_QuotientOfLinearsQ(u, self._x)
     def __repr__(self):
         return f"QuotientOfLinearsQ({self._u}, {self._x})"
 
@@ -871,10 +871,10 @@ class PowerOfLinearQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import PowerOfLinearQ as _PowerOfLinearQ
+        from .utility_functions import eager_PowerOfLinearQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _PowerOfLinearQ(u, self._x)
+        return eager_PowerOfLinearQ(u, self._x)
     def __repr__(self):
         return f"PowerOfLinearQ({self._u}, {self._x})"
 
@@ -884,10 +884,10 @@ class PowerOfLinearMatchQ(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import PowerOfLinearMatchQ as _PowerOfLinearMatchQ
+        from .utility_functions import eager_PowerOfLinearMatchQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _PowerOfLinearMatchQ(u, self._x)
+        return eager_PowerOfLinearMatchQ(u, self._x)
     def __repr__(self):
         return f"PowerOfLinearMatchQ({self._u}, {self._x})"
 
@@ -902,11 +902,11 @@ class SimplerQ(MathematicaConstraint):
         self._u = self.args[0]
         self._v = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import SimplerQ as _SimplerQ
+        from .utility_functions import eager_SimplerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _SimplerQ(u, v)
+        return eager_SimplerQ(u, v)
     def __repr__(self):
         return f"SimplerQ({self._u}, {self._v})"
 
@@ -917,11 +917,11 @@ class SumSimplerQ(MathematicaConstraint):
         self._u = self.args[0]
         self._v = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import SumSimplerQ as _SumSimplerQ
+        from .utility_functions import eager_SumSimplerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _SumSimplerQ(u, v)
+        return eager_SumSimplerQ(u, v)
     def __repr__(self):
         return f"SumSimplerQ({self._u}, {self._v})"
 
@@ -932,11 +932,11 @@ class SimplerSqrtQ(MathematicaConstraint):
         self._u = self.args[0]
         self._v = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import SimplerSqrtQ as _SimplerSqrtQ
+        from .utility_functions import eager_SimplerSqrtQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _SimplerSqrtQ(u, v)
+        return eager_SimplerSqrtQ(u, v)
     def __repr__(self):
         return f"SimplerSqrtQ({self._u}, {self._v})"
 
@@ -957,8 +957,8 @@ class FunctionOfQ(MathematicaConstraint):
         v = self._resolve(self._v, sk)
         u = self._resolve(self._u, sk)
         x = self._resolve(self._x, sk)
-        from .utility_functions import FunctionOfQ as _FunctionOfQ
-        return _FunctionOfQ(v, u, x, PureFlag=self._pure_flag)
+        from .utility_functions import eager_FunctionOfQ
+        return eager_FunctionOfQ(v, u, x, PureFlag=self._pure_flag)
     def __repr__(self):
         return f"FunctionOfQ({self._v}, {self._u}, {self._x})"
 
@@ -970,11 +970,11 @@ class LinearPairQ(MathematicaConstraint):
         self._v = self.args[1]
         self._x = self.args[2]
     def check(self, **kwargs):
-        from .utility_functions import LinearPairQ as _LinearPairQ
+        from .utility_functions import eager_LinearPairQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _LinearPairQ(u, v, self._x)
+        return eager_LinearPairQ(u, v, self._x)
     def __repr__(self):
         return f"LinearPairQ({self._u}, {self._v}, {self._x})"
 
@@ -989,8 +989,8 @@ class PolynomialInQ(MathematicaConstraint):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        from .utility_functions import PolynomialInQ as _PolynomialInQ
-        return _PolynomialInQ(u, v, self._x)
+        from .utility_functions import eager_PolynomialInQ
+        return eager_PolynomialInQ(u, v, self._x)
     def __repr__(self):
         return f"PolynomialInQ({self._u}, {self._v}, {self._x})"
 
@@ -1007,12 +1007,12 @@ class SimplerIntegrandQ(MathematicaConstraint):
         # When called from Condition._evaluate() after With.doit() substitution,
         # self._u and self._v already hold actual SymPy expressions (not WildSymbols),
         # so _resolve with an empty sk simply returns them unchanged.
-        from .utility_functions import SimplerIntegrandQ as _SimplerIntegrandQ
+        from .utility_functions import eager_SimplerIntegrandQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
         x = self._resolve(self._x, sk)
-        return _SimplerIntegrandQ(u, v, x)
+        return eager_SimplerIntegrandQ(u, v, x)
     def __repr__(self):
         return f"SimplerIntegrandQ({self._u}, {self._v}, {self._x})"
 
@@ -1024,11 +1024,11 @@ class PseudoBinomialPairQ(MathematicaConstraint):
         self._v = self.args[1]
         self._x = self.args[2]
     def check(self, **kwargs):
-        from .utility_functions import PseudoBinomialPairQ as _PseudoBinomialPairQ
+        from .utility_functions import eager_PseudoBinomialPairQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _PseudoBinomialPairQ(u, v, self._x)
+        return eager_PseudoBinomialPairQ(u, v, self._x)
     def __repr__(self):
         return f"PseudoBinomialPairQ({self._u}, {self._v}, {self._x})"
 
@@ -1040,11 +1040,11 @@ class SubstForFractionalPowerQ(MathematicaConstraint):
         self._v = self.args[1]
         self._x = self.args[2]
     def check(self, **kwargs):
-        from .utility_functions import SubstForFractionalPowerQ as _SubstForFractionalPowerQ
+        from .utility_functions import eager_SubstForFractionalPowerQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
-        return _SubstForFractionalPowerQ(u, v, self._x)
+        return eager_SubstForFractionalPowerQ(u, v, self._x)
     def __repr__(self):
         return f"SubstForFractionalPowerQ({self._u}, {self._v}, {self._x})"
 
@@ -1064,7 +1064,7 @@ class IntLinearQ(MathematicaConstraint):
         self._n = self.args[5]
         self._x = self.args[6]
     def check(self, **kwargs):
-        from .utility_functions import IntegerQ, IntegersQ, Less, Greater, IntLinearcQ as _IntLinearQ
+        from .utility_functions import IntegerQ, eager_IntegersQ, Less, Greater, IntLinearcQ as _IntLinearQ
         sk = self._resolve_all(kwargs)
         a = self._resolve(self._a, sk)
         b = self._resolve(self._b, sk)
@@ -1089,11 +1089,11 @@ class IntBinomialQ(MathematicaConstraint):
         # Store all args generically; x is always last
         self._vars = self.args
     def check(self, **kwargs):
-        from .utility_functions import IntBinomialQ
+        from .utility_functions import eager_IntBinomialQ
 
         sk = self._resolve_all(kwargs)
         args = [self._resolve(arg, sk) for arg in self.args]
-        return IntBinomialQ(*args)
+        return eager_IntBinomialQ(*args)
 
     def __repr__(self):
         return f"IntBinomialQ({', '.join(str(a) for a in self._vars)})"
@@ -1111,7 +1111,7 @@ class IntQuadraticQ(MathematicaConstraint):
         self._p = self.args[6]
         self._x = self.args[7]
     def check(self, **kwargs):
-        from .utility_functions import IntQuadraticQ as _IntQuadraticQ
+        from .utility_functions import eager_IntQuadraticQ
         sk = self._resolve_all(kwargs)
         a = self._resolve(self._a, sk)
         b = self._resolve(self._b, sk)
@@ -1120,7 +1120,7 @@ class IntQuadraticQ(MathematicaConstraint):
         e = self._resolve(self._e, sk)
         m = self._resolve(self._m, sk)
         p = self._resolve(self._p, sk)
-        return _IntQuadraticQ(a, b, c, d, e, m, p, self._x)
+        return eager_IntQuadraticQ(a, b, c, d, e, m, p, self._x)
     def __repr__(self):
         return f"IntQuadraticQ({self._a}, {self._b}, {self._c}, {self._d}, {self._e}, {self._m}, {self._p}, {self._x})"
 
@@ -1139,21 +1139,21 @@ class FractionalPowerFactorQ(MathematicaConstraint):
         # NB import ProductQ from utility_functions: the bare name `ProductQ` in this
         # module is the CONSTRAINT CLASS (always truthy when constructed), so `if
         # ProductQ(u)` without this import wrongly took the product branch for EVERY u.
-        from .utility_functions import AtomQ, PowerQ, FractionQ, First, Rest, ProductQ
+        from .utility_functions import AtomQ, eager_PowerQ, eager_FractionQ, eager_First, eager_Rest, eager_ProductQ
         if AtomQ(u):
             # Mathematica: Head[u] === Complex -- True only for an explicit COMPLEX NUMBER
             # (I, 2*I as Complex[0,2], ...), NOT for every atom. The old `u.is_complex`
             # was wrong: in SymPy reals are complex, so it wrongly fired on real atoms.
             return bool(u.is_number and u.is_real is False)
-        if PowerQ(u):
-            return FractionQ(u.exp)
-        if ProductQ(u):
+        if eager_PowerQ(u):
+            return eager_FractionQ(u.exp)
+        if eager_ProductQ(u):
             # Mathematica recurses First[u] || Rest[u]. Rest[u] must stay a PRODUCT of the
             # remaining factors; the old `u.args[1:]` handed a bare TUPLE, which is neither
             # atom/power/product, so the recursion peeled it to an empty args tuple and
             # raised IndexError (Int[x^2 (d+e x)/Sqrt[d^2-e^2 x^2]] etc. crashed here).
-            return (FractionalPowerFactorQ(First(u)).check(**kwargs)
-                    or FractionalPowerFactorQ(Rest(u)).check(**kwargs))
+            return (FractionalPowerFactorQ(eager_First(u)).check(**kwargs)
+                    or FractionalPowerFactorQ(eager_Rest(u)).check(**kwargs))
         return False
     def __repr__(self):
         return f"FractionalPowerFactorQ({self._u})"
@@ -1191,13 +1191,13 @@ class PiecewiseLinearQ(MathematicaConstraint):
         u = self._resolve(self._u, sk)
         x = self._resolve(self._x, sk)
 
-        from .utility_functions import PiecewiseLinearQ as _PiecewiseLinearQ
+        from .utility_functions import eager_PiecewiseLinearQ
 
         if self._v is None:
-            return _PiecewiseLinearQ(u, x)
+            return eager_PiecewiseLinearQ(u, x)
         else:
             v = self._resolve(self._v, sk)
-            return _PiecewiseLinearQ(u, v, x)
+            return eager_PiecewiseLinearQ(u, v, x)
 
     def __repr__(self):
         return f"PiecewiseLinearQ({self._u}, {self._x})"
@@ -1229,8 +1229,8 @@ class FunctionOfExponentialQ(MathematicaConstraint):
         from sympy import exp as sym_exp
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import FunctionOfExponentialQ
-        return FunctionOfExponentialQ(u, self._x)
+        from .utility_functions import eager_FunctionOfExponentialQ
+        return eager_FunctionOfExponentialQ(u, self._x)
     def __repr__(self):
         return f"FunctionOfExponentialQ({self._u}, {self._x})"
 
@@ -1243,8 +1243,8 @@ class FunctionOfTrigOfLinearQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import FunctionOfTrigOfLinearQ as _FunctionOfTrigOfLinearQ
-        return _FunctionOfTrigOfLinearQ(u, self._x)
+        from .utility_functions import eager_FunctionOfTrigOfLinearQ
+        return eager_FunctionOfTrigOfLinearQ(u, self._x)
     def __repr__(self):
         return f"FunctionOfTrigOfLinearQ({self._u}, {self._x})"
 
@@ -1281,8 +1281,8 @@ class KnownSineIntegrandQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import KnownSineIntegrandQ as _KnownSineIntegrandQ
-        return _KnownSineIntegrandQ(u, self._x)
+        from .utility_functions import eager_KnownSineIntegrandQ
+        return eager_KnownSineIntegrandQ(u, self._x)
     def __repr__(self):
         return f"KnownSineIntegrandQ({self._u}, {self._x})"
 
@@ -1295,8 +1295,8 @@ class KnownSecantIntegrandQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import KnownSecantIntegrandQ as _KnownSecantIntegrandQ
-        return _KnownSecantIntegrandQ(u, self._x)
+        from .utility_functions import eager_KnownSecantIntegrandQ
+        return eager_KnownSecantIntegrandQ(u, self._x)
     def __repr__(self):
         return f"KnownSecantIntegrandQ({self._u}, {self._x})"
 
@@ -1309,8 +1309,8 @@ class KnownTangentIntegrandQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import KnownTangentIntegrandQ as _KnownTangentIntegrandQ
-        return _KnownTangentIntegrandQ(u, self._x)
+        from .utility_functions import eager_KnownTangentIntegrandQ
+        return eager_KnownTangentIntegrandQ(u, self._x)
     def __repr__(self):
         return f"KnownTangentIntegrandQ({self._u}, {self._x})"
 
@@ -1323,8 +1323,8 @@ class KnownCotangentIntegrandQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        from .utility_functions import KnownCotangentIntegrandQ as _KnownCotangentIntegrandQ
-        return _KnownCotangentIntegrandQ(u, self._x)
+        from .utility_functions import eager_KnownCotangentIntegrandQ
+        return eager_KnownCotangentIntegrandQ(u, self._x)
     def __repr__(self):
         return f"KnownCotangentIntegrandQ({self._u}, {self._x})"
 
@@ -1337,8 +1337,8 @@ class EulerIntegrandQ(MathematicaConstraint):
     def check(self, **kwargs):
         sk = self._resolve_all(kwargs)
         expr = self._resolve(self._u, sk)
-        from .utility_functions import EulerIntegrandQ as _EulerIntegrandQ
-        return _EulerIntegrandQ(expr, self._x)
+        from .utility_functions import eager_EulerIntegrandQ
+        return eager_EulerIntegrandQ(expr, self._x)
     def __repr__(self):
         return f"EulerIntegrandQ({self._u}, {self._x})"
 
@@ -1403,10 +1403,10 @@ class TrigSimplifyQ(MathematicaConstraint):
     def __init__(self, u):
         self._u = self.args[0]
     def check(self, **kwargs):
-        from .utility_functions import TrigSimplifyQ as _TrigSimplifyQ
+        from .utility_functions import eager_TrigSimplifyQ
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
-        return _TrigSimplifyQ(u)
+        return eager_TrigSimplifyQ(u)
     def __repr__(self):
         return f"TrigSimplifyQ({self._u})"
 
@@ -1417,10 +1417,10 @@ class TryPureTanSubst(MathematicaConstraint):
         self._u = self.args[0]
         self._x = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import TryPureTanSubst as _TryPureTanSubst
+        from .utility_functions import eager_TryPureTanSubst
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         x = self._resolve(self._x, sk)
-        return _TryPureTanSubst(u, x)
+        return eager_TryPureTanSubst(u, x)
     def __repr__(self):
         return f"TryPureTanSubst({self._u}, {self._x})"

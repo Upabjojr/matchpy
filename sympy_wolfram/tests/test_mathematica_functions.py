@@ -86,10 +86,10 @@ def test_behaviour():
 
 
 def test_eager_helpers_are_self_contained():
-    assert fe.LeafCount(sin(x)) == 2
-    assert fe.Length(x + Integer(1)) == 2
-    assert fe.Complex(Integer(0), Integer(1)) == I
-    assert fe.Not(False) is True
+    assert fe.eager_LeafCount(sin(x)) == 2
+    assert fe.eager_Length(x + Integer(1)) == 2
+    assert fe.eager_Complex(Integer(0), Integer(1)) == I
+    assert fe.eager_Not(False) is True
 
 
 # ---------------------------------------------------------------------------
@@ -102,54 +102,54 @@ a, b, c, y = sympy.symbols('a b c y')
 
 
 def test_eager_First_Rest():
-    assert fe.First([2, 3, 5, 7]) == 2
-    assert fe.First(y ** 2) == y
-    assert fe.First(a + b + c) == a          # canonical sort_key order
-    assert fe.First(a * b * c) == a
-    assert fe.Rest([2, 3, 5, 7]) == [3, 5, 7]
-    assert fe.Rest(a + b + c) == b + c
-    assert fe.Rest(a * b * c) == b * c
-    assert fe.Rest(1 / b) == -1
+    assert fe.eager_First([2, 3, 5, 7]) == 2
+    assert fe.eager_First(y ** 2) == y
+    assert fe.eager_First(a + b + c) == a          # canonical sort_key order
+    assert fe.eager_First(a * b * c) == a
+    assert fe.eager_Rest([2, 3, 5, 7]) == [3, 5, 7]
+    assert fe.eager_Rest(a + b + c) == b + c
+    assert fe.eager_Rest(a * b * c) == b * c
+    assert fe.eager_Rest(1 / b) == -1
 
 
 def test_eager_Numerator_Denominator():
-    assert fe.Numerator((-a / b) ** 3) == (-a) ** 3
-    assert fe.Numerator(S(3) / 2) == 3
-    assert fe.Numerator(x / y) == x
-    assert fe.Numerator(-S(1) / 2 + I / 3) == -3 + 2 * I
-    assert fe.Denominator((-a / b) ** 3) == b ** 3
-    assert fe.Denominator(S(3) / 2) == 2
-    assert fe.Denominator(x / y) == y
-    assert fe.Denominator(-S(1) / 2 + I / 3) == 6
+    assert fe.eager_Numerator((-a / b) ** 3) == (-a) ** 3
+    assert fe.eager_Numerator(S(3) / 2) == 3
+    assert fe.eager_Numerator(x / y) == x
+    assert fe.eager_Numerator(-S(1) / 2 + I / 3) == -3 + 2 * I
+    assert fe.eager_Denominator((-a / b) ** 3) == b ** 3
+    assert fe.eager_Denominator(S(3) / 2) == 2
+    assert fe.eager_Denominator(x / y) == y
+    assert fe.eager_Denominator(-S(1) / 2 + I / 3) == 6
 
 
 def test_eager_Part():
-    assert fe.Part([1, 2, 3], 1) == 1
-    assert fe.Part(a * b, 1) == a
+    assert fe.eager_Part([1, 2, 3], 1) == 1
+    assert fe.eager_Part(a * b, 1) == a
     assert fe.Util_Part(1, a + b).doit() == a
     assert fe.Util_Part(c, a + b).doit() == fe.Util_Part(c, a + b)   # symbolic index -> deferred
 
 
 def test_eager_Apart():
-    assert fe.Apart(1 / (x ** 2 * (a + b * x) ** 2), x) == (
+    assert fe.eager_Apart(1 / (x ** 2 * (a + b * x) ** 2), x) == (
         b ** 2 / (a ** 2 * (a + b * x) ** 2) + 1 / (a ** 2 * x ** 2)
         + 2 * b ** 2 / (a ** 3 * (a + b * x)) - 2 * b / (a ** 3 * x))
     # Non-rational: returned unchanged (matches Mathematica, guards SymPy's apart).
-    assert fe.Apart(x ** (S(2) / 3) * (a + b * x) ** 2, x) == x ** (S(2) / 3) * (a + b * x) ** 2
+    assert fe.eager_Apart(x ** (S(2) / 3) * (a + b * x) ** 2, x) == x ** (S(2) / 3) * (a + b * x) ** 2
 
 
 def test_eager_Exponent_is_rational_function_faithful():
-    assert fe.Exponent(x ** 3 + x + 1, x) == 3
-    assert fe.Exponent(x ** 2 + 2 * x + 1, x) == 2
-    assert fe.Exponent(S(1), x) == 0
+    assert fe.eager_Exponent(x ** 3 + x + 1, x) == 3
+    assert fe.eager_Exponent(x ** 2 + 2 * x + 1, x) == 2
+    assert fe.eager_Exponent(S(1), x) == 0
     # Mathematica treats the argument as a rational function: Exponent[x^-3, x] == -3
     # (a polynomial-only implementation would wrongly return 0).
-    assert fe.Exponent(x ** (-3), x) == -3
+    assert fe.eager_Exponent(x ** (-3), x) == -3
 
 
 def test_eager_Simplify():
-    assert fe.Simplify(sin(x) ** 2 + cos(x) ** 2) == 1
-    assert fe.Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
+    assert fe.eager_Simplify(sin(x) ** 2 + cos(x) ** 2) == 1
+    assert fe.eager_Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
 
 
 def test_eager_FreeQ():

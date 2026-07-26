@@ -91,7 +91,7 @@ def head_to_class(obj):
     return None
 
 
-def LeafCount(expr):
+def eager_LeafCount(expr):
     """Mathematica LeafCount[expr] — number of nodes in the expression tree."""
     return len(list(postorder_traversal(expr)))
 
@@ -125,7 +125,7 @@ def _exponent_multiset(expr, form):
     return [e - shift for e in ne] or [S.Zero]
 
 
-def Exponent(expr, form, h=None):
+def eager_Exponent(expr, form, h=None):
     """Mathematica ``Exponent[expr, form]`` / ``Exponent[expr, form, h]``.
 
     Returns the maximum (default) or minimum (``h`` = ``Min``) power of ``form``
@@ -145,14 +145,14 @@ def Exponent(expr, form, h=None):
         return S.Zero
 
 
-def Length(expr):
+def eager_Length(expr):
     """Mathematica Length[expr] — number of elements."""
     if isinstance(expr, (tuple, list, sympy.Tuple)):
         return len(expr)
     return len(expr.args)
 
 
-def Complex(a, b):
+def eager_Complex(a, b):
     """Mathematica Complex[re, im] — construct a complex number a + I*b."""
     return a + I * b
 
@@ -162,7 +162,7 @@ def _sort(args):
     return sorted(args, key=lambda t: t.sort_key())
 
 
-def Simplify(expr):
+def eager_Simplify(expr):
     """Mathematica ``Simplify[expr]`` (eager).
 
     First resolves any unevaluated deferred ``MathematicaExpr`` nodes (a product of
@@ -183,7 +183,7 @@ def Simplify(expr):
         return expr
 
 
-def First(expr, d=None):
+def eager_First(expr, d=None):
     """Mathematica ``First[expr]`` — first element (``d`` unused, kept for arity)."""
     if isinstance(expr, (tuple, list, Tuple)):
         return expr[0]
@@ -194,7 +194,7 @@ def First(expr, d=None):
     return expr.args[0]
 
 
-def Rest(expr):
+def eager_Rest(expr):
     """Mathematica ``Rest[expr]`` — all elements but the first."""
     if isinstance(expr, (tuple, list, Tuple)):
         return expr[1:]
@@ -203,27 +203,27 @@ def Rest(expr):
     return expr.args[1]
 
 
-def Numerator(u):
+def eager_Numerator(u):
     """Mathematica ``Numerator[expr]`` — numerator, recursing through integer powers."""
-    u = Simplify(u)
+    u = eager_Simplify(u)
     if isinstance(u, Pow) and isinstance(u.exp, Integer):
         if u.exp > 0:
-            return Pow(Numerator(u.base), u.exp)
+            return Pow(eager_Numerator(u.base), u.exp)
         if u.exp < 0:
-            return Pow(Denominator(u.base), -1 * u.exp)
+            return Pow(eager_Denominator(u.base), -1 * u.exp)
     elif isinstance(u, Add):
         u = together(u)
     return fraction(u)[0]
 
 
-def Denominator(var):
+def eager_Denominator(var):
     """Mathematica ``Denominator[expr]`` — denominator, recursing through integer powers."""
-    var = Simplify(var)
+    var = eager_Simplify(var)
     if isinstance(var, Pow) and isinstance(var.exp, Integer):
         if var.exp > 0:
-            return Pow(Denominator(var.base), var.exp)
+            return Pow(eager_Denominator(var.base), var.exp)
         if var.exp < 0:
-            return Pow(Numerator(var.base), -1 * var.exp)
+            return Pow(eager_Numerator(var.base), -1 * var.exp)
     elif isinstance(var, Add):
         var = together(var)
     return fraction(var)[1]
@@ -233,7 +233,7 @@ class Util_Part(Function):
     """Helper for :func:`Part` — deferred until its index simplifies to an integer."""
 
     def doit(self):
-        i = Simplify(self.args[0])
+        i = eager_Simplify(self.args[0])
         if len(self.args) > 2:
             lst = list(self.args[1:])
         else:
@@ -247,14 +247,14 @@ class Util_Part(Function):
         return self
 
 
-def Part(lst, i):
+def eager_Part(lst, i):
     """Mathematica ``Part[expr, i]`` — 1-based part extraction (``i = -1`` = last)."""
     if isinstance(lst, (tuple, list)):
         return Util_Part(i, *lst).doit()
     return Util_Part(i, lst).doit()
 
 
-def Apart(u, x):
+def eager_Apart(u, x):
     """Mathematica ``Apart[expr, x]`` — partial-fraction decomposition in ``x``.
 
     Only rational functions of ``x`` decompose; anything else is returned unchanged
@@ -275,7 +275,7 @@ def PositiveQ(var):
     ``> 0``; ``ComplexInfinity``/``Infinity`` and non-comparable (e.g. complex) values
     are not positive.
     """
-    var = Simplify(_ensure_sympy(var))
+    var = eager_Simplify(_ensure_sympy(var))
     if var in (zoo, oo):
         return False
     if var.is_comparable:
@@ -287,7 +287,7 @@ def PositiveQ(var):
 
 def IntegerQ(var):
     """Mathematica ``IntegerQ[expr]`` — True iff ``expr`` is an explicit integer."""
-    var = Simplify(_ensure_sympy(var))
+    var = eager_Simplify(_ensure_sympy(var))
     if isinstance(var, (int, Integer)):
         return True
     else:
@@ -320,7 +320,7 @@ def _is_rational_in(p, x):
     return den != 1 and x in getattr(den, 'free_symbols', set())
 
 
-def PolynomialRemainder(p, q, x):
+def eager_PolynomialRemainder(p, q, x):
     """Mathematica ``PolynomialRemainder[p, q, x]``.
 
     * p a polynomial in x -> ordinary remainder.
@@ -348,7 +348,7 @@ def PolynomialRemainder(p, q, x):
         return p
 
 
-def PolynomialQuotient(p, q, x):
+def eager_PolynomialQuotient(p, q, x):
     """Mathematica ``PolynomialQuotient[p, q, x]``. Polynomial p -> SymPy ``quo``;
     transcendental p in x -> 0 (degree 0); RATIONAL p -> Laurent quotient
     ``(p - PolynomialRemainder[p,q,x])/q`` (e.g.
@@ -357,7 +357,7 @@ def PolynomialQuotient(p, q, x):
     p = sympify(p)
     q = sympify(q)
     if _is_rational_in(p, x):
-        r = PolynomialRemainder(p, q, x)
+        r = eager_PolynomialRemainder(p, q, x)
         try:
             return cancel((p - r) / q)
         except (PolynomialError, ZeroDivisionError):
@@ -368,7 +368,7 @@ def PolynomialQuotient(p, q, x):
         return S.Zero
 
 
-def Not(var):
+def eager_Not(var):
     """Mathematica Not[expr] — logical negation (tolerant of bool/None/Relational)."""
     if isinstance(var, bool):
         return not var

@@ -699,11 +699,11 @@ def _try_deactivate_trig(f, x, path, replacer, budget, trace):
     if not f.has(*_ACTIVE_TRIG_HEADS):
         return None
     from rubi_rules.utils.utility_functions import (
-        FunctionOfTrigOfLinearQ, DeactivateTrig, ActivateTrig)
+        eager_FunctionOfTrigOfLinearQ, eager_DeactivateTrig, eager_ActivateTrig)
     try:
-        if not FunctionOfTrigOfLinearQ(f, x):
+        if not eager_FunctionOfTrigOfLinearQ(f, x):
             return None
-        inert = DeactivateTrig(f, x)
+        inert = eager_DeactivateTrig(f, x)
     except Exception:
         return None
     if inert == f:  # nothing deactivated -> no progress, don't recurse
@@ -712,7 +712,7 @@ def _try_deactivate_trig(f, x, path, replacer, budget, trace):
     reduced, blocked = _dfs_reduce_int(inert, x, path, replacer, local, budget, trace)
     if blocked or not _dfs_is_clean(reduced):
         return None
-    return ActivateTrig(reduced), local
+    return eager_ActivateTrig(reduced), local
 
 
 def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
