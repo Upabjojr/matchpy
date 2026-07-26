@@ -117,6 +117,17 @@ class SumWolfram(MathematicaExpr):
         expr, limits = self.args
         if isinstance(limits, List) and len(limits.args) == 3:
             i, imin, imax = limits.args
+            # Mathematica ``Sum`` iterates ``i`` in unit steps from ``imin``, stopping
+            # at the largest value <= ``imax``. So a non-integer bound truncates toward
+            # the interior (imax -> floor, imin -> ceiling). The binomial-Pq rules
+            # (e.g. r_1_1_2_12) build limits like (q-r)/n = 5/4, and sympy.Sum leaves a
+            # fractional-bound sum UNEVALUATED -- a symbolic Sum that then drives
+            # simplify() into unbounded recursion (crashed (x^4+1)/(x^8+1)). Floor/ceil
+            # the concrete bounds so the sum actually expands to its finite terms.
+            if getattr(imax, "is_number", False) and imax.is_integer is False:
+                imax = sympy.floor(imax)
+            if getattr(imin, "is_number", False) and imin.is_integer is False:
+                imin = sympy.ceiling(imin)
             return sympy.Sum(expr, (i, imin, imax)).doit()
         return sympy.Sum(expr, limits)
 

@@ -114,7 +114,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] by the way, why are eager_Module, eager_Scan, eager_With, eager_Head, eager_First, eager_Rest still in rubi_utils ? These are standard mathematica library, so they should be in
       sympy_wolfram/, by the way eager_Module, eager_Scan, eager_With appear not to be used anywhere except a few tests. RationalQ (both class and eager function) are still in
       rubi_rules/, despite being standard Mathematica library. Can you please fix and check no other inconsistency with Mathematica standard library?
-
+- [ ] rebuild rubi test suite
+- [ ] lift replacement rule building to sympy_matching/
 
 Strange warning:
 

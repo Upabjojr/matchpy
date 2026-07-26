@@ -182,6 +182,13 @@ def eager_Simplify(expr):
         return simplify(expr)
     except (AttributeError, TypeError):
         return expr
+    except RecursionError:
+        # Defensive backstop: sympy.simplify can still recurse past the interpreter
+        # limit on a pathological input. simplify is only a NORMALISATION here (PosQ/
+        # TogetherSimplify/ExpandLinearProduct), so fall back to the unsimplified input
+        # -- correct, just less tidy -- rather than crash the integrator. (The main
+        # offender, fractional-bound Sum nodes, is fixed at source in SumWolfram.)
+        return expr
 
 
 def eager_First(expr, d=None):
