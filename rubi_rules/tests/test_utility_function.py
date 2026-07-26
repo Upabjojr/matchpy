@@ -2207,12 +2207,38 @@ def test_ProductLog():
     assert N(ProductLog(S(2), S(3.5)), 5) == N(-1.14064876353898 + 10.8912237027092*I, 5)
 
 def test_PolynomialQuotient():
-    assert PolynomialQuotient(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e) == log((-a*d + b*c)/(b*(c + d*x)))/((a + b*x)*(c + d*x))
+    # value-equal to log(...)/((a+b x)(c+d x)); the consolidated eager uses sympy.quo
+    # (as the deferred node the rules already used), which expands the denominator.
+    got = PolynomialQuotient(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e)
+    assert (got - log((-a*d + b*c)/(b*(c + d*x)))/((a + b*x)*(c + d*x))).simplify() == 0
     assert PolynomialQuotient(x**2, x + a, x) == -a + x
+
+
+def test_PolynomialQuotient_rational_laurent():
+    """A RATIONAL p (Rubi's Pq*(c x)^m with m<0, e.g. (A+Bx)/x^2) must divide as a Laurent
+    polynomial, NOT return 0. Cross-checked vs real Rubi (ssh pi):
+    PolynomialQuotient[(A+Bx)/x^2, a+b x^2, x] = (A+Bx)/(a x^2)."""
+    A, B = symbols('A B')
+    assert PolynomialQuotient((A + B*x)/x**2, a + b*x**2, x) == (A + B*x)/(a*x**2)
+    assert PolynomialQuotient((A + B*x)/x, a + b*x**2, x) == A/(a*x)
+    # denominator shares q -> quotient absorbs everything (value = (A+Bx)/(a+bx^2)^2,
+    # returned with the denominator expanded), remainder 0
+    got = PolynomialQuotient((A + B*x)/(a + b*x**2), a + b*x**2, x)
+    assert (got - (A + B*x)/(a + b*x**2)**2).simplify() == 0
+
 
 def test_PolynomialRemainder():
     assert PolynomialRemainder(log((-a*d + b*c)/(b*(c + d*x)))/(c + d*x), a + b*x, e) == 0
     assert PolynomialRemainder(x**2, x + a, x) == a**2
+
+
+def test_PolynomialRemainder_rational_laurent():
+    """PolynomialRemainder[(A+Bx)/x^2, a+b x^2, x] = -b(A+Bx)/a (p reduced mod q, since
+    x^2 == -a/b mod (a+b x^2) so x^-2 == -b/a). Cross-checked vs real Rubi (ssh pi)."""
+    A, B = symbols('A B')
+    assert PolynomialRemainder((A + B*x)/x**2, a + b*x**2, x) == -A*b/a - B*b*x/a
+    assert PolynomialRemainder((A + B*x)/x, a + b*x**2, x) == B - A*b*x/a
+    assert PolynomialRemainder((A + B*x)/(a + b*x**2), a + b*x**2, x) == 0
 
 def test_Floor():
     assert Floor(S(7.5)) == 7

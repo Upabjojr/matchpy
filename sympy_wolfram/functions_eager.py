@@ -25,6 +25,11 @@ from sympy import (
 from sympy.core.function import Function
 from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
+from sympy.polys.polytools import Poly, quo, rem, invert, cancel
+from sympy.polys.polyerrors import (
+    PolynomialError, PolynomialDivisionFailed, UnificationFailed, NotInvertible,
+    BasePolynomialError,
+)
 
 # MatchPy is a lower layer, so these are safe module-level imports; they back the
 # matchpy->sympy coercion used by FreeQ (see _ensure_sympy).
@@ -305,6 +310,62 @@ def MemberQ(l, u):
         uc = head_to_class(u)
         return uc is not None and any(head_to_class(m) == uc for m in members)
     return u in members
+
+
+def _is_rational_in(p, x):
+    """True iff p is a proper rational function of x with x in its DENOMINATOR (e.g.
+    (A+Bx)/x^2), as opposed to a polynomial in x or something transcendental in x
+    (log(x), ...). Only that case needs Laurent division."""
+    _, den = fraction(together(p))
+    return den != 1 and x in getattr(den, 'free_symbols', set())
+
+
+def PolynomialRemainder(p, q, x):
+    """Mathematica ``PolynomialRemainder[p, q, x]``.
+
+    * p a polynomial in x -> ordinary remainder.
+    * p transcendental in x (log(x), ...) -> Mathematica treats it as degree 0, so it is
+      its own remainder mod a positive-degree q (SymPy raises; fall back to p).
+    * p a RATIONAL function of x -- Rubi's ``Pq*(c x)^m`` with m<0, so ``p=(A+Bx)/x^2`` --
+      -> reduce p MODULO q in K[x]/(q): with ``p = num/den`` and den invertible mod q
+      (``gcd(den,q)=1``; e.g. den a power of x and ``q(0)!=0``), ``p ≡ num*den^(-1)`` (mod q).
+      If den shares a factor with q there is no finite reduction and the remainder is 0
+      (the quotient absorbs everything). Cross-checked vs real Rubi. The old code did an
+      ordinary division here and returned the whole input p (quotient 0), zeroing integrals.
+    """
+    p = sympify(p)
+    q = sympify(q)
+    if _is_rational_in(p, x):
+        num, den = fraction(together(p))
+        try:
+            den_inv = invert(Poly(den, x), Poly(q, x)).as_expr()
+            return rem(num * den_inv, q, x)
+        except (PolynomialError, PolynomialDivisionFailed, UnificationFailed, NotInvertible):
+            return S.Zero
+    try:
+        return rem(p, q, x)
+    except BasePolynomialError:
+        return p
+
+
+def PolynomialQuotient(p, q, x):
+    """Mathematica ``PolynomialQuotient[p, q, x]``. Polynomial p -> SymPy ``quo``;
+    transcendental p in x -> 0 (degree 0); RATIONAL p -> Laurent quotient
+    ``(p - PolynomialRemainder[p,q,x])/q`` (e.g.
+    ``PolynomialQuotient[(A+Bx)/x^2, a+b x^2] = (A+Bx)/(a x^2)``). See PolynomialRemainder.
+    """
+    p = sympify(p)
+    q = sympify(q)
+    if _is_rational_in(p, x):
+        r = PolynomialRemainder(p, q, x)
+        try:
+            return cancel((p - r) / q)
+        except (PolynomialError, ZeroDivisionError):
+            return p / q
+    try:
+        return quo(p, q, x)
+    except BasePolynomialError:
+        return S.Zero
 
 
 def Not(var):

@@ -61,8 +61,8 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And, Or
 from sympy.ntheory.factor_ import (factorint, factorrat)
 from sympy.polys.partfrac import apart
-from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed)
-from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree)
+from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed, NotInvertible)
+from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree, invert)
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect
@@ -85,6 +85,8 @@ from sympy_wolfram.functions_eager import (
     # Standard Wolfram predicates (bodies depend only on SymPy + Simplify/_ensure_sympy);
     # relocated here from utility_functions.
     IntegerQ, MemberQ, PositiveQ,
+    # PolynomialQuotient/Remainder handle the rational-p Laurent case (single impl there).
+    PolynomialQuotient, PolynomialRemainder,
 )
 
 
@@ -7261,31 +7263,10 @@ def Sum_doit(exp, args):
 
     return Sum(exp, args).doit()
 
-def PolynomialQuotient(p, q, x):
-    try:
-        p = poly(p, x)
-        q = poly(q, x)
+# PolynomialQuotient / PolynomialRemainder are standard Wolfram functions (they handle
+# the rational-p Laurent case Rubi needs); the single implementation lives in
+# sympy_wolfram.functions_eager and is imported at the top of this module.
 
-    except:
-        p = poly(p)
-        q = poly(q)
-    try:
-        return quo(p, q).as_expr()
-    except (PolynomialDivisionFailed, UnificationFailed):
-        return p/q
-
-def PolynomialRemainder(p, q, x):
-    try:
-        p = poly(p, x)
-        q = poly(q, x)
-
-    except:
-        p = poly(p)
-        q = poly(q)
-    try:
-        return rem(p, q).as_expr()
-    except (PolynomialDivisionFailed, UnificationFailed):
-        return S(0)
 
 def Floor(x, a = None):
     if a is None:

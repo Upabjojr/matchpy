@@ -54,17 +54,12 @@ class PolynomialQuotient(MathematicaExpr):
         return Expr.__new__(cls, p, q, x)
 
     def _evaluate(self, **kwargs):
-        p, q, x = self.args
-        try:
-            return sympy.quo(p, q, x)
-        except sympy.polys.polyerrors.BasePolynomialError:
-            # Either p is transcendental in x (e.g. contains log(...x...)) --
-            # Mathematica treats such a term as degree 0 in x, so the quotient by a
-            # positive-degree q is 0 (remainder is p) -- OR SymPy could not perform
-            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
-            # coefficients Mathematica would cancel symbolically). Either way fall
-            # back to quotient 0 rather than crashing the whole integration.
-            return sympy.Integer(0)
+        # Delegate to the eager helper (see functions_eager.PolynomialQuotient), which
+        # handles the RATIONAL-p case Rubi relies on (Pq*(c x)^m with m<0). The old inline
+        # sympy.quo(...) here returned 0 on such inputs -- e.g.
+        # PolynomialQuotient[(A+Bx)/x^2, a+b x^2] -> 0 -- silently zeroing whole integrals.
+        from sympy_wolfram.functions_eager import PolynomialQuotient as _PQ
+        return _PQ(*self.args)
 
 
 class PolynomialRemainder(MathematicaExpr):
@@ -74,15 +69,11 @@ class PolynomialRemainder(MathematicaExpr):
         return Expr.__new__(cls, p, q, x)
 
     def _evaluate(self, **kwargs):
-        p, q, x = self.args
-        try:
-            return sympy.rem(p, q, x)
-        except sympy.polys.polyerrors.BasePolynomialError:
-            # p is transcendental in x (Mathematica treats it as degree 0, so it is
-            # its own remainder mod a positive-degree q) OR SymPy could not perform
-            # the division (PolynomialDivisionFailed in the EX domain, e.g. surd
-            # coefficients). Either way return p rather than crashing integration.
-            return p
+        # Delegate to the eager helper (see functions_eager.PolynomialRemainder), which
+        # reduces a RATIONAL p modulo q; the old inline sympy.rem(...) returned the whole
+        # input p on such Rubi inputs, breaking the rules that use the remainder's coeffs.
+        from sympy_wolfram.functions_eager import PolynomialRemainder as _PR
+        return _PR(*self.args)
 
 
 class Rule(MathematicaExpr):

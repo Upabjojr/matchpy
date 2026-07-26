@@ -515,6 +515,25 @@ def _dfs_is_clean(expr) -> bool:
     return not any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
 
 
+def _assert_no_leaked_wildcards(expr, rule):
+    """Fail LOUDLY if a pattern wildcard survived into a rule's matched+reduced result.
+
+    Once a rule has matched, every wildcard in its replacement is bound by the match, and
+    any predicate embedded in the replacement -- ``If[MatchQ[f, f1*Complex(0,j)], ...]``,
+    etc. -- is evaluated at fire time (``If.doit`` runs ``MatchQ.check``, resolving that
+    MatchQ's LOCAL wildcards f1/j). So a wildcard reaching here means such a predicate was
+    NOT evaluated: a real bug in the rule's fire-time evaluation. Raise so it gets found
+    and fixed, rather than silently discarding the result and hiding the defect.
+    """
+    leaked = sorted({s.wildcard_name for s in expr.free_symbols
+                     if getattr(s, 'wildcard_name', None)})
+    if leaked:
+        raise RuntimeError(
+            f"pattern wildcard(s) {leaked} survived into a matched/reduced result from "
+            f"rule {rule}: a predicate condition (MatchQ/EqQ/...) embedded in the "
+            f"replacement was not evaluated at fire time. result={expr}")
+
+
 def _rule_id(replacement):
     """(module_name, rule_number) id parsed from a tracing replacement fn's qualname."""
     qn = getattr(replacement, '__qualname__', '')
@@ -763,6 +782,7 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         if blocked:
             _record(rule, 'rejected (cycle)')
             continue  # rule re-enters the current path -> cycle; try the next rule
+        _assert_no_leaked_wildcards(reduced, rule)
         if _dfs_is_clean(reduced):
             _record(rule, 'accepted')
             applied.append(rule)

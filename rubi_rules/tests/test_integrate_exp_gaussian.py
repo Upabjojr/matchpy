@@ -198,6 +198,11 @@ _SYMBOLIC_COEFF_INTEGRANDS = [
     # CLASS (always truthy) and its `u.args[1:]` handed a bare tuple that the recursion
     # peeled to empty args. See TestFractionalPowerFactorQ.
     x**2*(_c + _d*x)/sqrt(_c**2 - _d**2*x**2),
+    # (c+d x)/(x^2 (a+b x^2)^(3/2)): used to integrate to 0. Rule 1.1.2.y:[7] feeds a
+    # RATIONAL Pq*(c x)^m = (c+d x)/x^2 to PolynomialQuotient/Remainder, whose deferred
+    # nodes returned 0 / the whole input instead of Laurent-dividing. See
+    # test_PolynomialQuotient_rational_laurent.
+    (_c + _d*x)/(x**2*(_a + _b*x**2)**sympy.Rational(3, 2)),
 ]
 
 
