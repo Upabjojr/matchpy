@@ -182,6 +182,47 @@ def test_eager_IntegerQ():
     assert fe.IntegerQ(S(0.0)) is False
 
 
+def test_eager_AtomQ():
+    """AtomQ is a standard Wolfram predicate lifted here; True iff no subexpressions."""
+    assert fe.AtomQ(x)
+    assert not fe.AtomQ(x + 1)
+    assert not fe.AtomQ([a, b])
+
+
+def test_eager_NumberQ():
+    """NumberQ is a standard Wolfram predicate lifted here: True ONLY for explicit numbers
+    -- Integer/Rational/Real or Complex[a,b] with explicit parts. Cross-checked against
+    real Rubi (ssh pi): Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are NOT numbers (symbolic
+    constants / radicals), while I, 3*I and 2+3*I ARE. (SymPy's is_number is broader --
+    it accepts every constant -- which used to make NumberQ[(-1)^(1/4)] wrongly True.)"""
+    assert fe.NumberQ(S(2))
+    assert fe.NumberQ(sympy.Rational(3, 2))
+    assert fe.NumberQ(sympy.sympify(2.5))
+    assert fe.NumberQ(I)
+    assert fe.NumberQ(3 * I)
+    assert fe.NumberQ(2 + 3 * I)
+    assert not fe.NumberQ(sympy.pi)
+    assert not fe.NumberQ(sympy.E)
+    assert not fe.NumberQ(sympy.sqrt(2))
+    assert not fe.NumberQ((-1) ** (S(1) / 4))
+    assert not fe.NumberQ(sympy.sqrt(2) * I)
+    assert not fe.NumberQ(-(-1) ** (S(3) / 4) + (-1) ** (S(1) / 4))  # really sqrt(2), but a Plus of Powers
+    assert not fe.NumberQ(x)
+    assert not fe.NumberQ(2 * x)
+
+
+def test_eager_PolynomialQ():
+    """PolynomialQ is a standard Wolfram predicate lifted here; polynomial test in a variable."""
+    A, B, C = sympy.symbols('A B C')
+    assert not fe.PolynomialQ(x * (-1 + x ** 2), (1 + x) ** (S(1) / 2))
+    assert not fe.PolynomialQ((16 * x + 1) / ((x + 5) ** 2 * (x ** 2 + x + 1)), 2 * x)
+    assert not fe.PolynomialQ(A + b * x + c * x ** 2, x ** 2)
+    assert fe.PolynomialQ(A + B * x + C * x ** 2)
+    assert fe.PolynomialQ(A + B * x ** 4 + C * x ** 2, x ** 2)
+    assert fe.PolynomialQ(x ** 3, x)
+    assert not fe.PolynomialQ(sympy.sqrt(x), x)
+
+
 def test_eager_PositiveQ():
     """PositiveQ is a standard Wolfram predicate lifted here; truthy iff a positive real.
 

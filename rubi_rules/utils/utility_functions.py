@@ -84,7 +84,7 @@ from sympy_wolfram.functions_eager import (
     FreeQ, _ensure_sympy,
     # Standard Wolfram predicates (bodies depend only on SymPy + Simplify/_ensure_sympy);
     # relocated here from utility_functions.
-    IntegerQ, MemberQ, PositiveQ,
+    IntegerQ, MemberQ, PositiveQ, NumberQ, AtomQ, PolynomialQ,
     # PolynomialQuotient/Remainder handle the rational-p Laurent case (single impl there).
     eager_PolynomialQuotient, eager_PolynomialRemainder,
 )
@@ -685,17 +685,8 @@ def eager_FractionalPowerQ(u):
         return eager_FractionQ(u.args[0])
     return eager_PowerQ(u) and eager_FractionQ(u.args[1])
 
-def AtomQ(expr):
-    expr = _ensure_sympy(expr)
-    expr = sympify(expr)
-    if isinstance(expr, (tuple, list, Tuple)):
-        return False
-    if expr in [None, True, False, Exp1]: # [None, True, False] are atoms in mathematica and _E is also an atom
-        return True
-    # elif isinstance(expr, (tuple, list, Tuple)):
-    #     return all(AtomQ(i) for i in expr)
-    else:
-        return expr.is_Atom
+# AtomQ moved to sympy_wolfram.functions_eager (standard Wolfram predicate,
+# no Rubi coupling); imported at the top of this module.
 
 def ExpQ(u):
     return eager_Head(u) in (sym_exp, exp)
@@ -786,30 +777,8 @@ def SinhCoshQ(f):
 
 # Numerator moved to sympy_wolfram.functions_eager (imported above); see Denominator.
 
-def NumberQ(u):
-    # Mathematica NumberQ[u]: True iff u is an EXPLICIT number -- Integer, Rational,
-    # Real, or Complex[a,b] with explicit real/imaginary parts (so I, 3*I, 2+3*I are
-    # numbers, but Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are NOT).
-    #
-    # SymPy's ``is_number`` is broader: it is True for every constant, including
-    # radicals and symbolic constants. Using it made NumberQ[(-1)^(1/4)] wrongly True,
-    # so NumericFactor took its NumberQ branch and returned a complex-looking value
-    # (really Sqrt[2]) instead of Mathematica's 1 -- which then crashed a `< 0` test in
-    # SignOfFactor. Match Mathematica: explicit real, or explicit a+b*I.
-    if isinstance(u, (int, float, complex)):
-        return True
-    u = sympify(u)
-    if isinstance(u, (Integer, Rational, Float)):
-        return True
-    if u.is_number:
-        try:
-            re_u, im_u = u.as_real_imag()
-        except (TypeError, ValueError, AttributeError):
-            return False
-        return (im_u != 0
-                and isinstance(re_u, (Integer, Rational, Float))
-                and isinstance(im_u, (Integer, Rational, Float)))
-    return False
+# NumberQ moved to sympy_wolfram.functions_eager (standard Wolfram predicate,
+# no Rubi coupling); imported at the top of this module.
 
 def NumericQ(u):
     return N(u).is_number
@@ -915,45 +884,8 @@ def eager_ComplexFreeQ(u):
     else:
          return False
 
-def PolynomialQ(u, x = None):
-    if x is None :
-        return u.is_polynomial()
-    if isinstance(x, Pow):
-        if isinstance(x.exp, Integer):
-            deg = degree(u, x.base)
-            if u.is_polynomial(x):
-                if deg % x.exp !=0 :
-                    return False
-                try:
-                    p = Poly(u, x.base)
-                except PolynomialError:
-                    return False
-
-                c_list = p.all_coeffs()
-                coeff_list = c_list[:-1:x.exp]
-                coeff_list += [c_list[-1]]
-                for i in coeff_list:
-                    if not i == 0:
-                        index = c_list.index(i)
-                        c_list[index] = 0
-
-                if all(i == 0 for i in c_list):
-                    return True
-                else:
-                    return False
-
-            else:
-                return False
-
-        elif isinstance(x.exp, (Float, Rational)): #not full - proof
-            if FreeQ(simplify(u), x.base) and eager_Exponent(u, x.base) == 0:
-                if not all(FreeQ(u, i) for i in x.base.free_symbols):
-                    return False
-
-    if isinstance(x, Mul):
-        return all(PolynomialQ(u, i) for i in x.args)
-
-    return u.is_polynomial(x)
+# PolynomialQ moved to sympy_wolfram.functions_eager (standard Wolfram predicate,
+# no Rubi coupling); imported at the top of this module.
 
 def FactorSquareFree(u):
     return sqf(u)

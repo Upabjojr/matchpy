@@ -416,10 +416,8 @@ def test_FractionalPowerQ():
     assert eager_FractionalPowerQ(a**(S(2)/S(3)))
     assert eager_FractionalPowerQ(a**sqrt(2)) == False
 
-def test_AtomQ():
-    assert AtomQ(x)
-    assert not AtomQ(x+1)
-    assert not AtomQ([a, b])
+# test_AtomQ moved to sympy_wolfram/tests/test_mathematica_functions.py::test_eager_AtomQ
+# (AtomQ is a standard Wolfram predicate, now defined in sympy_wolfram).
 
 def test_ExpQ():
     assert ExpQ(E**2)
@@ -617,15 +615,8 @@ def test_BinomialDegree():
     assert eager_BinomialDegree(2 + x*(9*x), x) == 2
     assert eager_BinomialDegree(x**9, x) == 9
 
-def test_PolynomialQ():
-    assert not PolynomialQ(x*(-1 + x**2), (1 + x)**(S(1)/2))
-    assert not PolynomialQ((16*x + 1)/((x + 5)**2*(x**2 + x + 1)), 2*x)
-    C = Symbol('C')
-    assert not PolynomialQ(A + b*x + c*x**2, x**2)
-    assert PolynomialQ(A + B*x + C*x**2)
-    assert PolynomialQ(A + B*x**4 + C*x**2, x**2)
-    assert PolynomialQ(x**3, x)
-    assert not PolynomialQ(sqrt(x), x)
+# test_PolynomialQ moved to sympy_wolfram/tests/test_mathematica_functions.py::test_eager_PolynomialQ
+# (PolynomialQ is a standard Wolfram predicate, now defined in sympy_wolfram).
 
 def test_PolyQ():
     assert eager_PolyQ(-2*a*d**3*e**2 + x**6*(a*e**5 - b*d*e**4 + c*d**2*e**3)\
@@ -670,27 +661,9 @@ def test_PosQ():
 def test_NumericQ():
     assert NumericQ(sin(cos(2)))
 
-def test_NumberQ():
-    # Mathematica NumberQ[u] is True ONLY for explicit numbers -- Integer/Rational/Real
-    # or Complex[a,b] with explicit parts. Cross-checked against real Rubi (ssh pi):
-    # Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are all NOT numbers (they are symbolic
-    # constants / radicals), while I, 3*I and 2+3*I ARE. (SymPy's is_number is broader
-    # -- it accepts every constant -- which used to make NumberQ[(-1)^(1/4)] wrongly
-    # True and crash SignOfFactor; see test_SignOfFactor_complex_numeric_factor.)
-    assert NumberQ(S(2))
-    assert NumberQ(Rational(3, 2))
-    assert NumberQ(sympify(2.5))
-    assert NumberQ(I)
-    assert NumberQ(3*I)
-    assert NumberQ(2 + 3*I)
-    assert not NumberQ(pi)
-    assert not NumberQ(E)
-    assert not NumberQ(sqrt(2))
-    assert not NumberQ((-1)**(S(1)/4))
-    assert not NumberQ(sqrt(2)*I)
-    assert not NumberQ(-(-1)**(S(3)/4) + (-1)**(S(1)/4))   # really sqrt(2), but a Plus of Powers
-    assert not NumberQ(x)
-    assert not NumberQ(2*x)
+# test_NumberQ moved to sympy_wolfram/tests/test_mathematica_functions.py::test_eager_NumberQ
+# (NumberQ is a standard Wolfram predicate, now defined in sympy_wolfram). The SignOfFactor
+# interaction it guards is still covered by test_SignOfFactor_complex_numeric_factor below.
 
 def test_CoefficientList():
     assert CoefficientList(1 + a*x, x) == [1, a]

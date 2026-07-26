@@ -19,13 +19,14 @@ so the coupling was spurious.  They are inlined below and the functions live her
 """
 import sympy
 from sympy import (
-    Add, Basic, I, Integer, Mul, Pow, S, Symbol, Tuple,
+    Add, Basic, Float, I, Integer, Mul, Pow, Rational, S, Symbol, Tuple,
     expand, oo, postorder_traversal, sympify, together, zoo,
 )
+from sympy.core.numbers import Exp1
 from sympy.core.function import Function
 from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
-from sympy.polys.polytools import Poly, quo, rem, invert, cancel
+from sympy.polys.polytools import Poly, quo, rem, invert, cancel, degree
 from sympy.polys.polyerrors import (
     PolynomialError, PolynomialDivisionFailed, UnificationFailed, NotInvertible,
     BasePolynomialError,
@@ -310,6 +311,87 @@ def MemberQ(l, u):
         uc = head_to_class(u)
         return uc is not None and any(head_to_class(m) == uc for m in members)
     return u in members
+
+
+def AtomQ(expr):
+    """Mathematica ``AtomQ[expr]`` — True iff ``expr`` has no subexpressions."""
+    expr = _ensure_sympy(expr)
+    expr = sympify(expr)
+    if isinstance(expr, (tuple, list, Tuple)):
+        return False
+    if expr in [None, True, False, Exp1]:  # [None, True, False] are atoms in mathematica and _E is also an atom
+        return True
+    else:
+        return expr.is_Atom
+
+
+def NumberQ(u):
+    """Mathematica ``NumberQ[u]`` — True iff ``u`` is an EXPLICIT number."""
+    # Mathematica NumberQ[u]: True iff u is an EXPLICIT number -- Integer, Rational,
+    # Real, or Complex[a,b] with explicit real/imaginary parts (so I, 3*I, 2+3*I are
+    # numbers, but Pi, E, Sqrt[2], (-1)^(1/4), Sqrt[2]*I are NOT).
+    #
+    # SymPy's ``is_number`` is broader: it is True for every constant, including
+    # radicals and symbolic constants. Using it made NumberQ[(-1)^(1/4)] wrongly True,
+    # so NumericFactor took its NumberQ branch and returned a complex-looking value
+    # (really Sqrt[2]) instead of Mathematica's 1 -- which then crashed a `< 0` test in
+    # SignOfFactor. Match Mathematica: explicit real, or explicit a+b*I.
+    if isinstance(u, (int, float, complex)):
+        return True
+    u = sympify(u)
+    if isinstance(u, (Integer, Rational, Float)):
+        return True
+    if u.is_number:
+        try:
+            re_u, im_u = u.as_real_imag()
+        except (TypeError, ValueError, AttributeError):
+            return False
+        return (im_u != 0
+                and isinstance(re_u, (Integer, Rational, Float))
+                and isinstance(im_u, (Integer, Rational, Float)))
+    return False
+
+
+def PolynomialQ(u, x=None):
+    """Mathematica ``PolynomialQ[u]`` / ``PolynomialQ[u, x]`` — polynomial test."""
+    if x is None:
+        return u.is_polynomial()
+    if isinstance(x, Pow):
+        if isinstance(x.exp, Integer):
+            deg = degree(u, x.base)
+            if u.is_polynomial(x):
+                if deg % x.exp != 0:
+                    return False
+                try:
+                    p = Poly(u, x.base)
+                except PolynomialError:
+                    return False
+
+                c_list = p.all_coeffs()
+                coeff_list = c_list[:-1:x.exp]
+                coeff_list += [c_list[-1]]
+                for i in coeff_list:
+                    if not i == 0:
+                        index = c_list.index(i)
+                        c_list[index] = 0
+
+                if all(i == 0 for i in c_list):
+                    return True
+                else:
+                    return False
+
+            else:
+                return False
+
+        elif isinstance(x.exp, (Float, Rational)):  # not full - proof
+            if FreeQ(simplify(u), x.base) and eager_Exponent(u, x.base) == 0:
+                if not all(FreeQ(u, i) for i in x.base.free_symbols):
+                    return False
+
+    if isinstance(x, Mul):
+        return all(PolynomialQ(u, i) for i in x.args)
+
+    return u.is_polynomial(x)
 
 
 def _is_rational_in(p, x):

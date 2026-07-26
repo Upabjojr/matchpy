@@ -111,4 +111,59 @@ class MemberQ(MathematicaConstraint):
         return f"MemberQ({self._u}, {self._members})"
 
 
-__all__ = ['FreeQ', 'IntegerQ', 'PositiveQ', 'MemberQ']
+class NumberQ(MathematicaConstraint):
+    """Constraint: matched value is an explicit numeric quantity.
+
+    Delegates to the eager :func:`sympy_wolfram.functions_eager.NumberQ`.
+    """
+    def __init__(self, u):
+        self._u = self.args[0]
+
+    def check(self, **kwargs):
+        from sympy_wolfram.functions_eager import NumberQ as _NumberQ
+        sk = self._resolve_all(kwargs)
+        u = self._resolve(self._u, sk)
+        return _NumberQ(u)
+
+    def __repr__(self):
+        return f"NumberQ({self._u})"
+
+
+class AtomQ(MathematicaConstraint):
+    """Constraint: matched value is atomic (symbol, number, etc.).
+
+    Delegates to the eager :func:`sympy_wolfram.functions_eager.AtomQ`.
+    """
+    def __init__(self, u):
+        self._u = self.args[0]
+
+    def check(self, **kwargs):
+        from sympy_wolfram.functions_eager import AtomQ as _AtomQ
+        sk = self._resolve_all(kwargs)
+        u = self._resolve(self._u, sk)
+        return _AtomQ(u)
+
+    def __repr__(self):
+        return f"AtomQ({self._u})"
+
+
+class PolynomialQ(MathematicaConstraint):
+    """Constraint: matched value is a polynomial in the integration variable.
+
+    Delegates to the eager :func:`sympy_wolfram.functions_eager.PolynomialQ`.
+    """
+    def __init__(self, u, x):
+        self._u = self.args[0]
+        self._x = self.args[1]
+
+    def check(self, **kwargs):
+        from sympy_wolfram.functions_eager import PolynomialQ as _PolynomialQ
+        sk = self._resolve_all(kwargs)
+        u = self._resolve(self._u, sk)
+        return _PolynomialQ(u, self._x)
+
+    def __repr__(self):
+        return f"PolynomialQ({self._u}, {self._x})"
+
+
+__all__ = ['FreeQ', 'IntegerQ', 'PositiveQ', 'MemberQ', 'NumberQ', 'AtomQ', 'PolynomialQ']

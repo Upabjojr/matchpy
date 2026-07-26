@@ -13,7 +13,7 @@ from sympy.logic.boolalg import Boolean, Not
 from sympy_matching.wild import WildSymbol
 from sympy_wolfram.objects import MathematicaExpr
 from sympy_wolfram.constraints import MathematicaConstraint
-from sympy_wolfram.constraints_wolfram import FreeQ, IntegerQ, PositiveQ
+from sympy_wolfram.constraints_wolfram import FreeQ, IntegerQ, PositiveQ, NumberQ, AtomQ, PolynomialQ
 
 
 x = Symbol('x')
@@ -147,3 +147,49 @@ class TestPositiveQ:
         c = PositiveQ('n')
         assert c.check(n=Integer(-5)) == False
         assert c.check(n=Integer(0)) == False
+
+
+# ---------------------------------------------------------------------------
+# NumberQ / AtomQ / PolynomialQ (standard Wolfram predicates lifted here)
+# ---------------------------------------------------------------------------
+
+class TestNumberQ:
+    """Tests for NumberQ constraint (explicit numbers only)."""
+
+    def test_explicit_numbers(self):
+        c = NumberQ('n')
+        assert c.check(n=Integer(2)) is True
+        assert c.check(n=Rational(3, 2)) is True
+        assert c.check(n=Integer(2) + 3 * sympy.I) is True
+
+    def test_not_numbers(self):
+        c = NumberQ('n')
+        assert c.check(n=pi) is False
+        assert c.check(n=sympy.sqrt(2)) is False
+        assert c.check(n=x) is False
+
+
+class TestAtomQ:
+    """Tests for AtomQ constraint."""
+
+    def test_atoms(self):
+        c = AtomQ('a')
+        assert c.check(a=x) is True
+        assert c.check(a=Integer(5)) is True
+
+    def test_not_atoms(self):
+        c = AtomQ('a')
+        assert c.check(a=x + 1) is False
+
+
+class TestPolynomialQ:
+    """Tests for PolynomialQ constraint (polynomial in the integration variable)."""
+
+    def test_polynomial(self):
+        c = PolynomialQ('u', x)
+        assert c.check(u=x ** 3) is True
+        assert c.check(u=Integer(1) + x + x ** 2) is True
+
+    def test_not_polynomial(self):
+        c = PolynomialQ('u', x)
+        assert c.check(u=sympy.sqrt(x)) is False

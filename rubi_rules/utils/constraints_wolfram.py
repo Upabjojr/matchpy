@@ -13,11 +13,13 @@ from sympy import Symbol
 from sympy_matching.conversion import matchpy_to_sympy
 from sympy_wolfram.constraints import MathematicaConstraint
 
-# FreeQ, IntegerQ, PositiveQ and MemberQ are standard Wolfram-library constraints
-# (not Rubi-specific), so they now live in sympy_wolfram; re-exported here so
-# rubi_rules.utils and the generated rules keep importing them from this module
-# unchanged.
-from sympy_wolfram.constraints_wolfram import FreeQ, IntegerQ, PositiveQ, MemberQ
+# FreeQ, IntegerQ, PositiveQ, MemberQ, NumberQ, AtomQ and PolynomialQ are standard
+# Wolfram-library constraints (not Rubi-specific), so they now live in sympy_wolfram;
+# re-exported here so rubi_rules.utils and the generated rules keep importing them
+# from this module unchanged.
+from sympy_wolfram.constraints_wolfram import (
+    FreeQ, IntegerQ, PositiveQ, MemberQ, NumberQ, AtomQ, PolynomialQ,
+)
 
 
 # =============================================================================
@@ -50,19 +52,6 @@ class EvenQ(MathematicaConstraint):
         return f"EvenQ({self._u})"
 
 
-class NumberQ(MathematicaConstraint):
-    """Constraint: matched value is an explicit numeric quantity."""
-    def __init__(self, u):
-        self._u = self.args[0]
-    def check(self, **kwargs):
-        from .utility_functions import NumberQ as _NumberQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        return _NumberQ(u)
-    def __repr__(self):
-        return f"NumberQ({self._u})"
-
-
 class NumericQ(MathematicaConstraint):
     """Constraint: matched value is numeric (including constants like pi, E)."""
     def __init__(self, u):
@@ -74,19 +63,6 @@ class NumericQ(MathematicaConstraint):
         return _NumericQ(u)
     def __repr__(self):
         return f"NumericQ({self._u})"
-
-
-class AtomQ(MathematicaConstraint):
-    """Constraint: matched value is atomic (symbol, number, etc.)."""
-    def __init__(self, u):
-        self._u = self.args[0]
-    def check(self, **kwargs):
-        from .utility_functions import AtomQ as _AtomQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        return _AtomQ(u)
-    def __repr__(self):
-        return f"AtomQ({self._u})"
 
 
 class NegativeQ(MathematicaConstraint):
@@ -117,20 +93,6 @@ class PrimeQ(MathematicaConstraint):
 # =============================================================================
 # Two-argument predicates
 # =============================================================================
-
-class PolynomialQ(MathematicaConstraint):
-    """Constraint: matched value is a polynomial in the integration variable."""
-    def __init__(self, u, x):
-        self._u = self.args[0]
-        self._x = self.args[1]
-    def check(self, **kwargs):
-        from .utility_functions import PolynomialQ as _PolynomialQ
-        sk = self._resolve_all(kwargs)
-        u = self._resolve(self._u, sk)
-        return _PolynomialQ(u, self._x)
-    def __repr__(self):
-        return f"PolynomialQ({self._u}, {self._x})"
-
 
 class TrueQ(MathematicaConstraint):
     """Constraint: matched value is explicitly True."""
