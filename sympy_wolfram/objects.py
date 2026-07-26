@@ -385,6 +385,20 @@ class If(MathematicaExpr):
 
     def doit(self, **kwargs):
         cond = _eval(self.args[0], **kwargs)
+        # A predicate used as an If CONDITION -- e.g. If[MatchQ[f, f1*Complex(0,j)], ...]
+        # embedded in a rule's REPLACEMENT -- is a MathematicaConstraint, not a raw
+        # boolean. In Wolfram, MatchQ[...] evaluates to True/False (resolving its LOCAL
+        # pattern wildcards f1/j internally), so the If picks a branch. `_eval` alone
+        # leaves it as the constraint object (a predicate's doit() returns self), so the
+        # If would stay unevaluated and its MatchQ-local wildcards would leak into the
+        # result. Evaluate the constraint here via .check(), exactly as Wolfram does.
+        # Lazy import: constraints.py imports MathematicaExpr from this module.
+        from sympy_wolfram.constraints import MathematicaConstraint
+        if isinstance(cond, MathematicaConstraint):
+            try:
+                cond = S.true if cond.check(**kwargs) else S.false
+            except Exception:
+                pass
         if _is_true(cond):
             return _eval(self.args[1], **kwargs)
         if _is_false(cond):

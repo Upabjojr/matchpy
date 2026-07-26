@@ -132,6 +132,27 @@ class TestIf:
         result = If(cond, Integer(1), Integer(-1), Integer(0)).doit()
         assert result == Integer(0)
 
+    def test_if_evaluates_a_matchq_constraint_condition(self):
+        """A predicate used as an If CONDITION (e.g. If[MatchQ[f, f1*Complex(0,j)], ...]
+        in a rule's replacement) is a MathematicaConstraint, not a raw boolean. Wolfram
+        evaluates MatchQ[...] to True/False -- resolving its LOCAL pattern wildcards (f1/j)
+        internally -- so the If picks a branch. If.doit must do the same via .check();
+        otherwise the If stays unevaluated and the local wildcards leak into the result.
+        Cross-checked on real Wolfram: MatchQ[b/d, f1*Complex[0,j]] is False, [2 I b] True.
+        """
+        from rubi_rules.utils.constraints_wolfram import MatchQ
+        from sympy_matching.wild import WildSymbol
+        from sympy import I, symbols
+        b, d = symbols('b d')
+        f1, j = WildSymbol('f1'), WildSymbol('j')
+        A, B = Symbol('A'), Symbol('B')
+        # b/d is real -> does NOT match a pure-imaginary pattern -> else branch, no wildcards
+        res_real = If(MatchQ(b / d, f1 * I * j), A, B).doit()
+        assert res_real == B
+        assert not any(getattr(s, 'wildcard_name', None) for s in res_real.free_symbols)
+        # 2*I*b is imaginary -> matches -> then branch
+        assert If(MatchQ(2 * I * b, f1 * I * j), A, B).doit() == A
+
 
 class TestWith:
     """Tests for With: Mathematica local constant substitution.

@@ -334,11 +334,17 @@ def matchpy_to_sympy(expr):
 
     if isinstance(expr, Wildcard) and getattr(expr, 'variable_name', None):
         # An unbound wildcard reaching here is a pattern variable LOCAL to a MatchQ
-        # embedded in a replacement, e.g. If[MatchQ[f, f1*Complex(0, j)], ...] -- f1/j/e1
-        # are bound only WHEN that MatchQ runs, not by the outer rule match. Convert it
-        # back to a WildSymbol so the MatchQ can re-match and resolve it at .doit();
-        # leaving it a raw MatchPy Wildcard makes the enclosing SymPy node fail to
-        # sympify (SympifyError: Wildcard.dot('f1')).
+        # embedded in a rule's REPLACEMENT, e.g. If[MatchQ[f, f1*Complex(0, j)], ...]:
+        # f1/j/e1 are NOT bound by the outer rule match, only by the MatchQ's own pattern
+        # matching WHEN that MatchQ runs. matchpy_to_sympy runs BEFORE the replacement's
+        # .doit(), so at this instant the wildcard is legitimately still free -- convert it
+        # to a WildSymbol so the round-trip does not crash (SympifyError: Wildcard.dot).
+        # `If.doit()` then evaluates the MatchQ (see sympy_wolfram.objects.If.doit), which
+        # resolves f1/j/e1 exactly as Wolfram does, so NO wildcard survives into the final
+        # antiderivative. NOTE FOR FUTURE AGENTS: a wildcard appearing in a *finished*
+        # result is therefore always a real bug -- some predicate condition (MatchQ/EqQ/...)
+        # was not evaluated at fire time. Fix that evaluation; do NOT paper over it by
+        # discarding wildcard-laden results downstream.
         return WildSymbol(expr.variable_name)
 
     return from_expression(expr)
