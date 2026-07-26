@@ -747,3 +747,40 @@ class TestMatchQEnforcementIsGated:
         cc = self._cc(FreeQ(WildSymbol('u'), xx), enforce=False)
         assert cc(Substitution({'u': Symbol('a')})) is True
         assert cc(Substitution({'u': xx})) is False
+
+
+class TestGenericBooleanConstraintChecker:
+    """Regression: a generic SymPy-Boolean guard (NOT a MathematicaConstraint) whose
+    operands are WildSymbols and contain a deferred node -- e.g. the GCD-reduction guard
+    ``Ne(GCD(m+1, n), 1)`` -- must evaluate correctly. Two bugs made it silently False:
+      * ``check_subs`` keyed the substitution on ``Symbol(name)``, but the guard holds
+        ``WildSymbol(name)`` (a Symbol SUBCLASS that is != ``Symbol(name)``), so nothing
+        substituted; and
+      * the deferred ``GCD`` node was never ``doit()``'d, so the relational stayed symbolic.
+    The dead guard disabled the ``x^m/(a+b x^n)`` GCD-reduction rules, so ``Int[x/(a+b x^6)]``
+    fell through to the odd-m root-sum rule and returned a wrong ``I*ArcTan`` answer.
+    """
+
+    def _checker(self, constraint):
+        from rubi_rules.base_objects import _make_matchpy_constraint
+        return _make_matchpy_constraint(constraint, ['m', 'n'], {'m', 'n'})
+
+    def test_ne_gcd_guard_evaluates_with_wildsymbols_and_deferred_node(self):
+        from matchpy.expressions.substitution import Substitution
+        from rubi_rules.utils.rubi_utils import GCD
+        m_, n_ = WildSymbol('m'), WildSymbol('n')
+        cc = self._checker(sympy.Ne(GCD(m_ + 1, n_), 1))
+        # GCD(1+1, 6) = 2 != 1 -> guard holds (this is the case that used to fail)
+        assert cc(Substitution({'m': sympy.Integer(1), 'n': sympy.Integer(6)})) is True
+        # GCD(3+1, 6) = 2 != 1 -> holds
+        assert cc(Substitution({'m': sympy.Integer(3), 'n': sympy.Integer(6)})) is True
+        # GCD(1+1, 3) = 1 -> guard correctly FAILS (Ne(1, 1) is False)
+        assert cc(Substitution({'m': sympy.Integer(1), 'n': sympy.Integer(3)})) is False
+
+    def test_eq_guard_with_wildsymbol_still_works(self):
+        """A plain Eq guard over a WildSymbol substitutes and evaluates too."""
+        from matchpy.expressions.substitution import Substitution
+        n_ = WildSymbol('n')
+        cc = self._checker(sympy.Eq(n_, 6))
+        assert cc(Substitution({'n': sympy.Integer(6)})) is True
+        assert cc(Substitution({'n': sympy.Integer(5)})) is False

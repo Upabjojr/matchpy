@@ -81,6 +81,11 @@ FULL_RULESET_INTEGRANDS = [
     # test used to crash with TypeError on that non-real form. Guards the NumberQ /
     # SignOfFactor fix (see test_SignOfFactor_complex_numeric_factor).
     (1/(x**4 + 1), None),
+    # x^3/(1-x^6): GCD(4,6)=2 -> reduce via u=x^2 to the real cubic result. Without the
+    # generic-Boolean constraint fix, the GCD-reduction rule was disabled and the odd-m
+    # root-sum rule produced a wrong I*ArcTan. (Symbolic-coefficient siblings x/(a+b x^6)
+    # etc. are in _SYMBOLIC_COEFF_INTEGRANDS.)
+    (x**3/(1 - x**6), None),
     (1/sqrt(x**2 + 1), None), (sqrt(x**2 + 1), None), (1/(x*(x + 1)), None),
     (1/(x*(6*x + 4)), None),   # Simplify nc_simplify RecursionError fix
     # hyper/TupleArg round-trip fix + DerivativeDivides/Condition bool-leak fix:
@@ -180,6 +185,14 @@ _SYMBOLIC_COEFF_INTEGRANDS = [
     x/(_a + _b*x)**2,
     x**2/(_a + _b*x)**2,
     x**3/(_a + _b*x)**2,
+    # x^m/(a+b x^n) with GCD(m+1,n) > 1: the GCD-reduction rule (substitute u=x^GCD)
+    # must fire ahead of the odd-m root-sum rule. Its guard is a bare relational
+    # `Ne(GCD(m+1,n), 1)` whose WildSymbols never substituted (Symbol('m') !=
+    # WildSymbol('m')) and whose GCD stayed unevaluated -> the rule was silently
+    # disabled and these returned a WRONG I*ArcTan answer. See test_constraint_checker_*.
+    x/(_a + _b*x**6),
+    x**3/(_a + _b*x**6),
+    x/(_a + _b*x**10),
 ]
 
 

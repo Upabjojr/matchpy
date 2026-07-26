@@ -24,6 +24,7 @@ already-inert forms, so the fallback never re-fires. See the project memory note
 ``rubi-trig-deactivation-dispatch``.
 """
 import os
+import re
 from pathlib import Path
 import sympy
 from sympy.core.parameters import _exp_is_pow
@@ -206,16 +207,30 @@ def _make_constraint_checker(constraint_obj, variables):
             return constraint_obj.check(**kwargs)
         return check_rubi
 
-    # Generic SymPy Boolean: use .subs() approach
+    # Generic SymPy Boolean: use .subs() approach. The constraint holds WildSymbol('m')
+    # etc. (a Symbol SUBCLASS that is NOT equal to Symbol('m')), so we substitute by
+    # matching the constraint's own free symbols BY NAME -- keying the subs dict on a
+    # plain Symbol(name) silently no-ops and leaves the wildcards in place.
+    _free_by_name = {getattr(s, 'name', None): s for s in constraint_obj.free_symbols}
+
     def check_subs(**kwargs):
         subs_dict = {}
         for name in variables:
             if name in kwargs:
-                val = kwargs[name]
-                val = matchpy_to_sympy(val)
-                # Try to find WildSymbol in constraint's free_symbols
-                subs_dict[sympy.Symbol(name)] = val
+                val = matchpy_to_sympy(kwargs[name])
+                subs_dict[_free_by_name.get(name, sympy.Symbol(name))] = val
         result = constraint_obj.subs(subs_dict)
+        # Evaluate any deferred MathematicaExpr nodes the substitution leaves behind.
+        # A bare relational such as Ne(GCD(m+1,n),1) keeps GCD(...) unevaluated, so the
+        # relational stays symbolic and `== True` is wrongly False -- silently disabling
+        # the rule (this is what stopped the x^m/(a+b x^n) GCD-reduction rules from ever
+        # firing, so Int[x/(a+b x^6)] fell through to the odd-m root-sum rule and gave a
+        # wrong I*ArcTan result). doit() reduces GCD(2,6) -> 2, so Ne(2,1) -> True.
+        if hasattr(result, 'doit'):
+            try:
+                result = result.doit()
+            except Exception:
+                pass
         return result == True
     return check_subs
 
@@ -428,7 +443,9 @@ def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneRep
     # integrands we have already visited (`seen`) is a cycle — skip it and try the
     # next matching rule. A rule whose Condition fails raises StopIteration; skip
     # it too. If nothing applies, return the integral unchanged.
-    for replacement, subst in replacer.matcher.match(mp_expr):
+    matches = sorted(replacer.matcher.match(mp_expr),
+                     key=lambda rs: _rule_priority(rs[0]))
+    for replacement, subst in matches:
         try:
             result_mp, matched_rule = replacement(**subst)
         except StopIteration:
@@ -504,6 +521,25 @@ def _rule_id(replacement):
         except ValueError:
             pass
     return (qn or repr(replacement), None)
+
+
+def _rule_priority(replacement):
+    """Sort key restoring Rubi's ordered first-match priority.
+
+    Rubi tries its rules in LOAD ORDER -- by file (its dotted section number
+    ``1.1.3.2``), then by position within the file (the rule number). MatchPy instead
+    yields matches in an internal hash order, so when several rules match the same
+    integrand the first *clean* result is arbitrary. That silently picks the wrong rule
+    when two rules both integrate cleanly but only the earlier one is valid here -- e.g.
+    the GCD reduction ``1.1.3.2:[16]`` (substitute x^2, giving the real cubic result)
+    MUST beat the root-sum ``1.1.3.2:[37]`` (whose ``(-1)^(m/2)`` is imaginary for odd m)
+    for ``Int[x/(a+b x^6)]``. Sorting the matches by this key before trying them makes
+    the first clean result the one Rubi itself would apply.
+    """
+    mod, num = _rule_id(replacement)
+    m = re.match(r'[\d.]+', mod or '')
+    section = tuple(int(p) for p in m.group().split('.') if p) if m else ()
+    return (section, mod or '', num if num is not None else 1 << 30)
 
 
 def _dfs_reduce_result(result, x, path, replacer, applied, budget, trace=None):
@@ -704,7 +740,12 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
 
     fallback = None
     matched_any = False
-    for replacement, subst in replacer.matcher.match(mp_expr):
+    # Try the matches in Rubi's own rule-priority order (see _rule_priority), NOT the
+    # matcher's hash order, so that when several rules integrate cleanly the one Rubi
+    # would actually apply (the earliest) wins.
+    matches = sorted(replacer.matcher.match(mp_expr),
+                     key=lambda rs: _rule_priority(rs[0]))
+    for replacement, subst in matches:
         try:
             result_mp, rule = replacement(**subst)
         except StopIteration:
