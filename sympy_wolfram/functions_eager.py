@@ -292,6 +292,16 @@ def eager_Part(lst, i):
     return Util_Part(i, lst).doit()
 
 
+def _eager_apart_impl(u, x):
+    u = sympify(u)
+    if u.is_rational_function(x):
+        return apart(u, x)
+    return u
+
+
+_eager_apart_cached = _functools.lru_cache(maxsize=20000)(_eager_apart_impl)
+
+
 def eager_Apart(u, x):
     """Mathematica ``Apart[expr, x]`` — partial-fraction decomposition in ``x``.
 
@@ -299,11 +309,16 @@ def eager_Apart(u, x):
     (matching Mathematica, and guarding SymPy's ``apart`` which raises on non-rational
     input).  The rational-function test is SymPy's own ``is_rational_function`` -- the
     generic equivalent of what Rubi's ``RationalFunctionQ`` computes here.
+
+    MEMOISED (bounded): sympy's ``apart`` over denominators that factor only through
+    algebraic extensions is very expensive -- profiling Int[(x^4+1)/(x^8+3x^4+1)]
+    showed 65% of the runtime inside apart on the same expressions, re-requested
+    throughout the DFS. Unhashable input falls back to a direct call.
     """
-    u = sympify(u)
-    if u.is_rational_function(x):
-        return apart(u, x)
-    return u
+    try:
+        return _eager_apart_cached(u, x)
+    except TypeError:
+        return _eager_apart_impl(u, x)
 
 
 def eager_PositiveQ(var):

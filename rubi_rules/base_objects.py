@@ -481,9 +481,28 @@ def _try_deactivate_trig(f, x, path, replacer, budget, trace):
         return None
     local: list = []
     reduced, blocked = _dfs_reduce_int(inert, x, path, replacer, local, budget, trace)
-    if blocked or not _dfs_is_clean(reduced):
-        return None
-    return eager_ActivateTrig(reduced), local
+    if not blocked and _dfs_is_clean(reduced):
+        return eager_ActivateTrig(reduced), local
+    # Second chance: the generated inert corpus is CSC-PRIMARY -- its 4.5 binomial
+    # rules exist only over InertCsc (mixed rules pair InertCos/InertCot WITH
+    # InertCsc), but UnifyInertTrigFunction (faithful to real Rubi, whose corpus has
+    # both halves) can emit bare sec/cos/cot forms no rule matches -- e.g.
+    # 1/(csc(x)+1) unified to 1/(1 - InertSec(x+pi/2)) and died as CannotIntegrate.
+    # If the unified form failed to reduce and still carries a non-primary head,
+    # retry with the all-primary shift sec(v)->csc(v+pi/2), cos(v)->sin(v+pi/2),
+    # cot(v)->-tan(v+pi/2) (exact identities), which the csc-primary rules cover.
+    from rubi_rules.utils.inert_functions import (
+        InertSec, InertCos, InertCot, InertCsc, InertSin, InertTan)
+    if inert.has(InertSec, InertCos, InertCot):
+        shifted = inert.replace(InertSec, lambda v: InertCsc(v + sympy.pi/2))
+        shifted = shifted.replace(InertCos, lambda v: InertSin(v + sympy.pi/2))
+        shifted = shifted.replace(InertCot, lambda v: -InertTan(v + sympy.pi/2))
+        if shifted != inert:
+            local2: list = []
+            reduced2, blocked2 = _dfs_reduce_int(shifted, x, path, replacer, local2, budget, trace)
+            if not blocked2 and _dfs_is_clean(reduced2):
+                return eager_ActivateTrig(reduced2), local2
+    return None
 
 
 def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
