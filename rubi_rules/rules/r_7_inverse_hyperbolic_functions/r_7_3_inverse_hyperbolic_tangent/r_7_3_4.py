@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -307,7 +308,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_n_, x),
         constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(Discriminant(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(InverseFunctionOfLinear(u_, x))), EqQ(Head(InverseFunctionOfLinear(u_, x)), HeadRef(sympy.atanh)), EqQ(-D(v_, x)**2 + Discriminant(v_, x)*Part(InverseFunctionOfLinear(u_, x), 1)**2, 0),),
-        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, ((((Integer(-1) * Discriminant(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * (sympy.sech(x))**((Integer(2) * (_n_ + Integer(1))))), x), x), x, tmp))),
+        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, (-Discriminant(v_, x)/(4*Coefficient(v_, x, 2)))**_n_*Subst(Int(SimplifyIntegrand(SubstForInverseFunction(u_, tmp, x)*sech(x)**(2*_n_ + 2), x), x), x, tmp)/Coefficient(Part(tmp, 1), x, 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=25,
     ),
@@ -315,7 +316,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(u_*v_**_n_, x),
         constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(Discriminant(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(InverseFunctionOfLinear(u_, x))), EqQ(Head(InverseFunctionOfLinear(u_, x)), HeadRef(sympy.acoth)), EqQ(-D(v_, x)**2 + Discriminant(v_, x)*Part(InverseFunctionOfLinear(u_, x), 1)**2, 0),),
-        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, ((((Integer(-1) * Discriminant(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * ((Integer(-1) * (sympy.csch(x))**(Integer(2))))**((_n_ + Integer(1)))), x), x), x, tmp))),
+        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, (-Discriminant(v_, x)/(4*Coefficient(v_, x, 2)))**_n_*Subst(Int(SimplifyIntegrand((-csch(x)**2)**(_n_ + 1)*SubstForInverseFunction(u_, tmp, x), x), x), x, tmp)/Coefficient(Part(tmp, 1), x, 1)),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=26,
     ),

@@ -146,6 +146,66 @@ class SumWolfram(MathematicaExpr):
 Sum = SumWolfram
 
 
+class Factorial(MathematicaExpr):
+    """Mathematica ``Factorial[z]`` (``z!``)."""
+
+    def __new__(cls, z):
+        return Expr.__new__(cls, sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_Factorial(*self.args)
+
+
+class Zeta(MathematicaExpr):
+    """Mathematica ``Zeta[s]`` / ``Zeta[s, a]`` — Riemann and Hurwitz zeta."""
+
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *[sympy.sympify(a) for a in args])
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_Zeta(*self.args)
+
+
+class PolyGamma(MathematicaExpr):
+    """Mathematica ``PolyGamma[z]`` / ``PolyGamma[n, z]``."""
+
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *[sympy.sympify(a) for a in args])
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_PolyGamma(*self.args)
+
+
+class BesselJ(MathematicaExpr):
+    """Mathematica ``BesselJ[n, z]`` — Bessel function of the first kind."""
+
+    def __new__(cls, n, z):
+        return Expr.__new__(cls, sympy.sympify(n), sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_BesselJ(*self.args)
+
+
+class ExpIntegralE(MathematicaExpr):
+    """Mathematica ``ExpIntegralE[n, z]`` — the exponential integral E_n(z)."""
+
+    def __new__(cls, n, z):
+        return Expr.__new__(cls, sympy.sympify(n), sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_ExpIntegralE(*self.args)
+
+
+class Root(MathematicaExpr):
+    """Mathematica ``Root[poly, k]`` — the k-th root of *poly*, indexed from 1."""
+
+    def __new__(cls, poly, k):
+        return Expr.__new__(cls, sympy.sympify(poly), sympy.sympify(k))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_Root(*self.args)
+
+
 class Discriminant(MathematicaExpr):
     """Mathematica ``Discriminant[poly, x]`` — discriminant of *poly* with respect to *x*.
 

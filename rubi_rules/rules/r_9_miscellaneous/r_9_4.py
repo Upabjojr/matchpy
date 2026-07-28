@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -564,24 +565,24 @@ RULES = [
     # Rule 55
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x))), EqQ(Part(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x), Integer(3)), Integer(1)),),
-        replacement=With({lst: sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x)}, (Integer(2) * Subst(Int(Part(lst, Integer(1)), x), x, Part(lst, Integer(2))))),
+        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(FunctionOfSquareRootOfQuadratic(u_, x))), EqQ(Part(FunctionOfSquareRootOfQuadratic(u_, x), 3), 1),),
+        replacement=With({lst: FunctionOfSquareRootOfQuadratic(u_, x)}, 2*Subst(Int(Part(lst, 1), x), x, Part(lst, 2))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=55,
     ),
     # Rule 56
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x))), EqQ(Part(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x), Integer(3)), Integer(2)),),
-        replacement=With({lst: sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x)}, (Integer(2) * Subst(Int(Part(lst, Integer(1)), x), x, Part(lst, Integer(2))))),
+        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(FunctionOfSquareRootOfQuadratic(u_, x))), EqQ(Part(FunctionOfSquareRootOfQuadratic(u_, x), 3), 2),),
+        replacement=With({lst: FunctionOfSquareRootOfQuadratic(u_, x)}, 2*Subst(Int(Part(lst, 1), x), x, Part(lst, 2))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=56,
     ),
     # Rule 57
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x))), EqQ(Part(sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x), Integer(3)), Integer(3)),),
-        replacement=With({lst: sympy.Function('FunctionOfSquareRootOfQuadratic')(u_, x)}, (Integer(2) * Subst(Int(Part(lst, Integer(1)), x), x, Part(lst, Integer(2))))),
+        constraints=(EulerIntegrandQ(u_, x), Not(FalseQ(FunctionOfSquareRootOfQuadratic(u_, x))), EqQ(Part(FunctionOfSquareRootOfQuadratic(u_, x), 3), 3),),
+        replacement=With({lst: FunctionOfSquareRootOfQuadratic(u_, x)}, 2*Subst(Int(Part(lst, 1), x), x, Part(lst, 2))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=57,
     ),

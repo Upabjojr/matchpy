@@ -329,6 +329,88 @@ def eager_Part(lst, i):
     return Util_Part(i, lst).doit()
 
 
+def eager_Factorial(z):
+    """Mathematica ``Factorial[z]`` (``z!``).
+
+    SymPy's ``factorial`` leaves a non-integer argument unevaluated, where Mathematica
+    reduces it via the Gamma function (``Factorial[1/2] == Sqrt[Pi]/2``, verified on
+    12.2). Route explicit non-integers through ``gamma(z+1)``; a symbolic argument
+    stays ``factorial(z)``, which is Mathematica's ``z!``.
+    """
+    z = sympify(z)
+    if z.is_number and not (z.is_integer and z.is_nonnegative):
+        return sympy.gamma(z + 1)
+    return sympy.factorial(z)
+
+
+def eager_Zeta(*args):
+    """Mathematica ``Zeta[s]`` / ``Zeta[s, a]`` (Riemann / Hurwitz zeta)."""
+    return sympy.zeta(*[sympify(a) for a in args])
+
+
+def eager_PolyGamma(*args):
+    """Mathematica ``PolyGamma[z]`` / ``PolyGamma[n, z]``.
+
+    The one-argument form is Mathematica's digamma, i.e. exactly ``PolyGamma[0, z]``.
+    """
+    args = [sympify(a) for a in args]
+    if len(args) == 1:
+        return sympy.polygamma(S.Zero, args[0])
+    return sympy.polygamma(*args)
+
+
+def eager_BesselJ(n, z):
+    """Mathematica ``BesselJ[n, z]`` — Bessel function of the first kind."""
+    return sympy.besselj(sympify(n), sympify(z))
+
+
+def eager_ExpIntegralE(n, z):
+    """Mathematica ``ExpIntegralE[n, z]`` — the exponential integral E_n(z).
+
+    Kept SYMBOLIC unless an argument is inexact, mirroring Mathematica: it returns
+    ``ExpIntegralE[2, 3/2]`` unevaluated but ``ExpIntegralE[2, 1.5]`` numerically. The
+    previous implementation called ``.evalf()`` unconditionally, which both forced
+    machine precision on exact input and cost a last-digit disagreement with MMA.
+    """
+    n, z = sympify(n), sympify(z)
+    result = sympy.expint(n, z)
+    if any(a.is_Float for a in (n, z)):
+        return result.evalf()
+    return result
+
+
+def eager_Root(poly, k):
+    """Mathematica ``Root[poly, k]`` — the k-th root of *poly*, indexed from 1.
+
+    Mathematica orders the roots real-first-ascending, then the complex ones; SymPy's
+    ``CRootOf`` uses the SAME order but indexes from 0, so the only translation needed
+    is ``k-1``. Verified against Mathematica 12.2 on ``x^3-x-1``, ``x^4-1`` and
+    ``x^2+1`` (all roots, in order).
+
+    Mathematica displays a root in radicals when it can (``Root[x^2-2,1]`` prints as
+    ``-Sqrt[2]``); we return the ``CRootOf``, which is the same number and stays exact.
+    """
+    poly = sympify(poly)
+    k = sympify(k)
+    if not k.is_Integer:
+        return None
+    gens = sorted(poly.free_symbols, key=str)
+    try:
+        return sympy.CRootOf(poly, int(k) - 1)
+    except (BasePolynomialError, IndexError, ValueError, NotImplementedError):
+        pass
+    # A polynomial with symbolic coefficients has no CRootOf; solve for the variable
+    # and index into the result, which is what Rubi's uses of Root actually need.
+    if len(gens) == 1:
+        try:
+            roots = sympy.solve(sympy.Eq(poly, 0), gens[0])
+            if roots and 1 <= int(k) <= len(roots):
+                return roots[int(k) - 1]
+        except (NotImplementedError, ValueError, TypeError):
+            pass
+    return None
+
+
 def eager_Discriminant(p, x):
     """Mathematica ``Discriminant[poly, x]`` — the discriminant of *poly* in *x*.
 

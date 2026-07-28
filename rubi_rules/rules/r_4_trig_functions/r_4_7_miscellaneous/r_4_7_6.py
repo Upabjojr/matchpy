@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -324,7 +325,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_f_ + _e_)**_m_*WildHeadApp(F_, x*_b_ + _a_)**_p_*WildHeadApp(G_, x*_d_ + _c_)**_q_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _m_], x), MemberQ([HeadRef(sympy.sin), HeadRef(sympy.cos)], F_), MemberQ([HeadRef(sympy.sec), HeadRef(sympy.csc)], G_), IGtQ(_p_, 0), IGtQ(_q_, 0), EqQ(-_a_*_d_ + _b_*_c_, 0), IGtQ(_b_/_d_, 1),),
-        replacement=Int(sympy.Function('ExpandTrigExpand')((((_e_ + (_f_ * x)))**(_m_) * (WFApply(G_, (_c_ + (_d_ * x))))**(_q_)), F_, (_c_ + (_d_ * x)), _p_, (_b_ * (_d_)**(Integer(-1))), x), x),
+        replacement=Int(ExpandTrigExpand((x*_f_ + _e_)**_m_*WFApply(G_, x*_d_ + _c_)**_q_, F_, x*_d_ + _c_, _p_, _b_/_d_, x), x),
         module_name='4.7.6 (c+d x)^m trig(a+b x)^n trig(a+b x)^p',
         rule_number=28,
     ),

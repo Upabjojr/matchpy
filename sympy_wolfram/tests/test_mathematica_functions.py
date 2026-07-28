@@ -329,3 +329,97 @@ def test_gamma_deduplicated():
     """rubi_utils no longer defines its own Gamma; it uses sympy_wolfram's."""
     ru = importlib.import_module('rubi_rules.utils.rubi_utils')
     assert ru.Gamma.__module__ == 'sympy_wolfram.objects'
+
+
+# ---------------------------------------------------------------------------
+# 4. Standard Wolfram special functions
+#
+# Every expected value below was produced by real Mathematica 12.2 and is quoted
+# in the assertion comments. These are Wolfram-language BUILTINS (they appear
+# nowhere in Rubi's IntegrationUtilityFunctions.m), so they belong in this layer
+# rather than in rubi_rules.
+# ---------------------------------------------------------------------------
+
+def test_eager_Factorial_matches_mathematica():
+    from sympy_wolfram.functions_eager import eager_Factorial
+    n = sympy.Symbol('n')
+    assert eager_Factorial(5) == 120                       # Factorial[5] == 120
+    assert eager_Factorial(0) == 1
+    # MMA reduces a non-integer through Gamma: Factorial[1/2] == Sqrt[Pi]/2.
+    # SymPy's factorial() alone leaves it unevaluated.
+    assert eager_Factorial(sympy.Rational(1, 2)) == sympy.sqrt(sympy.pi) / 2
+    # a symbolic argument stays symbolic (MMA prints n!)
+    assert eager_Factorial(n) == sympy.factorial(n)
+
+
+def test_eager_Zeta_matches_mathematica():
+    from sympy_wolfram.functions_eager import eager_Zeta
+    s, a = sympy.symbols('s a')
+    assert eager_Zeta(2) == sympy.pi ** 2 / 6              # Zeta[2] == Pi^2/6
+    assert eager_Zeta(s) == sympy.zeta(s)                  # Zeta[s] stays symbolic
+    # Hurwitz form: Zeta[2, 3] == -5/4 + Pi^2/6
+    assert sympy.simplify(eager_Zeta(2, 3) - (sympy.Rational(-5, 4) + sympy.pi ** 2 / 6)) == 0
+    assert eager_Zeta(2, a) == sympy.zeta(2, a)
+
+
+def test_eager_PolyGamma_matches_mathematica():
+    from sympy_wolfram.functions_eager import eager_PolyGamma
+    z = sympy.Symbol('z')
+    # MMA's 1-arg form IS PolyGamma[0, z]
+    assert eager_PolyGamma(z) == sympy.polygamma(0, z)
+    assert eager_PolyGamma(0, z) == sympy.polygamma(0, z)
+    assert eager_PolyGamma(2, z) == sympy.polygamma(2, z)
+    assert eager_PolyGamma(1, 1) == sympy.pi ** 2 / 6      # PolyGamma[1,1] == Pi^2/6
+
+
+def test_eager_BesselJ_matches_mathematica():
+    from sympy_wolfram.functions_eager import eager_BesselJ
+    n, z = sympy.symbols('n z')
+    assert eager_BesselJ(1, z) == sympy.besselj(1, z)
+    assert eager_BesselJ(n, z) == sympy.besselj(n, z)
+    # MMA auto-expands half-integer order to Sqrt[2/Pi] Sin[z]/Sqrt[z]; SymPy keeps
+    # besselj(1/2, z), which is DELIBERATE -- Rubi's rules pattern-match on
+    # BesselJ[n_, a+b x], and auto-expanding would stop them matching. Same number:
+    mma = sympy.sqrt(2 / sympy.pi) * sympy.sin(z) / sympy.sqrt(z)
+    assert sympy.simplify(eager_BesselJ(sympy.Rational(1, 2), z) - mma) == 0
+
+
+def test_eager_ExpIntegralE_matches_mathematica():
+    from sympy_wolfram.functions_eager import eager_ExpIntegralE
+    n, z = sympy.symbols('n z')
+    assert eager_ExpIntegralE(1, z) == sympy.expint(1, z)  # stays symbolic
+    assert eager_ExpIntegralE(n, z) == sympy.expint(n, z)
+    # exact arguments must NOT be forced to a float (the old impl called .evalf())
+    assert eager_ExpIntegralE(2, sympy.Rational(3, 2)) == sympy.expint(2, sympy.Rational(3, 2))
+    # an inexact argument evaluates, as in MMA: ExpIntegralE[2, 1.5] == 0.0731007865384809
+    assert abs(float(eager_ExpIntegralE(2, 1.5)) - 0.0731007865384809) < 1e-15
+
+
+def test_eager_Root_matches_mathematica_indexing():
+    """MMA's Root[poly,k] is 1-based and orders roots real-first-ascending, then
+    complex. SymPy's CRootOf uses the same order but is 0-based, so k-1 is the whole
+    translation. Root values below are Mathematica 12.2's."""
+    from sympy_wolfram.functions_eager import eager_Root
+    x = sympy.Symbol('x')
+    assert sympy.simplify(eager_Root(x ** 2 - 2, 1) + sympy.sqrt(2)) == 0   # -Sqrt[2]
+    assert sympy.simplify(eager_Root(x ** 2 - 2, 2) - sympy.sqrt(2)) == 0   # +Sqrt[2]
+    # x^3-x-1: root 1 is the REAL one, roots 2/3 the conjugate pair (negative imag first)
+    assert abs(complex(sympy.N(eager_Root(x ** 3 - x - 1, 1), 20)) - 1.324717957244746) < 1e-12
+    r2 = complex(sympy.N(eager_Root(x ** 3 - x - 1, 2), 20))
+    assert abs(r2 - (-0.662358978622373 - 0.5622795120623012j)) < 1e-12
+    # x^4-1: reals ascending first
+    assert abs(complex(sympy.N(eager_Root(x ** 4 - 1, 1), 20)) - (-1)) < 1e-12
+    assert abs(complex(sympy.N(eager_Root(x ** 4 - 1, 2), 20)) - 1) < 1e-12
+    assert abs(complex(sympy.N(eager_Root(x ** 2 + 1, 1), 20)) - (-1j)) < 1e-12
+
+
+@pytest.mark.parametrize('name', ['Factorial', 'Zeta', 'PolyGamma', 'BesselJ',
+                                  'ExpIntegralE', 'Root', 'Discriminant'])
+def test_special_function_nodes_defer_then_evaluate(name):
+    """Each is a MathematicaExpr: constructing it does nothing, doit() computes."""
+    node = getattr(mf, name)
+    z = sympy.Symbol('z')
+    built = node(z, 2) if name in ('Zeta', 'PolyGamma', 'BesselJ', 'ExpIntegralE',
+                                   'Root', 'Discriminant') else node(z)
+    assert isinstance(built, mf.MathematicaExpr)
+    built.doit()   # must not raise

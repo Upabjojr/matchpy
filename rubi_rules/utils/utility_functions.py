@@ -58,7 +58,7 @@ from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, p
 from sympy.functions.special.hyper import (appellf1, hyper, TupleArg)
 from sympy.functions.special.zeta_functions import polylog, zeta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.ntheory.factor_ import (factorint, factorrat)
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed, NotInvertible, GeneratorsNeeded)
@@ -78,6 +78,9 @@ from sympy_matching.conversion import matchpy_to_sympy
 # Self-contained Wolfram-standard eager helpers now live in sympy_wolfram (the
 # correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
 # in-module callers keep resolving these names; the local defs were removed.
+from sympy_wolfram.mathematica_functions import (  # standard Wolfram nodes (moved out of this module)
+    BesselJ, ExpIntegralE, Factorial, PolyGamma, Root, Zeta,
+)
 from sympy_wolfram.functions_eager import (
     eager_LeafCount, eager_Length, eager_Complex, eager_Not, eager_Exponent,
     eager_Simplify, eager_First, eager_Rest, eager_Numerator, eager_Denominator, eager_Part, Util_Part, eager_Apart,
@@ -273,6 +276,8 @@ def ZeroQ(*expr):
             return list(ZeroQ(i) for i in expr[0])
         else:
             u = _ensure_sympy(expr[0])
+            if isinstance(u, BooleanAtom):
+                return False        # a Boolean is not the number zero (see _boolean_operand)
             if _provably_nonzero(u):
                 return False
             return eager_Simplify(u) == 0
@@ -861,12 +866,26 @@ def RealQ(u):
     else:
         return False
 
+def _boolean_operand(u, v):
+    """True if either side is a Boolean atom, so arithmetic on it is meaningless.
+
+    Rubi's guards are evaluated against EVERY integrand, and several read a part of a
+    helper that returned False -- e.g. `EqQ[FunctionOfSquareRootOfQuadratic[u,x][[3]], 2]`.
+    Mathematica keeps `False[[3]]` symbolic, so the subtraction just fails to be zero and
+    the guard is False. SymPy instead raises `BooleanAtom not allowed in this context`
+    from the subtraction, which aborted the whole match.
+    """
+    return isinstance(u, BooleanAtom) or isinstance(v, BooleanAtom)
+
+
 def eager_EqQ(u, v):
     # A function-head wildcard F_[...] binds its head to a HeadRef carrying the SymPy
     # class; a head-identity test EqQ[F, Sin] is written against a named head
     # (Symbol('sin')/Symbol('Sin')/a class). Compare by the underlying class so the
     # HeadRef and the Mathematica/SymPy-spelled name reconcile instead of subtracting
     # two unequal symbols (which would always be non-zero -> the rule never fires).
+    if _boolean_operand(u, v):
+        return u is v or u == v
     from sympy_matching.wild import HeadRef
     if isinstance(u, HeadRef) or isinstance(v, HeadRef):
         from sympy_wolfram.functions_eager import head_to_class
@@ -2875,14 +2894,14 @@ def FactorAbsurdNumber(m):
     # CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]
     return list((m.as_base_exp(),))
 
-def SubstForInverseFunction(*args):
+def eager_SubstForInverseFunction(*args):
     """
     SubstForInverseFunction(u, v, w, x) returns u with subexpressions equal to v replaced by x and x replaced by w.
 
     Examples
     ========
 
-    >>> from rubi_rules.utils.utility_functions import SubstForInverseFunction
+    >>> from rubi_rules.utils.utility_functions import eager_SubstForInverseFunction as SubstForInverseFunction
     >>> from sympy.abc import x, a, b
     >>> SubstForInverseFunction(a, a, b, x)
     a
@@ -2894,7 +2913,16 @@ def SubstForInverseFunction(*args):
     """
     if len(args) == 3:
         u, v, x = args[0], args[1], args[2]
-        return SubstForInverseFunction(u, v, (-eager_Coefficient(v.args[0], x, 0) + InverseFunction(eager_Head(v))(x))/eager_Coefficient(v.args[0], x, 1), x)
+        # Rubi: SubstForInverseFunction[u,v,x] :=
+        #   SubstForInverseFunction[u, v,
+        #     (-Coefficient[v[[1]],x,0] + InverseFunction[Head[v]][x]) / Coefficient[v[[1]],x,1], x]
+        # i.e. v is g[a+b*x]; solve y == g[a+b*x] for x, giving (g^-1[y] - a)/b.
+        inverse = eager_InverseFunction(eager_Head(v))
+        if inverse is None:
+            return False
+        a = eager_Coefficient(v.args[0], x, 0)
+        b = eager_Coefficient(v.args[0], x, 1)
+        return eager_SubstForInverseFunction(u, v, (-a + inverse(x))/b, x)
     elif len(args) == 4:
         u, v, w, x = args[0], args[1], args[2], args[3]
         if eager_AtomQ(u):
@@ -2903,8 +2931,57 @@ def SubstForInverseFunction(*args):
             return u
         elif eager_Head(u) == eager_Head(v) and ZeroQ(u.args[0] - v.args[0]):
             return x
-        res = [SubstForInverseFunction(i, v, w, x) for i in u.args]
+        res = [eager_SubstForInverseFunction(i, v, w, x) for i in u.args]
         return u.func(*res)
+
+_INVERSE_FUNCTION_PAIRS = [
+    (sin, asin), (cos, acos), (tan, atan), (cot, acot), (sec, asec), (csc, acsc),
+    (sinh, asinh), (cosh, acosh), (tanh, atanh), (coth, acoth), (sech, asech), (csch, acsch),
+]
+
+_INVERSE_FUNCTION_MAP = {}
+for _f, _g in _INVERSE_FUNCTION_PAIRS:
+    _INVERSE_FUNCTION_MAP[_f] = _g
+    _INVERSE_FUNCTION_MAP[_g] = _f
+_INVERSE_FUNCTION_MAP[log] = exp
+_INVERSE_FUNCTION_MAP[exp] = log
+
+
+def eager_InverseFunction(head):
+    """Mathematica ``InverseFunction[head]`` for the heads Rubi inverts.
+
+    Returns the inverse function CLASS (so it can be applied), or None when there is
+    no entry -- Mathematica would return an ``InverseFunction[...]`` object, but every
+    Rubi caller only ever reaches this with an elementary invertible head.
+    """
+    from sympy_wolfram.functions_eager import head_to_class
+    cls = head_to_class(head)
+    if cls is None:
+        cls = head
+    return _INVERSE_FUNCTION_MAP.get(cls)
+
+
+def eager_SubstPower(Fx, x, n):
+    """Rubi ``SubstPower[Fx, x, n]`` (IntegrationUtilityFunctions.m) -- replace every
+    ``x`` in *Fx* by ``x^n``.
+
+    Rubi::
+
+        SubstPower[Fx_,x_Symbol,n_Integer] :=
+          If[AtomQ[Fx], If[Fx===x, x^n, Fx],
+          If[PowerQ[Fx] && Fx[[1]]===x && FreeQ[Fx[[2]],x], x^(n*Fx[[2]]),
+          Map[Function[SubstPower[#,x,n]], Fx]]]
+
+    So ``x -> x^n``, ``x^p -> x^(n*p)`` for an x-free ``p``, and anything else is
+    rebuilt from its mapped parts (``Sin[x] + x^2 -> Sin[x^2] + x^4`` for n=2).
+    """
+    Fx = S(Fx)
+    if eager_AtomQ(Fx):
+        return x**n if Fx == x else Fx
+    if eager_PowerQ(Fx) and Fx.base == x and eager_FreeQ(Fx.exp, x):
+        return x**(n*Fx.exp)
+    return Fx.func(*[eager_SubstPower(arg, x, n) for arg in Fx.args])
+
 
 def SubstForFractionalPower(u, v, n, w, x):
     # (* SubstForFractionalPower[u,v,n,w,x] returns u with subexpressions equal to v^(m/n) replaced
@@ -4904,8 +4981,26 @@ def AbsurdNumberGCDList(lst1, lst2):
         return lst2[0][0]**lst2[0][1]*AbsurdNumberGCDList(lst1, eager_Rest(lst2))
     return AbsurdNumberGCDList(lst1, eager_Rest(lst2))
 
-def ExpandTrigExpand(u, F, v, m, n, x):
-    w = Expand(TrigExpand(F.xreplace({x: n*x}))**m).xreplace({x: v})
+def eager_ExpandTrigExpand(u, F, v, m, n, x):
+    """Rubi ``ExpandTrigExpand[u, F, v, m, n, x]``::
+
+        With[{w = ReplaceAll[Expand[TrigExpand[F[n*x]]^m, x], x -> v]},
+          If[SumQ[w], Map[Function[u*#], w], u*w]]
+
+    ``F`` is a function HEAD (Sin, Cos, ...) that Mathematica APPLIES to ``n*x``. In
+    our rules it arrives as the binding of a function-head wildcard, i.e. a HeadRef,
+    so it has to be resolved to the SymPy class and called -- substituting into it
+    (the previous behaviour) is only correct when F happens to be an expression in x.
+    """
+    from sympy_wolfram.functions_eager import head_to_class
+    cls = head_to_class(F)
+    if cls is not None:
+        inner = cls(n*x)
+    elif callable(F) and not isinstance(F, Basic):
+        inner = F(n*x)
+    else:
+        inner = F.xreplace({x: n*x})
+    w = Expand(TrigExpand(inner)**m).xreplace({x: v})
     if eager_SumQ(w):
         t = 0
         for i in w.args:
@@ -5570,14 +5665,14 @@ def eager_EulerIntegrandQ(expr, x):
     else:
         return False
 
-def FunctionOfSquareRootOfQuadratic(u, *args):
+def eager_FunctionOfSquareRootOfQuadratic(u, *args):
     if len(args) == 1:
         x = args[0]
         pattern = Pattern(UtilityOperator(x_**WildSymbol('m', optional_value=1)*(a_ + x**WildSymbol('n', optional_value=1)*WildSymbol('b', optional_value=1))**p_, x), _patched_custom_constraint_call(lambda a, b, m, n, p, x: eager_FreeQ([a, b, m, n, p], x)))
         M = is_match(UtilityOperator(u, args[0]), pattern)
         if M:
             return False
-        tmp = FunctionOfSquareRootOfQuadratic(u, False, x)
+        tmp = eager_FunctionOfSquareRootOfQuadratic(u, False, x)
         if eager_AtomQ(tmp) or eager_FalseQ(tmp[0]):
             return False
         tmp = tmp[0]
@@ -5611,14 +5706,14 @@ def FunctionOfSquareRootOfQuadratic(u, *args):
                         return [u.base]
                     else:
                         return False
-                return FunctionOfSquareRootOfQuadratic(u.base, v, x)
+                return eager_FunctionOfSquareRootOfQuadratic(u.base, v, x)
         if eager_ProductQ(u) or eager_SumQ(u):
             lst = [v]
             lst1 = []
             for i in u.args:
-                if FunctionOfSquareRootOfQuadratic(i, lst[0], x) == False:
+                if eager_FunctionOfSquareRootOfQuadratic(i, lst[0], x) == False:
                     return False
-                lst1 = FunctionOfSquareRootOfQuadratic(i, lst[0], x)
+                lst1 = eager_FunctionOfSquareRootOfQuadratic(i, lst[0], x)
             return lst1
         else:
             return False
@@ -7232,9 +7327,6 @@ def LogIntegral(z):
 def ExpIntegralEi(z):
     return Ei(z)
 
-def ExpIntegralE(a, b):
-    return expint(a, b).evalf()
-
 def SinIntegral(z):
     return Si(z)
 
@@ -7247,13 +7339,6 @@ def SinhIntegral(z):
 def CoshIntegral(z):
     return Chi(z)
 
-class PolyGamma(Function):
-    @classmethod
-    def eval(cls, *args):
-        if len(args) == 2:
-            return polygamma(args[0], args[1])
-        return digamma(args[0])
-
 def LogGamma(z):
     return loggamma(z)
 
@@ -7263,12 +7348,6 @@ class ProductLog(Function):
         if len(args) == 2:
             return LambertW(args[1], args[0]).evalf()
         return LambertW(args[0]).evalf()
-
-def Factorial(a):
-    return factorial(a)
-
-def Zeta(*args):
-    return zeta(*args)
 
 def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)

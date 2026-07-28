@@ -65,6 +65,12 @@ from sympy_wolfram.mathematica_functions import (
     Complex,
     Denominator,
     Discriminant,
+    BesselJ,
+    ExpIntegralE,
+    Factorial,
+    PolyGamma,
+    Root,
+    Zeta,
     EllipticPi,
     Exponent,
     First,
@@ -415,6 +421,64 @@ class FunctionOfExponentialFunction(MathematicaExpr):
     def _evaluate(self, **kwargs):
         from .utility_functions import eager_FunctionOfExponentialFunction
         return eager_FunctionOfExponentialFunction(*self.args)
+
+
+class SubstPower(MathematicaExpr):
+    """Deferred SubstPower[Fx, x, n] -- replace every ``x`` in ``Fx`` by ``x**n``."""
+
+    def __new__(cls, Fx, x, n):
+        return Expr.__new__(cls, sympy.sympify(Fx), sympy.sympify(x), sympy.sympify(n))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_SubstPower
+        return eager_SubstPower(*self.args)
+
+
+class SubstForInverseFunction(MathematicaExpr):
+    """Deferred SubstForInverseFunction[u, v, x] / [u, v, w, x].
+
+    Three-arg form: ``v`` is ``g[a+b*x]``; substitutes ``x -> (g^-1[x] - a)/b`` and
+    replaces occurrences of ``v`` by ``x``.
+    """
+
+    def __new__(cls, *args):
+        return Expr.__new__(cls, *[sympy.sympify(a) for a in args])
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_SubstForInverseFunction
+        result = eager_SubstForInverseFunction(*self.args)
+        return sympy.S.false if result is False else result
+
+
+class ExpandTrigExpand(MathematicaExpr):
+    """Deferred ExpandTrigExpand[u, F, v, m, n, x] -- expand ``TrigExpand[F[n x]]^m``,
+    substitute ``x -> v`` and distribute ``u`` over the resulting sum."""
+
+    def __new__(cls, u, F, v, m, n, x):
+        return Expr.__new__(cls, *[sympy.sympify(a) for a in (u, F, v, m, n, x)])
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_ExpandTrigExpand
+        return eager_ExpandTrigExpand(*self.args)
+
+
+class FunctionOfSquareRootOfQuadratic(MathematicaExpr):
+    """Deferred FunctionOfSquareRootOfQuadratic[u, x] -- the Euler substitution.
+
+    Returns ``{v, subst, n}`` (read by the rules with ``Part``) or False.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_FunctionOfSquareRootOfQuadratic
+        result = eager_FunctionOfSquareRootOfQuadratic(*self.args)
+        if result is False or result is None:
+            return sympy.S.false
+        if isinstance(result, (list, tuple)):
+            return List(*result)
+        return result
 
 
 class InverseFunctionOfLinear(MathematicaExpr):

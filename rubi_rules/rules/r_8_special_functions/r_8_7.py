@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -92,41 +93,41 @@ s_ = WildSymbol('s')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.Function('Zeta')(Integer(2), (_a_ + (_b_ * x))), x),
+        pattern=Int(zeta(2, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=Int(sympy.polygamma(Integer(1), (_a_ + (_b_ * x))), x),
+        replacement=Int(polygamma(1, x*_b_ + _a_), x),
         module_name='8.7 Zeta function',
         rule_number=1,
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.Function('Zeta')(s_, (_a_ + (_b_ * x))), x),
+        pattern=Int(zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, s_], x), NeQ(s_, 1), NeQ(s_, 2),),
-        replacement=((Integer(-1) * sympy.zeta((s_ + Integer(-1)), (_a_ + (_b_ * x)))) * ((_b_ * (s_ + Integer(-1))))**(Integer(-1))),
+        replacement=-zeta(s_ - 1, x*_b_ + _a_)/(_b_*(s_ - 1)),
         module_name='8.7 Zeta function',
         rule_number=2,
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Zeta')(Integer(2), (_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*zeta(2, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), RationalQ(_m_),),
-        replacement=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.polygamma(Integer(1), (_a_ + (_b_ * x)))), x),
+        replacement=Int((x*_d_ + _c_)**_m_*polygamma(1, x*_b_ + _a_), x),
         module_name='8.7 Zeta function',
         rule_number=3,
     ),
     # Rule 4
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Zeta')(s_, (_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, s_], x), NeQ(s_, 1), NeQ(s_, 2), GtQ(_m_, 0),),
-        replacement=(((Integer(-1) * ((_c_ + (_d_ * x)))**(_m_)) * sympy.zeta((s_ + Integer(-1)), (_a_ + (_b_ * x))) * ((_b_ * (s_ + Integer(-1))))**(Integer(-1))) + (_d_ * _m_ * ((_b_ * (s_ + Integer(-1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(-1))) * sympy.zeta((s_ + Integer(-1)), (_a_ + (_b_ * x)))), x))),
+        replacement=_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*zeta(s_ - 1, x*_b_ + _a_), x)/(_b_*(s_ - 1)) - (x*_d_ + _c_)**_m_*zeta(s_ - 1, x*_b_ + _a_)/(_b_*(s_ - 1)),
         module_name='8.7 Zeta function',
         rule_number=4,
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * sympy.Function('Zeta')(s_, (_a_ + (_b_ * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, s_], x), NeQ(s_, 1), NeQ(s_, 2), LtQ(_m_, -1),),
-        replacement=((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.zeta(s_, (_a_ + (_b_ * x))) * ((_d_ * (_m_ + Integer(1))))**(Integer(-1))) + (_b_ * s_ * ((_d_ * (_m_ + Integer(1))))**(Integer(-1)) * Int((((_c_ + (_d_ * x)))**((_m_ + Integer(1))) * sympy.zeta((s_ + Integer(1)), (_a_ + (_b_ * x)))), x))),
+        replacement=_b_*s_*Int((x*_d_ + _c_)**(_m_ + 1)*zeta(s_ + 1, x*_b_ + _a_), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*zeta(s_, x*_b_ + _a_)/(_d_*(_m_ + 1)),
         module_name='8.7 Zeta function',
         rule_number=5,
     ),

@@ -133,6 +133,12 @@ class FFLConverter:
         'FresnelS': 'sympy.fresnels', 'FresnelC': 'sympy.fresnelc',
         'ExpIntegralEi': 'sympy.Ei', 'LogIntegral': 'sympy.li',
         'SinIntegral': 'sympy.Si', 'CosIntegral': 'sympy.Ci',
+        # Pure special functions: these appear in rule PATTERNS (the integrand),
+        # so they must be the real SymPy functions -- a deferred node would only
+        # match another deferred node, never a caller's expint/besselj/...
+        'BesselJ': 'sympy.besselj', 'ExpIntegralE': 'sympy.expint',
+        'PolyGamma': 'sympy.polygamma', 'Zeta': 'sympy.zeta',
+        'Factorial': 'sympy.factorial',
         'SinhIntegral': 'sympy.Shi', 'CoshIntegral': 'sympy.Chi',
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra

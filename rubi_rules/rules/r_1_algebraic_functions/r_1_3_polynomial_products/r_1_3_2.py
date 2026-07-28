@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -142,16 +143,16 @@ RULES = [
     # Rule 4
     RubiRulePattern(
         pattern=Int(_Px_*(x**4*_e_ + x**3*_d_ + x**2*_c_ + x*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), PolyQ(_Px_, x), ILtQ(p_, 0), RationalQ(a_, _b_, _c_, _d_, _e_), NeQ(a_*_d_**2 - _b_**2*_e_, 0), RationalQ(sympy.Function('Root')(((a_ * (_d_)**(Integer(2))) + (Integer(-1) * ((_b_)**(Integer(2)) * _e_)) + (((_b_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(4) * _b_ * _c_ * _e_)) + (Integer(8) * a_ * _d_ * _e_)) * x) + (((_c_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(4) * (_c_)**(Integer(2)) * _e_)) + (Integer(2) * _b_ * _d_ * _e_) + (Integer(16) * a_ * (_e_)**(Integer(2)))) * (x)**(Integer(2))) + (((_d_)**(Integer(3)) + (Integer(-1) * (Integer(4) * _c_ * _d_ * _e_)) + (Integer(8) * _b_ * (_e_)**(Integer(2)))) * (x)**(Integer(3)))), Integer(3))),),
-        replacement=With({S: sympy.Function('Root')(((a_ * (_d_)**(Integer(2))) + (Integer(-1) * ((_b_)**(Integer(2)) * _e_)) + (((_b_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(4) * _b_ * _c_ * _e_)) + (Integer(8) * a_ * _d_ * _e_)) * x) + (((_c_ * (_d_)**(Integer(2))) + (Integer(-1) * (Integer(4) * (_c_)**(Integer(2)) * _e_)) + (Integer(2) * _b_ * _d_ * _e_) + (Integer(16) * a_ * (_e_)**(Integer(2)))) * (x)**(Integer(2))) + (((_d_)**(Integer(3)) + (Integer(-1) * (Integer(4) * _c_ * _d_ * _e_)) + (Integer(8) * _b_ * (_e_)**(Integer(2)))) * (x)**(Integer(3)))), Integer(3))}, Subst(Int((ReplaceAll(_Px_, Rule(x, (x + S))) * (ExpandToSum((a_ + (_b_ * (x + S)) + (_c_ * ((x + S))**(Integer(2))) + (_d_ * ((x + S))**(Integer(3))) + (_e_ * ((x + S))**(Integer(4)))), x))**(p_)), x), x, (x + (Integer(-1) * S)))),
+        constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), PolyQ(_Px_, x), ILtQ(p_, 0), RationalQ(a_, _b_, _c_, _d_, _e_), NeQ(a_*_d_**2 - _b_**2*_e_, 0), RationalQ(Root(x**3*(8*_b_*_e_**2 - 4*_c_*_d_*_e_ + _d_**3) + x**2*(16*a_*_e_**2 + 2*_b_*_d_*_e_ - 4*_c_**2*_e_ + _c_*_d_**2) + x*(8*a_*_d_*_e_ - 4*_b_*_c_*_e_ + _b_*_d_**2) + a_*_d_**2 - _b_**2*_e_, 3)),),
+        replacement=With({S: Root(x**3*(8*_b_*_e_**2 - 4*_c_*_d_*_e_ + _d_**3) + x**2*(16*a_*_e_**2 + 2*_b_*_d_*_e_ - 4*_c_**2*_e_ + _c_*_d_**2) + x*(8*a_*_d_*_e_ - 4*_b_*_c_*_e_ + _b_*_d_**2) + a_*_d_**2 - _b_**2*_e_, 3)}, Subst(Int(ExpandToSum(a_ + _b_*(S + x) + _c_*(S + x)**2 + _d_*(S + x)**3 + _e_*(S + x)**4, x)**p_*ReplaceAll(_Px_, Rule(x, S + x)), x), x, -S + x)),
         module_name='1.3.2 u (a+b x+c x^2+d x^3+e x^4)^p',
         rule_number=4,
     ),
     # Rule 5
     RubiRulePattern(
         pattern=Int(_Px_*(x**4*_e_ + x**3*_d_ + x*_b_ + a_)**p_, x),
-        constraints=(FreeQ([a_, _b_, _d_, _e_], x), PolyQ(_Px_, x), ILtQ(p_, 0), RationalQ(a_, _b_, _d_, _e_), NeQ(a_*_d_**2 - _b_**2*_e_, 0), RationalQ(sympy.Function('Root')(((a_ * (_d_)**(Integer(2))) + (Integer(-1) * ((_b_)**(Integer(2)) * _e_)) + (((_b_ * (_d_)**(Integer(2))) + (Integer(8) * a_ * _d_ * _e_)) * x) + (((Integer(2) * _b_ * _d_ * _e_) + (Integer(16) * a_ * (_e_)**(Integer(2)))) * (x)**(Integer(2))) + (((_d_)**(Integer(3)) + (Integer(8) * _b_ * (_e_)**(Integer(2)))) * (x)**(Integer(3)))), Integer(3))),),
-        replacement=With({S: sympy.Function('Root')(((a_ * (_d_)**(Integer(2))) + (Integer(-1) * ((_b_)**(Integer(2)) * _e_)) + (((_b_ * (_d_)**(Integer(2))) + (Integer(8) * a_ * _d_ * _e_)) * x) + (((Integer(2) * _b_ * _d_ * _e_) + (Integer(16) * a_ * (_e_)**(Integer(2)))) * (x)**(Integer(2))) + (((_d_)**(Integer(3)) + (Integer(8) * _b_ * (_e_)**(Integer(2)))) * (x)**(Integer(3)))), Integer(3))}, Subst(Int((ReplaceAll(_Px_, Rule(x, (x + S))) * (ExpandToSum((a_ + (_b_ * (x + S)) + (_d_ * ((x + S))**(Integer(3))) + (_e_ * ((x + S))**(Integer(4)))), x))**(p_)), x), x, (x + (Integer(-1) * S)))),
+        constraints=(FreeQ([a_, _b_, _d_, _e_], x), PolyQ(_Px_, x), ILtQ(p_, 0), RationalQ(a_, _b_, _d_, _e_), NeQ(a_*_d_**2 - _b_**2*_e_, 0), RationalQ(Root(x**3*(8*_b_*_e_**2 + _d_**3) + x**2*(16*a_*_e_**2 + 2*_b_*_d_*_e_) + x*(8*a_*_d_*_e_ + _b_*_d_**2) + a_*_d_**2 - _b_**2*_e_, 3)),),
+        replacement=With({S: Root(x**3*(8*_b_*_e_**2 + _d_**3) + x**2*(16*a_*_e_**2 + 2*_b_*_d_*_e_) + x*(8*a_*_d_*_e_ + _b_*_d_**2) + a_*_d_**2 - _b_**2*_e_, 3)}, Subst(Int(ExpandToSum(a_ + _b_*(S + x) + _d_*(S + x)**3 + _e_*(S + x)**4, x)**p_*ReplaceAll(_Px_, Rule(x, S + x)), x), x, -S + x)),
         module_name='1.3.2 u (a+b x+c x^2+d x^3+e x^4)^p',
         rule_number=5,
     ),

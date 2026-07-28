@@ -43,7 +43,7 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 QuotientOfLinearsP, eager_QuotientOfLinearsParts, eager_QuotientOfLinearsQ, Flatten,
                                                 Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors,
                                                 SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger,
-                                                FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower,
+                                                FactorAbsurdNumber, eager_SubstForInverseFunction, SubstForFractionalPower,
                                                 eager_SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears,
                                                 eager_SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ,
                                                 FractionalPowerSubexpressionQ, eager_Apply, FactorNumericGcd, MergeableFactorQ,
@@ -70,14 +70,14 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 eager_PiecewiseLinearQ, KnownTrigIntegrandQ, eager_KnownSineIntegrandQ,
                                                 eager_KnownTangentIntegrandQ, eager_KnownCotangentIntegrandQ, eager_KnownSecantIntegrandQ,
                                                 eager_TryPureTanSubst, TryTanhSubst, TryPureTanhSubst, AbsurdNumberGCD,
-                                                AbsurdNumberGCDList, ExpandTrigExpand, eager_ExpandTrigReduce, ExpandTrigReduceAux,
+                                                AbsurdNumberGCDList, eager_ExpandTrigExpand, eager_ExpandTrigReduce, ExpandTrigReduceAux,
                                                 NormalizeTrig, TrigToExp, eager_ExpandTrigToExp, TrigReduce, eager_FunctionOfTrig,
                                                 AlgebraicTrigFunctionQ, FunctionOfHyperbolic, eager_FunctionOfQ, FunctionOfExpnQ,
                                                 PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ,
                                                 FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ,
                                                 FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ,
                                                 eager_FunctionOfLog, eager_PowerVariableExpn, PowerVariableDegree, PowerVariableSubst,
-                                                eager_EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst,
+                                                eager_EulerIntegrandQ, eager_FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst,
                                                 eager_Divides, EasyDQ, ProductOfLinearPowersQ, eager_Rt, NthRoot, AtomBaseQ, eager_SumBaseQ,
                                                 NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare,
                                                 eager_IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors,
@@ -1123,10 +1123,10 @@ def test_Drop():
     assert Drop(a*b*c, 1) == b*c
 
 def test_SubstForInverseFunction():
-    assert SubstForInverseFunction(x, a, b, x) == b
-    assert SubstForInverseFunction(a, a, b, x) == a
-    assert SubstForInverseFunction(x**a, x**a, b, x) == x
-    assert SubstForInverseFunction(a*x**a, a, b, x) == a*b**a
+    assert eager_SubstForInverseFunction(x, a, b, x) == b
+    assert eager_SubstForInverseFunction(a, a, b, x) == a
+    assert eager_SubstForInverseFunction(x**a, x**a, b, x) == x
+    assert eager_SubstForInverseFunction(a*x**a, a, b, x) == a*b**a
 
 def test_SubstForFractionalPower():
     assert SubstForFractionalPower(a, b, n, c, x) == a
@@ -1491,6 +1491,83 @@ def test_SubstForFractionalPowerOfLinear():
     assert not eager_SubstForFractionalPowerOfLinear(u**(S(2)), x)
     assert eager_SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
 
+def test_SubstPower():
+    """Rubi IntegrationUtilityFunctions.m — replace x by x**n throughout.
+    Expected values cross-checked against real Rubi on Mathematica 12.2."""
+    from rubi_rules.utils.utility_functions import eager_SubstPower
+    assert eager_SubstPower(x**3, x, 2) == x**6          # SubstPower[x^3,x,2] == x^6
+    assert eager_SubstPower(x, x, 2) == x**2
+    assert eager_SubstPower(a + x**2, x, 3) == a + x**6
+    # recurses into non-power heads: Sin[x]+x^2 -> Sin[x^2]+x^4
+    assert eager_SubstPower(sin(x) + x**2, x, 2) == sin(x**2) + x**4
+    # x-free atoms are untouched
+    assert eager_SubstPower(a, x, 2) == a
+
+
+def test_SubstPower_deferred_node():
+    from rubi_rules.utils.rubi_utils import SubstPower
+    assert SubstPower(x**3, x, 2).doit() == x**6
+
+
+def test_SubstForInverseFunction_three_argument_form():
+    """The 3-arg form builds w = (g^-1[x] - a)/b from v = g[a+b x]; it used to raise
+    NameError because InverseFunction was never implemented.
+    Mathematica 12.2: SubstForInverseFunction[x^2, ArcTan[a+b x], x] == (-a+Tan[x])^2/b^2."""
+    from rubi_rules.utils.utility_functions import eager_SubstForInverseFunction as _S
+    assert simplify(_S(x**2, atan(a + b*x), x) - (-a + tan(x))**2/b**2) == 0
+    # 4-arg form (Mathematica-verified)
+    assert _S(a, a, b, x) == a
+    assert _S(x, a, b, x) == b
+    assert _S(a*x**a, a, b, x) == a*b**a
+    w = Symbol('w')
+    assert _S(sin(a + b*x) + x, sin(a + b*x), w, x) == w + x
+
+
+def test_InverseFunction_table():
+    """Mathematica InverseFunction for the heads Rubi inverts."""
+    import sympy
+    from rubi_rules.utils.utility_functions import eager_InverseFunction
+    assert eager_InverseFunction(atan) is tan
+    assert eager_InverseFunction(tan) is atan
+    assert eager_InverseFunction(asin) is sin
+    assert eager_InverseFunction(log) is exp
+    assert eager_InverseFunction(acosh) is cosh
+    assert eager_InverseFunction(sympy.Abs) is None       # not invertible -> None
+
+
+def test_ExpandTrigExpand():
+    """Rubi ExpandTrigExpand[u,F,v,m,n,x] = Map[u*#, Expand[TrigExpand[F[n x]]^m] /. x->v].
+    F is a HEAD that Mathematica APPLIES to n*x. Mathematica 12.2 values below."""
+    from rubi_rules.utils.utility_functions import eager_ExpandTrigExpand
+    u, v = symbols('u v')
+    # ExpandTrigExpand[u, Sin, x, 2, 2, x] == 4 u Cos[x]^2 Sin[x]^2
+    assert simplify(eager_ExpandTrigExpand(u, sin, x, 2, 2, x) - 4*u*cos(x)**2*sin(x)**2) == 0
+    # ExpandTrigExpand[1, Sin, x, 1, 2, x] == 2 Cos[x] Sin[x]
+    assert simplify(eager_ExpandTrigExpand(1, sin, x, 1, 2, x) - 2*sin(x)*cos(x)) == 0
+    # ExpandTrigExpand[1, Cos, v, 1, 2, x] == Cos[v]^2 - Sin[v]^2 (SymPy normalises it
+    # to 2 Cos[v]^2 - 1; same value)
+    assert simplify(eager_ExpandTrigExpand(1, cos, v, 1, 2, x) - (cos(v)**2 - sin(v)**2)) == 0
+
+
+def test_FunctionOfSquareRootOfQuadratic():
+    """Rubi's Euler substitution helper; returns {v, subst, n} or False.
+    Expected values from real Rubi on Mathematica 12.2."""
+    from rubi_rules.utils.utility_functions import eager_FunctionOfSquareRootOfQuadratic as _F
+    got = _F(sqrt(1 + x + x**2), x)
+    assert got[1] == x + sqrt(1 + x + x**2) and got[2] == 2
+    assert simplify(got[0] - (1 + x + x**2)**2/(1 + 2*x)**3) == 0
+    got = _F(1/sqrt(1 + x**2), x)
+    assert got == [1/(2*x), x + sqrt(1 + x**2), 2]
+    assert _F(x**2, x) is False
+
+
+def test_FunctionOfSquareRootOfQuadratic_deferred_node():
+    from rubi_rules.utils.rubi_utils import FunctionOfSquareRootOfQuadratic as _F
+    from sympy_wolfram.objects import List as _List
+    assert isinstance(_F(1/sqrt(1 + x**2), x).doit(), _List)
+    assert _F(x**2, x).doit() is S.false
+
+
 def test_InverseFunctionOfLinear():
     """Rubi IntegrationUtilityFunctions.m:6084. Expected values cross-checked against
     real Rubi on Mathematica 12.2."""
@@ -1737,8 +1814,8 @@ def test_FunctionOfQ_sech_squared_is_a_function_of_tanh_but_not_purely():
     assert eager_FunctionOfQ(tanh(A), u, x, PureFlag=False) is True
 
 def test_ExpandTrigExpand():
-    assert ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
-    assert ExpandTrigExpand(1, cos(x) + sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
+    assert eager_ExpandTrigExpand(1, cos(x), x**2, 2, 2, x) == 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
+    assert eager_ExpandTrigExpand(1, cos(x) + sin(x), x**2, 2, 2, x) == 4*sin(x**2)**2*cos(x**2)**2 + 8*sin(x**2)*cos(x**2)**3 - 4*sin(x**2)*cos(x**2) + 4*cos(x**2)**4 - 4*cos(x**2)**2 + 1
 
 def test_TrigToExp():
     assert TrigToExp(sin(x)) == -I*(exp(I*x) - exp(-I*x))/2
@@ -2191,8 +2268,9 @@ def test_ExpIntegralEi():
     assert ExpIntegralEi(a) == Ei(a)
 
 def test_ExpIntegralE():
+    # standard Wolfram builtin -> now a sympy_wolfram deferred node, so .doit() it
     from rubi_rules.utils.utility_functions import ExpIntegralE
-    assert ExpIntegralE(a, z) == expint(a, z)
+    assert ExpIntegralE(a, z).doit() == expint(a, z)
 
 def test_LogGamma():
     from rubi_rules.utils.utility_functions import LogGamma
@@ -2200,18 +2278,18 @@ def test_LogGamma():
 
 def test_Factorial():
     from rubi_rules.utils.utility_functions import Factorial
-    assert Factorial(S(5)) == 120
+    assert Factorial(S(5)).doit() == 120
 
 def test_Zeta():
     from rubi_rules.utils.utility_functions import Zeta
-    assert Zeta(a, z) == zeta(a, z)
+    assert Zeta(a, z).doit() == zeta(a, z)
 
 def test_HypergeometricPFQ():
     from rubi_rules.utils.utility_functions import HypergeometricPFQ
     assert HypergeometricPFQ([a, b], [c], z) == hyper([a, b], [c], z)
 
 def test_PolyGamma():
-    assert PolyGamma(S(2), S(3)) == polygamma(2, 3)
+    assert PolyGamma(S(2), S(3)).doit() == polygamma(2, 3)
 
 def test_ProductLog():
     from sympy.core.evalf import N

@@ -15,9 +15,10 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
     Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, cos, cosh, cot, coth, csc, csch, denom,
-    diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, floor, frac, fresnelc, fresnels, hyper, li,
-    log, loggamma, oo, pi, polylog, root, sec, sech, simplify, sin, sinh, sqrt, tan, tanh,
+    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
+    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
+    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
+    simplify, sin, sinh, sqrt, tan, tanh, zeta,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
@@ -86,23 +87,23 @@ n_ = WildSymbol('n')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int(sympy.Function('BesselJ')(Integer(1), (_a_ + (_b_ * x))), x),
+        pattern=Int(besselj(1, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
-        replacement=((Integer(-1) * sympy.besselj(Integer(0), (_a_ + (_b_ * x)))) * (_b_)**(Integer(-1))),
+        replacement=-besselj(0, x*_b_ + _a_)/_b_,
         module_name='8.10 Bessel functions',
         rule_number=1,
     ),
     # Rule 2
     RubiRulePattern(
-        pattern=Int(sympy.Function('BesselJ')(n_, (_a_ + (_b_ * x))), x),
+        pattern=Int(besselj(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x), IGtQ(n_/2 + sympy.S(-1)/2, 0),),
-        replacement=((Integer(-2) * sympy.besselj((n_ + Integer(-1)), (_a_ + (_b_ * x))) * (_b_)**(Integer(-1))) + Int(sympy.besselj((n_ + Integer(-2)), (_a_ + (_b_ * x))), x)),
+        replacement=Int(besselj(n_ - 2, x*_b_ + _a_), x) - 2*besselj(n_ - 1, x*_b_ + _a_)/_b_,
         module_name='8.10 Bessel functions',
         rule_number=2,
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int(sympy.Function('BesselJ')(n_, (_a_ + (_b_ * x))), x),
+        pattern=Int(besselj(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, n_], x),),
         replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*Gamma(n_ + 2)),
         module_name='8.10 Bessel functions',
