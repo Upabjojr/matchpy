@@ -448,21 +448,29 @@ RULES = [
     ),
     # Rule 42
     RubiRulePattern(
-        pattern=Int((_u_ * sympy.log(Gamma(v_))), x),
-        constraints=(),
-        replacement=(log(Gamma(v_)) - loggamma(v_))*Int(_u_, x) + Int(_u_*loggamma(v_), x),
+        pattern=Int(u_, x),
+        constraints=(NonsumQ(u_), Not(FalseQ(FunctionOfLog(x*u_, x))),),
+        replacement=With({lst: FunctionOfLog(x*u_, x)}, Subst(Int(Part(lst, 1), x), x, log(Part(lst, 2)))/Part(lst, 3)),
         module_name='3.5 Miscellaneous logarithms',
         rule_number=42,
     ),
     # Rule 43
     RubiRulePattern(
+        pattern=Int((_u_ * sympy.log(Gamma(v_))), x),
+        constraints=(),
+        replacement=(log(Gamma(v_)) - loggamma(v_))*Int(_u_, x) + Int(_u_*loggamma(v_), x),
+        module_name='3.5 Miscellaneous logarithms',
+        rule_number=43,
+    ),
+    # Rule 44
+    RubiRulePattern(
         pattern=Int(_u_*(x**_m_*_a_ + x**_r_*_b_*log(x**_n_*_c_)**_q_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, _n_, _p_, _q_, _r_], x), IntegerQ(_p_),),
         replacement=Int(x**(_p_*_r_)*_u_*(x**(_m_ - _r_)*_a_ + _b_*log(x**_n_*_c_)**_q_)**_p_, x),
         module_name='3.5 Miscellaneous logarithms',
-        rule_number=43,
+        rule_number=44,
     ),
 
 ]
 
-# Summary: 43 rules translated, 0 skipped
+# Summary: 44 rules translated, 0 skipped

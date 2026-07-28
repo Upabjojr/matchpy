@@ -5453,12 +5453,12 @@ def FunctionOfDensePolynomialsQ(u, x):
         return eager_Length(ExponentList(u, x)) > 1
     return all(FunctionOfDensePolynomialsQ(i, x) for i in u.args)
 
-def FunctionOfLog(u, *args):
+def eager_FunctionOfLog(u, *args):
     # If u (x) is equivalent to an expression of the form f (Log[a*x^n]), FunctionOfLog[u,x] returns
     # the list {f (x),a*x^n,n}; else it returns False.
     if len(args) == 1:
         x = args[0]
-        lst = FunctionOfLog(u, False, False, x)
+        lst = eager_FunctionOfLog(u, False, False, x)
         if eager_AtomQ(lst) or eager_FalseQ(lst[1]) or not isinstance(x, Symbol):
             return False
         else:
@@ -5483,7 +5483,7 @@ def FunctionOfLog(u, *args):
         lst = [0, v, n]
         l = []
         for i in u.args:
-                lst = FunctionOfLog(i, lst[1], lst[2], x)
+                lst = eager_FunctionOfLog(i, lst[1], lst[2], x)
                 if eager_AtomQ(lst):
                     return False
                 else:
@@ -5879,10 +5879,15 @@ def TrigSquare(u):
     else:
         return False
 
-def IntSum(u, x):
-    # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
-    # else it returns d*Int[v,x] where d*v=u and d is free of x.
-    return Add(*[Integral(i, x) for i in u.args])
+def eager_IntSum(u, x):
+    """Rubi ``IntSum[u,x] := Map[Function[Int[#,x]], u]`` -- distribute Int over a sum.
+
+    Emits OUR deferred ``Int`` nodes, not ``sympy.Integral``: the DFS has to be able to
+    reduce each term further. Returning sympy.Integral instead left an inert node in the
+    answer (it surfaced as an undifferentiable ``Derivative(IntSum(...))``).
+    """
+    from rubi_rules.base_objects import Int as _Int   # local: base_objects imports this module
+    return Add(*[_Int(term, x) for term in u.args])
 
 def IntTerm(expr, x):
     # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;

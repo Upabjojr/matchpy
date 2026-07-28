@@ -111,7 +111,17 @@ class SumWolfram(MathematicaExpr):
     """
 
     def __new__(cls, expr, limits):
-        return Expr.__new__(cls, expr, limits)
+        # The generated Rubi rules spell the iterator spec as a PYTHON list --
+        # Sum(..., [ii, 0, n/2 - 1]). Storing that raw list in .args breaks SymPy's
+        # invariant that every arg is a Basic, so ANY generic traversal of the node
+        # (free_symbols, xreplace, subs) raises AttributeError deep inside SymPy.
+        # That stayed hidden while the two constraints using this node were being
+        # dropped by the matcher; enforcing them surfaced it. Coerce to the Wolfram
+        # List node -- which is also the form _evaluate below expects, so the
+        # documented floor/ceil handling now actually runs for these rules.
+        if isinstance(limits, (list, tuple)):
+            limits = List(*limits)
+        return Expr.__new__(cls, sympy.sympify(expr), limits)
 
     def _evaluate(self, **kwargs):
         expr, limits = self.args

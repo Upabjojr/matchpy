@@ -382,125 +382,133 @@ RULES = [
     ),
     # Rule 34
     RubiRulePattern(
-        pattern=Int(u_*(x*_c_)**_m_, x),
-        constraints=(FreeQ([_c_, _m_], x), SumQ(u_), Not(LinearQ(u_, x)), Not(MatchQ(u_, Condition((a_ + (_b_ * v_)), And(FreeQ([a_, _b_], x), InverseFunctionQ(v_))))),),
-        replacement=Int(ExpandIntegrand(u_*(x*_c_)**_m_, x), x),
+        pattern=Int(u_, x),
+        constraints=(SumQ(u_),),
+        replacement=IntSum(u_, x),
         module_name='9.1 Derivative integration rules',
         rule_number=34,
     ),
     # Rule 35
     RubiRulePattern(
-        pattern=Int(_u_*(x**n_*_a_)**m_, x),
-        constraints=(FreeQ([_a_, m_, n_], x), Not(IntegerQ(m_)),),
-        replacement=_a_**IntPart(m_)*(x**n_*_a_)**FracPart(m_)*Int(x**(m_*n_)*_u_, x)/x**(n_*FracPart(m_)),
+        pattern=Int(u_*(x*_c_)**_m_, x),
+        constraints=(FreeQ([_c_, _m_], x), SumQ(u_), Not(LinearQ(u_, x)), Not(MatchQ(u_, Condition((a_ + (_b_ * v_)), And(FreeQ([a_, _b_], x), InverseFunctionQ(v_))))),),
+        replacement=Int(ExpandIntegrand(u_*(x*_c_)**_m_, x), x),
         module_name='9.1 Derivative integration rules',
         rule_number=35,
     ),
     # Rule 36
     RubiRulePattern(
-        pattern=Int(_u_*v_**_m_*(b_*v_)**n_, x),
-        constraints=(FreeQ([b_, n_], x), IntegerQ(_m_),),
-        replacement=Int(_u_*(b_*v_)**(_m_ + n_), x)/b_**_m_,
+        pattern=Int(_u_*(x**n_*_a_)**m_, x),
+        constraints=(FreeQ([_a_, m_, n_], x), Not(IntegerQ(m_)),),
+        replacement=_a_**IntPart(m_)*(x**n_*_a_)**FracPart(m_)*Int(x**(m_*n_)*_u_, x)/x**(n_*FracPart(m_)),
         module_name='9.1 Derivative integration rules',
         rule_number=36,
     ),
     # Rule 37
     RubiRulePattern(
-        pattern=Int(_u_*(_a_*v_)**m_*(_b_*v_)**n_, x),
-        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), IGtQ(n_ + sympy.S.Half, 0), IntegerQ(m_ + n_),),
-        replacement=_a_**(m_ + sympy.S.Half)*_b_**(n_ + sympy.S(-1)/2)*sqrt(_b_*v_)*Int(_u_*v_**(m_ + n_), x)/sqrt(_a_*v_),
+        pattern=Int(_u_*v_**_m_*(b_*v_)**n_, x),
+        constraints=(FreeQ([b_, n_], x), IntegerQ(_m_),),
+        replacement=Int(_u_*(b_*v_)**(_m_ + n_), x)/b_**_m_,
         module_name='9.1 Derivative integration rules',
         rule_number=37,
     ),
     # Rule 38
     RubiRulePattern(
         pattern=Int(_u_*(_a_*v_)**m_*(_b_*v_)**n_, x),
-        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), ILtQ(n_ + sympy.S(-1)/2, 0), IntegerQ(m_ + n_),),
-        replacement=_a_**(m_ + sympy.S(-1)/2)*_b_**(n_ + sympy.S.Half)*sqrt(_a_*v_)*Int(_u_*v_**(m_ + n_), x)/sqrt(_b_*v_),
+        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), IGtQ(n_ + sympy.S.Half, 0), IntegerQ(m_ + n_),),
+        replacement=_a_**(m_ + sympy.S.Half)*_b_**(n_ + sympy.S(-1)/2)*sqrt(_b_*v_)*Int(_u_*v_**(m_ + n_), x)/sqrt(_a_*v_),
         module_name='9.1 Derivative integration rules',
         rule_number=38,
     ),
     # Rule 39
     RubiRulePattern(
         pattern=Int(_u_*(_a_*v_)**m_*(_b_*v_)**n_, x),
-        constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), IntegerQ(m_ + n_),),
-        replacement=_a_**(m_ + n_)*(_b_*v_)**n_*Int(_u_*v_**(m_ + n_), x)/(_a_*v_)**n_,
+        constraints=(FreeQ([_a_, _b_, m_], x), Not(IntegerQ(m_)), ILtQ(n_ + sympy.S(-1)/2, 0), IntegerQ(m_ + n_),),
+        replacement=_a_**(m_ + sympy.S(-1)/2)*_b_**(n_ + sympy.S.Half)*sqrt(_a_*v_)*Int(_u_*v_**(m_ + n_), x)/sqrt(_b_*v_),
         module_name='9.1 Derivative integration rules',
         rule_number=39,
     ),
     # Rule 40
     RubiRulePattern(
         pattern=Int(_u_*(_a_*v_)**m_*(_b_*v_)**n_, x),
-        constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), Not(IntegerQ(m_ + n_)),),
-        replacement=_b_**IntPart(n_)*(_b_*v_)**FracPart(n_)*Int(_u_*(_a_*v_)**(m_ + n_), x)/(_a_**IntPart(n_)*(_a_*v_)**FracPart(n_)),
+        constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), IntegerQ(m_ + n_),),
+        replacement=_a_**(m_ + n_)*(_b_*v_)**n_*Int(_u_*v_**(m_ + n_), x)/(_a_*v_)**n_,
         module_name='9.1 Derivative integration rules',
         rule_number=40,
     ),
     # Rule 41
     RubiRulePattern(
-        pattern=Int(_u_*(a_ + _b_*v_)**_m_*(c_ + _d_*v_)**_n_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _n_], x), EqQ(-a_*_d_ + _b_*c_, 0), IntegerQ(_m_), Or(Not(IntegerQ(_n_)), SimplerQ(x*_d_ + c_, x*_b_ + a_)),),
-        replacement=(_b_/_d_)**_m_*Int(_u_*(c_ + _d_*v_)**(_m_ + _n_), x),
+        pattern=Int(_u_*(_a_*v_)**m_*(_b_*v_)**n_, x),
+        constraints=(FreeQ([_a_, _b_, m_, n_], x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), Not(IntegerQ(m_ + n_)),),
+        replacement=_b_**IntPart(n_)*(_b_*v_)**FracPart(n_)*Int(_u_*(_a_*v_)**(m_ + n_), x)/(_a_**IntPart(n_)*(_a_*v_)**FracPart(n_)),
         module_name='9.1 Derivative integration rules',
         rule_number=41,
     ),
     # Rule 42
     RubiRulePattern(
-        pattern=Int(_u_*(a_ + _b_*v_)**m_*(c_ + _d_*v_)**n_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), GtQ(_b_/_d_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_))),),
-        replacement=(_b_/_d_)**m_*Int(_u_*(c_ + _d_*v_)**(m_ + n_), x),
+        pattern=Int(_u_*(a_ + _b_*v_)**_m_*(c_ + _d_*v_)**_n_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _n_], x), EqQ(-a_*_d_ + _b_*c_, 0), IntegerQ(_m_), Or(Not(IntegerQ(_n_)), SimplerQ(x*_d_ + c_, x*_b_ + a_)),),
+        replacement=(_b_/_d_)**_m_*Int(_u_*(c_ + _d_*v_)**(_m_ + _n_), x),
         module_name='9.1 Derivative integration rules',
         rule_number=42,
     ),
     # Rule 43
     RubiRulePattern(
         pattern=Int(_u_*(a_ + _b_*v_)**m_*(c_ + _d_*v_)**n_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_), GtQ(_b_/_d_, 0))),),
-        replacement=(a_ + _b_*v_)**m_*Int(_u_*(c_ + _d_*v_)**(m_ + n_), x)/(c_ + _d_*v_)**m_,
+        constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), GtQ(_b_/_d_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_))),),
+        replacement=(_b_/_d_)**m_*Int(_u_*(c_ + _d_*v_)**(m_ + n_), x),
         module_name='9.1 Derivative integration rules',
         rule_number=43,
     ),
     # Rule 44
     RubiRulePattern(
-        pattern=Int(_u_*(a_ + _b_*v_)**m_*(_A_ + _B_*v_ + _C_*v_**2), x),
-        constraints=(FreeQ([a_, _b_, _A_, _B_, _C_], x), EqQ(_A_*_b_**2 - _B_*a_*_b_ + _C_*a_**2, 0), LeQ(m_, -1),),
-        replacement=Int(_u_*(a_ + _b_*v_)**(m_ + 1)*Simp(_B_*_b_ - _C_*a_ + _C_*_b_*v_, x), x)/_b_**2,
+        pattern=Int(_u_*(a_ + _b_*v_)**m_*(c_ + _d_*v_)**n_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0), Not(Or(IntegerQ(m_), IntegerQ(n_), GtQ(_b_/_d_, 0))),),
+        replacement=(a_ + _b_*v_)**m_*Int(_u_*(c_ + _d_*v_)**(m_ + n_), x)/(c_ + _d_*v_)**m_,
         module_name='9.1 Derivative integration rules',
         rule_number=44,
     ),
     # Rule 45
     RubiRulePattern(
-        pattern=Int(_u_*(x**_n_*_b_ + a_)**_m_*(x**_q_*_d_ + c_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_], x), EqQ(_q_, -_n_), IntegerQ(_p_), EqQ(a_*c_ - _b_*_d_, 0), Not(And(IntegerQ(_m_), NegQ(_n_))),),
-        replacement=(_d_/a_)**_p_*Int(_u_*(x**_n_*_b_ + a_)**(_m_ + _p_)/x**(_n_*_p_), x),
+        pattern=Int(_u_*(a_ + _b_*v_)**m_*(_A_ + _B_*v_ + _C_*v_**2), x),
+        constraints=(FreeQ([a_, _b_, _A_, _B_, _C_], x), EqQ(_A_*_b_**2 - _B_*a_*_b_ + _C_*a_**2, 0), LeQ(m_, -1),),
+        replacement=Int(_u_*(a_ + _b_*v_)**(m_ + 1)*Simp(_B_*_b_ - _C_*a_ + _C_*_b_*v_, x), x)/_b_**2,
         module_name='9.1 Derivative integration rules',
         rule_number=45,
     ),
     # Rule 46
     RubiRulePattern(
-        pattern=Int(_u_*(x**j_*_d_ + c_)**_p_*(x**_n_*_b_ + a_)**_m_, x),
-        constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_, _p_], x), EqQ(j_, 2*_n_), EqQ(_p_, -_m_), EqQ(a_**2*_d_ + _b_**2*c_, 0), GtQ(a_, 0), LtQ(_d_, 0),),
-        replacement=(-_b_**2/_d_)**_m_*Int(_u_/(-x**_n_*_b_ + a_)**_m_, x),
+        pattern=Int(_u_*(x**_n_*_b_ + a_)**_m_*(x**_q_*_d_ + c_)**_p_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_], x), EqQ(_q_, -_n_), IntegerQ(_p_), EqQ(a_*c_ - _b_*_d_, 0), Not(And(IntegerQ(_m_), NegQ(_n_))),),
+        replacement=(_d_/a_)**_p_*Int(_u_*(x**_n_*_b_ + a_)**(_m_ + _p_)/x**(_n_*_p_), x),
         module_name='9.1 Derivative integration rules',
         rule_number=46,
     ),
     # Rule 47
     RubiRulePattern(
-        pattern=Int(_u_*(x**2*_c_ + x*_b_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_], x), EqQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(_p_),),
-        replacement=Int(_u_*(2*x*_c_ + _b_)**(2*_p_)/(2**(2*_p_)*_c_**_p_), x),
+        pattern=Int(_u_*(x**j_*_d_ + c_)**_p_*(x**_n_*_b_ + a_)**_m_, x),
+        constraints=(FreeQ([a_, _b_, c_, _d_, _m_, _n_, _p_], x), EqQ(j_, 2*_n_), EqQ(_p_, -_m_), EqQ(a_**2*_d_ + _b_**2*c_, 0), GtQ(a_, 0), LtQ(_d_, 0),),
+        replacement=(-_b_**2/_d_)**_m_*Int(_u_/(-x**_n_*_b_ + a_)**_m_, x),
         module_name='9.1 Derivative integration rules',
         rule_number=47,
     ),
     # Rule 48
     RubiRulePattern(
+        pattern=Int(_u_*(x**2*_c_ + x*_b_ + a_)**_p_, x),
+        constraints=(FreeQ([a_, _b_, _c_], x), EqQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(_p_),),
+        replacement=Int(_u_*(2*x*_c_ + _b_)**(2*_p_)/(2**(2*_p_)*_c_**_p_), x),
+        module_name='9.1 Derivative integration rules',
+        rule_number=48,
+    ),
+    # Rule 49
+    RubiRulePattern(
         pattern=Int(_u_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, n_], x), EqQ(_n2_, 2*n_), EqQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(_p_),),
         replacement=Int(_u_*(x**n_*_c_ + _b_/2)**(2*_p_), x)/_c_**_p_,
         module_name='9.1 Derivative integration rules',
-        rule_number=48,
+        rule_number=49,
     ),
 
 ]
 
-# Summary: 48 rules translated, 0 skipped
+# Summary: 49 rules translated, 0 skipped

@@ -304,11 +304,21 @@ class Util_Part(Function):
         else:
             lst = self.args[1]
         if isinstance(i, (int, Integer)):
-            if isinstance(lst, (tuple, list)):
-                return lst[i - 1]
-            if getattr(lst, 'is_Atom', False):
-                return lst
-            return lst.args[i - 1]
+            # An out-of-range index (or a Part of something with no such part) stays
+            # UNEVALUATED, as in Mathematica, where `False[[3]]` merely warns and
+            # returns unevaluated. Rubi leans on that: guards like
+            # `EqQ[FunctionOfSquareRootOfQuadratic[u,x][[3]], 2]` are evaluated for
+            # every integrand, and the helper returns False for most of them -- the
+            # part access is then meaningless and the guard must simply fail, not
+            # raise. Propagating IndexError instead aborted the whole match.
+            try:
+                if isinstance(lst, (tuple, list)):
+                    return lst[i - 1]
+                if getattr(lst, 'is_Atom', False):
+                    return lst
+                return lst.args[i - 1]
+            except (IndexError, TypeError, AttributeError):
+                return self
         return self
 
 

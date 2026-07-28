@@ -76,11 +76,11 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 PureFunctionOfSinQ, PureFunctionOfCosQ, PureFunctionOfTanQ, PureFunctionOfCotQ,
                                                 FunctionOfCosQ, FunctionOfSinQ, OddTrigPowerQ, FunctionOfTanQ,
                                                 FunctionOfTanWeight, FunctionOfTrigQ, FunctionOfDensePolynomialsQ,
-                                                FunctionOfLog, eager_PowerVariableExpn, PowerVariableDegree, PowerVariableSubst,
+                                                eager_FunctionOfLog, eager_PowerVariableExpn, PowerVariableDegree, PowerVariableSubst,
                                                 eager_EulerIntegrandQ, FunctionOfSquareRootOfQuadratic, SquareRootOfQuadraticSubst,
                                                 eager_Divides, EasyDQ, ProductOfLinearPowersQ, eager_Rt, NthRoot, AtomBaseQ, eager_SumBaseQ,
                                                 NegSumBaseQ, AllNegTermQ, SomeNegTermQ, TrigSquareQ, RtAux, TrigSquare,
-                                                IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors,
+                                                eager_IntSum, IntTerm, Map2, ConstantFactor, SameQ, ReplacePart, CommonFactors,
                                                 MostMainFactorPosition, eager_FunctionOfExponentialQ, eager_FunctionOfExponential,
                                                 eager_FunctionOfExponentialFunction, FunctionOfExponentialFunctionAux,
                                                 FunctionOfExponentialTest, FunctionOfExponentialTestAux, stdev, eager_If, eager_IntQuadraticQ, eager_IntBinomialQ, RectifyTangent, RectifyCotangent,
@@ -1857,12 +1857,12 @@ def test_OddTrigPowerQ():
     assert OddTrigPowerQ(sin(3*x)**3,x,x)
 
 def test_FunctionOfLog():
-    assert not FunctionOfLog(x**2*(a + b*x)**3*exp(-a - b*x) ,False, False, x)
-    assert FunctionOfLog(log(2*x**8)*2 + log(2*x**8) + 1, x) == [3*x + 1, 2*x**8, 8]
-    assert FunctionOfLog(log(2*x)**2,x) == [x**2, 2*x, 1]
-    assert FunctionOfLog(log(3*x**3)**2 + 1,x) == [x**2 + 1, 3*x**3, 3]
-    assert FunctionOfLog(log(2*x**8)*2,x) == [2*x, 2*x**8, 8]
-    assert not FunctionOfLog(2*sin(x)*2,x)
+    assert not eager_FunctionOfLog(x**2*(a + b*x)**3*exp(-a - b*x) ,False, False, x)
+    assert eager_FunctionOfLog(log(2*x**8)*2 + log(2*x**8) + 1, x) == [3*x + 1, 2*x**8, 8]
+    assert eager_FunctionOfLog(log(2*x)**2,x) == [x**2, 2*x, 1]
+    assert eager_FunctionOfLog(log(3*x**3)**2 + 1,x) == [x**2 + 1, 3*x**3, 3]
+    assert eager_FunctionOfLog(log(2*x**8)*2,x) == [2*x, 2*x**8, 8]
+    assert not eager_FunctionOfLog(2*sin(x)*2,x)
 
 def test_EulerIntegrandQ():
     assert eager_EulerIntegrandQ((2*x + 3*((x + 1)**3)**(S(3)/2))**(-3), x)

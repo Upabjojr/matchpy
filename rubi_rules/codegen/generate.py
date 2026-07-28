@@ -401,6 +401,8 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'SubstFor': 'SubstFor',
     'FunctionOfExponential': 'FunctionOfExponential',
     'FunctionOfExponentialFunction': 'FunctionOfExponentialFunction',
+    'FunctionOfLog': 'FunctionOfLog',
+    'IntSum': 'IntSum',
     "D": "D",
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',
@@ -677,12 +679,40 @@ def load_json_entries(json_path: Path) -> List[dict]:
         return json.load(f)
 
 
+def _unwrap_load_show_steps(exprs: List) -> List:
+    """Replace ``If[TrueQ[LoadShowSteps], <step rule>, <plain rule>]`` by the plain rule.
+
+    Rubi defines 34 of its most GENERAL rules this way -- the ones keyed on a utility
+    predicate rather than on a syntactic shape: the ``FunctionOfLog`` log-substitution
+    (3.5), ``DeactivateTrig`` dispatch (4.1.0.1), the inert-trig rules (4.7.5), integrand
+    simplification (9.1) and the 9.3/9.4 miscellaneous rules. Both branches define the
+    SAME rule; the first merely wraps the RHS in ``ShowStep[...]`` so Rubi can narrate it.
+    Mathematica evaluates the ``If`` at load time and ``$LoadShowSteps`` is False by
+    default, so the THIRD argument is the rule that is actually installed.
+
+    Without this, every one of those rules was invisible to the generator (it only looks
+    for a top-level ``SetDelayed``), and their absence is not silent: with no general
+    log-substitution rule, ``Int[Erf[Log[x]]/x, x]`` fell through to the narrower and
+    upstream-buggy 8.1/8.4 rules. Verified against real Rubi 4.17.3.0, which solves it
+    via exactly this rule ("General" in its Steps output).
+    """
+    out = []
+    for expr in exprs:
+        if (isinstance(expr, list) and len(expr) == 4 and expr[0] == 'If'
+                and expr[1] == ['TrueQ', 'LoadShowSteps']
+                and isinstance(expr[3], list) and expr[3] and expr[3][0] == 'SetDelayed'):
+            out.append(expr[3])
+        else:
+            out.append(expr)
+    return out
+
+
 def group_entries_by_output(entries: List[dict]) -> Dict[str, dict]:
     """Group JSON entries by output path, merging expressions for duplicates."""
     groups: Dict[str, dict] = {}
     for entry in entries:
         fpath = entry.get('file', '')
-        exprs = entry.get('expressions') or []
+        exprs = _unwrap_load_show_steps(entry.get('expressions') or [])
         err   = entry.get('file_error')
         out   = _make_output_path(fpath)
         if out is None or (not exprs and not err):

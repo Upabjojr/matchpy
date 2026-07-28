@@ -90,35 +90,56 @@ def _make_replacement_fn(replacement_expr, rule):
 
 
 def _extract_wild_names(constraint_obj):
-    """Extract WildSymbol/Symbol names from a constraint.
+    """Extract the wildcard names a constraint depends on.
 
-    Handles SympyMatchingConstraint (via .variables) and Boolean wrappers
-    Not(...), Or(...), And(...) by recursing into their args.
+    A constraint reaches us as an arbitrary expression tree: a
+    SympyMatchingConstraint (which publishes its wilds via ``.variables`` --
+    ``free_symbols`` is empty on those), a Boolean wrapper (Not/Or/And), a bare
+    SymPy relational over WildSymbols, or a deferred ``MathematicaExpr`` such as
+    ``If(RationalQ(n_), GtQ(n_, 1), SumSimplerQ(n_, -2))`` that WRAPS inner
+    constraints.
+
+    The walk must therefore be GENERIC over ``.args``. An earlier version knew
+    only about Not/Or/And and ``.variables``, so it walked straight past the
+    ``If`` wrapper above and reported that the guard used no wildcards at all --
+    whereupon :func:`_make_matchpy_constraint` dropped it and the rule ran
+    unguarded. Seven Rubi rules were affected.
     """
-    if isinstance(constraint_obj, sympy.logic.boolalg.Not):
-        inner = constraint_obj.args[0]
-        return _extract_wild_names(inner)
-    if isinstance(constraint_obj, (sympy.logic.boolalg.Or, sympy.logic.boolalg.And)):
-        names = set()
-        for arg in constraint_obj.args:
-            names.update(_extract_wild_names(arg))
-        return sorted(names)
+    names: set = set()
+    stack = [constraint_obj]
+    visited: set = set()
+    while stack:
+        node = stack.pop()
+        marker = id(node)
+        if marker in visited:
+            continue
+        visited.add(marker)
 
-    try:
-        free_syms = constraint_obj.free_symbols
-        names = []
-        for s in free_syms:
-            if isinstance(s, WildSymbol):
-                names.append(s.wildcard_name)
-            elif hasattr(s, 'name') and s.name.endswith('_'):
-                names.append(s.name)
-        if names:
-            return sorted(set(names))
-    except (AttributeError, TypeError):
-        pass
-    if hasattr(constraint_obj, 'variables'):
-        return [v for v in constraint_obj.variables if v.isidentifier()]
-    return []
+        if isinstance(node, WildSymbol):
+            names.add(node.wildcard_name)
+            continue
+
+        # Every attribute below is read defensively with an explicit type check: a
+        # constraint's args legitimately contain CLASSES, not just instances -- e.g.
+        # MemberQ([HeadRef(sympy.Si), ...], F_) carries function heads. On a class,
+        # `.args`/`.free_symbols` resolve to the unbound property object, which is
+        # truthy and not iterable.
+        declared = getattr(node, 'variables', None)
+        if isinstance(declared, (list, tuple, set, frozenset)):
+            names.update(v for v in declared if isinstance(v, str) and v.isidentifier())
+
+        free_syms = getattr(node, 'free_symbols', None)
+        if isinstance(free_syms, (set, frozenset, list, tuple)):
+            for s in free_syms:
+                if isinstance(s, WildSymbol):
+                    names.add(s.wildcard_name)
+                elif isinstance(getattr(s, 'name', None), str) and s.name.endswith('_'):
+                    names.add(s.name)
+
+        args = getattr(node, 'args', ())
+        if isinstance(args, (list, tuple)):
+            stack.extend(args)
+    return sorted(names)
 
 
 # Mathematica's MatchQ inspects the UNEVALUATED expression. By the time an expression
@@ -228,6 +249,26 @@ def _make_matchpy_constraint(constraint_obj, pattern_wilds):
     declared = _extract_wild_names(constraint_obj)
     variables = [v for v in declared if v in pattern_wilds]
     if not variables:
+        if declared:
+            # Mentions wildcards, just none the pattern binds -> its value still depends
+            # on something we cannot supply, so stay permissive (see the note above).
+            return CustomConstraint(lambda: True)
+        # A guard over NO wildcard at all cannot depend on the match, so its value is
+        # fixed for the whole run -- EVALUATE it once here rather than assume it passes.
+        # Assuming True let a constant-FALSE guard run its rule unconditionally, which
+        # is how Rubi's `MemberQ[{SinIntegral,CosIntegral}, x]` typo (rules 8.4#27 and
+        # 8.5#27, where `x` should read `F`) turned from harmless upstream dead code
+        # into a catch-all: the pattern's head wildcard matches EVERY head, so the rules
+        # fired for arbitrary F and returned a wrong antiderivative. The same held for
+        # `TrueQ[$UseGamma]` (2.3#2/#5), which Rubi defines as False.
+        # An indeterminate result (None, or a guard that raises because it wants match
+        # context after all) keeps the permissive default -- only a definite False blocks.
+        try:
+            value = _make_constraint_checker(constraint_obj, [])()
+        except Exception:
+            return CustomConstraint(lambda: True)
+        if value is False or value is sympy.S.false:
+            return CustomConstraint(lambda: False)
         return CustomConstraint(lambda: True)
 
     checker = _make_constraint_checker(constraint_obj, variables)

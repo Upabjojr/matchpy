@@ -1346,7 +1346,18 @@ def _binding_substitutions(bindings: Basic, evaluate_values: bool, **kwargs) -> 
                 # SympifyError in xreplace; keep the raw (still-valid, possibly
                 # deferred) value instead so the binding stays a legal expression --
                 # the rule then simply yields a non-clean result and the DFS moves on.
-                subs[symbol] = value if evaluated is None else evaluated
+                if evaluated is None:
+                    evaluated = value
+                elif isinstance(evaluated, (list, tuple)):
+                    # Mathematica utilities that "return a list" return a List
+                    # EXPRESSION, and Rubi's rules then read it with Part. Several of
+                    # our eager helpers (FunctionOfLinear, FunctionOfLog, ...) hand
+                    # back a PYTHON list instead; substituting that into the body
+                    # explodes inside SymPy's xreplace, which requires every value to
+                    # be a Basic. Wrap it here, at the one place bindings are made,
+                    # rather than in each helper.
+                    evaluated = List(*evaluated)
+                subs[symbol] = evaluated
             else:
                 subs[symbol] = value
     return subs

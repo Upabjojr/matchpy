@@ -121,6 +121,70 @@ def _collect_wildcards_from_args(args):
     return sorted(names)
 
 
+def _free_symbols_safe(expr):
+    """``expr.free_symbols``, tolerating args that are not SymPy objects.
+
+    A deferred Wolfram node may keep a raw Python value in ``.args`` --
+    ``Part(RationalFunctionExponents(u, x), 2)`` holds an ``int`` -- because its
+    ``__new__`` passes arguments through without sympifying. That breaks SymPy's
+    invariant that every arg is a ``Basic``, and the recursive ``free_symbols``
+    walk then raises ``AttributeError`` from inside SymPy. Guards belong here
+    rather than in each of the ~20 node constructors: some of them hold non-SymPy
+    payloads deliberately, and a constraint must never crash the matcher.
+    """
+    try:
+        return expr.free_symbols
+    except AttributeError:
+        pass
+    found = set()
+    stack = [expr]
+    seen: set = set()
+    while stack:
+        node = stack.pop()
+        if id(node) in seen:
+            continue
+        seen.add(id(node))
+        if isinstance(node, sympy.Symbol):
+            found.add(node)
+            continue
+        if isinstance(node, (list, tuple, set, frozenset)):
+            stack.extend(node)
+            continue
+        args = getattr(node, 'args', ())
+        if isinstance(args, (list, tuple)):
+            stack.extend(args)
+    return found
+
+
+def _xreplace_safe(expr, rule):
+    """``expr.xreplace(rule)``, tolerating non-SymPy args (see :func:`_free_symbols_safe`)."""
+    try:
+        return expr.xreplace(rule)
+    except AttributeError:
+        pass
+    return _xreplace_rebuild(expr, rule)
+
+
+def _xreplace_rebuild(expr, rule):
+    """Structural xreplace that walks ``.args`` itself and rebuilds via ``.func``."""
+    try:
+        if expr in rule:
+            return rule[expr]
+    except TypeError:          # unhashable -> cannot be a substitution key
+        pass
+    if isinstance(expr, (list, tuple)):
+        return type(expr)(_xreplace_rebuild(item, rule) for item in expr)
+    args = getattr(expr, 'args', None)
+    if isinstance(args, (list, tuple)) and args:
+        new_args = [_xreplace_rebuild(a, rule) for a in args]
+        if any(new is not old for new, old in zip(new_args, args)):
+            try:
+                return expr.func(*new_args)
+            except (TypeError, ValueError):
+                return expr
+    return expr
+
+
 def _resolve_with_substitution(expr, substitution):
     """Resolve an expression using a substitution dict keyed by wildcard/symbol name.
 
@@ -140,15 +204,17 @@ def _resolve_with_substitution(expr, substitution):
         return substitution[expr.name]
 
     # For compound expressions, build an xreplace dict
-    if isinstance(expr, sympy.Basic) and expr.free_symbols:
-        subs_dict = {}
-        for sym in expr.free_symbols:
-            if hasattr(sym, 'wildcard_name') and sym.wildcard_name in substitution:
-                subs_dict[sym] = substitution[sym.wildcard_name]
-            elif sym.name in substitution:
-                subs_dict[sym] = substitution[sym.name]
-        if subs_dict:
-            return expr.xreplace(subs_dict)
+    if isinstance(expr, sympy.Basic):
+        free_syms = _free_symbols_safe(expr)
+        if free_syms:
+            subs_dict = {}
+            for sym in free_syms:
+                if hasattr(sym, 'wildcard_name') and sym.wildcard_name in substitution:
+                    subs_dict[sym] = substitution[sym.wildcard_name]
+                elif sym.name in substitution:
+                    subs_dict[sym] = substitution[sym.name]
+            if subs_dict:
+                return _xreplace_safe(expr, subs_dict)
 
     # For tuples/lists, resolve recursively
     if isinstance(expr, (list, tuple)):

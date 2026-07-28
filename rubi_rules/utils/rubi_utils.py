@@ -416,6 +416,48 @@ class FunctionOfExponentialFunction(MathematicaExpr):
         return eager_FunctionOfExponentialFunction(*self.args)
 
 
+class IntSum(MathematicaExpr):
+    """Deferred IntSum[u, x] -- distribute Int over the terms of the sum ``u``.
+
+    Used by Rubi's general sum-splitting rules (9.1 / 1.4.1). Our DFS already splits a
+    top-level Add itself, but those rules can still be reached through the whole-sum
+    match, so the node has to reduce to real ``Int`` terms rather than sit inert.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_IntSum
+        return eager_IntSum(*self.args)
+
+
+class FunctionOfLog(MathematicaExpr):
+    """Deferred FunctionOfLog[u, x] -- delegates to the eager utility.
+
+    If ``u`` is a function of ``Log[a*x^n]``, returns the list ``{f(x), a*x^n, n}``;
+    otherwise False. Drives Rubi's general log-substitution rule (3.5 Miscellaneous
+    logarithms), which rewrites ``Int[f(Log[a x^n])/x, x]`` as
+    ``Subst[Int[f(x), x], x, Log[a x^n]]/n``.
+
+    The eager helper returns a PYTHON list (or the bool False), neither of which is a
+    SymPy object, so ``_evaluate`` hands back a ``List`` / ``S.false`` -- the rule then
+    reads it with ``Part`` and tests it with ``FalseQ``, exactly as Rubi does.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_FunctionOfLog
+        result = eager_FunctionOfLog(*self.args)
+        if result is False or result is None:
+            return sympy.S.false
+        if isinstance(result, (list, tuple)):
+            return List(*result)
+        return result
+
+
 # =============================================================================
 # PolynomialDivide[u, v, x] — quotient + remainder/v as one expression
 # =============================================================================
