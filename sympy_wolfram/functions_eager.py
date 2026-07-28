@@ -329,6 +329,45 @@ def eager_Part(lst, i):
     return Util_Part(i, lst).doit()
 
 
+def eager_ProductLog(*args):
+    """Mathematica ``ProductLog[z]`` / ``ProductLog[k, z]`` — the Lambert W function.
+
+    THE ARGUMENT ORDER IS REVERSED between the two systems: Mathematica takes the
+    branch index FIRST (``ProductLog[k, z]``), SymPy takes it LAST (``LambertW(z, k)``).
+    Verified on 12.2: ``N[ProductLog[-1, -0.1]] == -3.577152063957297``.
+
+    Stays symbolic for symbolic input, as Mathematica does (``ProductLog[1]`` is not
+    evaluated); the previous implementation called ``.evalf()`` unconditionally.
+    """
+    args = [sympify(a) for a in args]
+    if len(args) == 2:
+        k, z = args
+        return sympy.LambertW(z, k)
+    return sympy.LambertW(args[0])
+
+
+def eager_Identity(z):
+    """Mathematica ``Identity[z]`` — returns its argument unchanged.
+
+    Rubi uses it to keep a coefficient from being folded away too early, as in
+    ``Int[-u_, x] := Identity[-1]*Int[u, x]`` (9.1 Integrand simplification rules).
+    """
+    return sympify(z)
+
+
+def eager_ExpIntegralEi(z):
+    """Mathematica ``ExpIntegralEi[z]`` — the exponential integral Ei(z)."""
+    return sympy.Ei(sympify(z))
+
+
+def eager_LogIntegral(z):
+    """Mathematica ``LogIntegral[z]`` — the logarithmic integral li(z).
+
+    ``LogIntegral[1] == -Infinity`` in Mathematica; SymPy's ``li(1)`` agrees.
+    """
+    return sympy.li(sympify(z))
+
+
 def eager_Factorial(z):
     """Mathematica ``Factorial[z]`` (``z!``).
 

@@ -108,7 +108,7 @@ v_ = WildSymbol('v')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertCsc((_e_ + (_k_ * sympy.pi) + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertCsc((_e_ + (_k_ * sympy.pi) + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IntegerQ(2*_k_), IGtQ(_m_, 0),),
         replacement=I*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*log(1 - exp(-I*pi*_k_)*exp(x*_f_*fz_ - I*_e_)), x)/(_f_*fz_) - I*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*log(1 + exp(-I*pi*_k_)*exp(x*_f_*fz_ - I*_e_)), x)/(_f_*fz_) + 2*I*(x*_d_ + _c_)**_m_*atanh(exp(-I*pi*_k_)*exp(x*_f_*fz_ - I*_e_))/(_f_*fz_),
         module_name='4.5.10 (c+d x)^m (a+b sec)^n',
@@ -124,7 +124,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertCsc((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertCsc((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IGtQ(_m_, 0),),
         replacement=I*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*log(1 - exp(x*_f_*fz_ - I*_e_)), x)/(_f_*fz_) - I*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*log(exp(x*_f_*fz_ - I*_e_) + 1), x)/(_f_*fz_) + 2*I*(x*_d_ + _c_)**_m_*atanh(exp(x*_f_*fz_ - I*_e_))/(_f_*fz_),
         module_name='4.5.10 (c+d x)^m (a+b sec)^n',

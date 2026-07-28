@@ -108,7 +108,7 @@ v_ = WildSymbol('v')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_k_ * sympy.pi) + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_k_ * sympy.pi) + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IntegerQ(4*_k_), IGtQ(_m_, 0),),
         replacement=2*I*Int((x*_d_ + _c_)**_m_*exp(-2*I*pi*_k_)*exp(2*x*_f_*fz_ - 2*I*_e_)/(1 + exp(-2*I*pi*_k_)*exp(2*x*_f_*fz_ - 2*I*_e_)), x) - I*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
@@ -124,7 +124,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x)))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IGtQ(_m_, 0),),
         replacement=2*I*Int((x*_d_ + _c_)**_m_*exp(2*x*_f_*fz_ - 2*I*_e_)/(exp(2*x*_f_*fz_ - 2*I*_e_) + 1), x) - I*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',

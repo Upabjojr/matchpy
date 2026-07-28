@@ -205,7 +205,20 @@ def _make_constraint_checker(constraint_obj, variables):
     # SympyMatchingConstraint (incl. Wolfram's MathematicaConstraint): use .check().
     if isinstance(constraint_obj, SympyMatchingConstraint):
         def check_constraint(**kwargs):
-            return constraint_obj.check(**kwargs)
+            try:
+                return constraint_obj.check(**kwargs)
+            except TypeError as exc:
+                # A guard whose operand is a Boolean cannot be evaluated arithmetically:
+                # SymPy raises "BooleanAtom not allowed in this context" from the first
+                # `-` or comparison. This happens all over Rubi because its helpers
+                # signal "no result" by returning False, and a rule then feeds that
+                # value straight into the next guard (ZeroQ[u.base - v], EqQ[lst[[3]],2],
+                # ...). Mathematica keeps such an expression symbolic, so the guard
+                # simply does not hold -- which is what we return. Only this one
+                # message is swallowed; any other TypeError is a real bug and propagates.
+                if 'BooleanAtom not allowed' not in str(exc):
+                    raise
+                return False
         return check_constraint
 
     # Generic SymPy Boolean guard (a bare relational like Ne(GCD(m+1,n),1), NOT a

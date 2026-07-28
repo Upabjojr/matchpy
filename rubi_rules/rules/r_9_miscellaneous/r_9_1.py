@@ -361,15 +361,15 @@ RULES = [
     RubiRulePattern(
         pattern=Int(-u_, x),
         constraints=(),
-        replacement=(sympy.Function('Identity')(Integer(-1)) * Int(u_, x)),
+        replacement=(eager_Identity(Integer(-1)) * Int(u_, x)),
         module_name='9.1 Derivative integration rules',
         rule_number=31,
     ),
     # Rule 32
     RubiRulePattern(
-        pattern=Int((sympy.Function('Complex')(Integer(0), a_) * u_), x),
+        pattern=Int((eager_Complex(Integer(0), a_) * u_), x),
         constraints=(FreeQ(a_, x), EqQ(a_**2, 1),),
-        replacement=(Complex(sympy.Function('Identity')(Integer(0)), a_) * Int(u_, x)),
+        replacement=(Complex(eager_Identity(Integer(0)), a_) * Int(u_, x)),
         module_name='9.1 Derivative integration rules',
         rule_number=32,
     ),

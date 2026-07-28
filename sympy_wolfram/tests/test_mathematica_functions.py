@@ -423,3 +423,61 @@ def test_special_function_nodes_defer_then_evaluate(name):
                                    'Root', 'Discriminant') else node(z)
     assert isinstance(built, mf.MathematicaExpr)
     built.doit()   # must not raise
+
+
+# ---------------------------------------------------------------------------
+# 5. ProductLog / Identity / ExpIntegralEi / LogIntegral
+#    All Wolfram BUILTINS. Expected values from Mathematica 12.2.
+# ---------------------------------------------------------------------------
+
+def test_eager_ProductLog_argument_order_is_reversed_vs_sympy():
+    """MMA takes the branch index FIRST (ProductLog[k, z]); SymPy takes it LAST
+    (LambertW(z, k)). Getting this backwards is silent and wrong, so it is pinned."""
+    from sympy_wolfram.functions_eager import eager_ProductLog
+    z = sympy.Symbol('z')
+    assert eager_ProductLog(z) == sympy.LambertW(z)
+    assert eager_ProductLog(0) == 0                        # ProductLog[0] == 0
+    assert eager_ProductLog(-1 / sympy.E) == -1            # ProductLog[-1/E] == -1
+    # MMA keeps exact/symbolic input symbolic -- the old impl called .evalf()
+    assert eager_ProductLog(1) == sympy.LambertW(1)
+    # N[ProductLog[5.0]] == 1.3267246652422002
+    assert abs(float(sympy.N(eager_ProductLog(5.0), 20)) - 1.3267246652422002) < 1e-15
+    # branch k=-1: N[ProductLog[-1, -0.1]] == -3.577152063957297
+    assert abs(float(sympy.N(eager_ProductLog(-1, -0.1), 20)) - (-3.577152063957297)) < 1e-14
+    # branch k=0:  N[ProductLog[0, -0.1]]  == -0.11183255915896297
+    assert abs(float(sympy.N(eager_ProductLog(0, -0.1), 20)) - (-0.11183255915896297)) < 1e-15
+
+
+def test_eager_Identity():
+    """Identity[z] == z. Rubi uses it to stop a coefficient folding away early:
+    Int[-u_, x] := Identity[-1]*Int[u, x]."""
+    from sympy_wolfram.functions_eager import eager_Identity, eager_Complex
+    a, b = sympy.symbols('a b')
+    assert eager_Identity(-1) == -1
+    assert eager_Identity(0) == 0
+    assert eager_Identity(a + b) == a + b
+    # Complex[Identity[0], a] == Complex[0, a] == I a
+    assert eager_Complex(eager_Identity(0), a) == sympy.I * a
+
+
+def test_eager_ExpIntegralEi_and_LogIntegral():
+    from sympy_wolfram.functions_eager import eager_ExpIntegralEi, eager_LogIntegral
+    z = sympy.Symbol('z')
+    assert eager_ExpIntegralEi(z) == sympy.Ei(z)           # stays symbolic
+    assert eager_LogIntegral(z) == sympy.li(z)
+    # N[ExpIntegralEi[1.0]] == 1.8951178163559368
+    assert abs(float(sympy.N(eager_ExpIntegralEi(1.0), 20)) - 1.8951178163559368) < 1e-15
+    # N[LogIntegral[2.0]] == 1.0451637801174924
+    assert abs(float(sympy.N(eager_LogIntegral(2.0), 20)) - 1.0451637801174924) < 1e-14
+    assert eager_LogIntegral(1) == -sympy.oo                # LogIntegral[1] == -Infinity
+
+
+def test_Block_is_available_for_the_UseGamma_rule():
+    """8.6 Gamma functions wraps its body in Block[{$UseGamma = True}, ...]; the rule
+    now generates, so Block has to be importable where the rules look for it."""
+    from rubi_rules.utils import rubi_utils
+    from sympy_wolfram.objects import Block, List, Set
+    q = sympy.Symbol('q')
+    assert rubi_utils.Block is Block
+    # Block[{q = 1}, q + 2] == 3
+    assert Block(List(Set(q, sympy.Integer(1))), q + 2).doit() == 3

@@ -246,12 +246,32 @@ def _rewrite_fhw_in_matchq(node):
         subject, pattern = node[1], node[2]
         if isinstance(pattern, list) and pattern and pattern[0] == 'Condition':
             inner, test = pattern[1], pattern[2]
-            inner, _heads = _extract_fhw_from_pattern(inner)
-            pattern = ['Condition', inner, test]
+            inner, heads = _extract_fhw_from_pattern(inner)
+            pattern = ['Condition', inner, _apply_fhw_heads_in_test(test, heads)]
         else:
             pattern, _heads = _extract_fhw_from_pattern(pattern)
         return ['MatchQ', _rewrite_fhw_in_matchq(subject), pattern] + list(node[3:])
     return [_rewrite_fhw_in_matchq(c) for c in node]
+
+
+def _apply_fhw_heads_in_test(test, heads):
+    """Rewrite ``F[args]`` in a MatchQ condition's TEST when ``F`` is a head wildcard
+    bound by the surrounding pattern.
+
+    ``MatchQ[u, E^(c_.*(a_.+b_.*x))*F_[v_] /; ... && InverseFunctionQ[F[x]]]``: the
+    pattern binds ``F`` as a function HEAD, and the test then APPLIES it to ``x``. In
+    the FFL the pattern side is ``[['Pattern','F',['Blank']], v]`` (rewritten to
+    WildHeadApp by :func:`_extract_fhw_from_pattern`), but the test side is a plain
+    ``['F', 'x']`` -- head is the bare string, so nothing recognised it and the
+    emitter produced an undefined ``sympy.Function('F')(x)``, silently losing the
+    binding. Rewrite those applications to ``WildHeadApp[F_, args]`` too.
+    """
+    if not heads or not isinstance(test, list) or not test:
+        return test
+    if isinstance(test[0], str) and test[0] in heads:
+        args = [_apply_fhw_heads_in_test(a, heads) for a in test[1:]]
+        return ['WildHeadApp', ['Pattern', test[0], ['Blank']]] + args
+    return [_apply_fhw_heads_in_test(c, heads) for c in test]
 
 
 def _summarize_ffl_guard(ffl) -> str:
@@ -404,6 +424,8 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'FunctionOfLog': 'FunctionOfLog',
     'IntSum': 'IntSum',
     'Discriminant': 'Discriminant',
+    'Block': 'Block',
+    'Identity': 'eager_Identity',
     'Root': 'Root',
     'SubstPower': 'SubstPower',
     'SubstForInverseFunction': 'SubstForInverseFunction',

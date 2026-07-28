@@ -908,7 +908,7 @@ RULES = [
     # Rule 96
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))), Not(MatchQ(u_, Condition(((sympy.E)**((_c_ * (_a_ + (_b_ * x)))) * WildHeadApp(F_, v_)), And(FreeQ([_a_, _b_, _c_], x), InverseFunctionQ(sympy.Function('F')(x)))))),),
+        constraints=(FunctionOfExponentialQ(u_, x), Not(MatchQ(u_, Condition((w_ * ((_a_ * (v_)**(n_)))**(m_)), And(FreeQ([_a_, m_, n_], x), IntegerQ((m_ * n_)))))), Not(MatchQ(u_, Condition(((sympy.E)**((_c_ * (_a_ + (_b_ * x)))) * WildHeadApp(F_, v_)), And(FreeQ([_a_, _b_, _c_], x), InverseFunctionQ(WildHeadApp(F_, x)))))),),
         replacement=With({v: FunctionOfExponential(u_, x)}, v*Subst(Int(FunctionOfExponentialFunction(u_, x)/x, x), x, v)/D(v, x)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=96,

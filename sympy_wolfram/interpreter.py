@@ -139,6 +139,12 @@ class FFLConverter:
         'BesselJ': 'sympy.besselj', 'ExpIntegralE': 'sympy.expint',
         'PolyGamma': 'sympy.polygamma', 'Zeta': 'sympy.zeta',
         'Factorial': 'sympy.factorial',
+        # ProductLog and Complex also occur in PATTERNS, but neither is a plain
+        # rename: Mathematica's ProductLog[k,z] has the branch index FIRST
+        # (SymPy's LambertW(z,k) has it last) and Complex[a,b] is arithmetic
+        # (a + I b), not a function. Both map to the EAGER helpers, which
+        # evaluate at construction so the pattern holds a real LambertW / I*a.
+        'ProductLog': 'eager_ProductLog', 'Complex': 'eager_Complex',
         'SinhIntegral': 'sympy.Shi', 'CoshIntegral': 'sympy.Chi',
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra

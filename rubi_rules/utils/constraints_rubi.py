@@ -51,12 +51,16 @@ class NeQ(MathematicaConstraint):
         self._u = self.args[0]
         self._v = self.args[1]
     def check(self, **kwargs):
-        from .utility_functions import NonzeroQ
+        from .utility_functions import NonzeroQ, _boolean_operand
         if len(self.args) != 2:
             return None
         sk = self._resolve_all(kwargs)
         u = self._resolve(self._u, sk)
         v = self._resolve(self._v, sk)
+        if _boolean_operand(u, v):
+            # A Boolean operand cannot be subtracted (SymPy raises); Mathematica just
+            # leaves the difference unevaluated, so it is non-zero unless identical.
+            return not (u is v or u == v)
         return NonzeroQ(u - v)
     def __repr__(self):
         return f"NeQ({self._u}, {self._v})"

@@ -811,26 +811,21 @@ class TestGeneratedRulesetInvariants:
         offenders = [str(p) for p, t in self._all_text() if 'dropped guard' in t]
         assert offenders == []
 
-    def test_only_the_two_known_rules_are_skipped(self):
-        """Everything Rubi can actually run must translate; any OTHER skip is a
-        regression in this port. The two known exceptions are:
+    def test_the_only_skipped_rule_is_the_upstream_rubi_typo(self):
+        """Everything Rubi can actually run must translate. The single exception is
+        Rubi's own `NeQ[e^2-4*d*f]` (one argument), which Mathematica leaves
+        unevaluated so the rule never fires there either -- verified against real
+        Rubi. Any OTHER skip is a regression in this port.
 
-        1. Rubi's own `NeQ[e^2-4*d*f]` (one argument), which Mathematica leaves
-           unevaluated so the rule never fires there either -- verified against real
-           Rubi.
-        2. The Weierstrass half-angle substitution (4.7.5 #71). It arrived with the
-           `If[TrueQ[$LoadShowSteps], ...]` unwrapping, and its nested
-           `Block[{...}, Int[SubstFor[...]]]` does not survive the generator's
-           load-validation yet. It was absent from this port before that unwrapping
-           too, so skipping it loses nothing that used to work -- but it IS a real
-           Rubi rule and wiring it up is outstanding work, not an accepted quirk.
+        The Weierstrass half-angle substitution (4.7.5 #71) briefly appeared here too,
+        when the `If[TrueQ[$LoadShowSteps], ...]` unwrapping first exposed it; it now
+        translates, so all 34 of those general rules are emitted.
         """
         skips = [line.strip()
                  for _p, t in self._all_text()
                  for line in t.splitlines() if 'SKIPPED' in line]
-        assert len(skips) == 2, skips
-        assert any('upstream Rubi arity typo' in s for s in skips), skips
-        assert any('is_Float' in s for s in skips), skips
+        assert len(skips) == 1, skips
+        assert 'upstream Rubi arity typo' in skips[0]
 
     def test_head_wildcards_inside_matchq_guards_are_emitted(self):
         """The 6 trig rules whose guard matches `trig_[e+f*x]` for any trig head."""

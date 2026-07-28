@@ -2293,8 +2293,8 @@ def test_PolyGamma():
 
 def test_ProductLog():
     from sympy.core.evalf import N
-    assert N(ProductLog(S(5.0)), 5) == N(1.32672466524220, 5)
-    assert N(ProductLog(S(2), S(3.5)), 5) == N(-1.14064876353898 + 10.8912237027092*I, 5)
+    assert N(ProductLog(S(5.0)).doit(), 5) == N(1.32672466524220, 5)
+    assert N(ProductLog(S(2), S(3.5)).doit(), 5) == N(-1.14064876353898 + 10.8912237027092*I, 5)
 
 def test_PolynomialQuotient():
     # value-equal to log(...)/((a+b x)(c+d x)); the consolidated eager uses sympy.quo

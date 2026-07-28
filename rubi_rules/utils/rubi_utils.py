@@ -39,6 +39,7 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
                    Poly, frac, floor, Expr)
 
 from sympy_wolfram.objects import (
+    Block,
     CompoundExpression,
     Condition,   # standard Wolfram node; defined in sympy_wolfram, re-exported here
     Head,
@@ -53,6 +54,14 @@ from sympy_wolfram.objects import (
 )
 from sympy_wolfram.objects import (
     Gamma,
+)
+# EAGER helpers that generated rules call by name. They must evaluate AT
+# CONSTRUCTION -- these heads occur in rule PATTERNS, where a deferred node
+# would only match another deferred node instead of a caller's LambertW / I*a.
+from sympy_wolfram.functions_eager import (
+    eager_Complex,
+    eager_Identity,
+    eager_ProductLog,
 )
 # Standard Wolfram-language function nodes — moved to sympy_wolfram (not
 # Rubi-specific). Re-exported here so generated rules (which do

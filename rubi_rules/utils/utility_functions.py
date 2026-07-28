@@ -79,7 +79,10 @@ from sympy_matching.conversion import matchpy_to_sympy
 # correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
 # in-module callers keep resolving these names; the local defs were removed.
 from sympy_wolfram.mathematica_functions import (  # standard Wolfram nodes (moved out of this module)
-    BesselJ, ExpIntegralE, Factorial, PolyGamma, Root, Zeta,
+    BesselJ, ExpIntegralE, Factorial, PolyGamma, Root, Zeta, ProductLog,
+)
+from sympy_wolfram.functions_eager import (
+    eager_ExpIntegralEi as ExpIntegralEi, eager_LogIntegral as LogIntegral,
 )
 from sympy_wolfram.functions_eager import (
     eager_LeafCount, eager_Length, eager_Complex, eager_Not, eager_Exponent,
@@ -7321,12 +7324,6 @@ def PureFunctionOfCothQ(u, v, x):
         return CothQ(u)
     return all(PureFunctionOfCothQ(i, v, x) for i in u.args)
 
-def LogIntegral(z):
-    return li(z)
-
-def ExpIntegralEi(z):
-    return Ei(z)
-
 def SinIntegral(z):
     return Si(z)
 
@@ -7341,13 +7338,6 @@ def CoshIntegral(z):
 
 def LogGamma(z):
     return loggamma(z)
-
-class ProductLog(Function):
-    @classmethod
-    def eval(cls, *args):
-        if len(args) == 2:
-            return LambertW(args[1], args[0]).evalf()
-        return LambertW(args[0]).evalf()
 
 def HypergeometricPFQ(a, b, c):
     return hyper(a, b, c)

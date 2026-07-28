@@ -683,7 +683,14 @@ RULES = [
         module_name='4.7.5 Inert trig functions',
         rule_number=70,
     ),
-    # Rule 71: SKIPPED - ValueError: generated rule not loadable: AttributeError: 'list' object has no attribute 'is_Float'
+    # Rule 71
+    RubiRulePattern(
+        pattern=Int(u_, x),
+        constraints=(InverseFunctionFreeQ(u_, x), Not(FalseQ(FunctionOfTrig(u_, x))), CalculusFreeQ(Block({ShowSteps: sympy.false, StepCounter: Symbol('Null')}, sympy.Function('Int')(SubstFor(((Integer(1) + ((FreeFactors(sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))), x))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1)), (sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))) * (FreeFactors(sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))), x))**(Integer(-1))), u_, x), x)), x),),
+        replacement=With({w: Block({ShowSteps: sympy.false, StepCounter: Symbol('Null')}, Int(SubstFor(((Integer(1) + ((FreeFactors(sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))), x))**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1)), (sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))) * (FreeFactors(sympy.tan((FunctionOfTrig(u_, x) * (Integer(2))**(Integer(-1)))), x))**(Integer(-1))), u_, x), x))}, Module({v: FunctionOfTrig(u_, x), d: None}, CompoundExpression(Set(d, FreeFactors(sympy.tan((v * (Integer(2))**(Integer(-1)))), x)), Dist((Integer(2) * d * (Coefficient(v, x, Integer(1)))**(Integer(-1))), Subst(Int(SubstFor(((Integer(1) + ((d)**(Integer(2)) * (x)**(Integer(2)))))**(Integer(-1)), (sympy.tan((v * (Integer(2))**(Integer(-1)))) * (d)**(Integer(-1))), u_, x), x), x, (sympy.tan((v * (Integer(2))**(Integer(-1)))) * (d)**(Integer(-1)))), x)))),
+        module_name='4.7.5 Inert trig functions',
+        rule_number=71,
+    ),
     # Rule 72
     RubiRulePattern(
         pattern=Int(u_, x),
@@ -695,4 +702,4 @@ RULES = [
 
 ]
 
-# Summary: 71 rules translated, 1 skipped
+# Summary: 72 rules translated, 0 skipped

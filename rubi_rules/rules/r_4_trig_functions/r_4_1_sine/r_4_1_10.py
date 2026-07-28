@@ -119,7 +119,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
+        pattern=Int((InertSin((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*_e_, 0),),
         replacement=I*Shi(x*_f_*fz_ + _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
@@ -135,7 +135,7 @@ RULES = [
     ),
     # Rule 5
     RubiRulePattern(
-        pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
+        pattern=Int((InertSin((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*(_e_ - pi/2), 0), NegQ(_c_*_f_*fz_/_d_, 0),),
         replacement=Chi(-x*_f_*fz_ - _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
@@ -143,7 +143,7 @@ RULES = [
     ),
     # Rule 6
     RubiRulePattern(
-        pattern=Int((InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
+        pattern=Int((InertSin((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x))) * ((_c_ + (_d_ * x)))**(Integer(-1))), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), EqQ(-I*_c_*_f_*fz_ + _d_*(_e_ - pi/2), 0),),
         replacement=Chi(x*_f_*fz_ + _c_*_f_*fz_/_d_)/_d_,
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
@@ -295,7 +295,7 @@ RULES = [
     ),
     # Rule 25
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * ((a_ + (_b_ * InertSin((_e_ + (_k_ * sympy.pi) + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))))))**(Integer(-1))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * ((a_ + (_b_ * InertSin((_e_ + (_k_ * sympy.pi) + (_f_ * eager_Complex(Integer(0), fz_) * x))))))**(Integer(-1))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, fz_], x), IntegerQ(2*_k_), NeQ(a_**2 - _b_**2, 0), IGtQ(_m_, 0),),
         replacement=2*Int((x*_d_ + _c_)**_m_*exp(-I*pi*(_k_ + sympy.S(-1)/2))*exp(x*_f_*fz_ - I*_e_)/(2*a_*exp(-I*pi*(_k_ + sympy.S(-1)/2))*exp(x*_f_*fz_ - I*_e_) + _b_ - _b_*exp(-2*I*pi*_k_)*exp(2*x*_f_*fz_ - 2*I*_e_)), x),
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
@@ -311,7 +311,7 @@ RULES = [
     ),
     # Rule 27
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * ((a_ + (_b_ * InertSin((_e_ + (_f_ * sympy.Function('Complex')(Integer(0), fz_) * x))))))**(Integer(-1))), x),
+        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * ((a_ + (_b_ * InertSin((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x))))))**(Integer(-1))), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, fz_], x), NeQ(a_**2 - _b_**2, 0), IGtQ(_m_, 0),),
         replacement=2*Int((x*_d_ + _c_)**_m_*exp(x*_f_*fz_ - I*_e_)/(2*a_*exp(x*_f_*fz_ - I*_e_) + I*_b_*exp(2*x*_f_*fz_ - 2*I*_e_) - I*_b_), x),
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
