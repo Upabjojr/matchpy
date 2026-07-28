@@ -87,6 +87,12 @@ class _ThrowSignal(Exception):
         super().__init__(repr((value, tag)))
 
 
+# Bounded memo for MathematicaExpr.doit (see doit docstring note). Keyed by
+# (class, node, deep); cleared wholesale when full.
+_DOIT_CACHE: dict = {}
+_DOIT_CACHE_MAX = 100000
+
+
 class MathematicaExpr(Expr):
     """Abstract base class for all Mathematica-inspired SymPy expressions.
 
@@ -114,7 +120,24 @@ class MathematicaExpr(Expr):
     """
 
     def doit(self, **kwargs):
+        # MEMOISED (bounded): a deferred node's evaluation is a pure function of the
+        # node (all _evaluate implementations delegate to eager utilities of the
+        # args). During the integration DFS the SAME nodes are re-evaluated
+        # constantly -- deferred-node doit held 15-18% of every profiled slow
+        # integral. Only the plain call shape (no kwargs beyond `deep`) is cached;
+        # scoping nodes (With/Module/If/...) override doit and bypass this. An
+        # _evaluate that RAISES (e.g. Condition's StopIteration no-match protocol)
+        # propagates before any cache store, so failures are never cached.
         deep = kwargs.get('deep', True)
+        cache_key = None
+        if not kwargs or set(kwargs) == {'deep'}:
+            try:
+                cache_key = (self.__class__, self, deep)
+                hit = _DOIT_CACHE.get(cache_key)
+                if hit is not None:
+                    return hit
+            except TypeError:        # unhashable arg somewhere -> uncached
+                cache_key = None
         if deep:
             new_args = [
                 arg.doit(**kwargs) if hasattr(arg, 'doit') else arg
@@ -129,7 +152,12 @@ class MathematicaExpr(Expr):
         # via sympify(None) -> SympifyError). Stay UNEVALUATED instead so the node
         # remains a legal expression; the DFS then treats the result as non-clean
         # and moves on rather than crashing.
-        return instance if result is None else result
+        final = instance if result is None else result
+        if cache_key is not None:
+            if len(_DOIT_CACHE) >= _DOIT_CACHE_MAX:
+                _DOIT_CACHE.clear()      # simple bounded reset (LRU not worth the cost)
+            _DOIT_CACHE[cache_key] = final
+        return final
 
     def _evaluate(self, **kwargs):
         raise NotImplementedError

@@ -93,6 +93,7 @@ from sympy_wolfram.functions_eager import (
 from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_matchpy_expression, \
     to_matchpy_expression
 from matchpy import is_match, replace_all
+from matchpy import match as matchpy_match
 from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
 
 
@@ -2552,40 +2553,55 @@ def eager_TrinomialMatchQ(u, x):
         u = UtilityOperator(u, x)
         return is_match(u, pattern)
 
+def _monomial_exponent(term, x):
+    """Exponent e if ``term == coef*x**e`` with ``coef`` free of x and e free of x, else None.
+
+    ``e`` may be symbolic; a term entirely free of x has e == 0.
+    """
+    coef, xpart = term.as_independent(x)
+    if xpart == S.One:
+        return S.Zero
+    if xpart == x:
+        return S.One
+    if xpart.is_Pow and xpart.base == x and eager_FreeQ(xpart.exp, x):
+        return xpart.exp
+    return None
+
 def eager_GeneralizedBinomialMatchQ(u, x):
+    # Mathematica: MatchQ[u, a_.*x^q_. + b_.*x^n_.] with a,b,n,q free of x and
+    # nonzero. On Mathematica's canonical Plus each pattern addend binds exactly
+    # one subject addend, so this is purely structural: exactly two monomial
+    # addends with distinct nonzero exponents. (The previous sympy Wild ``.match``
+    # implementation was both unfaithful -- numeric splits let single monomials
+    # through, e.g. -3*x/2 as -x/2 + -x -- and combinatorial on sums whose
+    # coefficients are large multi-symbol polynomials.)
     if isinstance(u, (tuple, list, Tuple)):
         return all(eager_GeneralizedBinomialMatchQ(i, x) for i in u)
-    else:
-        a = Wild('a', exclude=[x, 0])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        q = Wild('q', exclude=[x, 0])
-        Match = u.match(a*x**q + b*x**n)
-        # Rubi's first clause is guarded by PosQ[n-q], i.e. the two exponents must
-        # DIFFER; everything else falls through to `GeneralizedBinomialParts := False`.
-        # Without that check a single monomial slips through on a spurious split
-        # (-3*x/2 matching as -x/2 + -x, q == n == 1) and GeneralizedBinomialParts is
-        # then called on something that is not a generalized binomial at all.
-        if (Match and len(Match) == 4 and Match[q] != 0 and Match[n] != 0
-                and Match[q] != Match[n]):
-            return True
-        else:
-            return False
+    if not u.is_Add or len(u.args) != 2:
+        return False
+    exps = [_monomial_exponent(t, x) for t in u.args]
+    if any(e is None or e == 0 for e in exps):
+        return False
+    return exps[0] != exps[1]
 
 def eager_GeneralizedTrinomialMatchQ(u, x):
+    # Mathematica: MatchQ[u, a_.*x^q_. + b_.*x^n_. + c_.*x^r_.] with all wilds
+    # free of x and nonzero, and r == 2*n - q. Structural (see the binomial
+    # variant above): exactly three monomial addends whose nonzero exponents
+    # admit a labeling (q, n, r) with r == 2*n - q, i.e. an arithmetic
+    # progression when the exponents are distinct.
     if isinstance(u, (tuple, list, Tuple)):
         return all(eager_GeneralizedTrinomialMatchQ(i, x) for i in u)
-    else:
-        a = Wild('a', exclude=[x, 0])
-        b = Wild('b', exclude=[x, 0])
-        n = Wild('n', exclude=[x, 0])
-        c = Wild('c', exclude=[x, 0])
-        q = Wild('q', exclude=[x, 0])
-        Match = u.match(a*x**q + b*x**n + c*x**(2*n - q))
-        if Match and len(Match) == 5 and 2*Match[n] - Match[q] != 0 and Match[n] != 0:
+    if not u.is_Add or len(u.args) != 3:
+        return False
+    exps = [_monomial_exponent(t, x) for t in u.args]
+    if any(e is None or e == 0 for e in exps):
+        return False
+    from itertools import permutations as _permutations
+    for q, n, r in _permutations(exps):
+        if (r - (2*n - q)).is_zero and n != 0 and 2*n - q != 0:
             return True
-        else:
-            return False
+    return False
 
 def QuotientOfLinearsMatchQ(u, x):
     if isinstance(u, (tuple, list, Tuple)):
@@ -6790,10 +6806,34 @@ def _FixSimplify():
     return [rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12, rule13, rule14, rule15, rule16, rule17, rule18, rule19, rule20, rule21, rule22, ]
 
 
+@_pure_expr_cache(maxsize=20000)
+def _fixsimplify_scalar(expr):
+    # ROOT-ONLY matching: every FixSimplify pattern is rooted at UtilityOp, a head
+    # that cannot occur anywhere INSIDE the converted subject (UtilityOperator is
+    # only ever applied here, at the top). So the previous
+    # ``replace_all(UtilityOperator(expr), FixSimplify_rules)`` could only ever
+    # fire at the root -- yet it scanned the whole tree, and the identity rule
+    # (the final ``u_ -> u`` fall-through) unwrapped the root and forced a SECOND
+    # full-tree pass of all 22 rules over every node. Trying the rules once at
+    # the root is provably equivalent and skips both scans; when nothing fires we
+    # return the ORIGINAL SymPy object, avoiding the matchpy->sympy reconversion.
+    # (Profiled at 60% of the runtime of rational-function integrals with two
+    # symbolic quadratics: PosQ -> TogetherSimplify -> FixSimplify on every large
+    # coefficient the DFS produces.)
+    subject = UtilityOperator(expr)
+    for pattern, replacement in FixSimplify_rules[:-1]:  # last rule is the identity fall-through
+        try:
+            subst = next(iter(matchpy_match(subject, pattern)))
+        except StopIteration:
+            continue
+        return matchpy_to_sympy(replacement(**subst))
+    return expr
+
+
 def FixSimplify(expr):
     if isinstance(expr, (list, tuple, TupleArg)):
-        return [matchpy_to_sympy(replace_all(UtilityOperator(i), FixSimplify_rules)) for i in expr]
-    return matchpy_to_sympy(replace_all(UtilityOperator(expr), FixSimplify_rules))
+        return [FixSimplify(i) for i in expr]
+    return _fixsimplify_scalar(expr)
 
 
 def _SimplifyAntiderivativeSum():

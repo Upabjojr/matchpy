@@ -31,6 +31,7 @@ from sympy.core.function import Function
 from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
 from sympy.polys.polytools import Poly, quo, rem, invert, cancel, degree
+from sympy.core.exprtools import factor_terms as _sympy_factor_terms
 from sympy.polys.polyerrors import (
     PolynomialError, PolynomialDivisionFailed, UnificationFailed, NotInvertible,
     BasePolynomialError,
@@ -175,6 +176,32 @@ def _eager_simplify_impl(expr):
             expr = expr.doit()
         except (AttributeError, TypeError):
             return expr
+    # RATIONAL fast path: for a pure rational function, ``cancel`` already yields
+    # the canonical p/q normal form that Simplify is used for downstream (ZeroQ /
+    # FreeQ / sign guards). Full sympy.simplify additionally runs trig/radical/
+    # power passes that cannot fire here, yet cost seconds each on the large
+    # many-symbol coefficients partial-fraction expansion produces (profiled: 30
+    # Simplify calls = 50s inside one ExpandIntegrand). ``factor_terms`` is kept
+    # when it shrinks the result, mirroring simplify's shortest-form preference.
+    if isinstance(expr, Basic) and expr.free_symbols:
+        try:
+            if expr.is_rational_function(*expr.free_symbols):
+                res = cancel(expr)
+                try:
+                    ft = _sympy_factor_terms(res)
+                    if ft.count_ops() <= res.count_ops():
+                        res = ft
+                except (AttributeError, TypeError, PolynomialError):
+                    pass
+                # Like Mathematica's Simplify, never return a LARGER form than the
+                # input: cancel expands products of sums ((x^2+3)^2 -> quartic),
+                # which is only an improvement when it actually shrinks the tree
+                # (or reveals a cancellation).
+                if res.count_ops() <= expr.count_ops():
+                    return res
+                return expr
+        except (AttributeError, TypeError, PolynomialError):
+            pass
     try:
         return simplify(expr)
     except (AttributeError, TypeError):
@@ -454,21 +481,7 @@ def _is_rational_in(p, x):
     return den != 1 and x in getattr(den, 'free_symbols', set())
 
 
-def eager_PolynomialRemainder(p, q, x):
-    """Mathematica ``PolynomialRemainder[p, q, x]``.
-
-    * p a polynomial in x -> ordinary remainder.
-    * p transcendental in x (log(x), ...) -> Mathematica treats it as degree 0, so it is
-      its own remainder mod a positive-degree q (SymPy raises; fall back to p).
-    * p a RATIONAL function of x -- Rubi's ``Pq*(c x)^m`` with m<0, so ``p=(A+Bx)/x^2`` --
-      -> reduce p MODULO q in K[x]/(q): with ``p = num/den`` and den invertible mod q
-      (``gcd(den,q)=1``; e.g. den a power of x and ``q(0)!=0``), ``p ≡ num*den^(-1)`` (mod q).
-      If den shares a factor with q there is no finite reduction and the remainder is 0
-      (the quotient absorbs everything). Cross-checked vs real Rubi. The old code did an
-      ordinary division here and returned the whole input p (quotient 0), zeroing integrals.
-    """
-    p = sympify(p)
-    q = sympify(q)
+def _polynomial_remainder_impl(p, q, x):
     if _is_rational_in(p, x):
         num, den = fraction(together(p))
         try:
@@ -482,14 +495,36 @@ def eager_PolynomialRemainder(p, q, x):
         return p
 
 
-def eager_PolynomialQuotient(p, q, x):
-    """Mathematica ``PolynomialQuotient[p, q, x]``. Polynomial p -> SymPy ``quo``;
-    transcendental p in x -> 0 (degree 0); RATIONAL p -> Laurent quotient
-    ``(p - PolynomialRemainder[p,q,x])/q`` (e.g.
-    ``PolynomialQuotient[(A+Bx)/x^2, a+b x^2] = (A+Bx)/(a x^2)``). See PolynomialRemainder.
+_polynomial_remainder_cached = _functools.lru_cache(maxsize=20000)(_polynomial_remainder_impl)
+
+
+def eager_PolynomialRemainder(p, q, x):
+    """Mathematica ``PolynomialRemainder[p, q, x]``.
+
+    * p a polynomial in x -> ordinary remainder.
+    * p transcendental in x (log(x), ...) -> Mathematica treats it as degree 0, so it is
+      its own remainder mod a positive-degree q (SymPy raises; fall back to p).
+    * p a RATIONAL function of x -- Rubi's ``Pq*(c x)^m`` with m<0, so ``p=(A+Bx)/x^2`` --
+      -> reduce p MODULO q in K[x]/(q): with ``p = num/den`` and den invertible mod q
+      (``gcd(den,q)=1``; e.g. den a power of x and ``q(0)!=0``), ``p ≡ num*den^(-1)`` (mod q).
+      If den shares a factor with q there is no finite reduction and the remainder is 0
+      (the quotient absorbs everything). Cross-checked vs real Rubi. The old code did an
+      ordinary division here and returned the whole input p (quotient 0), zeroing integrals.
+
+    MEMOISED (bounded): a pure function of (p, q, x); rule guards evaluate it on the
+    same operands many times per DFS (profiled at 35% of a rational-function integral,
+    each call doing a fraction-field ``invert``/``rem``). Unhashable input falls back
+    to a direct call.
     """
     p = sympify(p)
     q = sympify(q)
+    try:
+        return _polynomial_remainder_cached(p, q, x)
+    except TypeError:
+        return _polynomial_remainder_impl(p, q, x)
+
+
+def _polynomial_quotient_impl(p, q, x):
     if _is_rational_in(p, x):
         r = eager_PolynomialRemainder(p, q, x)
         try:
@@ -500,6 +535,25 @@ def eager_PolynomialQuotient(p, q, x):
         return quo(p, q, x)
     except BasePolynomialError:
         return S.Zero
+
+
+_polynomial_quotient_cached = _functools.lru_cache(maxsize=20000)(_polynomial_quotient_impl)
+
+
+def eager_PolynomialQuotient(p, q, x):
+    """Mathematica ``PolynomialQuotient[p, q, x]``. Polynomial p -> SymPy ``quo``;
+    transcendental p in x -> 0 (degree 0); RATIONAL p -> Laurent quotient
+    ``(p - PolynomialRemainder[p,q,x])/q`` (e.g.
+    ``PolynomialQuotient[(A+Bx)/x^2, a+b x^2] = (A+Bx)/(a x^2)``). See PolynomialRemainder.
+
+    MEMOISED (bounded) like PolynomialRemainder -- same repeat-heavy guard usage.
+    """
+    p = sympify(p)
+    q = sympify(q)
+    try:
+        return _polynomial_quotient_cached(p, q, x)
+    except TypeError:
+        return _polynomial_quotient_impl(p, q, x)
 
 
 def eager_Not(var):
