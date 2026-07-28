@@ -403,6 +403,9 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'FunctionOfExponentialFunction': 'FunctionOfExponentialFunction',
     'FunctionOfLog': 'FunctionOfLog',
     'IntSum': 'IntSum',
+    'Discriminant': 'Discriminant',
+    'InverseFunctionOfLinear': 'InverseFunctionOfLinear',
+    'SubstForFractionalPowerOfQuotientOfLinears': 'SubstForFractionalPowerOfQuotientOfLinears',
     "D": "D",
     # Additional Rubi-specific utility functions
     'Dist': 'Dist',

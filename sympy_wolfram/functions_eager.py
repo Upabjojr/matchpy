@@ -30,7 +30,7 @@ from sympy.core.numbers import Exp1
 from sympy.core.function import Function
 from sympy.polys.partfrac import apart
 from sympy.simplify.simplify import fraction, simplify
-from sympy.polys.polytools import Poly, quo, rem, invert, cancel, degree
+from sympy.polys.polytools import Poly, quo, rem, invert, cancel, degree, discriminant
 from sympy.core.exprtools import factor_terms as _sympy_factor_terms
 from sympy.polys.polyerrors import (
     PolynomialError, PolynomialDivisionFailed, UnificationFailed, NotInvertible,
@@ -327,6 +327,36 @@ def eager_Part(lst, i):
     if isinstance(lst, (tuple, list)):
         return Util_Part(i, *lst).doit()
     return Util_Part(i, lst).doit()
+
+
+def eager_Discriminant(p, x):
+    """Mathematica ``Discriminant[poly, x]`` — the discriminant of *poly* in *x*.
+
+    Matches Mathematica on the degenerate cases, which SymPy's ``discriminant`` does
+    NOT (all verified against Mathematica 12.2):
+
+    * degree 0 (constant in *x*) -> ``p**-2``; SymPy returns 0.
+      ``Discriminant[5, x] == 1/25``, ``Discriminant[c, x] == c^-2``,
+      ``Discriminant[a+b, x] == (a+b)^-2``.
+    * the zero polynomial -> ``0``.
+    * not a polynomial in *x* (``Sin[x]``) -> unevaluated. Mathematica emits
+      ``Discriminant::poly2`` and returns the expression unchanged; returning None
+      here leaves the deferred node in place, which is the same thing.
+    """
+    p = sympify(p)
+    x = sympify(x)
+    try:
+        poly = Poly(p, x)
+    except BasePolynomialError:      # PolynomialError / GeneratorsNeeded / ...
+        return None
+    if poly.is_zero:
+        return S.Zero
+    if poly.degree() == 0:
+        return S.One / p ** 2
+    try:
+        return discriminant(p, x)
+    except (PolynomialError, BasePolynomialError):
+        return None
 
 
 def _eager_apart_impl(u, x):

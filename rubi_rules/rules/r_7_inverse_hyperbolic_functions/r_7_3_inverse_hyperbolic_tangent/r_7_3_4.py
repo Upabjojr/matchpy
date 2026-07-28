@@ -306,16 +306,16 @@ RULES = [
     # Rule 25
     RubiRulePattern(
         pattern=Int(u_*v_**_n_, x),
-        constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(sympy.Function('Discriminant')(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(sympy.Function('InverseFunctionOfLinear')(u_, x))), EqQ(Head(sympy.Function('InverseFunctionOfLinear')(u_, x)), HeadRef(sympy.atanh)), EqQ(((sympy.Function('Discriminant')(v_, x) * (Part(sympy.Function('InverseFunctionOfLinear')(u_, x), Integer(1)))**(Integer(2))) + (Integer(-1) * (D(v_, x))**(Integer(2)))), Integer(0)),),
-        replacement=With({tmp: sympy.Function('InverseFunctionOfLinear')(u_, x)}, ((((Integer(-1) * sympy.Function('Discriminant')(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * (sympy.sech(x))**((Integer(2) * (_n_ + Integer(1))))), x), x), x, tmp))),
+        constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(Discriminant(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(InverseFunctionOfLinear(u_, x))), EqQ(Head(InverseFunctionOfLinear(u_, x)), HeadRef(sympy.atanh)), EqQ(-D(v_, x)**2 + Discriminant(v_, x)*Part(InverseFunctionOfLinear(u_, x), 1)**2, 0),),
+        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, ((((Integer(-1) * Discriminant(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * (sympy.sech(x))**((Integer(2) * (_n_ + Integer(1))))), x), x), x, tmp))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=25,
     ),
     # Rule 26
     RubiRulePattern(
         pattern=Int(u_*v_**_n_, x),
-        constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(sympy.Function('Discriminant')(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(sympy.Function('InverseFunctionOfLinear')(u_, x))), EqQ(Head(sympy.Function('InverseFunctionOfLinear')(u_, x)), HeadRef(sympy.acoth)), EqQ(((sympy.Function('Discriminant')(v_, x) * (Part(sympy.Function('InverseFunctionOfLinear')(u_, x), Integer(1)))**(Integer(2))) + (Integer(-1) * (D(v_, x))**(Integer(2)))), Integer(0)),),
-        replacement=With({tmp: sympy.Function('InverseFunctionOfLinear')(u_, x)}, ((((Integer(-1) * sympy.Function('Discriminant')(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * ((Integer(-1) * (sympy.csch(x))**(Integer(2))))**((_n_ + Integer(1)))), x), x), x, tmp))),
+        constraints=(QuadraticQ(v_, x), ILtQ(_n_, 0), PosQ(Discriminant(v_, x)), MatchQ(u_, Condition(f_**w_*_r_, FreeQ(f_, x))), Not(FalseQ(InverseFunctionOfLinear(u_, x))), EqQ(Head(InverseFunctionOfLinear(u_, x)), HeadRef(sympy.acoth)), EqQ(-D(v_, x)**2 + Discriminant(v_, x)*Part(InverseFunctionOfLinear(u_, x), 1)**2, 0),),
+        replacement=With({tmp: InverseFunctionOfLinear(u_, x)}, ((((Integer(-1) * Discriminant(v_, x)) * ((Integer(4) * Coefficient(v_, x, Integer(2))))**(Integer(-1))))**(_n_) * (Coefficient(Part(tmp, Integer(1)), x, Integer(1)))**(Integer(-1)) * Subst(Int(SimplifyIntegrand((sympy.Function('SubstForInverseFunction')(u_, tmp, x) * ((Integer(-1) * (sympy.csch(x))**(Integer(2))))**((_n_ + Integer(1)))), x), x), x, tmp))),
         module_name='7.3.4 Miscellaneous inverse hyperbolic tangent',
         rule_number=26,
     ),

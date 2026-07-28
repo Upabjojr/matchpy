@@ -64,6 +64,7 @@ from sympy_wolfram.mathematica_functions import (
     Coefficient,
     Complex,
     Denominator,
+    Discriminant,
     EllipticPi,
     Exponent,
     First,
@@ -414,6 +415,45 @@ class FunctionOfExponentialFunction(MathematicaExpr):
     def _evaluate(self, **kwargs):
         from .utility_functions import eager_FunctionOfExponentialFunction
         return eager_FunctionOfExponentialFunction(*self.args)
+
+
+class InverseFunctionOfLinear(MathematicaExpr):
+    """Deferred InverseFunctionOfLinear[u, x] -- delegates to the eager utility.
+
+    If ``u`` contains a subexpression ``g[a+b*x]`` with ``g`` an inverse function,
+    returns that subexpression; else False. Rubi-specific
+    (``IntegrationUtilityFunctions.m:6084``), so it lives here rather than in
+    sympy_wolfram.
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_InverseFunctionOfLinear
+        result = eager_InverseFunctionOfLinear(*self.args)
+        return sympy.S.false if result is False else result
+
+
+class SubstForFractionalPowerOfQuotientOfLinears(MathematicaExpr):
+    """Deferred SubstForFractionalPowerOfQuotientOfLinears[u, x] -- eager delegate.
+
+    For ``u`` containing ``((a+b*x)/(c+d*x))^(m/n)``, returns the 4-element list
+    ``{v, n, (a+b*x)/(c+d*x), b*c-a*d}``; else False. Rubi-specific
+    (``IntegrationUtilityFunctions.m:1801``).
+    """
+
+    def __new__(cls, u, x):
+        return Expr.__new__(cls, sympy.sympify(u), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        from .utility_functions import eager_SubstForFractionalPowerOfQuotientOfLinears
+        result = eager_SubstForFractionalPowerOfQuotientOfLinears(*self.args)
+        if result is False or result is None:
+            return sympy.S.false
+        if isinstance(result, (list, tuple)):
+            return List(*result)
+        return result
 
 
 class IntSum(MathematicaExpr):

@@ -428,8 +428,8 @@ RULES = [
     # Rule 38
     RubiRulePattern(
         pattern=Int(u_, x),
-        constraints=(Not(FalseQ(sympy.Function('SubstForFractionalPowerOfQuotientOfLinears')(u_, x))),),
-        replacement=With({lst: sympy.Function('SubstForFractionalPowerOfQuotientOfLinears')(u_, x)}, (Part(lst, Integer(2)) * Part(lst, Integer(4)) * Subst(Int(Part(lst, Integer(1)), x), x, (Part(lst, Integer(3)))**((Part(lst, Integer(2)))**(Integer(-1)))))),
+        constraints=(Not(FalseQ(SubstForFractionalPowerOfQuotientOfLinears(u_, x))),),
+        replacement=With({lst: SubstForFractionalPowerOfQuotientOfLinears(u_, x)}, Part(lst, 2)*Part(lst, 4)*Subst(Int(Part(lst, 1), x), x, Part(lst, 3)**(1/Part(lst, 2)))),
         module_name='9.4 Miscellaneous integration rules',
         rule_number=38,
     ),

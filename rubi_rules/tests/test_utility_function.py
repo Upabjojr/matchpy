@@ -44,7 +44,7 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 Sort, AbsurdNumberQ, AbsurdNumberFactors, NonabsurdNumberFactors,
                                                 SumSimplerAuxQ, Prepend, Drop, CombineExponents, FactorInteger,
                                                 FactorAbsurdNumber, SubstForInverseFunction, SubstForFractionalPower,
-                                                SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears,
+                                                eager_SubstForFractionalPowerOfQuotientOfLinears, FractionalPowerOfQuotientOfLinears,
                                                 eager_SubstForFractionalPowerQ, SubstForFractionalPowerAuxQ, FractionalPowerOfSquareQ,
                                                 FractionalPowerSubexpressionQ, eager_Apply, FactorNumericGcd, MergeableFactorQ,
                                                 MergeFactor, MergeFactors, eager_TrigSimplifyQ, eager_TrigSimplify, TrigSimplifyRecur,
@@ -65,7 +65,7 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
                                                 SmartDenominator, eager_ActivateTrig, eager_ExpandTrig, TrigExpand,
                                                 SubstForTrig, SubstForHyperbolic, eager_InertTrigFreeQ, LCM,
                                                 eager_SubstForFractionalPowerOfLinear, FractionalPowerOfLinear,
-                                                InverseFunctionOfLinear, eager_InertTrigQ, InertReciprocalQ, eager_DeactivateTrig,
+                                                eager_InverseFunctionOfLinear, eager_InertTrigQ, InertReciprocalQ, eager_DeactivateTrig,
                                                 FixInertTrigFunction, DeactivateTrigAux, PowerOfInertTrigSumQ,
                                                 eager_PiecewiseLinearQ, KnownTrigIntegrandQ, eager_KnownSineIntegrandQ,
                                                 eager_KnownTangentIntegrandQ, eager_KnownCotangentIntegrandQ, eager_KnownSecantIntegrandQ,
@@ -1492,9 +1492,30 @@ def test_SubstForFractionalPowerOfLinear():
     assert eager_SubstForFractionalPowerOfLinear(u**(S(1)/2), x) == [x**2, 2, a + b*x, 1/b]
 
 def test_InverseFunctionOfLinear():
+    """Rubi IntegrationUtilityFunctions.m:6084. Expected values cross-checked against
+    real Rubi on Mathematica 12.2."""
     u = a + b*x
-    assert InverseFunctionOfLinear(log(u)*sin(x), x) == log(u)
-    assert InverseFunctionOfLinear(log(u), x) == log(u)
+    assert eager_InverseFunctionOfLinear(log(u)*sin(x), x) == log(u)
+    assert eager_InverseFunctionOfLinear(log(u), x) == log(u)
+    # returns the inverse-function subexpression itself...
+    assert eager_InverseFunctionOfLinear(atan(u), x) == atan(u)
+    assert eager_InverseFunctionOfLinear(log(u)**2, x) == log(u)
+    # ...found at any depth
+    assert eager_InverseFunctionOfLinear(x*asin(2 + 3*x), x) == asin(2 + 3*x)
+    # False when there is none, when the argument is not LINEAR in x,
+    # and for atoms / x-free expressions
+    assert eager_InverseFunctionOfLinear(sin(u), x) is False
+    assert eager_InverseFunctionOfLinear(atan(x**2), x) is False
+    assert eager_InverseFunctionOfLinear(x**2, x) is False
+    assert eager_InverseFunctionOfLinear(a, x) is False
+
+
+def test_InverseFunctionOfLinear_deferred_node():
+    """The deferred node maps Rubi's False onto SymPy's S.false so a rule guard can
+    test it (a bare Python False is not a SymPy object)."""
+    from rubi_rules.utils.rubi_utils import InverseFunctionOfLinear
+    assert InverseFunctionOfLinear(atan(a + b*x), x).doit() == atan(a + b*x)
+    assert InverseFunctionOfLinear(sin(a + b*x), x).doit() is S.false
 
 def test_InertTrigQ():
     # InertTrigQ detects *inert* trig markers (Function('sin')(...)), not the
@@ -1584,7 +1605,25 @@ def test_GeneralizedTrinomialQ():
     assert not eager_GeneralizedTrinomialQ(a*x**q + c*x**(2*n-q), x)
 
 def test_SubstForFractionalPowerOfQuotientOfLinears():
-    assert SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+    """Rubi IntegrationUtilityFunctions.m:1801 — returns {v, n, (a+b x)/(c+d x), b c-a d}.
+    Expected values cross-checked against real Rubi on Mathematica 12.2."""
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(((1 + x)/(1 - x))**(S(1)/2), x) == [x**2/(x**2 + 1)**2, 2, (1 + x)/(1 - x), 2]
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(((1 + x)/(1 - x))**(S(1)/3), x) == [x**3/(x**3 + 1)**2, 3, (1 + x)/(1 - x), 2]
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(x*((a + b*x)/(c + d*x))**(S(1)/2), x) == [x**2*(-a + c*x**2)/(b - d*x**2)**3, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+    # no fractional power of a quotient of linears -> False
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(x**2, x) is False
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(sqrt(1 + x), x) is False
+
+
+def test_SubstForFractionalPowerOfQuotientOfLinears_deferred_node():
+    """The node returns a Wolfram List (Rubi reads it with Part), or S.false."""
+    from rubi_rules.utils.rubi_utils import SubstForFractionalPowerOfQuotientOfLinears as _S
+    from sympy_wolfram.objects import List as _List
+    got = _S(((1 + x)/(1 - x))**(S(1)/2), x).doit()
+    assert isinstance(got, _List)
+    assert list(got.args) == [x**2/(x**2 + 1)**2, S(2), (1 + x)/(1 - x), S(2)]
+    assert _S(x**2, x).doit() is S.false
 
 def test_SubstForFractionalPowerQ():
     assert eager_SubstForFractionalPowerQ(x, sin(x), x)
@@ -2234,9 +2273,25 @@ def test_CoprimeQ():
     assert not CoprimeQ(S(6), S(3))
 
 def test_Discriminant():
-    from rubi_rules.utils.utility_functions import Discriminant
-    assert Discriminant(a*x**2 + b*x + c, x) == b**2 - 4*a*c
-    assert unchanged(Discriminant, 1/x, x)
+    """Mathematica-verified (12.2). Discriminant is a standard Wolfram builtin, so it
+    lives in sympy_wolfram; the degenerate cases are where SymPy differs from MMA."""
+    from sympy_wolfram.functions_eager import eager_Discriminant
+    from sympy_wolfram.mathematica_functions import Discriminant
+    assert eager_Discriminant(a*x**2 + b*x + c, x) == b**2 - 4*a*c
+    assert eager_Discriminant(x**2 + 2*x + 1, x) == 0
+    assert eager_Discriminant(x**4 - 1, x) == -256
+    assert eager_Discriminant(3*x**2 - 5*x + 2, x) == 1
+    assert eager_Discriminant(a*x + b, x) == 1
+    # degree 0: MMA gives p^-2, NOT SymPy's 0
+    assert eager_Discriminant(c, x) == 1/c**2
+    assert eager_Discriminant(S(5), x) == S(1)/25
+    assert eager_Discriminant(a + b, x) == (a + b)**-2
+    assert eager_Discriminant(S(0), x) == 0
+    # not a polynomial in x -> Mathematica leaves it unevaluated
+    assert eager_Discriminant(sin(x), x) is None
+    assert Discriminant(sin(x), x).doit() == Discriminant(sin(x), x)
+    # the deferred node evaluates to the eager value
+    assert Discriminant(a*x**2 + b*x + c, x).doit() == b**2 - 4*a*c
 
 def test_Sum_doit():
     assert Sum_doit(2*x + 2, [x, 0, 1.7]) == 6
@@ -2273,6 +2328,7 @@ def test_process_trig():
 # ============================================================================
 import pytest as _pytest
 from rubi_rules.utils import utility_functions as _U
+from sympy_wolfram import functions_eager as _EAGER
 from sympy import (Rational, sympify, simplify, sqrt, sin, cos, exp, log, pi, I,
                    sinh, asin, asinh, S)
 
@@ -2422,8 +2478,8 @@ _MMA_EXPRESSIONS = [
     (lambda: _U.eager_PolynomialRemainder(x**2 + 1, x - 1, x), S(2)),
     (lambda: _U.eager_PolynomialRemainder(x**3 + x + 1, x**2 + 1, x), S(1)),
     (lambda: _U.RemoveContent(6 * x + 9, x), 3 + 2 * x),
-    (lambda: _U.Discriminant(a + b * x + c * x**2, x), b**2 - 4 * a * c),
-    (lambda: _U.Discriminant(x**2 + 2 * x + 5, x), S(-16)),
+    (lambda: _EAGER.eager_Discriminant(a + b * x + c * x**2, x), b**2 - 4 * a * c),
+    (lambda: _EAGER.eager_Discriminant(x**2 + 2 * x + 5, x), S(-16)),
     (lambda: _U.CoefficientList(1 + 2 * x + 3 * x**2, x), [S(1), S(2), S(3)]),
     (lambda: _U.eager_MinimumMonomialExponent(x**2 + x**3, x), S(2)),
     (lambda: _U.eager_ExpandTrigReduce(sin(x) * cos(x), x), sin(2 * x) / 2),

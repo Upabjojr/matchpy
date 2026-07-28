@@ -146,6 +146,21 @@ class SumWolfram(MathematicaExpr):
 Sum = SumWolfram
 
 
+class Discriminant(MathematicaExpr):
+    """Mathematica ``Discriminant[poly, x]`` — discriminant of *poly* with respect to *x*.
+
+    Delegates to :func:`sympy_wolfram.functions_eager.eager_Discriminant`, which follows
+    Mathematica on the degenerate cases SymPy handles differently (constant -> ``p^-2``,
+    non-polynomial -> unevaluated).
+    """
+
+    def __new__(cls, p, x):
+        return Expr.__new__(cls, sympy.sympify(p), sympy.sympify(x))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_Discriminant(*self.args)
+
+
 class Numerator(MathematicaExpr):
     """Mathematica Numerator[expr] -> numerator of rational expression.
 

@@ -2919,7 +2919,7 @@ def SubstForFractionalPower(u, v, n, w, x):
     res = [SubstForFractionalPower(i, v, n, w, x) for i in u.args]
     return u.func(*res)
 
-def SubstForFractionalPowerOfQuotientOfLinears(u, x):
+def eager_SubstForFractionalPowerOfQuotientOfLinears(u, x):
     # (* If u has a subexpression of the form ((a+b*x)/(c+d*x))^(m/n) where m and n>1 are integers,
     # SubstForFractionalPowerOfQuotientOfLinears[u,x] returns the list {v,n,(a+b*x)/(c+d*x),b*c-a*d} where v is u
     # with subexpressions of the form ((a+b*x)/(c+d*x))^(m/n) replaced by x^m and x replaced
@@ -4095,7 +4095,7 @@ def FractionalPowerOfLinear(u, n, v, x):
             return False
     return lst
 
-def InverseFunctionOfLinear(u, x):
+def eager_InverseFunctionOfLinear(u, x):
     # (* If u has a subexpression of the form g[a+b*x] where g is an inverse function,
     # InverseFunctionOfLinear[u,x] returns g[a+b*x]; else it returns False. *)
     if eager_AtomQ(u) or CalculusQ(u) or eager_FreeQ(u, x):
@@ -4103,7 +4103,7 @@ def InverseFunctionOfLinear(u, x):
     elif eager_InverseFunctionQ(u) and eager_LinearQ(u.args[0], x):
         return u
     for i in u.args:
-        tmp = InverseFunctionOfLinear(i, x)
+        tmp = eager_InverseFunctionOfLinear(i, x)
         if eager_Not(eager_AtomQ(tmp)):
             return tmp
     return False
@@ -7327,14 +7327,6 @@ def CoprimeQ(*args):
     if g == 1:
         return True
     return False
-
-class Discriminant(Function):
-    @classmethod
-    def eval(cls, a, b):
-        try:
-            return discriminant(a, b)
-        except PolynomialError:
-            return None  # stay unevaluated
 
 def eager_Quotient(m, n):
     return eager_Floor(m/n)
