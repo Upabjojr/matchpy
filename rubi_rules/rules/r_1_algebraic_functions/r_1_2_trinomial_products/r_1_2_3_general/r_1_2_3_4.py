@@ -10,11 +10,11 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Symbol
+from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Ne,
+    Mod, Ne,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -254,7 +254,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), IGtQ(_p_, 0), ILtQ(q_, -1), IGtQ(_m_, 0),),
-        replacement=((((Integer(-1) * d_))**((((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * d_ * _e_)) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((sympy.Mod(_m_, n_) + Integer(1))) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1))) + (((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1)) * Int(((x)**(sympy.Mod(_m_, n_)) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ExpandToSum(Together((((d_ + (_e_ * (x)**(n_))))**(Integer(-1)) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1)) * (x)**((_m_ + (Integer(-1) * sympy.Mod(_m_, n_)))) * ((a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)) + (Integer(-1) * (((Integer(-1) * d_))**((((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * d_ * _e_)) + (a_ * (_e_)**(Integer(2)))))**(_p_) * ((d_ * (sympy.Mod(_m_, n_) + Integer(1))) + (_e_ * (sympy.Mod(_m_, n_) + (n_ * (q_ + Integer(1))) + Integer(1)) * (x)**(n_)))))))), x)), x))),
+        replacement=x**(Mod(_m_, n_) + 1)*_e_**(-2*_p_ - (_m_ - Mod(_m_, n_))/n_)*(-d_)**(-1 + (_m_ - Mod(_m_, n_))/n_)*(x**n_*_e_ + d_)**(q_ + 1)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_/(n_*(q_ + 1)) + _e_**(-2*_p_ - (_m_ - Mod(_m_, n_))/n_)*Int(x**(Mod(_m_, n_))*(x**n_*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((x**(_m_ - Mod(_m_, n_))*_e_**(2*_p_ + (_m_ - Mod(_m_, n_))/n_)*n_*(q_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**_p_ - (-d_)**(-1 + (_m_ - Mod(_m_, n_))/n_)*(x**n_*_e_*(n_*(q_ + 1) + Mod(_m_, n_) + 1) + d_*(Mod(_m_, n_) + 1))*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_)/(x**n_*_e_ + d_)), x), x)/(n_*(q_ + 1)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=21,
     ),
@@ -262,7 +262,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(x**n_*_e_ + d_)**q_*(x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), EqQ(_n2_, 2*n_), IGtQ(n_, 0), IGtQ(_p_, 0), ILtQ(q_, -1), IGtQ(_m_, 0),),
-        replacement=((((Integer(-1) * d_))**((((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((sympy.Mod(_m_, n_) + Integer(1))) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1))) + (((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1)) * Int(((x)**(sympy.Mod(_m_, n_)) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ExpandToSum(Together((((d_ + (_e_ * (x)**(n_))))**(Integer(-1)) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1)) * (x)**((_m_ + (Integer(-1) * sympy.Mod(_m_, n_)))) * ((a_ + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)) + (Integer(-1) * (((Integer(-1) * d_))**((((_m_ + (Integer(-1) * sympy.Mod(_m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (a_ * (_e_)**(Integer(2)))))**(_p_) * ((d_ * (sympy.Mod(_m_, n_) + Integer(1))) + (_e_ * (sympy.Mod(_m_, n_) + (n_ * (q_ + Integer(1))) + Integer(1)) * (x)**(n_)))))))), x)), x))),
+        replacement=x**(Mod(_m_, n_) + 1)*_e_**(-2*_p_ - (_m_ - Mod(_m_, n_))/n_)*(-d_)**(-1 + (_m_ - Mod(_m_, n_))/n_)*(x**n_*_e_ + d_)**(q_ + 1)*(a_*_e_**2 + _c_*d_**2)**_p_/(n_*(q_ + 1)) + _e_**(-2*_p_ - (_m_ - Mod(_m_, n_))/n_)*Int(x**(Mod(_m_, n_))*(x**n_*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((x**(_m_ - Mod(_m_, n_))*_e_**(2*_p_ + (_m_ - Mod(_m_, n_))/n_)*n_*(q_ + 1)*(x**(2*n_)*_c_ + a_)**_p_ - (-d_)**(-1 + (_m_ - Mod(_m_, n_))/n_)*(a_*_e_**2 + _c_*d_**2)**_p_*(x**n_*_e_*(n_*(q_ + 1) + Mod(_m_, n_) + 1) + d_*(Mod(_m_, n_) + 1)))/(x**n_*_e_ + d_)), x), x)/(n_*(q_ + 1)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=22,
     ),
@@ -270,7 +270,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*(x**n_*_e_ + d_)**q_*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), IGtQ(_p_, 0), ILtQ(q_, -1), ILtQ(m_, 0),),
-        replacement=((((Integer(-1) * d_))**((((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * d_ * _e_)) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((sympy.Mod(m_, n_) + Integer(1))) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1))) + (((Integer(-1) * d_))**((((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * ((n_ * (_e_)**((Integer(2) * _p_)) * (q_ + Integer(1))))**(Integer(-1)) * Int(((x)**(m_) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ExpandToSum(Together((((d_ + (_e_ * (x)**(n_))))**(Integer(-1)) * ((n_ * ((Integer(-1) * d_))**((((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))) * (n_)**(Integer(-1))) + Integer(1))) * (_e_)**((Integer(2) * _p_)) * (q_ + Integer(1)) * ((a_ + (_b_ * (x)**(n_)) + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)) + (Integer(-1) * (((_e_)**(((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))) * (n_)**(Integer(-1)))) * (((_c_ * (d_)**(Integer(2))) + (Integer(-1) * (_b_ * d_ * _e_)) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))))) * ((d_ * (sympy.Mod(m_, n_) + Integer(1))) + (_e_ * (sympy.Mod(m_, n_) + (n_ * (q_ + Integer(1))) + Integer(1)) * (x)**(n_)))))))), x)), x))),
+        replacement=x**(Mod(m_, n_) + 1)*_e_**(-2*_p_ - (m_ - Mod(m_, n_))/n_)*(-d_)**(-1 + (m_ - Mod(m_, n_))/n_)*(x**n_*_e_ + d_)**(q_ + 1)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_/(n_*(q_ + 1)) + (-d_)**(-1 + (m_ - Mod(m_, n_))/n_)*Int(x**m_*(x**n_*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((-x**(-m_ + Mod(m_, n_))*_e_**((-m_ + Mod(m_, n_))/n_)*(x**n_*_e_*(n_*(q_ + 1) + Mod(m_, n_) + 1) + d_*(Mod(m_, n_) + 1))*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_ + _e_**(2*_p_)*n_*(-d_)**(1 + (-m_ + Mod(m_, n_))/n_)*(q_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**_p_)/(x**n_*_e_ + d_)), x), x)/(_e_**(2*_p_)*n_*(q_ + 1)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=23,
     ),
@@ -278,7 +278,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**m_*(x**n_*_e_ + d_)**q_*(x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), EqQ(_n2_, 2*n_), IGtQ(n_, 0), IGtQ(_p_, 0), IntegersQ(m_, q_), ILtQ(q_, -1), ILtQ(m_, 0),),
-        replacement=((((Integer(-1) * d_))**((((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * (((_c_ * (d_)**(Integer(2))) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((sympy.Mod(m_, n_) + Integer(1))) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ((n_ * (_e_)**(((Integer(2) * _p_) + ((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))))) * (q_ + Integer(1))))**(Integer(-1))) + (((Integer(-1) * d_))**((((m_ + (Integer(-1) * sympy.Mod(m_, n_))) * (n_)**(Integer(-1))) + Integer(-1))) * ((n_ * (_e_)**((Integer(2) * _p_)) * (q_ + Integer(1))))**(Integer(-1)) * Int(((x)**(m_) * ((d_ + (_e_ * (x)**(n_))))**((q_ + Integer(1))) * ExpandToSum(Together((((d_ + (_e_ * (x)**(n_))))**(Integer(-1)) * ((n_ * ((Integer(-1) * d_))**((((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))) * (n_)**(Integer(-1))) + Integer(1))) * (_e_)**((Integer(2) * _p_)) * (q_ + Integer(1)) * ((a_ + (_c_ * (x)**((Integer(2) * n_)))))**(_p_)) + (Integer(-1) * (((_e_)**(((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))) * (n_)**(Integer(-1)))) * (((_c_ * (d_)**(Integer(2))) + (a_ * (_e_)**(Integer(2)))))**(_p_) * (x)**((Integer(-1) * (m_ + (Integer(-1) * sympy.Mod(m_, n_)))))) * ((d_ * (sympy.Mod(m_, n_) + Integer(1))) + (_e_ * (sympy.Mod(m_, n_) + (n_ * (q_ + Integer(1))) + Integer(1)) * (x)**(n_)))))))), x)), x))),
+        replacement=x**(Mod(m_, n_) + 1)*_e_**(-2*_p_ - (m_ - Mod(m_, n_))/n_)*(-d_)**(-1 + (m_ - Mod(m_, n_))/n_)*(x**n_*_e_ + d_)**(q_ + 1)*(a_*_e_**2 + _c_*d_**2)**_p_/(n_*(q_ + 1)) + (-d_)**(-1 + (m_ - Mod(m_, n_))/n_)*Int(x**m_*(x**n_*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((-x**(-m_ + Mod(m_, n_))*_e_**((-m_ + Mod(m_, n_))/n_)*(a_*_e_**2 + _c_*d_**2)**_p_*(x**n_*_e_*(n_*(q_ + 1) + Mod(m_, n_) + 1) + d_*(Mod(m_, n_) + 1)) + _e_**(2*_p_)*n_*(-d_)**(1 + (-m_ + Mod(m_, n_))/n_)*(q_ + 1)*(x**(2*n_)*_c_ + a_)**_p_)/(x**n_*_e_ + d_)), x), x)/(_e_**(2*_p_)*n_*(q_ + 1)),
         module_name='1.2.3.4 (f x)^m (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=24,
     ),

@@ -608,7 +608,7 @@ RULES = [
     # Rule 68
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(ExpIntegralEi), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), Symbol('ExpIntegralEi'), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int(WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=68,
@@ -616,7 +616,7 @@ RULES = [
     # Rule 69
     RubiRulePattern(
         pattern=Int((x*_h_ + g_)**_m_*WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(ExpIntegralEi), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), Symbol('ExpIntegralEi'), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int((x*g_/d_)**_m_*WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=69,

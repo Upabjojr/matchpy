@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    erf, erfi, exp, hyper, log, pi, sqrt,
+    Ei, erf, erfi, exp, hyper, log, pi, sqrt,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
@@ -249,7 +249,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)/(x*_f_ + _e_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0),),
-        replacement=((F_)**(_a_) * ExpIntegralEi((_b_ * ((_c_ + (_d_ * x)))**(n_) * sympy.log(F_))) * ((_f_ * n_))**(Integer(-1))),
+        replacement=F_**_a_*Ei(_b_*(x*_d_ + _c_)**n_*log(F_))/(_f_*n_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=17,
     ),
@@ -481,7 +481,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(x**2*_c_ + x*_b_ + _a_)/(x*_e_ + _d_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_], x), EqQ(_b_*_e_ - 2*_c_*_d_, 0),),
-        replacement=(((Integer(2) * _e_))**(Integer(-1)) * (F_)**((_a_ + (Integer(-1) * ((_b_)**(Integer(2)) * ((Integer(4) * _c_))**(Integer(-1)))))) * ExpIntegralEi((((_b_ + (Integer(2) * _c_ * x)))**(Integer(2)) * sympy.log(F_) * ((Integer(4) * _c_))**(Integer(-1))))),
+        replacement=F_**(_a_ - _b_**2/(4*_c_))*Ei((2*x*_c_ + _b_)**2*log(F_)/(4*_c_))/(2*_e_),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=46,
     ),

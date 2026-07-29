@@ -14,8 +14,7 @@ from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Not
 from sympy import (
-    acos, acsc,
-    asec, asin, cot, csc, sec, sqrt, tan,
+    acos, acsc, asec, asin, cot, csc, sec, sqrt, tan,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT

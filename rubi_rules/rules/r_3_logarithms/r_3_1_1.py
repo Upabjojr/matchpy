@@ -10,10 +10,10 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Symbol
+from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy import (
-    exp, log,
+    exp, li, log,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -85,7 +85,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(1/log(x*_c_), x),
         constraints=(FreeQ(_c_, x),),
-        replacement=(LogIntegral((_c_ * x)) * (_c_)**(Integer(-1))),
+        replacement=li(x*_c_)/_c_,
         module_name='3.1.1 (a+b log(c x^n))^p',
         rule_number=4,
     ),

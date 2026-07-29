@@ -116,8 +116,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
       rubi_rules/, despite being standard Mathematica library. Can you please fix and check no other inconsistency with Mathematica standard library?
 - [ ] rebuild rubi test suite
 - [X] lift replacement rule building to sympy_matching/ (done: build_tracing_replacer / _make_replacement_fn in sympy_matching/matching_rule.py)
-- [ ] rename SympyMatchingRule to RewriteRule, SymPyRewriteRule, Rule, MatchingRule?
-- [ ] rename SympyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not.
+- [ ] rename SympyMatchingRule to RewriteRule, SymPyRewriteRule, Rule, MatchingRule? (MAYBE: SymPyReplacementRule)
+- [ ] rename SympyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not. (MAYBE: SymPyMatchingConstraint)
 
 Strange warning:
 

@@ -14,9 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    cos, cosh, cot, coth,
-    csc, csch, exp, log, sec, sech,
-    sin, sinh, tan, tanh,
+    cos, cosh, cot, coth, csc, csch, exp, log, sec, sech, sin, sinh, tan, tanh,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, HeadRef, IDENTITY_ELEMENT

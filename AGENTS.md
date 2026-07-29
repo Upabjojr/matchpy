@@ -148,6 +148,52 @@ The same procedure applied to
 [MathematicaSyntaxTestSuite](https://github.com/RuleBasedIntegration/MathematicaSyntaxTestSuite)
 generates the test suite under `rubi_rules/rubi_test_suite/**`.
 
+### Which Python object does a Wolfram head become?
+
+This is decided **per layer**, and the two layers deliberately disagree.
+
+**`sympy_wolfram/` — the interpreter and runtime library.** A head this project
+implements becomes its **own `MathematicaExpr` node**, even when SymPy has a function
+of the same name. SymPy's functions apply SymPy's eager-evaluation rules, which are
+not Mathematica's, so the two are kept separate and the node evaluates only on
+`doit()`. `FFLConverter.wolfram_library_names()` discovers those nodes by walking the
+package, so adding a node makes it translatable with no list to update.
+
+**`rubi_rules/` — overrides the default for heads where the two really do agree.**
+Rubi's rules must match what a caller passes to `rubi_integrate`, and a caller writes
+`expint(n, x)`, not `ExpIntegralE(n, x)`. `_EXTRA_SYMPY_HEADS` in
+`codegen/generate.py` maps those heads to plain SymPy, and it is applied to
+**patterns as well as replacements** (`_PATTERN_CUSTOM`) — a pattern holding a
+deferred node could never match, so the rule would be dead. Pinned by
+`TestWolframHeadTranslationLayering` in `tests/test_codegen.py`.
+
+Two heads are *replaced* at generation time rather than translated, because neither
+is really a function: `Identity[z]` → `z` and `Complex[a,b]` → `(a + sympy.I*b)`.
+
+Careful with `ProductLog`: Mathematica puts the branch index **first**
+(`ProductLog[k,z]` = `LambertW(z,k)`). The rubi-level rename passes arguments
+straight through, so it is sound only while Rubi uses the one-argument form — a test
+fails loudly if a two-argument use ever appears.
+
+### Generated-code hygiene
+
+Two post-processing behaviours worth knowing, because both fail **silently**:
+
+* **Shortening.** Emitted code is round-tripped through the printer
+  (`_simplify_code`): eval → print → eval, keeping the short form only if it
+  reproduces the same object. If any name in the *printed* form is missing from the
+  eval namespace the verification raises `NameError`, the shortener gives up, and the
+  rule is left in its verbose `(Integer(-1) * ...)` form with no error. So **verbose
+  generated code is the symptom of a missing name**, not a cosmetic accident. The
+  namespace must contain the rubi-level override names (`expint`, `LambertW`, …) and
+  the module's declared scope locals (`k`, `r`, `s`, …). Merge only *Symbols* from the
+  module namespace — merging it wholesale shadows the shortener's own placeholders
+  (`Not`, `Simplify`) and defeats the round-trip for ~1200 expressions.
+* **Unused imports.** After all modules are written, `strip_unused_imports()` runs
+  `ruff check --select F401 --fix` over them. The header imports the union of every
+  name the emitter *could* need, so generating first and pruning after is the only
+  order that works. `ruff` is optional: a missing binary is reported, not fatal.
+
 ## Layout
 
 - `matchpy/expressions/` — `expressions.py` (`TypedModel` expression types), `constraints.py`, `substitution.py`, `functions.py`; `matchpy/_typed.py` — the `TypedModel` base

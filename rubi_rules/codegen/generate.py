@@ -22,18 +22,43 @@ import re
 import sys
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 from collections import defaultdict
 
 from rubi_rules.utils import rubi_utils
 from sympy_wolfram import FFLConverter
 from sympy_wolfram import objects as wolfram_objects
 from sympy_wolfram.interpreter import ffl_to_sympy_short_code
+from sympy import Symbol as _sympy_Symbol
 
 
 # =============================================================================
 # Rubi-specific FFL helpers (operate on Int[integrand, x_Symbol] structure)
 # =============================================================================
+
+def _rubi_override_sympy_names() -> Dict[str, Any]:
+    """Bare SymPy names introduced by the rubi_rules-level overrides.
+
+    ``_EXTRA_SYMPY_HEADS`` translates Wolfram heads to SymPy functions for THIS layer
+    (see :func:`_build_pattern_custom_functions`). The emitter writes them qualified
+    (``sympy.expint(...)``), but the shortening printer prints them BARE
+    (``expint(...)``) -- so unless the bare name is both importable in the generated
+    module and present in the shortening namespace, the round-trip's verification eval
+    raises NameError and the shortener SILENTLY keeps the verbose form. That is what
+    left ~100 rules reading ``(Integer(-1) * sympy.expint(...)) * (_b_)**(Integer(-1))``
+    instead of ``-expint(n_ + 1, ...)/_b_``.
+    """
+    import sympy as _sympy
+    names: Dict[str, Any] = {}
+    for target in _EXTRA_SYMPY_HEADS.values():
+        if not target.startswith('sympy.'):
+            continue
+        bare = target.split('.', 1)[1]
+        obj = getattr(_sympy, bare, None)
+        if obj is not None:
+            names[bare] = obj
+    return names
+
 
 def _sympy_import_line() -> str:
     """The generated-module ``from sympy import (...)`` line for every SymPy name that
@@ -46,7 +71,8 @@ def _sympy_import_line() -> str:
     resolvable in the round-trip, with no second list to update.
     """
     import textwrap
-    names = sorted(FFLConverter.generated_code_sympy_names())
+    names = sorted(set(FFLConverter.generated_code_sympy_names())
+                   | set(_rubi_override_sympy_names()))
     body = textwrap.fill(', '.join(names), width=100,
                          initial_indent='    ', subsequent_indent='    ')
     return f"from sympy import (\n{body},\n)"
@@ -531,6 +557,13 @@ _EXTRA_SYMPY_HEADS: Dict[str, str] = {
     'Factorial': 'sympy.factorial',
     # Other special functions
     'PolyLog': 'sympy.polylog',
+    # Rubi only ever uses the ONE-argument form, which is a straight rename. The
+    # two-argument Mathematica form would NOT be: ProductLog[k, z] is LambertW(z, k)
+    # (branch index moves from first to last), so if a two-arg use ever appears here
+    # this entry must become a reordering wrapper. sympy_wolfram's ProductLog node
+    # already handles both; this override exists so rule PATTERNS hold a plain
+    # LambertW and therefore match a caller's expression.
+    'ProductLog': 'sympy.LambertW',
     'Zeta': 'sympy.zeta',
     'Mod': 'sympy.Mod',
     # Elementary functions not in SYMPY_FUNC_MAP
@@ -655,8 +688,31 @@ def _build_inert_trig_custom_functions() -> dict:
 
 
 _INERT_TRIG_CUSTOM = _build_inert_trig_custom_functions()
+
+
+def _build_pattern_custom_functions() -> dict:
+    """custom_functions for converting a rule's PATTERN (the integrand).
+
+    LAYERING. ``sympy_wolfram`` is an interpreter for the Wolfram language: a head it
+    implements is translated to its OWN node, because SymPy's same-named function
+    applies its own eager-evaluation rules which are not Mathematica's. ``rubi_rules``
+    sits on top and OVERRIDES that for the heads where the two really do agree, so the
+    generated rules speak plain SymPy -- `expint`, `LambertW`, `polylog` -- and a
+    pattern matches what a caller actually passes to ``rubi_integrate``.
+
+    Patterns used to get only the inert-trig overrides, so they held deferred nodes
+    while the REPLACEMENT half of the very same rule held the SymPy function. A
+    pattern holding ``ExpIntegralE(n_, ...)`` can never match a caller's
+    ``expint(n, ...)``, so those rules were unreachable.
+    """
+    import sympy as _sympy
+    custom = {head: (code, _sympy) for head, code in _EXTRA_SYMPY_HEADS.items()}
+    custom.update(_INERT_TRIG_CUSTOM)
+    return custom
+
 _REPLACEMENT_CUSTOM = {**_build_replacement_custom_functions(), **_INERT_TRIG_CUSTOM}
 _CONSTRAINT_CUSTOM = {**_build_constraint_custom_functions(), **_INERT_TRIG_CUSTOM}
+_PATTERN_CUSTOM = _build_pattern_custom_functions()
 
 
 # =============================================================================
@@ -1059,7 +1115,8 @@ Max = Symbol('Max')
                 plain.add(var_name[:-1])
         return plain, optional
 
-    def _translate_constraints(self, conditions, reserved, plain_wilds, opt_wilds):
+    def _translate_constraints(self, conditions, reserved, plain_wilds, opt_wilds,
+                               short_ns=None):
         """Translate the guards into constraint code, dropping only what is safe.
 
         A top-level ``And[...]`` is flattened, since the constraints tuple already
@@ -1079,6 +1136,7 @@ Max = Symbol('Max')
         """
         parts: List[str] = []
         dropped: List[str] = []
+        short_ns = dict(short_ns) if short_ns else dict(_rubi_override_sympy_names())
 
         def translate(guard):
             guard = _rewrite_fhw_in_matchq(guard)
@@ -1086,7 +1144,7 @@ Max = Symbol('Max')
                 code, _, _ = ffl_to_sympy_short_code(
                     guard,
                     reserved,
-                    namespace={},
+                    namespace=dict(short_ns),
                     custom_functions=_CONSTRAINT_CUSTOM,
                     wildcards=plain_wilds,
                     optional_wildcards=opt_wilds,
@@ -1157,6 +1215,24 @@ Max = Symbol('Max')
         # The integration variable is bound by the rule, so it is reserved rather
         # than a pattern wildcard, and is emitted as the canonical identifier `x`.
         reserved = _reserved_symbols(lhs)
+        # Namespace the shortening round-trip verifies against. It must contain
+        # everything the MODULE will have at import time, not just SymPy: the printed
+        # short form references the module's declared scope locals by their bare names
+        # (`k` in `Sum(..., [k, 1, n_/2])`, `r`, `s`, `u`, ...). Without them the
+        # verification eval raises NameError and the shortener silently keeps the
+        # verbose form -- which is what left the Sum/Star rules unshortened.
+        short_ns = dict(_rubi_override_sympy_names())
+        if load_ns:
+            # ONLY the module's plain Symbols (its declared scope locals `k`/`r`/`s`,
+            # the Min/Max ordering flags, ...). The printed short form names them bare,
+            # e.g. `Sum(..., [k, 1, n_/2])`, and without them the verification eval
+            # raises NameError and the shortener silently keeps the verbose form.
+            # Merging the WHOLE module namespace instead would shadow the shortener's
+            # own placeholders (`Not`, `Simplify`, ... come back as rubi_utils objects),
+            # changing what the code evaluates to and defeating the round-trip for
+            # ~1200 expressions -- measured.
+            short_ns.update({name: value for name, value in load_ns.items()
+                             if isinstance(value, _sympy_Symbol)})
         integrand_ffl = lhs[1]
 
         result_ffl, conditions = self._split_conditions(rhs)
@@ -1168,18 +1244,18 @@ Max = Symbol('Max')
         # the reserved variable, then every wildcard discovered -- so passing a
         # FRESH dict per call keeps one rule's wildcards out of the next one.
         pattern_code, wild_defs, _symbols = ffl_to_sympy_short_code(
-            integrand_ffl, reserved, namespace={},
-            custom_functions=_INERT_TRIG_CUSTOM)
+            integrand_ffl, reserved, namespace=dict(short_ns),
+            custom_functions=_PATTERN_CUSTOM)
 
         plain_wilds, opt_wilds = self._wildcard_names(wild_defs)
 
         replacement_code, _, _symbols = ffl_to_sympy_short_code(
-            result_ffl, reserved, namespace={},
+            result_ffl, reserved, namespace=dict(short_ns),
             custom_functions=_REPLACEMENT_CUSTOM,
             wildcards=plain_wilds, optional_wildcards=opt_wilds)
 
         constraints_frag, dropped_guards = self._translate_constraints(
-            conditions, reserved, plain_wilds, opt_wilds)
+            conditions, reserved, plain_wilds, opt_wilds, short_ns=short_ns)
 
         probe = (
             f"RubiRulePattern(pattern=Int({pattern_code}, x), "

@@ -427,7 +427,7 @@ RULES = [
     ),
     # Rule 43
     RubiRulePattern(
-        pattern=Int((_u_ * sympy.log(Gamma(v_))), x),
+        pattern=Int(_u_*log(Gamma(v_)), x),
         constraints=(),
         replacement=(log(Gamma(v_)) - loggamma(v_))*Int(_u_, x) + Int(_u_*loggamma(v_), x),
         module_name='3.5 Miscellaneous logarithms',

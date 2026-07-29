@@ -13,8 +13,7 @@ import sympy
 from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy import (
-    asinh, cosh, coth,
-    sinh, sqrt,
+    asinh, cosh, coth, sinh, sqrt,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT

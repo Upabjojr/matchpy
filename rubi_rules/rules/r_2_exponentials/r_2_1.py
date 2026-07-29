@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Not, And
 from sympy import (
-    log, sqrt,
+    Ei, log, sqrt,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -94,7 +94,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_g_*(x*_f_ + _e_))/(x*_d_ + _c_), x),
         constraints=(FreeQ([F_, _c_, _d_, _e_, _f_, _g_], x), Not(TrueQ(UseGamma)),),
-        replacement=((F_)**((_g_ * (_e_ + (Integer(-1) * (_c_ * _f_ * (_d_)**(Integer(-1))))))) * (_d_)**(Integer(-1)) * ExpIntegralEi((_f_ * _g_ * (_c_ + (_d_ * x)) * sympy.log(F_) * (_d_)**(Integer(-1))))),
+        replacement=F_**(_g_*(-_c_*_f_/_d_ + _e_))*Ei(_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)/_d_,
         module_name='2.1 (c+d x)^m (a+b (F^(g (e+f x)))^n)^p',
         rule_number=3,
     ),

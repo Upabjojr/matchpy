@@ -8,6 +8,7 @@ Tests the FFL-to-Python translation pipeline:
 - Integration variable handling
 - End-to-end: parse .m file -> generate -> load -> integrate
 """
+import re
 import sys
 import os
 import pytest
@@ -867,3 +868,77 @@ class TestPostfixDerivativeIsParsedNatively:
         # Int[f'g + f g'] -> f g  and the quotient-rule shape
         assert text.count('WildHeadDeriv(f_, x, 1)') >= 2
         assert 'WFApply(f_, x)*WFApply(g_, x)' in text
+
+
+class TestWolframHeadTranslationLayering:
+    """Which Python object a Wolfram head becomes depends on WHICH LAYER is asking.
+
+    ``sympy_wolfram`` is an interpreter for the Wolfram language and the runtime
+    library translated code links against, so a head it implements becomes its OWN
+    node -- SymPy's same-named function applies SymPy's eager-evaluation rules, which
+    are not Mathematica's, so the two are kept separate.
+
+    ``rubi_rules`` sits on top and OVERRIDES that for heads where the two agree, via
+    ``_EXTRA_SYMPY_HEADS``. Rubi's rules have to match expressions a caller passes to
+    ``rubi_integrate``, and a caller writes ``expint(n, x)``, not ``ExpIntegralE(n, x)``.
+    """
+
+    # heads implemented in sympy_wolfram AND overridden to plain SymPy by rubi_rules
+    OVERRIDDEN = ['ExpIntegralE', 'ExpIntegralEi', 'LogIntegral', 'PolyGamma',
+                  'Zeta', 'Factorial', 'BesselJ', 'ProductLog']
+
+    def _convert(self, ffl, custom_functions=None):
+        from sympy_wolfram.interpreter import FFLConverter
+        c = FFLConverter(reserved_symbols={'x': 'x'}, custom_functions=custom_functions)
+        return c.convert(ffl)
+
+    @pytest.mark.parametrize('head', OVERRIDDEN)
+    def test_sympy_wolfram_alone_translates_to_its_own_node(self, head):
+        """Bare interpreter: the Wolfram head keeps its identity."""
+        from sympy_wolfram.interpreter import FFLConverter
+        assert head in FFLConverter.wolfram_library_names()
+        assert self._convert([head, 'x']).startswith(f'{head}(')
+
+    @pytest.mark.parametrize('head', OVERRIDDEN)
+    def test_rubi_rules_overrides_to_the_equivalent_sympy_function(self, head):
+        from rubi_rules.codegen.generate import _EXTRA_SYMPY_HEADS, _PATTERN_CUSTOM
+        assert head in _EXTRA_SYMPY_HEADS, f'{head} must be overridden at the rubi layer'
+        assert _EXTRA_SYMPY_HEADS[head].startswith('sympy.')
+        assert self._convert([head, 'x'], _PATTERN_CUSTOM).startswith('sympy.')
+
+    def test_the_override_applies_to_patterns_not_only_replacements(self):
+        """The PATTERN is the half that must match a caller's expression. It used to
+        get only the inert-trig overrides, so a rule's pattern held a deferred node
+        while its own replacement held the SymPy function -- and never matched."""
+        from rubi_rules.codegen.generate import _PATTERN_CUSTOM, _REPLACEMENT_CUSTOM
+        # Assert the EFFECTIVE translation, not dict membership: a head already in
+        # FFLConverter.SYMPY_FUNC_MAP (PolyLog) is handled there and is deliberately
+        # absent from the custom dicts, yet still translates to plain SymPy.
+        for head in ('ExpIntegralE', 'ProductLog', 'PolyLog'):
+            as_pattern = self._convert([head, 'x'], _PATTERN_CUSTOM)
+            as_replacement = self._convert([head, 'x'], _REPLACEMENT_CUSTOM)
+            assert as_pattern.startswith('sympy.'), f'{head} pattern -> {as_pattern}'
+            assert as_pattern == as_replacement, f'{head}: {as_pattern} != {as_replacement}' 
+
+    def test_generated_rules_use_plain_sympy_for_the_overridden_heads(self):
+        """End-to-end: no generated rule may mention the Wolfram node for a head the
+        rubi layer overrides -- that rule could never fire."""
+        offenders = []
+        for path, text in TestGeneratedRulesetInvariants()._all_text():
+            for head in self.OVERRIDDEN:
+                if re.search(rf'(?<![A-Za-z_]){head}\(', text):
+                    offenders.append(f'{path}: {head}')
+        assert not offenders, offenders
+
+    def test_ProductLog_override_is_only_sound_while_rubi_uses_the_1_arg_form(self):
+        """Mathematica's ProductLog[k, z] is LambertW(z, k) -- the branch index moves.
+        The rubi-level rename passes arguments straight through, so it is correct ONLY
+        for the one-argument form. Fail loudly if a two-arg use ever appears."""
+        two_arg = []
+        for path, text in TestGeneratedRulesetInvariants()._all_text():
+            for call in re.findall(r'LambertW\(([^()]*(?:\([^()]*\)[^()]*)*)\)', text):
+                if ',' in call:
+                    two_arg.append(f'{path}: LambertW({call})')
+        assert not two_arg, (
+            'two-argument LambertW found; _EXTRA_SYMPY_HEADS["ProductLog"] must become '
+            'an argument-reordering wrapper: ' + '; '.join(two_arg))

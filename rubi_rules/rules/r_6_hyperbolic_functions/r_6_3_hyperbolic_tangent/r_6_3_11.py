@@ -10,13 +10,11 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Symbol
+from sympy import Integral, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Not
 from sympy import (
-    coth,
-    csch, sech,
-    tanh,
+    Integral, coth, csch, sech, tanh,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -89,7 +87,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*tanh(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, n_, _p_], x),),
-        replacement=sympy.Integral(((_a_ + (_b_ * sympy.tanh((_c_ + (_d_ * (x)**(n_)))))))**(_p_), x),
+        replacement=Integral((_a_ + _b_*tanh(x**n_*_d_ + _c_))**_p_, x),
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=3,
     ),
@@ -97,7 +95,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((_a_ + _b_*coth(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, n_, _p_], x),),
-        replacement=sympy.Integral(((_a_ + (_b_ * sympy.coth((_c_ + (_d_ * (x)**(n_)))))))**(_p_), x),
+        replacement=Integral((_a_ + _b_*coth(x**n_*_d_ + _c_))**_p_, x),
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=4,
     ),
@@ -169,7 +167,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*tanh(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x),),
-        replacement=sympy.Integral(((x)**(_m_) * ((_a_ + (_b_ * sympy.tanh((_c_ + (_d_ * (x)**(n_)))))))**(_p_)), x),
+        replacement=Integral(x**_m_*(_a_ + _b_*tanh(x**n_*_d_ + _c_))**_p_, x),
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=13,
     ),
@@ -177,7 +175,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(x**_m_*(_a_ + _b_*coth(x**n_*_d_ + _c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_, _p_], x),),
-        replacement=sympy.Integral(((x)**(_m_) * ((_a_ + (_b_ * sympy.coth((_c_ + (_d_ * (x)**(n_)))))))**(_p_)), x),
+        replacement=Integral(x**_m_*(_a_ + _b_*coth(x**n_*_d_ + _c_))**_p_, x),
         module_name='6.3.11 (e x)^m (a+b tanh(c+d x^n))^p',
         rule_number=14,
     ),

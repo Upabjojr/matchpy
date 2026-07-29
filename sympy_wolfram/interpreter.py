@@ -131,20 +131,12 @@ class FFLConverter:
         'Erf': 'sympy.erf',
         'Erfi': 'sympy.erfi', 'Erfc': 'sympy.erfc',
         'FresnelS': 'sympy.fresnels', 'FresnelC': 'sympy.fresnelc',
-        # These three are NAMED CLASSES in sympy_wolfram rather than bare renames.
-        # ExpIntegralEi/LogIntegral are 1:1 with Ei/li, but ProductLog is NOT --
-        # Mathematica's branch index comes first, SymPy's last -- so the class owns
-        # that translation in one place. All three evaluate eagerly, so a pattern
-        # built from them holds the real SymPy object and still matches.
-        'ExpIntegralEi': 'ExpIntegralEi', 'LogIntegral': 'LogIntegral',
-        'ProductLog': 'ProductLog',
         'SinIntegral': 'sympy.Si', 'CosIntegral': 'sympy.Ci',
-        # Pure special functions: these appear in rule PATTERNS (the integrand),
-        # so they must be the real SymPy functions -- a deferred node would only
-        # match another deferred node, never a caller's expint/besselj/...
-        'BesselJ': 'sympy.besselj', 'ExpIntegralE': 'sympy.expint',
-        'PolyGamma': 'sympy.polygamma', 'Zeta': 'sympy.zeta',
-        'Factorial': 'sympy.factorial',
+        # NOTE: BesselJ / ExpIntegralE / PolyGamma / Zeta / Factorial are deliberately
+        # NOT renamed to sympy.besselj/expint/polygamma/zeta/factorial here. They have
+        # nodes in this package, and a Wolfram head that we implement keeps its own
+        # node -- SymPy's versions apply their own eager-evaluation rules, which are
+        # not Mathematica's. They are picked up by wolfram_library_names().
         'SinhIntegral': 'sympy.Shi', 'CoshIntegral': 'sympy.Chi',
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra
@@ -196,6 +188,34 @@ class FFLConverter:
     # qualified as ``sympy.Min(...)``). So bare ``Min`` is a Symbol in the file, never the
     # SymPy function -- keep it out of the shortening namespace to match.
     _GENERATED_SYMPY_EXCLUDE: frozenset = frozenset({'Min', 'Max'})
+
+    @classmethod
+    def wolfram_library_names(cls) -> Dict[str, Any]:
+        """Every Wolfram node this package provides, as ``{Wolfram name: class}``.
+
+        ``sympy_wolfram`` is an interpreter for the Wolfram language AND the runtime
+        library that translated code links against, so a head with a node here is
+        emitted as THAT node -- not silently renamed to a SymPy function that merely
+        looks similar. Keeping them separate matters because SymPy's functions apply
+        their own eager-evaluation rules, which are not Mathematica's.
+
+        Discovered by walking the package rather than listed by hand: adding a node
+        makes it translatable and round-trippable with no second place to update.
+        """
+        cached = getattr(cls, '_WOLFRAM_LIBRARY_CACHE', None)
+        if cached is not None:
+            return cached
+        from sympy_wolfram import mathematica_functions as _mf
+        from sympy_wolfram import objects as _ob
+        registry: Dict[str, Any] = {}
+        for module in (_ob, _mf):
+            for name, obj in vars(module).items():
+                if name.startswith('_') or not isinstance(obj, type):
+                    continue
+                if issubclass(obj, _ob.MathematicaExpr) and obj is not _ob.MathematicaExpr:
+                    registry[name] = obj
+        cls._WOLFRAM_LIBRARY_CACHE = registry
+        return registry
 
     @classmethod
     def generated_code_sympy_names(cls) -> Dict[str, Any]:
@@ -297,6 +317,10 @@ class FFLConverter:
             # from the SINGLE SOURCE shared with the generated-file import header, so the
             # two never drift (see generated_code_sympy_names).
             **self.generated_code_sympy_names(),
+            # The Wolfram runtime library, so the shortening round-trip can eval a
+            # node the emitter just wrote. Without this, any rule mentioning e.g.
+            # ProductLog failed to eval and silently kept its VERBOSE form.
+            **self.wolfram_library_names(),
             # Logical operators — use unevaluated wrappers so simplify_code
             # round-trip preserves And(...)/Or(...)/Not(...) form rather than
             # the &/|/~ infix operators that sympy.And/Or/Not would produce.
@@ -554,6 +578,11 @@ class FFLConverter:
         # -- RemoveContent (pass through) --------------------------------------
         if head == 'RemoveContent':
             return self.convert(ffl[1], is_pattern=is_pattern)
+
+        # -- A node provided by the Wolfram runtime library ---------------------
+        if head in self.wolfram_library_names():
+            args = [self.convert(a, is_pattern=is_pattern) for a in ffl[1:]]
+            return f"{head}({', '.join(args)})"
 
         # -- Generic fallback: sympy.Function('Head')(...) ---------------------
         args = [self.convert(a, is_pattern=is_pattern) for a in ffl[1:]]

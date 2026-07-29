@@ -10,9 +10,12 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Symbol
+from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not
+from sympy import (
+    Mod,
+)
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
@@ -83,7 +86,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x*c_)**_m_*(x**_j_*_a_ + x**n_*_b_)**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _j_, n_, p_], x), PolyQ(Pq_, x**n_), Not(IntegerQ(p_)), NeQ(n_, _j_), IntegerQ(Simplify(_j_/n_)), IntegerQ(Simplify((_m_ + 1)/n_)), RationalQ(_m_), GtQ(_m_**2, 1),),
-        replacement=((c_)**((Sign(_m_) * Quotient(_m_, Sign(_m_)))) * ((c_ * x))**(sympy.Mod(_m_, Sign(_m_))) * ((x)**(sympy.Mod(_m_, Sign(_m_))))**(Integer(-1)) * Int(((x)**(_m_) * Pq_ * (((_a_ * (x)**(_j_)) + (_b_ * (x)**(n_))))**(p_)), x)),
+        replacement=c_**(Quotient(_m_, Sign(_m_))*Sign(_m_))*(x*c_)**(Mod(_m_, Sign(_m_)))*Int(x**_m_*Pq_*(x**_j_*_a_ + x**n_*_b_)**p_, x)/x**(Mod(_m_, Sign(_m_))),
         module_name='1.1.4.4 P(x) (c x)^m (a x^j+b x^n)^p',
         rule_number=3,
     ),
@@ -123,7 +126,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(Pq_*(x*c_)**m_*(x**_j_*_a_ + x**n_*_b_)**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _j_, n_, p_], x), PolyQ(Pq_, x**n_), Not(IntegerQ(p_)), NeQ(n_, _j_), IntegerQ(Simplify(_j_/n_)), IntegerQ(Simplify(n_/(m_ + 1))), Not(IntegerQ(n_)), GtQ(m_**2, 1),),
-        replacement=((c_)**((Sign(m_) * Quotient(m_, Sign(m_)))) * ((c_ * x))**(sympy.Mod(m_, Sign(m_))) * ((x)**(sympy.Mod(m_, Sign(m_))))**(Integer(-1)) * Int(((x)**(m_) * Pq_ * (((_a_ * (x)**(_j_)) + (_b_ * (x)**(n_))))**(p_)), x)),
+        replacement=c_**(Quotient(m_, Sign(m_))*Sign(m_))*(x*c_)**(Mod(m_, Sign(m_)))*Int(x**m_*Pq_*(x**_j_*_a_ + x**n_*_b_)**p_, x)/x**(Mod(m_, Sign(m_))),
         module_name='1.1.4.4 P(x) (c x)^m (a x^j+b x^n)^p',
         rule_number=8,
     ),

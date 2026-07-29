@@ -10,11 +10,10 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Symbol
+from sympy import Integral, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy import (
-    cosh, coth,
-    log, sinh, tanh,
+    Integral, cosh, coth, log, sinh, tanh,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -66,7 +65,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(tanh(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_], x),),
-        replacement=sympy.Integral((sympy.tanh((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2))))))**(_n_), x),
+        replacement=Integral(tanh(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         module_name='6.3.12 (d+e x)^m tanh(a+b x+c x^2)^n',
         rule_number=1,
     ),
@@ -74,7 +73,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(coth(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_], x),),
-        replacement=sympy.Integral((sympy.coth((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2))))))**(_n_), x),
+        replacement=Integral(coth(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         module_name='6.3.12 (d+e x)^m tanh(a+b x+c x^2)^n',
         rule_number=2,
     ),
@@ -98,7 +97,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_ + _d_)**_m_*tanh(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=sympy.Integral((((_d_ + (_e_ * x)))**(_m_) * (sympy.tanh((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2))))))**(_n_)), x),
+        replacement=Integral((x*_e_ + _d_)**_m_*tanh(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         module_name='6.3.12 (d+e x)^m tanh(a+b x+c x^2)^n',
         rule_number=5,
     ),
@@ -106,7 +105,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_e_ + _d_)**_m_*coth(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_], x),),
-        replacement=sympy.Integral((((_d_ + (_e_ * x)))**(_m_) * (sympy.coth((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2))))))**(_n_)), x),
+        replacement=Integral((x*_e_ + _d_)**_m_*coth(x**2*_c_ + x*_b_ + _a_)**_n_, x),
         module_name='6.3.12 (d+e x)^m tanh(a+b x+c x^2)^n',
         rule_number=6,
     ),
