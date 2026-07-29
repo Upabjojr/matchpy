@@ -582,28 +582,62 @@ _EXTRA_SYMPY_HEADS: Dict[str, str] = {
 _CONSTRAINT_LITERAL_HEADS: Set[str] = {'List'}
 
 
-def _replacement_codegen_target(head: str) -> tuple[str, object]:
+def _rewritable_wolfram_node(name: str) -> Optional[type]:
+    """Return the real Wolfram node class called *name*, iff it can self-translate.
+
+    A head that is neither a plain rename (``_EXTRA_SYMPY_HEADS``) nor structural
+    still reaches standard SymPy if its node implements
+    ``rewrite_as_standard_sympy`` -- the arity-overloaded ones do: Mathematica's
+    ``Gamma[a]``/``Gamma[a, z]`` are SymPy's ``gamma``/``uppergamma``, two different
+    functions, so no name-to-name map can express it.
+
+    That protocol is driven off the OBJECT the shortening pass evaluates, not off
+    the emitted text, so the codegen target for such a head must be the genuine
+    node. Everything else keeps the ``sympy.Function(head)`` stand-in (see
+    :func:`_replacement_codegen_target`): those heads are deferred Rubi utilities
+    whose real classes may evaluate eagerly or reject wildcard arguments, which
+    would break the eval-print-eval round trip.
+    """
+    from sympy_wolfram.objects import MathematicaExpr
+    from rubi_rules.utils import rubi_utils
+    obj = getattr(rubi_utils, name, None)
+    if (isinstance(obj, type) and issubclass(obj, MathematicaExpr)
+            and 'rewrite_as_standard_sympy' in obj.__dict__):
+        return obj
+    return None
+
+
+def _codegen_target_object(head: str, name: str):
+    """Object the shortening pass should build for *head*, emitted as *name*."""
     import sympy as _sympy
+    node = _rewritable_wolfram_node(name)
+    return node if node is not None else _sympy.Function(head)
+
+
+def _replacement_codegen_target(head: str) -> tuple[str, object]:
     if head in _ALL_KNOWN_CONSTRAINTS:
-        return head, _sympy.Function(head)
+        return head, _codegen_target_object(head, head)
     if head in _EXTRA_SYMPY_HEADS:
+        import sympy as _sympy
         return _EXTRA_SYMPY_HEADS[head], _sympy
     if head in RUBI_UTILS_MAP:
-        return RUBI_UTILS_MAP[head], _sympy.Function(head)
-    return head, _sympy.Function(head)
+        name = RUBI_UTILS_MAP[head]
+        return name, _codegen_target_object(head, name)
+    return head, _codegen_target_object(head, head)
 
 
 def _constraint_codegen_target(head: str) -> tuple[str, object] | None:
-    import sympy as _sympy
     if head in _CONSTRAINT_LITERAL_HEADS:
         return None
     if head in _ALL_KNOWN_CONSTRAINTS:
-        return head, _sympy.Function(head)
+        return head, _codegen_target_object(head, head)
     if head in _EXTRA_SYMPY_HEADS:
+        import sympy as _sympy
         return _EXTRA_SYMPY_HEADS[head], _sympy
     if head in RUBI_UTILS_MAP:
-        return RUBI_UTILS_MAP[head], _sympy.Function(head)
-    return head, _sympy.Function(head)
+        name = RUBI_UTILS_MAP[head]
+        return name, _codegen_target_object(head, name)
+    return head, _codegen_target_object(head, head)
 
 
 def _build_replacement_custom_functions() -> dict:

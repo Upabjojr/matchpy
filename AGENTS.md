@@ -189,9 +189,21 @@ equivalent" — true of most nodes, which model Wolfram *language* constructs
 (`With`, `Module`, `Condition`).
 
 The codegen applies it through the `rewrite` hook of `ffl_to_sympy_short_code`, which
-runs on the evaluated object *before* printing. Note the ordering constraint: the
-round-trip verifies the printed text against that object, so rewriting afterwards
-would always compare unequal and be silently discarded.
+runs on the evaluated object *before* printing, to the pattern, the replacement **and**
+the constraints. Note the ordering constraint: the round-trip verifies the printed text
+against that object, so rewriting afterwards would always compare unequal and be
+silently discarded.
+
+Because the protocol keys off that evaluated **object**, the codegen target for such a
+head must be the genuine node. Most heads resolve to a stand-in `sympy.Function(head)`
+during shortening — deliberately, since the real deferred classes may evaluate eagerly
+or reject wildcard arguments and break the round-trip — and a stand-in carries no
+protocol, so the hook silently changes nothing. `_rewritable_wolfram_node()` is the
+exception that hands back the real class for heads that can self-translate. Replacements
+went untranslated for exactly this reason, which matters more than a stale pattern: a
+pattern holding a Wolfram node merely fails to fire, whereas a replacement holding one
+substitutes it into the **answer**. Pinned by
+`test_no_self_translating_node_survives_in_a_replacement`.
 
 ### Generated-code hygiene
 

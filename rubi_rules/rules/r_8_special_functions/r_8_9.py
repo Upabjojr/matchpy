@@ -14,7 +14,7 @@ from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Ei, LambertW, erf, erfi, exp, log, pi, sqrt,
+    Ei, LambertW, erf, erfi, exp, log, pi, sqrt, uppergamma,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -150,7 +150,7 @@ RULES = [
     ),
     # Rule 11
     SymPyReplacementPattern(
-        pattern=Int(1/(_d_*LambertW(x*_b_ + _a_) + d_), x),
+        pattern=Int(1/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=(x*_b_ + _a_)/(_b_*_d_*LambertW(x*_b_ + _a_)),
         module_name='8.9 Product logarithm function',
@@ -158,7 +158,7 @@ RULES = [
     ),
     # Rule 12
     SymPyReplacementPattern(
-        pattern=Int(LambertW(x*_b_ + _a_)/(_d_*LambertW(x*_b_ + _a_) + d_), x),
+        pattern=Int(LambertW(x*_b_ + _a_)/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=x*_d_ - Int(1/(_d_*LambertW(x*_b_ + _a_) + _d_), x),
         module_name='8.9 Product logarithm function',
@@ -166,7 +166,7 @@ RULES = [
     ),
     # Rule 13
     SymPyReplacementPattern(
-        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
+        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(_d_*LambertW(x*_b_ + _a_) + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), GtQ(p_, 0),),
         replacement=-_c_*p_*Int((_c_*LambertW(x*_b_ + _a_))**(p_ - 1)/(_d_*LambertW(x*_b_ + _a_) + _d_), x) + _c_*(_c_*LambertW(x*_b_ + _a_))**(p_ - 1)*(x*_b_ + _a_)/(_b_*_d_),
         module_name='8.9 Product logarithm function',
@@ -174,7 +174,7 @@ RULES = [
     ),
     # Rule 14
     SymPyReplacementPattern(
-        pattern=Int(1/((d_ + _d_*LambertW(x*_b_ + _a_))*LambertW(x*_b_ + _a_)), x),
+        pattern=Int(1/((_d_*LambertW(x*_b_ + _a_) + d_)*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=Ei(LambertW(x*_b_ + _a_))/(_b_*_d_),
         module_name='8.9 Product logarithm function',
@@ -190,7 +190,7 @@ RULES = [
     ),
     # Rule 16
     SymPyReplacementPattern(
-        pattern=Int(1/(sqrt(_c_*LambertW(x*_b_ + _a_))*(_d_*LambertW(x*_b_ + _a_) + d_)), x),
+        pattern=Int(1/(sqrt(_c_*LambertW(x*_b_ + _a_))*(d_ + _d_*LambertW(x*_b_ + _a_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NegQ(_c_),),
         replacement=Rt(-pi*_c_, 2)*erf(sqrt(_c_*LambertW(x*_b_ + _a_))/Rt(-_c_, 2))/(_b_*_c_*_d_),
         module_name='8.9 Product logarithm function',
@@ -198,7 +198,7 @@ RULES = [
     ),
     # Rule 17
     SymPyReplacementPattern(
-        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
+        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(_d_*LambertW(x*_b_ + _a_) + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), LtQ(p_, -1),),
         replacement=-Int((_c_*LambertW(x*_b_ + _a_))**(p_ + 1)/(_d_*LambertW(x*_b_ + _a_) + _d_), x)/(_c_*(p_ + 1)) + (_c_*LambertW(x*_b_ + _a_))**p_*(x*_b_ + _a_)/(_b_*_d_*(p_ + 1)),
         module_name='8.9 Product logarithm function',
@@ -208,13 +208,13 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + _a_))**_p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _p_], x),),
-        replacement=(_c_*LambertW(x*_b_ + _a_))**_p_*Gamma(_p_ + 1, -LambertW(x*_b_ + _a_))/(_b_*_d_*(-LambertW(x*_b_ + _a_))**_p_),
+        replacement=(_c_*LambertW(x*_b_ + _a_))**_p_*uppergamma(_p_ + 1, -LambertW(x*_b_ + _a_))/(_b_*_d_*(-LambertW(x*_b_ + _a_))**_p_),
         module_name='8.9 Product logarithm function',
         rule_number=18,
     ),
     # Rule 19
     SymPyReplacementPattern(
-        pattern=Int((x*_f_ + _e_)**_m_/(_d_*LambertW(x*_b_ + a_) + d_), x),
+        pattern=Int((x*_f_ + _e_)**_m_/(d_ + _d_*LambertW(x*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand(1/(_d_*LambertW(x) + _d_), (x*_f_ - a_*_f_ + _b_*_e_)**_m_, x), x), x, x*_b_ + a_),
         module_name='8.9 Product logarithm function',
@@ -222,7 +222,7 @@ RULES = [
     ),
     # Rule 20
     SymPyReplacementPattern(
-        pattern=Int((_c_*LambertW(x*_b_ + a_))**_p_*(x*_f_ + _e_)**_m_/(_d_*LambertW(x*_b_ + a_) + d_), x),
+        pattern=Int((_c_*LambertW(x*_b_ + a_))**_p_*(x*_f_ + _e_)**_m_/(d_ + _d_*LambertW(x*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _p_], x), IGtQ(_m_, 0),),
         replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand((_c_*LambertW(x))**_p_/(_d_*LambertW(x) + _d_), (x*_f_ - a_*_f_ + _b_*_e_)**_m_, x), x), x, x*_b_ + a_),
         module_name='8.9 Product logarithm function',
@@ -246,7 +246,7 @@ RULES = [
     ),
     # Rule 23
     SymPyReplacementPattern(
-        pattern=Int(LambertW(x**_n_*_a_)**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+        pattern=Int(LambertW(x**_n_*_a_)**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _d_], x), IntegerQ(_p_), EqQ(_n_*_p_, -1),),
         replacement=_a_**_p_*Ei(-_p_*LambertW(x**_n_*_a_))/(_d_*_n_),
         module_name='8.9 Product logarithm function',
@@ -278,7 +278,7 @@ RULES = [
     ),
     # Rule 27
     SymPyReplacementPattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), GtQ(_n_, 0), LtQ(_n_*_p_ + 1, 0),),
         replacement=x*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*(_n_*_p_ + 1)) - Int((_c_*LambertW(x**_n_*_a_))**(_p_ + 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x)/(_c_*(_n_*_p_ + 1)),
         module_name='8.9 Product logarithm function',
@@ -294,7 +294,7 @@ RULES = [
     ),
     # Rule 29
     SymPyReplacementPattern(
-        pattern=Int(x**_m_/(d_ + _d_*LambertW(x*_a_)), x),
+        pattern=Int(x**_m_/(_d_*LambertW(x*_a_) + d_), x),
         constraints=(FreeQ([_a_, _d_], x), GtQ(_m_, 0),),
         replacement=x**(_m_ + 1)/(_d_*(_m_ + 1)*LambertW(x*_a_)) - _m_*Int(x**_m_/((_d_*LambertW(x*_a_) + _d_)*LambertW(x*_a_)), x)/(_m_ + 1),
         module_name='8.9 Product logarithm function',
@@ -302,7 +302,7 @@ RULES = [
     ),
     # Rule 30
     SymPyReplacementPattern(
-        pattern=Int(1/(x*(_d_*LambertW(x*_a_) + d_)), x),
+        pattern=Int(1/(x*(d_ + _d_*LambertW(x*_a_))), x),
         constraints=(FreeQ([_a_, _d_], x),),
         replacement=log(LambertW(x*_a_))/_d_,
         module_name='8.9 Product logarithm function',
@@ -318,9 +318,9 @@ RULES = [
     ),
     # Rule 32
     SymPyReplacementPattern(
-        pattern=Int(x**_m_/(d_ + _d_*LambertW(x*_a_)), x),
+        pattern=Int(x**_m_/(_d_*LambertW(x*_a_) + d_), x),
         constraints=(FreeQ([_a_, _d_, _m_], x), Not(IntegerQ(_m_)),),
-        replacement=x**_m_*Gamma(_m_ + 1, (-_m_ - 1)*LambertW(x*_a_))*exp(-_m_*LambertW(x*_a_))/(_a_*_d_*((-_m_ - 1)*LambertW(x*_a_))**_m_*(_m_ + 1)),
+        replacement=x**_m_*exp(-_m_*LambertW(x*_a_))*uppergamma(_m_ + 1, (-_m_ - 1)*LambertW(x*_a_))/(_a_*_d_*((-_m_ - 1)*LambertW(x*_a_))**_m_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=32,
     ),
@@ -350,7 +350,7 @@ RULES = [
     ),
     # Rule 36
     SymPyReplacementPattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_, _p_], x), NeQ(_m_, -1), EqQ(_m_ + _n_*(_p_ - 1), -1),),
         replacement=x**(_m_ + 1)*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
@@ -374,7 +374,7 @@ RULES = [
     ),
     # Rule 39
     SymPyReplacementPattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_], x), NeQ(_m_, -1), IntegerQ(p_ + sympy.S(-1)/2), EqQ(_m_ + _n_*(p_ + sympy.S(-1)/2), -1), NegQ(_c_/(p_ + sympy.S(-1)/2)),),
         replacement=_a_**(p_ + sympy.S(-1)/2)*_c_**(p_ + sympy.S(-1)/2)*Rt(-pi*_c_/(p_ + sympy.S(-1)/2), 2)*erfi(sqrt(_c_*LambertW(x**_n_*_a_))/Rt(-_c_/(p_ + sympy.S(-1)/2), 2))/(_d_*_n_),
         module_name='8.9 Product logarithm function',
@@ -382,7 +382,7 @@ RULES = [
     ),
     # Rule 40
     SymPyReplacementPattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_, _p_], x), NeQ(_m_, -1), GtQ(Simplify(_p_ + (_m_ + 1)/_n_), 1),),
         replacement=x**(_m_ + 1)*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*(_m_ + 1)) - _c_*(_m_ + _n_*(_p_ - 1) + 1)*Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x)/(_m_ + 1),
         module_name='8.9 Product logarithm function',
@@ -398,15 +398,15 @@ RULES = [
     ),
     # Rule 42
     SymPyReplacementPattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_/(_d_*LambertW(x*_a_) + d_), x),
+        pattern=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_/(d_ + _d_*LambertW(x*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _p_], x), NeQ(_m_, -1),),
-        replacement=x**_m_*(_c_*LambertW(x*_a_))**_p_*((-_m_ - 1)*LambertW(x*_a_))**(-_m_ - _p_)*Gamma(_m_ + _p_ + 1, (-_m_ - 1)*LambertW(x*_a_))*exp(-_m_*LambertW(x*_a_))/(_a_*_d_*(_m_ + 1)),
+        replacement=x**_m_*(_c_*LambertW(x*_a_))**_p_*((-_m_ - 1)*LambertW(x*_a_))**(-_m_ - _p_)*exp(-_m_*LambertW(x*_a_))*uppergamma(_m_ + _p_ + 1, (-_m_ - 1)*LambertW(x*_a_))/(_a_*_d_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=42,
     ),
     # Rule 43
     SymPyReplacementPattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _p_], x), NeQ(_m_, -1), IntegerQ(_m_), LtQ(_n_, 0),),
         replacement=-Subst(Int(x**(-_m_ - 2)*(_c_*LambertW(_a_/x**_n_))**_p_/(_d_*LambertW(_a_/x**_n_) + _d_), x), x, 1/x),
         module_name='8.9 Product logarithm function',

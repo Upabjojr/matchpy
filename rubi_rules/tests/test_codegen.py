@@ -979,6 +979,53 @@ class TestPatternsContainOnlyMatchableHeads:
         assert not offenders, (
             'pattern heads that no caller expression can contain: ' + repr(offenders))
 
+    @staticmethod
+    def _self_translating_node_names():
+        """Wolfram nodes that override ``rewrite_as_standard_sympy``."""
+        from sympy_wolfram.objects import MathematicaExpr
+        import sympy_wolfram.objects as _objects
+        import sympy_wolfram.mathematica_functions as _functions
+        names = set()
+        for module in (_objects, _functions):
+            for name, value in vars(module).items():
+                if (isinstance(value, type) and issubclass(value, MathematicaExpr)
+                        and value is not MathematicaExpr
+                        and 'rewrite_as_standard_sympy' in value.__dict__):
+                    names.add(name)
+        return names
+
+    def test_no_self_translating_node_survives_in_a_replacement(self):
+        """The REPLACEMENT is the answer, not just the query.
+
+        A node that implements ``rewrite_as_standard_sympy`` has an agreed standard
+        SymPy form, and the codegen applies the protocol to the pattern, the
+        replacement and the constraints alike. A pattern still holding the Wolfram
+        node merely fails to fire; a REPLACEMENT still holding it is worse -- that
+        node is substituted and handed straight back, so ``rubi_integrate`` returns
+        an answer spelled in a vocabulary the caller never used and SymPy cannot
+        evaluate, differentiate or simplify.
+
+        This regression is silent by construction: the codegen resolves each head to
+        an object during the eval-print-eval shortening pass, and the protocol keys
+        off that OBJECT. While replacements resolved ``Gamma`` to a stand-in
+        ``sympy.Function('Gamma')`` the rewrite hook ran, found no ``MathematicaExpr``
+        and changed nothing -- emitting perfectly well-formed, perfectly wrong code.
+        """
+        names = self._self_translating_node_names()
+        assert 'Gamma' in names, 'expected the Gamma node to define the protocol'
+        offenders = {}
+        for path, text in TestGeneratedRulesetInvariants()._all_text():
+            for line in text.splitlines():
+                line = line.strip()
+                if not (line.startswith('replacement=') or line.startswith('constraints=')):
+                    continue
+                for head in re.findall(r'(?<![\w.])([A-Za-z_][A-Za-z0-9_]*)\s*\(', line):
+                    if head in names:
+                        offenders.setdefault(head, str(path))
+        assert not offenders, (
+            'Wolfram nodes left untranslated in a replacement/constraint: '
+            + repr(offenders))
+
     def test_Gamma_is_split_by_arity_via_the_node_protocol(self):
         """Mathematica overloads Gamma: Gamma[a] is the complete gamma function,
         Gamma[a, z] the UPPER INCOMPLETE one -- two different SymPy functions, so no
