@@ -108,7 +108,7 @@ v_ = WildSymbol('v')
 RULES = [
     # Rule 1
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_k_ * sympy.pi) + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*InertTan(I*x*_f_*fz_ + _e_ + pi*_k_), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IntegerQ(4*_k_), IGtQ(_m_, 0),),
         replacement=2*I*Int((x*_d_ + _c_)**_m_*exp(-2*I*pi*_k_)*exp(2*x*_f_*fz_ - 2*I*_e_)/(1 + exp(-2*I*pi*_k_)*exp(2*x*_f_*fz_ - 2*I*_e_)), x) - I*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
@@ -124,7 +124,7 @@ RULES = [
     ),
     # Rule 3
     RubiRulePattern(
-        pattern=Int((((_c_ + (_d_ * x)))**(_m_) * InertTan((_e_ + (_f_ * eager_Complex(Integer(0), fz_) * x)))), x),
+        pattern=Int((x*_d_ + _c_)**_m_*InertTan(I*x*_f_*fz_ + _e_), x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, fz_], x), IGtQ(_m_, 0),),
         replacement=2*I*Int((x*_d_ + _c_)**_m_*exp(2*x*_f_*fz_ - 2*I*_e_)/(exp(2*x*_f_*fz_ - 2*I*_e_) + 1), x) - I*(x*_d_ + _c_)**(_m_ + 1)/(_d_*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
@@ -294,7 +294,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int((x*_d_ + _c_)**_m_*InertTan(x*_f_ + _e_)**_n_, x),
         constraints=(FreeQ([_c_, _d_, _e_, _f_, _m_, _n_], x), IntegerQ(_n_),),
-        replacement=If(MatchQ(_f_, _f1_*Complex(0, j_)), If(MatchQ(_e_, _e1_ + pi/2), I**_n_*Unintegrable((-I*tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x), I**_n_*Unintegrable((-I*tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x)), If(MatchQ(_e_, _e1_ + pi/2), (-1)**_n_*Unintegrable((-tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x), Unintegrable((x*_d_ + _c_)**_m_*tan(x*_f_ + _e_)**_n_, x))),
+        replacement=If(MatchQ(_f_, I*_f1_*j_), If(MatchQ(_e_, _e1_ + pi/2), I**_n_*Unintegrable((-I*tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x), I**_n_*Unintegrable((-I*tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x)), If(MatchQ(_e_, _e1_ + pi/2), (-1)**_n_*Unintegrable((-tan(x*_f_ + _e_))**_n_*(x*_d_ + _c_)**_m_, x), Unintegrable((x*_d_ + _c_)**_m_*tan(x*_f_ + _e_)**_n_, x))),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=24,
     ),

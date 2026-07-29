@@ -139,12 +139,6 @@ class FFLConverter:
         'BesselJ': 'sympy.besselj', 'ExpIntegralE': 'sympy.expint',
         'PolyGamma': 'sympy.polygamma', 'Zeta': 'sympy.zeta',
         'Factorial': 'sympy.factorial',
-        # ProductLog and Complex also occur in PATTERNS, but neither is a plain
-        # rename: Mathematica's ProductLog[k,z] has the branch index FIRST
-        # (SymPy's LambertW(z,k) has it last) and Complex[a,b] is arithmetic
-        # (a + I b), not a function. Both map to the EAGER helpers, which
-        # evaluate at construction so the pattern holds a real LambertW / I*a.
-        'ProductLog': 'eager_ProductLog', 'Complex': 'eager_Complex',
         'SinhIntegral': 'sympy.Shi', 'CoshIntegral': 'sympy.Chi',
         'PolyLog': 'sympy.polylog',
         # Calculus / algebra
@@ -523,6 +517,27 @@ class FFLConverter:
             code_str, _ = self._custom_functions[head]
             args = [self.convert(a, is_pattern=is_pattern) for a in ffl[1:]]
             return f"{code_str}({', '.join(args)})"
+
+        # -- Heads that are NOT a call in SymPy --------------------------------
+        # These three cannot be expressed as a name substitution, so they are built
+        # structurally rather than emitted as a helper call. Emitting a call to an
+        # eager helper would work, but it leaves `eager_Complex(...)` littered through
+        # the generated rules; the rules should read as ordinary SymPy.
+        if head == 'Complex' and len(ffl) == 3:
+            # Complex[a, b] is the NUMBER a + I b, not a function.
+            re_, im_ = (self.convert(a, is_pattern=is_pattern) for a in ffl[1:])
+            return f"({re_} + sympy.I*{im_})"
+        if head == 'Identity' and len(ffl) == 2:
+            # Identity[z] == z. Rubi uses it only to stop a coefficient folding away
+            # early (Int[-u_, x] := Identity[-1]*Int[u, x]).
+            return self.convert(ffl[1], is_pattern=is_pattern)
+        if head == 'ProductLog' and len(ffl) in (2, 3):
+            # Mathematica puts the branch index FIRST, SymPy puts it LAST:
+            # ProductLog[k, z] == LambertW(z, k).
+            args = [self.convert(a, is_pattern=is_pattern) for a in ffl[1:]]
+            if len(args) == 2:
+                args = [args[1], args[0]]
+            return f"sympy.LambertW({', '.join(args)})"
 
         # -- Known SymPy functions ---------------------------------------------
         if head in self.func_map:

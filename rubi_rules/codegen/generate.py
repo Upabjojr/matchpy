@@ -425,7 +425,6 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'IntSum': 'IntSum',
     'Discriminant': 'Discriminant',
     'Block': 'Block',
-    'Identity': 'eager_Identity',
     'Root': 'Root',
     'SubstPower': 'SubstPower',
     'SubstForInverseFunction': 'SubstForInverseFunction',
@@ -456,7 +455,6 @@ RUBI_UTILS_MAP: Dict[str, str] = {
     'Head': 'Head',
     'Length': 'Length',
     'If': 'If',
-    'Complex': 'Complex',
     'Numer': 'Numer',
     'Denom': 'Denom',
     'CompoundExpression': 'CompoundExpression',
@@ -606,6 +604,7 @@ def _build_constraint_custom_functions() -> dict:
     IMPORTANT: We do NOT add entries for heads already in FFLConverter.SYMPY_FUNC_MAP
     or SYMPY_LOGIC_MAP. Those are handled naturally by FFLConverter.
     """
+    import sympy as _sympy
     # Get heads already handled by FFLConverter
     sympy_handled = set(FFLConverter.SYMPY_FUNC_MAP.keys()) | set(FFLConverter.SYMPY_LOGIC_MAP.keys())
 
@@ -621,6 +620,11 @@ def _build_constraint_custom_functions() -> dict:
             continue
         code_str, obj = target
         custom[head] = (code_str, obj)
+    # `Int` can appear inside a CONSTRAINT too -- the Weierstrass rule guards on
+    # `CalculusFreeQ[Block[..., Int[...]]]`. Without this it fell through to the
+    # generic `sympy.Function('Int')`, i.e. a DIFFERENT head from the integrator's
+    # own Int, so the guard inspected something that only looked like an integral.
+    custom['Int'] = ('Int', _sympy.Function('Int'))
     return custom
 
 

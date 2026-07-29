@@ -41,6 +41,7 @@ from sympy import (Symbol, Integer, Rational, Add, Mul, Pow, S,
 from sympy_wolfram.objects import (
     Block,
     CompoundExpression,
+    Null,
     Condition,   # standard Wolfram node; defined in sympy_wolfram, re-exported here
     Head,
     If,

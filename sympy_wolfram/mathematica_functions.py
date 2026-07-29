@@ -186,6 +186,50 @@ class BesselJ(MathematicaExpr):
         return _eager.eager_BesselJ(*self.args)
 
 
+class ExpIntegralEi(MathematicaExpr):
+    """Mathematica ``ExpIntegralEi[z]`` — the exponential integral Ei(z).
+
+    Provided for symmetry with the other builtins; the GENERATED RULES do not use it,
+    because ``ExpIntegralEi`` is a pure function that occurs inside integrands, and a
+    pattern has to hold the real ``sympy.Ei`` to match a caller's expression. The
+    codegen therefore maps the head straight to ``sympy.Ei`` (SYMPY_FUNC_MAP). This
+    node exists for callers who want the deferred Wolfram-style object.
+    """
+
+    def __new__(cls, z):
+        return Expr.__new__(cls, sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_ExpIntegralEi(*self.args)
+
+
+class LogIntegral(MathematicaExpr):
+    """Mathematica ``LogIntegral[z]`` — the logarithmic integral li(z).
+
+    Same note as :class:`ExpIntegralEi`: the rules use ``sympy.li`` directly.
+    """
+
+    def __new__(cls, z):
+        return Expr.__new__(cls, sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_LogIntegral(*self.args)
+
+
+class Identity(MathematicaExpr):
+    """Mathematica ``Identity[z]`` — returns its argument.
+
+    The rules do not use it either: the codegen unwraps ``Identity[z]`` to ``z``
+    structurally, since that is all it means.
+    """
+
+    def __new__(cls, z):
+        return Expr.__new__(cls, sympy.sympify(z))
+
+    def _evaluate(self, **kwargs):
+        return _eager.eager_Identity(*self.args)
+
+
 class ExpIntegralE(MathematicaExpr):
     """Mathematica ``ExpIntegralE[n, z]`` — the exponential integral E_n(z)."""
 
