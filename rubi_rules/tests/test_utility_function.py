@@ -97,6 +97,8 @@ from rubi_rules.utils.utility_functions import (eager_Set, eager_With, eager_Mod
 # SqrtNumberSumQ, Sin, Cos, Tan, Cot, Sec, Csc, Csch, TrigHyperbolicFreeQ,
 # InverseFunctionFreeQ, RealQ,
 
+import pytest
+
 from sympy.core.add import Add
 from sympy.core.expr import unchanged
 from sympy.core.numbers import (E, I, oo, pi, zoo)
@@ -1134,7 +1136,75 @@ def test_SubstForFractionalPower():
     assert SubstForFractionalPower(a**(S(1)/2), a, n, b, x) == x**(n/2)
 
 def test_CombineExponents():
-    assert True
+    """Merge adjacent equal bases in a base-sorted (base, exponent) list.
+
+    This was a bare ``assert True``, which is why the helper could stay broken: it
+    built results with the Rubi ``Prepend``, which CONCATENATES when handed a list,
+    so prepending a ``[base, exp]`` pair spliced its elements into the result.
+    """
+    assert CombineExponents([[S(2), S(1)], [S(3), S(1)]]) == [[S(2), S(1)], [S(3), S(1)]]
+    assert CombineExponents([[S(2), S(1)], [S(2), S(2)]]) == [[S(2), S(3)]]
+    assert CombineExponents([[S(2), S(1)], [S(2), Rational(1, 2)], [S(3), S(1)]]) == [
+        [S(2), Rational(3, 2)], [S(3), S(1)]]
+    assert CombineExponents([[S(5), S(4)]]) == [[S(5), S(4)]]
+    assert CombineExponents([]) == []
+
+
+def test_FactorAbsurdNumber_power_and_product_branches():
+    """Prime factorisation with rational exponents, verified against Mathematica.
+
+    Two branches were broken. The POWER branch read
+    ``r = FactorInteger(m.base); [r[0], r[1]*m.exp]``, treating a LIST of
+    (prime, exponent) pairs as one pair -- an IndexError for any single-prime base,
+    so ``FactorAbsurdNumber(Sqrt[3])`` raised. The PRODUCT branch was never written
+    and returned ``[(m, 1)]``, leaving the whole product as one opaque base.
+    """
+    assert FactorAbsurdNumber(sqrt(S(3))) == [(S(3), Rational(1, 2))]
+    assert FactorAbsurdNumber(S(2)*sqrt(S(3))) == [[S(2), S(1)], [S(3), Rational(1, 2)]]
+    assert FactorAbsurdNumber(S(4)*sqrt(S(3))) == [[S(2), S(2)], [S(3), Rational(1, 2)]]
+    assert FactorAbsurdNumber(S(6)*sqrt(S(2))) == [[S(2), Rational(3, 2)], [S(3), S(1)]]
+
+
+def test_AbsurdNumberGCD_over_surds():
+    """Mathematica: AbsurdNumberGCD[2 Sqrt[3], 4 Sqrt[3]] = 2 Sqrt[3].
+
+    Came out 1 while FactorAbsurdNumber's product branch left 2*Sqrt[3] and
+    4*Sqrt[3] as opaque, unequal bases.
+    """
+    assert AbsurdNumberGCD(S(2)*sqrt(S(3)), S(4)*sqrt(S(3))) == S(2)*sqrt(S(3))
+    assert AbsurdNumberGCD(S(6)*sqrt(S(2)), S(9)*sqrt(S(2))) == S(3)*sqrt(S(2))
+
+
+@pytest.mark.parametrize('terms, expected', [
+    # Mathematica/Rubi values, captured from Rubi 4.17.3.0
+    ([S(2)*a*b, S(4)*a*c], [S(2)*a, b, S(2)*c]),
+    ([S(2)*sqrt(S(3)), S(4)*sqrt(S(3))], [S(2)*sqrt(S(3)), S(1), S(2)]),
+    ([S(2)*x, S(4)*x], [S(2)*x, S(1), S(2)]),
+    ([S(6), S(9)], [S(3), S(2), S(3)]),
+    ([x**2, x**3], [x**2, S(1), x]),
+])
+def test_CommonFactors_matches_rubi(terms, expected):
+    assert CommonFactors(list(terms)) == expected
+
+
+@pytest.mark.parametrize('terms', [
+    [S(2)*a*b, S(4)*a*c], [S(2)*sqrt(S(3)), S(4)*sqrt(S(3))], [S(2)*x, S(4)*x],
+    [S(6), S(9)], [x**2, x**3], [S(3)*a*b, S(6)*a*b*c], [a*b*c, a*b],
+])
+def test_CommonFactors_preserves_the_product(terms):
+    """CommonFactors[lst] = {common, lst/common...}, so common * residual_i == lst_i.
+
+    Rubi is ONE nested If -- exactly one branch per iteration. Ported as two
+    independent if-chains, control fell through after the SameQ branch and ran a
+    second branch on a stale lst3, so CommonFactors[{2 a b, 4 a c}] returned
+    {2a, a, 2c}: 2a*a is 2a^2, not 2ab. The decomposition silently stopped
+    reconstructing its own input.
+    """
+    result = CommonFactors(list(terms))
+    common, residuals = result[0], result[1:]
+    assert len(residuals) == len(terms)
+    for residual, original in zip(residuals, terms):
+        assert simplify(common*residual - original) == 0
 
 def test_FractionalPowerOfSquareQ():
     assert not FractionalPowerOfSquareQ(x)
@@ -2937,12 +3007,36 @@ def test_PowerOfLinearQ_rejects_a_non_linear_base():
 
 
 def test_GeneralizedBinomialMatchQ_rejects_a_single_monomial():
-    """Rubi guards its first clause with PosQ[n-q], so the two exponents must
-    DIFFER. Without that, -3*x/2 slipped through on a spurious -x/2 + -x split
-    (q == n == 1) and GeneralizedBinomialParts was then handed a non-binomial."""
+    """A single monomial is not a binomial: -3*x/2 used to slip through on a
+    spurious -x/2 + -x split and GeneralizedBinomialParts was then handed a
+    non-binomial.
+
+    The reason Rubi rejects it is purely structural -- a two-addend Plus pattern
+    cannot bind a one-term expression -- NOT a PosQ[n-q] side condition, which this
+    docstring used to claim. Rubi 4.17.3.0 defines
+    ``MatchQ[u, a_.*x^q_. + b_.*x^n_. /; FreeQ[{a,b,n,q}, x]]`` with no such guard;
+    confirmed directly, ``MatchQ[-3x/2, a_. x^q_. + b_. x^n_.]`` is False.
+    """
     xx = Symbol('x')
     assert eager_GeneralizedBinomialMatchQ(Rational(-3, 2)*xx, xx) is False
     assert eager_GeneralizedBinomialMatchQ(3*xx, xx) is False
+
+
+def test_GeneralizedBinomialMatchQ_accepts_equal_exponents():
+    """Rubi's pattern has NO q != n condition, so `a*x^2 + b*x^2` matches.
+
+    Verified against Rubi 4.17.3.0: GeneralizedBinomialMatchQ[a x^2 + b x^2, x] is
+    True (while GeneralizedBinomialParts of the same input is False -- the MatchQ
+    pre-filter is deliberately looser than Parts). SymPy keeps that as a two-term
+    Add, since it only collects addends differing by a numeric factor, so an added
+    distinctness test really did make us answer False where Rubi answers True.
+    """
+    xx, aa, bb = Symbol('x'), Symbol('a'), Symbol('b')
+    assert eager_GeneralizedBinomialMatchQ(aa*xx**2 + bb*xx**2, xx) is True
+    assert eager_GeneralizedBinomialMatchQ(aa*xx**3 + bb*xx**3, xx) is True
+    assert eager_GeneralizedBinomialMatchQ(aa*xx**2 + bb*xx**5, xx) is True
+    # a term free of x still cannot bind `x^q_.`, so this stays False
+    assert eager_GeneralizedBinomialMatchQ(aa + bb*xx**2, xx) is False
 
 
 def test_GeneralizedBinomialParts_on_a_single_monomial_is_False():

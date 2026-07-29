@@ -593,9 +593,20 @@ def eager_NumberQ(u):
 
 
 def eager_PolynomialQ(u, x=None):
-    """Mathematica ``PolynomialQ[u]`` / ``PolynomialQ[u, x]`` — polynomial test."""
+    """Mathematica ``PolynomialQ[u]`` / ``PolynomialQ[u, x]`` — polynomial test.
+
+    Always returns a real bool. SymPy's ``is_polynomial`` answers ``None`` for
+    "undecided", which it does for EVERY transcendental function of x --
+    ``sin(x)``, ``exp(x)``, ``log(x)`` all give None, not False. Mathematica's
+    PolynomialQ is total and answers False for all of them.
+
+    Leaking the None was not merely cosmetic. It is falsy, so a plain guard behaved
+    correctly by accident, but ``Not[PolynomialQ[Sin[x], x]]`` came back None rather
+    than True (``eager_Not`` propagates None) -- and None is falsy, so a negated guard
+    that Rubi PASSES we FAILED, silently disabling those rules.
+    """
     if x is None:
-        return u.is_polynomial()
+        return bool(u.is_polynomial())
     if isinstance(x, Pow):
         if isinstance(x.exp, Integer):
             deg = degree(u, x.base)
@@ -631,7 +642,7 @@ def eager_PolynomialQ(u, x=None):
     if isinstance(x, Mul):
         return all(eager_PolynomialQ(u, i) for i in x.args)
 
-    return u.is_polynomial(x)
+    return bool(u.is_polynomial(x))
 
 
 def _is_rational_in(p, x):

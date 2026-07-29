@@ -2590,21 +2590,26 @@ def _monomial_exponent(term, x):
     return None
 
 def eager_GeneralizedBinomialMatchQ(u, x):
-    # Mathematica: MatchQ[u, a_.*x^q_. + b_.*x^n_.] with a,b,n,q free of x and
-    # nonzero. On Mathematica's canonical Plus each pattern addend binds exactly
-    # one subject addend, so this is purely structural: exactly two monomial
-    # addends with distinct nonzero exponents. (The previous sympy Wild ``.match``
-    # implementation was both unfaithful -- numeric splits let single monomials
-    # through, e.g. -3*x/2 as -x/2 + -x -- and combinatorial on sums whose
+    # Rubi: MatchQ[u, a_.*x^q_. + b_.*x^n_. /; FreeQ[{a,b,n,q},x]]  (verified against
+    # DownValues[GeneralizedBinomialMatchQ] in Rubi 4.17.3.0). On Mathematica's
+    # canonical Plus each pattern addend binds exactly one subject addend, so this is
+    # purely structural: exactly two monomial addends in x. (The previous sympy Wild
+    # ``.match`` implementation was both unfaithful -- numeric splits let single
+    # monomials through, e.g. -3*x/2 as -x/2 + -x -- and combinatorial on sums whose
     # coefficients are large multi-symbol polynomials.)
+    #
+    # The exponents need NOT differ: Rubi's pattern has no q != n side condition, and
+    # `a*x^2 + b*x^2` really does return True there. SymPy keeps that as a two-term Add
+    # (it only collects addends differing by a numeric factor), so the case is reachable
+    # and an added distinctness test made us answer False where Rubi answers True.
+    # A term free of x is still rejected: `x^q_.` requires a literal x, so a bare `a`
+    # cannot bind it -- which is what the exponent-0 test below expresses.
     if isinstance(u, (tuple, list, Tuple)):
         return all(eager_GeneralizedBinomialMatchQ(i, x) for i in u)
     if not u.is_Add or len(u.args) != 2:
         return False
     exps = [_monomial_exponent(t, x) for t in u.args]
-    if any(e is None or e == 0 for e in exps):
-        return False
-    return exps[0] != exps[1]
+    return not any(e is None or e == 0 for e in exps)
 
 def eager_GeneralizedTrinomialMatchQ(u, x):
     # Mathematica: MatchQ[u, a_.*x^q_. + b_.*x^n_. + c_.*x^r_.] with all wilds
@@ -2873,11 +2878,24 @@ def Drop(lst, n):
     return lst.func(*[i for i in Drop(list(lst.args), n)])
 
 def CombineExponents(lst):
-    if eager_Length(lst) < 2:
+    """Rubi ``CombineExponents``: merge adjacent equal bases in a base-sorted
+    (base, exponent) list by summing their exponents.
+
+    Uses plain list operations rather than the Rubi ``Prepend``/``Rest`` helpers.
+    ``Prepend(l1, l2)`` CONCATENATES when l2 is itself a list, so prepending a
+    ``[base, exp]`` pair spliced its two elements into the result --
+    ``Prepend([[3, 1/2]], [2, 1])`` gave ``[2, 1, [3, 1/2]]`` instead of
+    ``[[2, 1], [3, 1/2]]`` -- and the next recursion then subscripted an int.
+    The only caller (FactorAbsurdNumber) never reached this path before, and
+    ``test_CombineExponents`` was a bare ``assert True``, so it went unnoticed.
+    """
+    lst = list(lst)
+    if len(lst) < 2:
         return lst
-    elif lst[0][0] == lst[1][0]:
-        return CombineExponents(Prepend(Drop(lst,2),[lst[0][0], lst[0][1] + lst[1][1]]))
-    return Prepend(CombineExponents(eager_Rest(lst)), eager_First(lst))
+    if lst[0][0] == lst[1][0]:
+        merged = [lst[0][0], lst[0][1] + lst[1][1]]
+        return CombineExponents([merged] + lst[2:])
+    return [lst[0]] + CombineExponents(lst[1:])
 
 def FactorInteger(n, l=None):
     if isinstance(n, (int, Integer)):
@@ -2891,11 +2909,25 @@ def FactorAbsurdNumber(m):
     if eager_RationalQ(m):
         return FactorInteger(m)
     elif eager_PowerQ(m):
-        r = FactorInteger(m.base)
-        return [r[0], r[1]*m.exp]
+        # Rubi: Map[Function[{#[[1]], #[[2]]*m[[2]]}], FactorInteger[m[[1]]]]
+        # -- MAP over the factor list, scaling each prime's exponent. This used to read
+        # `r = FactorInteger(m.base); [r[0], r[1]*m.exp]`, treating that list of
+        # (prime, exponent) pairs as ONE pair: wrong shape in general, and an
+        # IndexError whenever the base had a single prime factor (Sqrt[3] crashed).
+        return [(b, e*m.exp) for b, e in FactorInteger(m.base)]
 
-    # CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber,Apply[List,m]],1], Function[i1[[1]]<i2[[1]]]]]
-    return list((m.as_base_exp(),))
+    # Rubi: CombineExponents[Sort[Flatten[Map[FactorAbsurdNumber, Apply[List, m]], 1],
+    #                             Function[i1[[1]] < i2[[1]]]]]
+    # The product branch was never implemented -- it returned [(m, 1)], leaving the whole
+    # product as an opaque "base". AbsurdNumberGCD compares bases, so 2*Sqrt[3] and
+    # 4*Sqrt[3] looked coprime and their gcd came out 1 instead of 2*Sqrt[3].
+    # Pairs are normalised to LISTS here: CombineExponents/Prepend build and concatenate
+    # lists (Mathematica {base, exp}), and mixing in FactorInteger's tuples makes
+    # `Prepend` raise "can only concatenate tuple (not list) to tuple".
+    factors = []
+    for factor in m.args:
+        factors.extend([list(pair) for pair in FactorAbsurdNumber(factor)])
+    return CombineExponents(sorted(factors, key=lambda pair: pair[0]))
 
 def eager_SubstForInverseFunction(*args):
     """
@@ -6063,11 +6095,18 @@ def CommonFactors(lst):
     while (True):
         lst3 = [LeadFactor(i) for i in lst1]
 
+        # Rubi is ONE nested If: exactly one branch runs per iteration. This used to be
+        # two independent if-chains, so after the SameQ branch fired control fell
+        # through into the second chain and ran a SECOND branch on a now-stale lst3 --
+        # usually MostMainFactorPosition, which pushed the already-extracted factor
+        # into the residual and dropped the real one. That broke the function's defining
+        # invariant (common * residual[i] == lst[i]): CommonFactors[{2 a b, 4 a c}]
+        # returned {2a, a, 2c} (2a*a = 2a^2) where Rubi returns {2a, b, 2c}.
         if SameQ(*lst3):
             common = common*lst3[0]
             lst1 = [RemainingFactors(i) for i in lst1]
         elif (all((eager_LogQ(i) and eager_IntegerQ(eager_First(i)) and eager_First(i) > 0) for i in lst3) and
-            all(eager_RationalQ(i) for i in [eager_FullSimplify(j/eager_First(lst3)) for j in lst3])):
+              all(eager_RationalQ(i) for i in [eager_FullSimplify(j/eager_First(lst3)) for j in lst3])):
             lst4 = [eager_FullSimplify(j/eager_First(lst3)) for j in lst3]
             num = eager_GCD(*lst4)
             # .args[0] of the log node (Mathematica Log[First[lst3][[1]]^num]);
@@ -6075,36 +6114,42 @@ def CommonFactors(lst):
             common = common*Log((eager_First(lst3).args[0])**num)
             lst2 = [lst2[i]*lst4[i]/num for i in range(0, len(lst2))]
             lst1 = [RemainingFactors(i) for i in lst1]
-        lst4 = [LeadDegree(i) for i in lst1]
-        if SameQ(*[LeadBase(i) for i in lst1]) and eager_RationalQ(*lst4):
-            num = Smallest(lst4)
-            base = LeadBase(lst1[0])
-            if num != 0:
-                common = common*base**num
-            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
-            lst1 = [RemainingFactors(i) for i in lst1]
-        elif (eager_Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
-            NonzeroQ(lst1[0] - 1) and eager_IntegerQ(lst4[0]) and eager_FractionQ(lst4[1])):
-            num = Min(*lst4)
-            base = LeadBase(lst1[1])
-            if num != 0:
-                common = common*base**num
-            lst2 = [lst2[0]*(-1)**lst4[0], lst2[1]]
-            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
-            lst1 = [RemainingFactors(i) for i in lst1]
-        elif (eager_Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
-            NonzeroQ(lst1[1] - 1) and eager_IntegerQ(lst1[1]) and eager_FractionQ(lst4[0])):
-            num = Min(*lst4)
-            base = LeadBase(lst1[0])
-            if num != 0:
-                common = common*base**num
-            lst2 = [lst2[0], lst2[1]*(-1)**lst4[1]]
-            lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
-            lst1 = [RemainingFactors(i) for i in lst1]
         else:
-            num = MostMainFactorPosition(lst3)
-            lst2 = ReplacePart(lst2, lst3[num]*lst2[num], num)
-            lst1 = ReplacePart(lst1, RemainingFactors(lst1[num]), num)
+            # Rubi assigns lst4 only once the two branches above have been ruled out.
+            lst4 = [LeadDegree(i) for i in lst1]
+            if SameQ(*[LeadBase(i) for i in lst1]) and eager_RationalQ(*lst4):
+                num = Smallest(lst4)
+                base = LeadBase(lst1[0])
+                if num != 0:
+                    common = common*base**num
+                lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+                lst1 = [RemainingFactors(i) for i in lst1]
+            elif (eager_Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
+                  NonzeroQ(lst1[0] - 1) and eager_IntegerQ(lst4[0]) and eager_FractionQ(lst4[1])):
+                num = Min(*lst4)
+                base = LeadBase(lst1[1])
+                if num != 0:
+                    common = common*base**num
+                lst2 = [lst2[0]*(-1)**lst4[0], lst2[1]]
+                lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+                lst1 = [RemainingFactors(i) for i in lst1]
+            # Rubi: EqQ[LeadBase[lst1[[1]]] + LeadBase[lst1[[2]]], 0] && NeQ[lst1[[2]], 1]
+            #       && IntegerQ[lst4[[2]]] && FractionQ[lst4[[1]]].
+            # This tested lst1[0] instead of LeadBase(lst1[0]) and IntegerQ on lst1[1]
+            # instead of lst4[1] -- transcription slips against the Rubi DownValues.
+            elif (eager_Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
+                  NonzeroQ(lst1[1] - 1) and eager_IntegerQ(lst4[1]) and eager_FractionQ(lst4[0])):
+                num = Min(*lst4)
+                base = LeadBase(lst1[0])
+                if num != 0:
+                    common = common*base**num
+                lst2 = [lst2[0], lst2[1]*(-1)**lst4[1]]
+                lst2 = [lst2[i]*base**(lst4[i] - num) for i in range(0, len(lst2))]
+                lst1 = [RemainingFactors(i) for i in lst1]
+            else:
+                num = MostMainFactorPosition(lst3)
+                lst2 = ReplacePart(lst2, lst3[num]*lst2[num], num)
+                lst1 = ReplacePart(lst1, RemainingFactors(lst1[num]), num)
         if all(i==1 for i in lst1):
             return Prepend(lst2, common)
 

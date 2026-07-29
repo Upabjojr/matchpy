@@ -111,6 +111,27 @@ def test_SumWolfram_floors_fractional_bounds():
     assert mf.Sum(x**k, mf.List(k, Integer(0), q / 2)).doit().has(q)
 
 
+@pytest.mark.parametrize('expr', [sin(x), cos(x), sympy.exp(x), sympy.log(x), sympy.tan(x)])
+def test_eager_PolynomialQ_is_total_over_transcendentals(expr):
+    """Mathematica's PolynomialQ is TOTAL: PolynomialQ[Sin[x], x] is False, not unknown.
+
+    SymPy's ``is_polynomial`` answers None ("undecided") for every transcendental
+    function of x, and that None used to leak straight out. It is falsy, so a plain
+    guard behaved correctly by accident -- but ``Not[PolynomialQ[Sin[x], x]]`` then
+    came back None instead of True (eager_Not propagates None), and None is falsy,
+    so a NEGATED guard that Rubi passes we failed, silently disabling those rules.
+    """
+    assert fe.eager_PolynomialQ(expr, x) is False
+    assert fe.eager_Not(fe.eager_PolynomialQ(expr, x)) is True
+
+
+def test_eager_PolynomialQ_still_decides_the_easy_cases():
+    assert fe.eager_PolynomialQ(x**2 + 1, x) is True
+    assert fe.eager_PolynomialQ(1/x, x) is False
+    assert fe.eager_PolynomialQ(sympy.sqrt(x), x) is False
+    assert fe.eager_PolynomialQ(sin(a), x) is True      # free of x -> a constant
+
+
 def test_eager_helpers_are_self_contained():
     assert fe.eager_LeafCount(sin(x)) == 2
     assert fe.eager_Length(x + Integer(1)) == 2
