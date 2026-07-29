@@ -10,52 +10,23 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
+from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
-    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
-    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
-    simplify, sin, sinh, sqrt, tan, tanh, zeta,
+    log, polylog, sqrt,
 )
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
-from rubi_rules.utils.inert_functions import (
-    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
-    FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
-    PositiveQ, NegativeQ, PolynomialQ, TrueQ, FalseQ, MatchQ, PrimeQ, UnsameQ,
-    # RUBI-specific constraints
-    EqQ, NeQ, IGtQ, ILtQ, IGeQ, ILeQ, GtQ, LtQ, GeQ, LeQ, PosQ, NegQ,
-    IntegersQ, HalfIntegerQ, FractionQ, RationalQ, ComplexNumberQ, RealNumberQ,
-    FractionOrNegativeQ, SqrtNumberQ, PowerQ, ProductQ, SumQ, NonsumQ,
-    IntegerPowerQ, FractionalPowerQ, PolyQ, LinearQ, QuadraticQ, BinomialQ,
-    TrinomialQ, LinearMatchQ, QuadraticMatchQ, BinomialMatchQ, TrinomialMatchQ,
-    TrigQ, HyperbolicQ, InverseTrigQ, InverseHyperbolicQ, LogQ, ComplexFreeQ,
-    InverseFunctionFreeQ, FractionalPowerFreeQ, TrigHyperbolicFreeQ, IntegralFreeQ,
-    RationalFunctionQ, AlgebraicFunctionQ, IndependentQ, SimplerQ, SumSimplerQ,
-    FunctionOfQ, PiecewiseLinearQ, ExpressionEqQ,
-    IntLinearQ, IntBinomialQ, IntQuadraticQ,
-    MonomialQ, LinearPairQ,
-    GeneralizedBinomialQ, GeneralizedBinomialMatchQ,
-    GeneralizedTrinomialQ, GeneralizedTrinomialMatchQ,
-    NiceSqrtQ, SimplerSqrtQ, FractionalPowerFactorQ,
-    SumBaseQ, InverseFunctionQ, InertTrigQ, InertTrigFreeQ,
-    CalculusFreeQ, QuotientOfLinearsQ,
-    PowerOfLinearQ, PowerOfLinearMatchQ,
-    FunctionOfExponentialQ,
-    KnownSineIntegrandQ, KnownSecantIntegrandQ,
-    KnownTangentIntegrandQ, KnownCotangentIntegrandQ,
-    EulerIntegrandQ, SubstForFractionalPowerQ,
-    PerfectSquareQ, PolynomialInQ, FunctionOfTrigOfLinearQ,
-    SimplerIntegrandQ, PseudoBinomialPairQ, QuadraticProductQ,
-    EveryQ, TrigSimplifyQ, EqM, TryPureTanSubst,
+    FreeQ, IntegerQ, MemberQ,
+    PolynomialQ, MatchQ, EqQ, NeQ, IGtQ, GtQ, LtQ, IntegersQ, FractionQ, SumQ, LinearQ, BinomialQ,
+    LinearMatchQ, BinomialMatchQ, InverseFunctionFreeQ, IntegralFreeQ,
+    RationalFunctionQ, AlgebraicFunctionQ,
 )
 
 # --- Integration variable ---

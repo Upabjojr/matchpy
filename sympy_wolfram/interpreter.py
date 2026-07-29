@@ -131,7 +131,13 @@ class FFLConverter:
         'Erf': 'sympy.erf',
         'Erfi': 'sympy.erfi', 'Erfc': 'sympy.erfc',
         'FresnelS': 'sympy.fresnels', 'FresnelC': 'sympy.fresnelc',
-        'ExpIntegralEi': 'sympy.Ei', 'LogIntegral': 'sympy.li',
+        # These three are NAMED CLASSES in sympy_wolfram rather than bare renames.
+        # ExpIntegralEi/LogIntegral are 1:1 with Ei/li, but ProductLog is NOT --
+        # Mathematica's branch index comes first, SymPy's last -- so the class owns
+        # that translation in one place. All three evaluate eagerly, so a pattern
+        # built from them holds the real SymPy object and still matches.
+        'ExpIntegralEi': 'ExpIntegralEi', 'LogIntegral': 'LogIntegral',
+        'ProductLog': 'ProductLog',
         'SinIntegral': 'sympy.Si', 'CosIntegral': 'sympy.Ci',
         # Pure special functions: these appear in rule PATTERNS (the integrand),
         # so they must be the real SymPy functions -- a deferred node would only
@@ -175,6 +181,13 @@ class FFLConverter:
     _GENERATED_SYMPY_EXTRAS: Tuple[str, ...] = (
         'sqrt', 'exp', 'log', 'Abs', 'pi', 'I', 'oo',
         'root', 'diff', 'simplify', 'hyper', 'atan2',
+        # ExpIntegralEi/LogIntegral/ProductLog are emitted as their WOLFRAM class
+        # names, which evaluate eagerly to these SymPy objects. Both spellings must
+        # therefore resolve in the generated module and in the shortening namespace:
+        # once a rule's code evaluates, the printer may well render `Ei(...)` rather
+        # than `ExpIntegralEi(...)`, and a name that will not import makes the load
+        # probe drop the rule silently.
+        'Ei', 'li', 'LambertW',
     )
 
     # Map targets that must NOT be exposed as bare names: the generated header binds
@@ -531,13 +544,6 @@ class FFLConverter:
             # Identity[z] == z. Rubi uses it only to stop a coefficient folding away
             # early (Int[-u_, x] := Identity[-1]*Int[u, x]).
             return self.convert(ffl[1], is_pattern=is_pattern)
-        if head == 'ProductLog' and len(ffl) in (2, 3):
-            # Mathematica puts the branch index FIRST, SymPy puts it LAST:
-            # ProductLog[k, z] == LambertW(z, k).
-            args = [self.convert(a, is_pattern=is_pattern) for a in ffl[1:]]
-            if len(args) == 2:
-                args = [args[1], args[0]]
-            return f"sympy.LambertW({', '.join(args)})"
 
         # -- Known SymPy functions ---------------------------------------------
         if head in self.func_map:

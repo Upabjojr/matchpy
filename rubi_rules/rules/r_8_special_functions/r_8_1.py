@@ -10,52 +10,21 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
+from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
-from sympy.logic.boolalg import Or, Not, And
+from sympy.logic.boolalg import Or
 from sympy import (
-    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
-    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
-    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
-    simplify, sin, sinh, sqrt, tan, tanh, zeta,
+    I, cos, cosh, erf, erfc, erfi, exp, hyper, log, pi, sin, sinh, sqrt,
 )
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, HeadRef, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
-from rubi_rules.utils.inert_functions import (
-    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
-    FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
-    PositiveQ, NegativeQ, PolynomialQ, TrueQ, FalseQ, MatchQ, PrimeQ, UnsameQ,
-    # RUBI-specific constraints
-    EqQ, NeQ, IGtQ, ILtQ, IGeQ, ILeQ, GtQ, LtQ, GeQ, LeQ, PosQ, NegQ,
-    IntegersQ, HalfIntegerQ, FractionQ, RationalQ, ComplexNumberQ, RealNumberQ,
-    FractionOrNegativeQ, SqrtNumberQ, PowerQ, ProductQ, SumQ, NonsumQ,
-    IntegerPowerQ, FractionalPowerQ, PolyQ, LinearQ, QuadraticQ, BinomialQ,
-    TrinomialQ, LinearMatchQ, QuadraticMatchQ, BinomialMatchQ, TrinomialMatchQ,
-    TrigQ, HyperbolicQ, InverseTrigQ, InverseHyperbolicQ, LogQ, ComplexFreeQ,
-    InverseFunctionFreeQ, FractionalPowerFreeQ, TrigHyperbolicFreeQ, IntegralFreeQ,
-    RationalFunctionQ, AlgebraicFunctionQ, IndependentQ, SimplerQ, SumSimplerQ,
-    FunctionOfQ, PiecewiseLinearQ, ExpressionEqQ,
-    IntLinearQ, IntBinomialQ, IntQuadraticQ,
-    MonomialQ, LinearPairQ,
-    GeneralizedBinomialQ, GeneralizedBinomialMatchQ,
-    GeneralizedTrinomialQ, GeneralizedTrinomialMatchQ,
-    NiceSqrtQ, SimplerSqrtQ, FractionalPowerFactorQ,
-    SumBaseQ, InverseFunctionQ, InertTrigQ, InertTrigFreeQ,
-    CalculusFreeQ, QuotientOfLinearsQ,
-    PowerOfLinearQ, PowerOfLinearMatchQ,
-    FunctionOfExponentialQ,
-    KnownSineIntegrandQ, KnownSecantIntegrandQ,
-    KnownTangentIntegrandQ, KnownCotangentIntegrandQ,
-    EulerIntegrandQ, SubstForFractionalPowerQ,
-    PerfectSquareQ, PolynomialInQ, FunctionOfTrigOfLinearQ,
-    SimplerIntegrandQ, PseudoBinomialPairQ, QuadraticProductQ,
-    EveryQ, TrigSimplifyQ, EqM, TryPureTanSubst,
+    FreeQ, MemberQ,
+    EqQ, NeQ, IGtQ, ILtQ,
 )
 
 # --- Integration variable ---
@@ -639,7 +608,7 @@ RULES = [
     # Rule 68
     RubiRulePattern(
         pattern=Int(WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(sympy.Ei), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_], x), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(ExpIntegralEi), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int(WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=68,
@@ -647,7 +616,7 @@ RULES = [
     # Rule 69
     RubiRulePattern(
         pattern=Int((x*_h_ + g_)**_m_*WildHeadApp(F_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
-        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(sympy.Ei), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
+        constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _m_, _n_], x), EqQ(-d_*g_ + _e_*_f_, 0), MemberQ([HeadRef(sympy.erf), HeadRef(sympy.erfc), HeadRef(sympy.erfi), HeadRef(sympy.fresnels), HeadRef(sympy.fresnelc), HeadRef(ExpIntegralEi), HeadRef(sympy.Si), HeadRef(sympy.Ci), HeadRef(sympy.Shi), HeadRef(sympy.Chi)], F_),),
         replacement=Subst(Int((x*g_/d_)**_m_*WFApply(F_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.1 Error functions',
         rule_number=69,

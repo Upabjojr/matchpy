@@ -10,52 +10,24 @@
 # Re-run the generator to update.
 # =============================================================================
 import sympy
-from sympy import Integer, Integral, Lambda, Rational, Symbol, Tuple as SympyTuple
+from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Abs, Chi, Ci, Ei, Eq, Ge, Gt, I, Le, Lt, Ne, Shi, Si, acos, acosh, acot, acoth, acsc, acsch,
-    appellf1, asec, asech, asin, asinh, atan, atan2, atanh, besselj, cos, cosh, cot, coth, csc,
-    csch, denom, diff, elliptic_e, elliptic_f, erf, erfc, erfi, exp, expint, factorial, floor, frac,
-    fresnelc, fresnels, hyper, li, log, loggamma, oo, pi, polygamma, polylog, root, sec, sech,
-    simplify, sin, sinh, sqrt, tan, tanh, zeta,
+    erf, erfi, exp, hyper, log, pi, sqrt,
 )
 
-from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
+from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
 from rubi_rules.base_objects import Int, RubiRulePattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
-from rubi_rules.utils.inert_functions import (
-    InertSin, InertCos, InertTan, InertCot, InertSec, InertCsc)
 from rubi_rules.utils import (
     # Wolfram standard constraints
-    FreeQ, IntegerQ, OddQ, EvenQ, NumberQ, NumericQ, AtomQ, MemberQ,
-    PositiveQ, NegativeQ, PolynomialQ, TrueQ, FalseQ, MatchQ, PrimeQ, UnsameQ,
-    # RUBI-specific constraints
-    EqQ, NeQ, IGtQ, ILtQ, IGeQ, ILeQ, GtQ, LtQ, GeQ, LeQ, PosQ, NegQ,
-    IntegersQ, HalfIntegerQ, FractionQ, RationalQ, ComplexNumberQ, RealNumberQ,
-    FractionOrNegativeQ, SqrtNumberQ, PowerQ, ProductQ, SumQ, NonsumQ,
-    IntegerPowerQ, FractionalPowerQ, PolyQ, LinearQ, QuadraticQ, BinomialQ,
-    TrinomialQ, LinearMatchQ, QuadraticMatchQ, BinomialMatchQ, TrinomialMatchQ,
-    TrigQ, HyperbolicQ, InverseTrigQ, InverseHyperbolicQ, LogQ, ComplexFreeQ,
-    InverseFunctionFreeQ, FractionalPowerFreeQ, TrigHyperbolicFreeQ, IntegralFreeQ,
-    RationalFunctionQ, AlgebraicFunctionQ, IndependentQ, SimplerQ, SumSimplerQ,
-    FunctionOfQ, PiecewiseLinearQ, ExpressionEqQ,
-    IntLinearQ, IntBinomialQ, IntQuadraticQ,
-    MonomialQ, LinearPairQ,
-    GeneralizedBinomialQ, GeneralizedBinomialMatchQ,
-    GeneralizedTrinomialQ, GeneralizedTrinomialMatchQ,
-    NiceSqrtQ, SimplerSqrtQ, FractionalPowerFactorQ,
-    SumBaseQ, InverseFunctionQ, InertTrigQ, InertTrigFreeQ,
-    CalculusFreeQ, QuotientOfLinearsQ,
-    PowerOfLinearQ, PowerOfLinearMatchQ,
+    FreeQ, IntegerQ, PolynomialQ, TrueQ, MatchQ, EqQ, NeQ, IGtQ, ILtQ, GtQ, LtQ, GeQ, LeQ, PosQ, NegQ,
+    IntegersQ, FractionQ, RationalQ, PowerQ, SumQ, LinearQ, QuadraticQ, BinomialQ,
+    LinearMatchQ, QuadraticMatchQ, BinomialMatchQ, SumSimplerQ,
+    InverseFunctionQ, PowerOfLinearQ, PowerOfLinearMatchQ,
     FunctionOfExponentialQ,
-    KnownSineIntegrandQ, KnownSecantIntegrandQ,
-    KnownTangentIntegrandQ, KnownCotangentIntegrandQ,
-    EulerIntegrandQ, SubstForFractionalPowerQ,
-    PerfectSquareQ, PolynomialInQ, FunctionOfTrigOfLinearQ,
-    SimplerIntegrandQ, PseudoBinomialPairQ, QuadraticProductQ,
-    EveryQ, TrigSimplifyQ, EqM, TryPureTanSubst,
 )
 
 # --- Integration variable ---
@@ -277,7 +249,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)/(x*_f_ + _e_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0),),
-        replacement=F_**_a_*Ei(_b_*(x*_d_ + _c_)**n_*log(F_))/(_f_*n_),
+        replacement=((F_)**(_a_) * ExpIntegralEi((_b_ * ((_c_ + (_d_ * x)))**(n_) * sympy.log(F_))) * ((_f_ * n_))**(Integer(-1))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=17,
     ),
@@ -509,7 +481,7 @@ RULES = [
     RubiRulePattern(
         pattern=Int(F_**(x**2*_c_ + x*_b_ + _a_)/(x*_e_ + _d_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_], x), EqQ(_b_*_e_ - 2*_c_*_d_, 0),),
-        replacement=F_**(_a_ - _b_**2/(4*_c_))*Ei((2*x*_c_ + _b_)**2*log(F_)/(4*_c_))/(2*_e_),
+        replacement=(((Integer(2) * _e_))**(Integer(-1)) * (F_)**((_a_ + (Integer(-1) * ((_b_)**(Integer(2)) * ((Integer(4) * _c_))**(Integer(-1)))))) * ExpIntegralEi((((_b_ + (Integer(2) * _c_ * x)))**(Integer(2)) * sympy.log(F_) * ((Integer(4) * _c_))**(Integer(-1))))),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=46,
     ),

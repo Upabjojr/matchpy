@@ -189,11 +189,12 @@ class BesselJ(MathematicaExpr):
 class ExpIntegralEi(MathematicaExpr):
     """Mathematica ``ExpIntegralEi[z]`` — the exponential integral Ei(z).
 
-    Provided for symmetry with the other builtins; the GENERATED RULES do not use it,
-    because ``ExpIntegralEi`` is a pure function that occurs inside integrands, and a
-    pattern has to hold the real ``sympy.Ei`` to match a caller's expression. The
-    codegen therefore maps the head straight to ``sympy.Ei`` (SYMPY_FUNC_MAP). This
-    node exists for callers who want the deferred Wolfram-style object.
+    https://reference.wolfram.com/language/ref/ExpIntegralEi.html
+
+    A deferred node like every other Wolfram standard-library function here: this
+    package is an INTERPRETER for the Wolfram language, so a head keeps its Wolfram
+    identity and semantics even when SymPy happens to have the same function.
+    ``doit()`` evaluates it to SymPy's ``Ei``.
     """
 
     def __new__(cls, z):
@@ -206,7 +207,9 @@ class ExpIntegralEi(MathematicaExpr):
 class LogIntegral(MathematicaExpr):
     """Mathematica ``LogIntegral[z]`` — the logarithmic integral li(z).
 
-    Same note as :class:`ExpIntegralEi`: the rules use ``sympy.li`` directly.
+    https://reference.wolfram.com/language/ref/LogIntegral.html
+
+    ``doit()`` evaluates it to SymPy's ``li``; ``LogIntegral[1] == -Infinity`` in both.
     """
 
     def __new__(cls, z):
@@ -217,10 +220,12 @@ class LogIntegral(MathematicaExpr):
 
 
 class Identity(MathematicaExpr):
-    """Mathematica ``Identity[z]`` — returns its argument.
+    """Mathematica ``Identity[z]`` — returns its argument unchanged.
 
-    The rules do not use it either: the codegen unwraps ``Identity[z]`` to ``z``
-    structurally, since that is all it means.
+    Defined for interpreter completeness. The RULE generator does not emit it: unlike
+    a real function, ``Identity`` carries no meaning of its own, so it is replaced by
+    its argument at generation time (Rubi writes ``Identity[-1]*Int[u,x]`` only to stop
+    the -1 folding away early).
     """
 
     def __new__(cls, z):
@@ -405,24 +410,25 @@ class Binomial(MathematicaExpr):
 
 
 class ProductLog(MathematicaExpr):
-    """Mathematica ProductLog[z] or ProductLog[k, z] -> LambertW.
+    """Mathematica ``ProductLog[z]`` / ``ProductLog[k, z]`` — the Lambert W function.
 
-    1-arg: ProductLog(z)    -> LambertW(z)
-    2-arg: ProductLog(k, z) -> LambertW(z, k)  [Mathematica arg order reversed vs SymPy]
+    https://reference.wolfram.com/language/ref/ProductLog.html
+
+    SymPy has this function, but the correspondence is NOT identity: Mathematica takes
+    the branch index FIRST, SymPy takes it LAST, so ``ProductLog[k, z]`` is
+    ``LambertW(z, k)``. Passing the arguments straight through would silently select
+    the wrong branch. Verified on Mathematica 12.2:
+    ``N[ProductLog[-1, -0.1]] == -3.577152063957297``.
+
+    That mismatch is exactly why the head keeps its own node instead of being renamed
+    away: the translation lives here, in one place, and ``doit()`` applies it.
     """
 
     def __new__(cls, *args):
-        safe = [sympy.sympify(a) for a in args]
-        return Expr.__new__(cls, *safe)
+        return Expr.__new__(cls, *[sympy.sympify(a) for a in args])
 
     def _evaluate(self, **kwargs):
-        if len(self.args) == 1:
-            z = self.args[0]
-            return sympy.LambertW(z)
-        elif len(self.args) == 2:
-            k, z = self.args          # Mathematica: ProductLog[k, z]
-            return sympy.LambertW(z, k)  # SymPy:       LambertW(z, k)
-        return self
+        return _eager.eager_ProductLog(*self.args)
 
 
 class Floor(MathematicaExpr):

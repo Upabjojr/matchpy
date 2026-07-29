@@ -741,6 +741,35 @@ def _unwrap_load_show_steps(exprs: List) -> List:
     return out
 
 
+
+def strip_unused_imports(paths: List[Path]) -> Tuple[int, str]:
+    """Remove unused imports from freshly generated modules, with ``ruff``.
+
+    The header of a generated rule module imports the union of every name the emitter
+    COULD need, so most modules pull in dozens of names they never use. Rather than
+    predict per module which imports survive constraint/replacement shortening -- the
+    emitter cannot know before the code exists -- generate first, then let a linter
+    delete what is provably unused (pyflakes' F401, via ruff's ``--fix``).
+
+    ``ruff`` is optional: without it the modules are still correct, just noisier, so a
+    missing binary is reported and ignored rather than failing the build.
+
+    Returns ``(files_changed, message)``.
+    """
+    import subprocess
+    if not paths:
+        return 0, 'no files to clean'
+    before = {p: p.read_text(encoding='utf-8') for p in paths}
+    cmd = [sys.executable, '-m', 'ruff', 'check', '--isolated',
+           '--select', 'F401', '--fix', '--quiet', *[str(p) for p in paths]]
+    try:
+        subprocess.run(cmd, check=False, capture_output=True, timeout=600)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return 0, f'skipped ({type(exc).__name__}: {exc}); install ruff to enable'
+    changed = sum(1 for p in paths if p.read_text(encoding='utf-8') != before[p])
+    return changed, f'{changed} module(s) had unused imports removed'
+
+
 def group_entries_by_output(entries: List[dict]) -> Dict[str, dict]:
     """Group JSON entries by output path, merging expressions for duplicates."""
     groups: Dict[str, dict] = {}
@@ -1191,6 +1220,7 @@ def generate_all(json_path: Path, base_dir: Path,
     translator = RubiRuleTranslator()
 
     generated = skipped_empty = skipped_filter = 0
+    written_paths: List[Path] = []
 
     for out_rel, info in sorted(groups.items()):
         if filter_re and not filter_re.search(out_rel):
@@ -1229,11 +1259,15 @@ def generate_all(json_path: Path, base_dir: Path,
                 init.write_text('', encoding="utf-8", newline="\n")
 
         output_path.write_text(module_code, encoding='utf-8', newline="\n")
+        written_paths.append(output_path)
 
         n_skipped = module_code.count('SKIPPED')
         n_ok      = len(exprs) - n_skipped
         print(f"    -> {n_ok} rules, {n_skipped} skipped")
         generated += 1
+
+    changed, msg = strip_unused_imports(written_paths)
+    print(f"Unused-import cleanup: {msg}")
 
     print(f"\nDone: {generated} modules generated "
           f"({skipped_empty} empty, {skipped_filter} filtered out).")

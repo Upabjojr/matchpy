@@ -45,6 +45,12 @@ MOVED_NODES = [
 
 @pytest.mark.parametrize('name', MOVED_NODES)
 def test_node_lives_in_sympy_wolfram(name):
+    """EVERY Wolfram standard-library head here is a deferred MathematicaExpr.
+
+    sympy_wolfram is an interpreter for the Wolfram language and the runtime library
+    translated code links against, so a head keeps its Wolfram identity and evaluates
+    only on doit() -- even when SymPy happens to provide the same function.
+    """
     cls = getattr(mf, name)
     assert cls.__module__ == 'sympy_wolfram.mathematica_functions'
     assert issubclass(cls, MathematicaExpr)
@@ -481,3 +487,67 @@ def test_Block_is_available_for_the_UseGamma_rule():
     assert rubi_utils.Block is Block
     # Block[{q = 1}, q + 2] == 3
     assert Block(List(Set(q, sympy.Integer(1))), q + 2).doit() == 3
+
+
+# ---------------------------------------------------------------------------
+# 6. Named Wolfram classes that evaluate to their SymPy equivalent
+#
+# ExpIntegralEi / LogIntegral / ProductLog / Identity are kept as NAMED classes
+# rather than erased into a plain SymPy call by the code generator, so the Wolfram
+# spelling stays readable at the call site and the translation lives in one place.
+# They evaluate EAGERLY, so an expression built from them holds the SymPy object.
+# https://reference.wolfram.com/language/ref/ExpIntegralEi.html
+# https://reference.wolfram.com/language/ref/LogIntegral.html
+# All values below are from Mathematica 12.2.
+# ---------------------------------------------------------------------------
+
+def test_ExpIntegralEi_node_evaluates_to_Ei():
+    z = sympy.Symbol('z')
+    assert isinstance(mf.ExpIntegralEi(z), MathematicaExpr)   # stays a Wolfram node
+    assert mf.ExpIntegralEi(z).doit() == sympy.Ei(z)          # ExpIntegralEi[z]
+    # N[ExpIntegralEi[1.0]] == 1.8951178163559368
+    assert abs(float(sympy.N(mf.ExpIntegralEi(1.0).doit(), 20)) - 1.8951178163559368) < 1e-15
+
+
+def test_LogIntegral_node_evaluates_to_li():
+    z = sympy.Symbol('z')
+    assert isinstance(mf.LogIntegral(z), MathematicaExpr)
+    assert mf.LogIntegral(z).doit() == sympy.li(z)         # LogIntegral[z]
+    assert mf.LogIntegral(1).doit() == -sympy.oo           # LogIntegral[1] == -Infinity
+    # N[LogIntegral[2.0]] == 1.0451637801174924
+    assert abs(float(sympy.N(mf.LogIntegral(2.0).doit(), 20)) - 1.0451637801174924) < 1e-14
+
+
+def test_ProductLog_node_evaluates_to_LambertW_with_swapped_branch_index():
+    """Why ProductLog keeps its own node: the correspondence is NOT identity.
+    Mathematica's branch index comes FIRST, SymPy's LAST."""
+    z, k = sympy.symbols('z k')
+    assert isinstance(mf.ProductLog(z), MathematicaExpr)
+    assert mf.ProductLog(z).doit() == sympy.LambertW(z)    # ProductLog[z]
+    assert mf.ProductLog(0).doit() == 0                    # ProductLog[0] == 0
+    assert mf.ProductLog(-1 / sympy.E).doit() == -1        # ProductLog[-1/E] == -1
+    # the swap, on both branches:
+    assert mf.ProductLog(k, z).doit() == sympy.LambertW(z, k)
+    # N[ProductLog[-1, -0.1]] == -3.577152063957297
+    assert abs(float(sympy.N(mf.ProductLog(-1, -0.1).doit(), 20)) - (-3.577152063957297)) < 1e-14
+    # N[ProductLog[0, -0.1]]  == -0.11183255915896297
+    assert abs(float(sympy.N(mf.ProductLog(0, -0.1).doit(), 20)) - (-0.11183255915896297)) < 1e-15
+    # N[ProductLog[5.0]] == 1.3267246652422002
+    assert abs(float(sympy.N(mf.ProductLog(5.0).doit(), 20)) - 1.3267246652422002) < 1e-15
+
+
+def test_Identity_node():
+    """Defined for interpreter completeness. The RULE generator replaces Identity[z]
+    by z instead of emitting it -- it carries no meaning of its own."""
+    a, b = sympy.symbols('a b')
+    assert isinstance(mf.Identity(-1), MathematicaExpr)
+    assert mf.Identity(-1).doit() == -1                    # Identity[-1] == -1
+    assert mf.Identity(a + b).doit() == a + b
+
+
+def test_nodes_are_importable_where_generated_code_expects_them():
+    """Generated rule modules resolve these through `from rubi_utils import *`, and the
+    generated TEST-SUITE modules through an explicit sympy_wolfram import."""
+    from rubi_rules.utils import rubi_utils
+    for name in ('ExpIntegralEi', 'LogIntegral', 'ProductLog', 'Identity'):
+        assert getattr(rubi_utils, name) is getattr(mf, name)
