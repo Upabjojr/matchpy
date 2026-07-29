@@ -38,7 +38,7 @@ from sympy.core.evalf import N
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, WildFunction, expand, expand_trig)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo, Exp1)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -1338,8 +1338,158 @@ def eager_GCD(*args):
         result = gcd(result, a)
     return result
 
+def UnifyNegativeBaseFactors(u):
+    """Rubi ``UnifyNegativeBaseFactors``::
+
+        UnifyNegativeBaseFactors[u_.*(-v_)^m_*v_^n_.] :=
+            UnifyNegativeBaseFactors[(-1)^n*u*(-v)^(m+n)] /; IntegerQ[n]
+        UnifyNegativeBaseFactors[u_] := u
+
+    Merges a pair of factors whose bases differ only in sign, so that
+    ``(-v)^m * v^n`` becomes ``(-1)^n * (-v)^(m+n)``. Only used by
+    :func:`ContentFactorAux`, and only for INTEGER n (for a fractional n the
+    branch cut makes the rewrite invalid).
+    """
+    if not eager_ProductQ(u):
+        return u
+    factors = list(u.args)
+    for i in range(len(factors)):
+        b_i, m = factors[i].as_base_exp()
+        for j in range(len(factors)):
+            if i == j:
+                continue
+            b_j, n = factors[j].as_base_exp()
+            # v^n must have an INTEGER exponent; (-v)^m may have any.
+            if not eager_IntegerQ(n):
+                continue
+            if not ZeroQ(b_i + b_j):
+                continue
+            rest = [f for k, f in enumerate(factors) if k not in (i, j)]
+            rebuilt = Mul(*rest) * S(-1)**n * b_i**(m + n)
+            return UnifyNegativeBaseFactors(rebuilt)
+    return u
+
+
+def _content_times(common, rest):
+    """``common * rest`` WITHOUT SymPy distributing a number over the sum.
+
+    ContentFactor's whole purpose is to expose a common factor, but SymPy
+    auto-distributes a Number over an Add inside ``Mul`` -- ``Mul(1/3, 2 + 3*x)``
+    evaluates straight back to ``x + 2/3``, undoing the factorisation. SymPy's own
+    ``factor_terms`` avoids this with ``_keep_coeff``, which builds the Mul in a form
+    that survives; we use the same mechanism. Only the NUMERIC part needs the
+    treatment -- a symbolic common factor (``a*(x + 1)``) does not distribute.
+    """
+    coeff, other = S(common).as_coeff_Mul()
+    body = other*rest if other != S(1) else rest
+    if coeff == S(1):
+        return body
+    # Mathematica canonicalises a factor of exactly -1 INTO the Plus, so
+    # Times[Rational[-1,q], Plus[t...]] is stored as Times[Rational[1,q], Plus[-t...]].
+    # Verified on Mathematica 12.2: (-1/3)(2+3x) -> Times[Rational[1,3], Plus[-2,-3x]]
+    # and (-1/2)(2+x) likewise, while (-3/2)(2+x), (-2)(2+x) and (-1/3)a(2+3x) all KEEP
+    # the sign on the coefficient -- the rewrite needs the numerator to be -1 and the
+    # sum to be the coefficient's only companion. NumericFactor walks those args, so
+    # without this it reported -1/3 where Rubi reports 1/3 for NumericFactor[-2/3 - x].
+    if other == S(1) and coeff.is_Rational and coeff.p == -1 and coeff.q != 1:
+        return _keep_coeff(Rational(1, coeff.q), -rest)
+    return _keep_coeff(coeff, body)
+
+
+def _numeric_factor_is_negative(u):
+    """``NumericFactor[u] < 0``, False when the comparison is not decidable."""
+    try:
+        return bool(NumericFactor(u) < 0)
+    except TypeError:
+        return False
+
+
+def ContentFactorAux(expn):
+    """Rubi ``ContentFactorAux`` -- factor the content out of sums, recursively.
+
+    Faithful transcription of the Rubi 4.17.3.0 definition::
+
+        If[AtomQ[expn], expn,
+        If[IntegerPowerQ[expn],
+          If[SumQ[expn[[1]]] && NumericFactor[expn[[1,1]]] < 0,
+             (-1)^expn[[2]]*ContentFactorAux[-expn[[1]]]^expn[[2]],
+             ContentFactorAux[expn[[1]]]^expn[[2]]],
+        If[ProductQ[expn],
+          Module[{num=1, tmp},
+            tmp = Map[If[SumQ[#] && NumericFactor[#[[1]]] < 0,
+                         num = -num; ContentFactorAux[-#], ContentFactorAux[#]]&, expn];
+            num*UnifyNegativeBaseFactors[tmp]],
+        If[SumQ[expn],
+          With[{lst = CommonFactors[List @@ expn]},
+            If[lst[[1]] === 1 || lst[[1]] === -1, expn, lst[[1]]*Plus @@ Rest[lst]]],
+          expn]]]]
+
+    This used to be ``factor_terms``, which is close but not the same function: it
+    leaves the content in when no term already carries a denominator, so
+    ``ContentFactor[2/3 + x]`` came back unchanged where Mathematica gives
+    ``(2 + 3*x)/3``. That fed ``NumericFactor``, which answered 1 instead of 1/3.
+    """
+    if eager_AtomQ(expn):
+        return expn
+
+    if eager_IntegerPowerQ(expn):
+        base, exponent = expn.base, expn.exp
+        if eager_SumQ(base) and _numeric_factor_is_negative(eager_First(base)):
+            return S(-1)**exponent*ContentFactorAux(-base)**exponent
+        return ContentFactorAux(base)**exponent
+
+    if eager_ProductQ(expn):
+        num = S(1)
+        tmp = []
+        for factor in expn.args:
+            if eager_SumQ(factor) and _numeric_factor_is_negative(eager_First(factor)):
+                num = -num
+                tmp.append(ContentFactorAux(-factor))
+            else:
+                tmp.append(ContentFactorAux(factor))
+        return num*UnifyNegativeBaseFactors(Mul(*tmp))
+
+    if eager_SumQ(expn):
+        lst = CommonFactors(list(expn.args))
+        common = lst[0]
+        if common == S(1) or common == S(-1):
+            return expn
+        return _content_times(common, Add(*lst[1:]))
+
+    return expn
+
+
+# Bounded memo: ContentFactor sits under NumericFactor/NonnumericFactors, which the
+# guards call constantly on the same subexpressions, and the faithful version is much
+# more work than the old factor_terms one-liner.
+_CONTENT_FACTOR_CACHE: dict = {}
+_CONTENT_FACTOR_CACHE_MAX = 20000
+
+
 def ContentFactor(expn):
-    return factor_terms(expn)
+    """Rubi: ``TimeConstrained[ContentFactorAux[expn], $TimeLimit, expn]``.
+
+    Rubi's time limit exists because ContentFactorAux can be expensive; the
+    fallback is simply to return the input unfactored. We keep that contract for
+    any failure -- returning the input is always sound, since the result is only
+    ever a re-association of the same expression.
+    """
+    try:
+        key = expn
+        hash(key)
+    except TypeError:
+        key = None
+    if key is not None:
+        cached = _CONTENT_FACTOR_CACHE.get(key)
+        if cached is not None:
+            return cached
+    try:
+        result = ContentFactorAux(expn)
+    except (RecursionError, TypeError, ValueError, AttributeError, PolynomialError):
+        result = expn
+    if key is not None and len(_CONTENT_FACTOR_CACHE) < _CONTENT_FACTOR_CACHE_MAX:
+        _CONTENT_FACTOR_CACHE[key] = result
+    return result
 
 def NumericFactor(u):
     # returns the real numeric factor of u.
@@ -2898,10 +3048,21 @@ def CombineExponents(lst):
     return [lst[0]] + CombineExponents(lst[1:])
 
 def FactorInteger(n, l=None):
+    """Mathematica ``FactorInteger`` — prime factorisation as (prime, exponent) pairs.
+
+    Pairs are SymPy Integers, not Python ints. ``factorint``/``factorrat`` hand back
+    plain ints, and a Python ``int ** negative int`` evaluates to a FLOAT: the
+    reciprocal exponents that a rational produces (FactorInteger[3/4] is
+    {{2,-2},{3,1}}) then turned ``2**-2`` into ``0.25``. That float propagated out
+    through AbsurdNumberGCD into CommonFactors and ContentFactor, so an exact
+    rational content came back as ``0.25*(2.0*x + 3.0)``. Mathematica's arithmetic
+    here is exact.
+    """
     if isinstance(n, (int, Integer)):
-        return sorted(factorint(n, limit=l).items())
+        pairs = factorint(n, limit=l).items()
     else:
-        return sorted(factorrat(n, limit=l).items())
+        pairs = factorrat(n, limit=l).items()
+    return sorted((Integer(base), Integer(exponent)) for base, exponent in pairs)
 
 def FactorAbsurdNumber(m):
     # (* m must be an absurd number.  FactorAbsurdNumber[m] returns the prime factorization of m *)
@@ -3132,7 +3293,10 @@ def FactorNumericGcd(u):
         # branch and always returned 1, so numeric content was never factored out.
         g = eager_GCD(*[NumericFactor(i) for i in u.args])
         r = Add(*[i/g for i in u.args])
-        return g*r
+        # `g*r` would let SymPy distribute the number straight back over the sum,
+        # undoing the very factorisation this function exists to perform:
+        # FactorNumericGcd[2 x + 4] came back as 4 + 2*x instead of Rubi's 2*(2 + x).
+        return _content_times(g, r)
     return u
 
 def MergeableFactorQ(bas, deg, v):

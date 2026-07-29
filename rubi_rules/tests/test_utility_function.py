@@ -101,7 +101,7 @@ import pytest
 
 from sympy.core.add import Add
 from sympy.core.expr import unchanged
-from sympy.core.numbers import (E, I, oo, pi, zoo)
+from sympy.core.numbers import (E, I, oo, pi, zoo, Rational)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (symbols, Symbol, Wild)
@@ -1148,6 +1148,65 @@ def test_CombineExponents():
         [S(2), Rational(3, 2)], [S(3), S(1)]]
     assert CombineExponents([[S(5), S(4)]]) == [[S(5), S(4)]]
     assert CombineExponents([]) == []
+
+
+# ---------------------------------------------------------------------------
+# ContentFactor -- faithful port of Rubi's ContentFactorAux.
+#
+# Expectations are asserted on the ARGS TUPLE, not just on value equality: the whole
+# point of ContentFactor is the FORM, and `Simplify[r == e]` cannot tell
+# `(2 + 3x)/3` from `x + 2/3`. Every expected value below was captured from
+# Rubi 4.17.3.0 via FullForm, and compared structurally (SameQ) rather than by
+# Simplify -- which is how the FactorNumericGcd defect below was caught at all.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize('expr, coeff, sumpart', [
+    (Rational(2, 3) + x,        Rational(1, 3), 3*x + 2),      # MMA: (2 + 3 x)/3
+    (x/2 + Rational(3, 4),      Rational(1, 4), 2*x + 3),      # MMA: (3 + 2 x)/4
+    (x/2 + Rational(1, 3),      Rational(1, 6), 3*x + 2),      # MMA: (2 + 3 x)/6
+    (2*x + 4,                   S(2),           x + 2),        # MMA: 2 (2 + x)
+    (6*x + 9,                   S(3),           2*x + 3),      # MMA: 3 (3 + 2 x)
+    (-2*x - 4,                  S(-2),          x + 2),        # MMA: -2 (2 + x)
+    (Rational(-2, 3) - x,       Rational(1, 3), -3*x - 2),     # MMA: (-2 - 3 x)/3
+])
+def test_ContentFactor_matches_rubi_structurally(expr, coeff, sumpart):
+    result = ContentFactor(expr)
+    assert result.is_Mul, f'{expr} -> {result} is not a product; the content was not factored out'
+    assert result.args == (coeff, sumpart), f'{expr} -> {result} (args {result.args})'
+
+
+@pytest.mark.parametrize('expr', [a + b, x + 1, x, S(6), Rational(1, 2)])
+def test_ContentFactor_leaves_contentless_input_alone(expr):
+    """Rubi returns expn unchanged when the common factor is 1 or -1."""
+    assert ContentFactor(expr) == expr
+
+
+def test_ContentFactor_negative_unit_coefficient_follows_mathematica():
+    """Mathematica canonicalises a factor of exactly -1 INTO the Plus.
+
+    (-1/3)(2+3x) is stored as Times[Rational[1,3], Plus[-2,-3x]], while (-3/2)(2+x)
+    and (-2)(2+x) keep the sign on the coefficient. NumericFactor walks those args,
+    so the difference is observable: Rubi's NumericFactor[-2/3 - x] is +1/3.
+    """
+    assert NumericFactor(Rational(-2, 3) - x) == Rational(1, 3)
+    assert NumericFactor(-2*x - 4) == S(-2)
+    assert NumericFactor(-x - 1) == S(1)
+    assert NonnumericFactors(Rational(-2, 3) - x) == -3*x - 2
+
+
+@pytest.mark.parametrize('expr, coeff, sumpart', [
+    (2*x + 4,             S(2),           x + 2),         # MMA: 2 (2 + x)
+    (6*x + 9,             S(3),           2*x + 3),       # MMA: 3 (3 + 2 x)
+    (3 - 6*x,             S(3),           1 - 2*x),       # MMA: 3 (1 - 2 x)
+    (Rational(2, 3) + x,  Rational(1, 3), 3*x + 2),       # MMA: (2 + 3 x)/3
+])
+def test_FactorNumericGcd_actually_factors(expr, coeff, sumpart):
+    """`g*r` let SymPy distribute the number straight back over the sum, so this
+    returned its own input: FactorNumericGcd[2 x + 4] was 4 + 2*x, not 2*(2 + x).
+    Invisible to a Simplify-based comparison, since the two are equal in value."""
+    result = FactorNumericGcd(expr)
+    assert result.is_Mul, f'{expr} -> {result} was not factored'
+    assert result.args == (coeff, sumpart), f'{expr} -> {result} (args {result.args})'
 
 
 def test_FactorAbsurdNumber_power_and_product_branches():
