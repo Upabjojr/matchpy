@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Ei, erf, erfi, exp, hyper, log, pi, sqrt, uppergamma,
+    Ei, erf, erfi, exp, hyper, log, pi, sqrt,
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, IDENTITY_ELEMENT
@@ -233,7 +233,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_), x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, n_], x), Not(IntegerQ(2/n_)),),
-        replacement=-F_**_a_*(x*_d_ + _c_)*uppergamma(1/n_, -_b_*(x*_d_ + _c_)**n_*log(F_))/(_d_*n_*(-_b_*(x*_d_ + _c_)**n_*log(F_))**(1/n_)),
+        replacement=-F_**_a_*(x*_d_ + _c_)*Gamma(1/n_, -_b_*(x*_d_ + _c_)**n_*log(F_))/(_d_*n_*(-_b_*(x*_d_ + _c_)**n_*log(F_))**(1/n_)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=15,
     ),
@@ -313,7 +313,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)*(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, _m_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0), Not(TrueQ(UseGamma)), IGtQ(Simplify((_m_ + 1)/n_), 0),),
-        replacement=With({p: Simplify((_m_ + 1)/n_)}, -F_**_a_*(_f_/_d_)**_m_*Simplify(FunctionExpand(uppergamma(p, -_b_*(x*_d_ + _c_)**n_*log(F_))))/(_d_*n_*(-_b_*log(F_))**p)),
+        replacement=With({p: Simplify((_m_ + 1)/n_)}, -F_**_a_*(_f_/_d_)**_m_*Simplify(FunctionExpand(Gamma(p, -_b_*(x*_d_ + _c_)**n_*log(F_))))/(_d_*n_*(-_b_*log(F_))**p)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=25,
     ),
@@ -321,7 +321,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(F_**(_a_ + _b_*(x*_d_ + _c_)**n_)*(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([F_, _a_, _b_, _c_, _d_, _e_, _f_, _m_, n_], x), EqQ(-_c_*_f_ + _d_*_e_, 0),),
-        replacement=-F_**_a_*(x*_f_ + _e_)**(_m_ + 1)*uppergamma((_m_ + 1)/n_, -_b_*(x*_d_ + _c_)**n_*log(F_))/(_f_*n_*(-_b_*(x*_d_ + _c_)**n_*log(F_))**((_m_ + 1)/n_)),
+        replacement=-F_**_a_*(x*_f_ + _e_)**(_m_ + 1)*Gamma((_m_ + 1)/n_, -_b_*(x*_d_ + _c_)**n_*log(F_))/(_f_*n_*(-_b_*(x*_d_ + _c_)**n_*log(F_))**((_m_ + 1)/n_)),
         module_name='2.3 Miscellaneous exponentials',
         rule_number=26,
     ),

@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not
 from sympy import (
-    exp, expint, factorial,
+    exp, factorial,
     gamma, hyper, log, loggamma, polygamma, uppergamma,
 )
 
@@ -73,13 +73,13 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, n_], x),),
-        replacement=(x*_b_ + _a_)*uppergamma(n_, x*_b_ + _a_)/_b_ - uppergamma(n_ + 1, x*_b_ + _a_)/_b_,
+        replacement=(x*_b_ + _a_)*Gamma(n_, x*_b_ + _a_)/_b_ - Gamma(n_ + 1, x*_b_ + _a_)/_b_,
         module_name='8.6 Gamma functions',
         rule_number=1,
     ),
     # Rule 2
     SymPyReplacementPattern(
-        pattern=Int(expint(1, x*_b_)/x, x),
+        pattern=Int(uppergamma(0, x*_b_)/x, x),
         constraints=(FreeQ(_b_, x),),
         replacement=((_b_ * x * sympy.hyper(List(Integer(1), Integer(1), Integer(1)), List(Integer(2), Integer(2), Integer(2)), ((Integer(-1) * _b_) * x))) + (Integer(-1) * (sympy.EulerGamma * sympy.log(x))) + (Integer(-1) * ((Integer(2))**(Integer(-1)) * (sympy.log((_b_ * x)))**(Integer(2))))),
         module_name='8.6 Gamma functions',
@@ -89,7 +89,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(n_, x*_b_)/x, x),
         constraints=(FreeQ(_b_, x), IGtQ(n_, 1),),
-        replacement=(n_ - 1)*Int(uppergamma(n_ - 1, x*_b_)/x, x) - uppergamma(n_ - 1, x*_b_),
+        replacement=(n_ - 1)*Int(Gamma(n_ - 1, x*_b_)/x, x) - Gamma(n_ - 1, x*_b_),
         module_name='8.6 Gamma functions',
         rule_number=3,
     ),
@@ -97,7 +97,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(n_, x*_b_)/x, x),
         constraints=(FreeQ(_b_, x), ILtQ(n_, 0),),
-        replacement=Int(uppergamma(n_ + 1, x*_b_)/x, x)/n_ + uppergamma(n_, x*_b_)/n_,
+        replacement=Gamma(n_, x*_b_)/n_ + Int(Gamma(n_ + 1, x*_b_)/x, x)/n_,
         module_name='8.6 Gamma functions',
         rule_number=4,
     ),
@@ -105,7 +105,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(n_, x*_b_)/x, x),
         constraints=(FreeQ([_b_, n_], x), Not(IntegerQ(n_)),),
-        replacement=log(x)*gamma(n_) - (x*_b_)**n_*hyper((n_, n_), (n_ + 1, n_ + 1), -x*_b_)/n_**2,
+        replacement=Gamma(n_)*log(x) - (x*_b_)**n_*hyper((n_, n_), (n_ + 1, n_ + 1), -x*_b_)/n_**2,
         module_name='8.6 Gamma functions',
         rule_number=5,
     ),
@@ -113,7 +113,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**_m_*uppergamma(n_, x*_b_), x),
         constraints=(FreeQ([_b_, _d_, _m_, n_], x), NeQ(_m_, -1),),
-        replacement=(x*_d_)**(_m_ + 1)*uppergamma(n_, x*_b_)/(_d_*(_m_ + 1)) - (x*_d_)**_m_*uppergamma(_m_ + n_ + 1, x*_b_)/(_b_*(x*_b_)**_m_*(_m_ + 1)),
+        replacement=(x*_d_)**(_m_ + 1)*Gamma(n_, x*_b_)/(_d_*(_m_ + 1)) - (x*_d_)**_m_*Gamma(_m_ + n_ + 1, x*_b_)/(_b_*(x*_b_)**_m_*(_m_ + 1)),
         module_name='8.6 Gamma functions',
         rule_number=6,
     ),
@@ -121,7 +121,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + c_)**_m_*uppergamma(n_, x*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _m_, n_], x), EqQ(-a_*_d_ + _b_*c_, 0),),
-        replacement=Subst(Int((x*_d_/_b_)**_m_*uppergamma(n_, x), x), x, x*_b_ + a_)/_b_,
+        replacement=Subst(Int((x*_d_/_b_)**_m_*Gamma(n_, x), x), x, x*_b_ + a_)/_b_,
         module_name='8.6 Gamma functions',
         rule_number=7,
     ),
@@ -129,7 +129,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(n_, x*_b_ + _a_)/(x*_d_ + _c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), IGtQ(n_, 1),),
-        replacement=(n_ - 1)*Int(uppergamma(n_ - 1, x*_b_ + _a_)/(x*_d_ + _c_), x) + Int((x*_b_ + _a_)**(n_ - 1)*exp(-x*_b_ - _a_)/(x*_d_ + _c_), x),
+        replacement=(n_ - 1)*Int(Gamma(n_ - 1, x*_b_ + _a_)/(x*_d_ + _c_), x) + Int((x*_b_ + _a_)**(n_ - 1)*exp(-x*_b_ - _a_)/(x*_d_ + _c_), x),
         module_name='8.6 Gamma functions',
         rule_number=8,
     ),
@@ -137,7 +137,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_*uppergamma(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x), Or(IGtQ(_m_, 0), IGtQ(n_, 0), IntegersQ(_m_, n_)), NeQ(_m_, -1),),
-        replacement=Block({UseGamma: True}, _b_*Int((x*_b_ + _a_)**(n_ - 1)*(x*_d_ + _c_)**(_m_ + 1)*exp(-x*_b_ - _a_), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*uppergamma(n_, x*_b_ + _a_)/(_d_*(_m_ + 1))),
+        replacement=Block({UseGamma: True}, _b_*Int((x*_b_ + _a_)**(n_ - 1)*(x*_d_ + _c_)**(_m_ + 1)*exp(-x*_b_ - _a_), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*Gamma(n_, x*_b_ + _a_)/(_d_*(_m_ + 1))),
         module_name='8.6 Gamma functions',
         rule_number=9,
     ),
@@ -145,7 +145,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_*uppergamma(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _m_, n_], x),),
-        replacement=Unintegrable((x*_d_ + _c_)**_m_*uppergamma(n_, x*_b_ + _a_), x),
+        replacement=Unintegrable((x*_d_ + _c_)**_m_*Gamma(n_, x*_b_ + _a_), x),
         module_name='8.6 Gamma functions',
         rule_number=10,
     ),
@@ -209,7 +209,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(gamma(x*_b_ + _a_)**_n_*polygamma(0, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _n_], x),),
-        replacement=gamma(x*_b_ + _a_)**_n_/(_b_*_n_),
+        replacement=Gamma(x*_b_ + _a_)**_n_/(_b_*_n_),
         module_name='8.6 Gamma functions',
         rule_number=18,
     ),
@@ -225,7 +225,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, p_], x),),
-        replacement=x*uppergamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_))) + _b_*_d_*_n_*Int((_d_*(_a_ + _b_*log(x**_n_*_c_)))**(p_ - 1)/(x**_n_*_c_)**(_b_*_d_), x)*exp(-_a_*_d_),
+        replacement=x*Gamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_))) + _b_*_d_*_n_*Int((_d_*(_a_ + _b_*log(x**_n_*_c_)))**(p_ - 1)/(x**_n_*_c_)**(_b_*_d_), x)*exp(-_a_*_d_),
         module_name='8.6 Gamma functions',
         rule_number=20,
     ),
@@ -233,7 +233,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/x, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _n_, p_], x),),
-        replacement=Subst(uppergamma(p_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
+        replacement=Subst(Gamma(p_, _d_*(x*_b_ + _a_)), x, log(x**_n_*_c_))/_n_,
         module_name='8.6 Gamma functions',
         rule_number=21,
     ),
@@ -241,7 +241,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_)**_m_*uppergamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _m_, _n_, p_], x), NeQ(_m_, -1),),
-        replacement=_b_*_d_*_n_*(x*_e_)**(_b_*_d_*_n_)*Int((x*_e_)**(-_b_*_d_*_n_ + _m_)*(_d_*(_a_ + _b_*log(x**_n_*_c_)))**(p_ - 1), x)*exp(-_a_*_d_)/((x**_n_*_c_)**(_b_*_d_)*(_m_ + 1)) + (x*_e_)**(_m_ + 1)*uppergamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/(_e_*(_m_ + 1)),
+        replacement=_b_*_d_*_n_*(x*_e_)**(_b_*_d_*_n_)*Int((x*_e_)**(-_b_*_d_*_n_ + _m_)*(_d_*(_a_ + _b_*log(x**_n_*_c_)))**(p_ - 1), x)*exp(-_a_*_d_)/((x**_n_*_c_)**(_b_*_d_)*(_m_ + 1)) + (x*_e_)**(_m_ + 1)*Gamma(p_, _d_*(_a_ + _b_*log(x**_n_*_c_)))/(_e_*(_m_ + 1)),
         module_name='8.6 Gamma functions',
         rule_number=22,
     ),
@@ -249,7 +249,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(uppergamma(p_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, _n_, p_], x),),
-        replacement=Subst(Int(uppergamma(p_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
+        replacement=Subst(Int(Gamma(p_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.6 Gamma functions',
         rule_number=23,
     ),
@@ -257,7 +257,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_h_ + g_)**_m_*uppergamma(p_, _f_*(_a_ + _b_*log(_c_*(x*_e_ + d_)**_n_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, d_, _e_, _f_, g_, _h_, _m_, _n_, p_], x), EqQ(-d_*_h_ + _e_*g_, 0),),
-        replacement=Subst(Int((x*g_/d_)**_m_*uppergamma(p_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
+        replacement=Subst(Int((x*g_/d_)**_m_*Gamma(p_, _f_*(_a_ + _b_*log(x**_n_*_c_))), x), x, x*_e_ + d_)/_e_,
         module_name='8.6 Gamma functions',
         rule_number=24,
     ),

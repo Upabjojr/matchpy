@@ -979,14 +979,17 @@ class TestPatternsContainOnlyMatchableHeads:
         assert not offenders, (
             'pattern heads that no caller expression can contain: ' + repr(offenders))
 
-    def test_Gamma_is_split_by_arity(self):
+    def test_Gamma_is_split_by_arity_via_the_node_protocol(self):
         """Mathematica overloads Gamma: Gamma[a] is the complete gamma function,
-        Gamma[a, z] the UPPER INCOMPLETE one -- two different SymPy functions, so it
-        cannot be a name mapping."""
-        from rubi_rules.codegen.generate import _rewrite_gamma_arity
-        assert _rewrite_gamma_arity(['Gamma', 'a']) == ['Gamma$Complete', 'a']
-        assert _rewrite_gamma_arity(['Gamma', 'a', 'z']) == ['Gamma$Upper', 'a', 'z']
-        assert _rewrite_gamma_arity(['Log', ['Gamma', 'v']]) == ['Log', ['Gamma$Complete', 'v']]
+        Gamma[a, z] the UPPER INCOMPLETE one -- two different SymPy functions, so no
+        name table can express it. The NODE decides, through
+        ``rewrite_as_standard_sympy()``, and the codegen applies that via the
+        ``rewrite`` hook of ``ffl_to_sympy_short_code``."""
+        import sympy
+        from sympy_wolfram.objects import Gamma
+        a, z = sympy.symbols('a z')
+        assert Gamma(a).rewrite_as_standard_sympy() == sympy.gamma(a)
+        assert Gamma(a, z).rewrite_as_standard_sympy() == sympy.uppergamma(a, z)
         # and the generated rules really do use both SymPy functions
         joined = '\n'.join(t for _p, t in TestGeneratedRulesetInvariants()._all_text())
         assert 'uppergamma(' in joined and 'gamma(' in joined

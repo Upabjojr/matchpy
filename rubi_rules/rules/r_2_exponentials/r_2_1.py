@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Not, And
 from sympy import (
-    Ei, log, sqrt, uppergamma,
+    Ei, log, sqrt,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -102,7 +102,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(F_**(_g_*(x*_f_ + _e_))*(x*_d_ + _c_)**_m_, x),
         constraints=(FreeQ([F_, _c_, _d_, _e_, _f_, _g_], x), IntegerQ(_m_),),
-        replacement=F_**(_g_*(-_c_*_f_/_d_ + _e_))*_f_**(-_m_ - 1)*_g_**(-_m_ - 1)*(-_d_)**_m_*log(F_)**(-_m_ - 1)*uppergamma(_m_ + 1, -_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_),
+        replacement=F_**(_g_*(-_c_*_f_/_d_ + _e_))*_f_**(-_m_ - 1)*_g_**(-_m_ - 1)*(-_d_)**_m_*Gamma(_m_ + 1, -_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)*log(F_)**(-_m_ - 1),
         module_name='2.1 (c+d x)^m (a+b (F^(g (e+f x)))^n)^p',
         rule_number=4,
     ),
@@ -118,7 +118,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(F_**(_g_*(x*_f_ + _e_))*(x*_d_ + _c_)**m_, x),
         constraints=(FreeQ([F_, _c_, _d_, _e_, _f_, _g_, m_], x), Not(IntegerQ(m_)),),
-        replacement=-F_**(_g_*(-_c_*_f_/_d_ + _e_))*(-_f_*_g_*log(F_)/_d_)**(-IntPart(m_) - 1)*(x*_d_ + _c_)**FracPart(m_)*uppergamma(m_ + 1, -_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)/(_d_*(-_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)**FracPart(m_)),
+        replacement=-F_**(_g_*(-_c_*_f_/_d_ + _e_))*(-_f_*_g_*log(F_)/_d_)**(-IntPart(m_) - 1)*(x*_d_ + _c_)**FracPart(m_)*Gamma(m_ + 1, -_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)/(_d_*(-_f_*_g_*(x*_d_ + _c_)*log(F_)/_d_)**FracPart(m_)),
         module_name='2.1 (c+d x)^m (a+b (F^(g (e+f x)))^n)^p',
         rule_number=6,
     ),

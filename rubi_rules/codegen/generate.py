@@ -29,36 +29,13 @@ from rubi_rules.utils import rubi_utils
 from sympy_wolfram import FFLConverter
 from sympy_wolfram import objects as wolfram_objects
 from sympy_wolfram.interpreter import ffl_to_sympy_short_code
+from sympy_wolfram.objects import rewrite_as_standard_sympy
 from sympy import Symbol as _sympy_Symbol
 
 
 # =============================================================================
 # Rubi-specific FFL helpers (operate on Int[integrand, x_Symbol] structure)
 # =============================================================================
-
-def _rewrite_gamma_arity(node):
-    """Split Mathematica's overloaded ``Gamma`` by arity, for the rubi layer.
-
-    ``Gamma[a]`` is the complete gamma function (SymPy ``gamma``) while
-    ``Gamma[a, z]`` is the UPPER INCOMPLETE one (SymPy ``uppergamma``) -- one Wolfram
-    head, two different SymPy functions, so it cannot be expressed as a name mapping
-    the way the other overrides in ``_EXTRA_SYMPY_HEADS`` are. Rewriting the head to a
-    private arity-tagged name lets the ordinary mapping machinery finish the job.
-
-    Without this the rules kept the Wolfram ``Gamma`` NODE in their patterns, which no
-    caller's expression can ever match (they pass ``gamma(a)`` / ``uppergamma(a, z)``),
-    so all 17 of those rules were dead.
-    """
-    if not isinstance(node, list) or not node:
-        return node
-    rewritten = [_rewrite_gamma_arity(child) for child in node]
-    if rewritten[0] == 'Gamma':
-        if len(rewritten) == 2:
-            rewritten[0] = 'Gamma$Complete'
-        elif len(rewritten) == 3:
-            rewritten[0] = 'Gamma$Upper'
-    return rewritten
-
 
 def _rubi_override_sympy_names() -> Dict[str, Any]:
     """Bare SymPy names introduced by the rubi_rules-level overrides.
@@ -577,10 +554,6 @@ _EXTRA_SYMPY_HEADS: Dict[str, str] = {
     # Gamma and related
     # NOTE: Gamma is NOT here — it needs a 2-arg wrapper (see RUBI_UTILS_MAP)
     'LogGamma': 'sympy.loggamma',
-    # Mathematica's Gamma is overloaded by arity; _rewrite_gamma_arity tags the head
-    # so each arity can map to the right SymPy function.
-    'Gamma$Complete': 'sympy.gamma',
-    'Gamma$Upper': 'sympy.uppergamma',
     'PolyGamma': 'sympy.polygamma',
     'Factorial': 'sympy.factorial',
     # Other special functions
@@ -1173,6 +1146,7 @@ Max = Symbol('Max')
                     guard,
                     reserved,
                     namespace=dict(short_ns),
+                    rewrite=rewrite_as_standard_sympy,
                     custom_functions=_CONSTRAINT_CUSTOM,
                     wildcards=plain_wilds,
                     optional_wildcards=opt_wilds,
@@ -1236,7 +1210,6 @@ Max = Symbol('Max')
         """
         if not (isinstance(ffl, list) and len(ffl) >= 3 and ffl[0] == 'SetDelayed'):
             return None
-        ffl = _rewrite_gamma_arity(ffl)
         lhs, rhs = ffl[1], ffl[2]
         if not isinstance(lhs, list) or lhs[0] != 'Int':
             return None  # a utility predicate defined in a rule file, not a rule
@@ -1274,12 +1247,14 @@ Max = Symbol('Max')
         # FRESH dict per call keeps one rule's wildcards out of the next one.
         pattern_code, wild_defs, _symbols = ffl_to_sympy_short_code(
             integrand_ffl, reserved, namespace=dict(short_ns),
+            rewrite=rewrite_as_standard_sympy,
             custom_functions=_PATTERN_CUSTOM)
 
         plain_wilds, opt_wilds = self._wildcard_names(wild_defs)
 
         replacement_code, _, _symbols = ffl_to_sympy_short_code(
             result_ffl, reserved, namespace=dict(short_ns),
+            rewrite=rewrite_as_standard_sympy,
             custom_functions=_REPLACEMENT_CUSTOM,
             wildcards=plain_wilds, optional_wildcards=opt_wilds)
 

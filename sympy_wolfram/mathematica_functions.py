@@ -155,6 +155,9 @@ class Factorial(MathematicaExpr):
     def _evaluate(self, **kwargs):
         return _eager.eager_Factorial(*self.args)
 
+    def rewrite_as_standard_sympy(self):
+        return sympy.factorial(*self.args, evaluate=False)
+
 
 class Zeta(MathematicaExpr):
     """Mathematica ``Zeta[s]`` / ``Zeta[s, a]`` — Riemann and Hurwitz zeta."""
@@ -164,6 +167,9 @@ class Zeta(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return _eager.eager_Zeta(*self.args)
+
+    def rewrite_as_standard_sympy(self):
+        return sympy.zeta(*self.args, evaluate=False)
 
 
 class PolyGamma(MathematicaExpr):
@@ -175,6 +181,11 @@ class PolyGamma(MathematicaExpr):
     def _evaluate(self, **kwargs):
         return _eager.eager_PolyGamma(*self.args)
 
+    def rewrite_as_standard_sympy(self):
+        """Mathematica's one-argument ``PolyGamma[z]`` IS ``PolyGamma[0, z]``."""
+        args = self.args if len(self.args) == 2 else (S.Zero,) + tuple(self.args)
+        return sympy.polygamma(*args, evaluate=False)
+
 
 class BesselJ(MathematicaExpr):
     """Mathematica ``BesselJ[n, z]`` — Bessel function of the first kind."""
@@ -184,6 +195,9 @@ class BesselJ(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return _eager.eager_BesselJ(*self.args)
+
+    def rewrite_as_standard_sympy(self):
+        return sympy.besselj(*self.args, evaluate=False)
 
 
 class ExpIntegralEi(MathematicaExpr):
@@ -203,6 +217,9 @@ class ExpIntegralEi(MathematicaExpr):
     def _evaluate(self, **kwargs):
         return _eager.eager_ExpIntegralEi(*self.args)
 
+    def rewrite_as_standard_sympy(self):
+        return sympy.Ei(*self.args, evaluate=False)
+
 
 class LogIntegral(MathematicaExpr):
     """Mathematica ``LogIntegral[z]`` — the logarithmic integral li(z).
@@ -217,6 +234,9 @@ class LogIntegral(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return _eager.eager_LogIntegral(*self.args)
+
+    def rewrite_as_standard_sympy(self):
+        return sympy.li(*self.args, evaluate=False)
 
 
 class Identity(MathematicaExpr):
@@ -234,6 +254,10 @@ class Identity(MathematicaExpr):
     def _evaluate(self, **kwargs):
         return _eager.eager_Identity(*self.args)
 
+    def rewrite_as_standard_sympy(self):
+        """``Identity[z]`` is just ``z`` -- there is no function left to keep."""
+        return self.args[0]
+
 
 class ExpIntegralE(MathematicaExpr):
     """Mathematica ``ExpIntegralE[n, z]`` — the exponential integral E_n(z)."""
@@ -243,6 +267,9 @@ class ExpIntegralE(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return _eager.eager_ExpIntegralE(*self.args)
+
+    def rewrite_as_standard_sympy(self):
+        return sympy.expint(*self.args, evaluate=False)
 
 
 class Root(MathematicaExpr):
@@ -429,6 +456,13 @@ class ProductLog(MathematicaExpr):
 
     def _evaluate(self, **kwargs):
         return _eager.eager_ProductLog(*self.args)
+
+    def rewrite_as_standard_sympy(self):
+        """The branch index MOVES: ``ProductLog[k, z]`` is ``LambertW(z, k)``."""
+        if len(self.args) == 2:
+            k, z = self.args
+            return sympy.LambertW(z, k, evaluate=False)
+        return sympy.LambertW(*self.args, evaluate=False)
 
 
 class Floor(MathematicaExpr):

@@ -162,6 +162,55 @@ class MathematicaExpr(Expr):
     def _evaluate(self, **kwargs):
         raise NotImplementedError
 
+    def rewrite_as_standard_sympy(self):
+        """Re-express this node as the equivalent STANDARD SymPy function, UNEVALUATED.
+
+        This is the bridge between the two languages, and it is deliberately distinct
+        from :meth:`doit`:
+
+        * ``doit()`` EVALUATES -- it applies Mathematica's semantics and computes.
+          ``Factorial(5).doit()`` is ``120``.
+        * ``rewrite_as_standard_sympy()`` TRANSLATES -- it swaps the Wolfram head for
+          the SymPy one and stops. ``Factorial(5).rewrite_as_standard_sympy()`` is
+          ``factorial(5)``, still a function application. That is what makes it usable
+          on rule PATTERNS, whose arguments are wildcards that must survive intact.
+
+        A head can be overloaded in Mathematica but not in SymPy, which is exactly why
+        this is a METHOD on the node rather than a name table: ``Gamma[a]`` is the
+        complete gamma function while ``Gamma[a, z]`` is the upper incomplete one, so
+        the node inspects its own arity and picks.
+
+        The default returns ``self``: most nodes (``With``, ``Module``, ``Condition``,
+        ``Set``, ...) model Wolfram *language* constructs with no SymPy counterpart, and
+        "there is no standard equivalent, I am already the best representation" is a
+        meaningful answer rather than an error. Override it wherever a real equivalent
+        exists.
+        """
+        return self
+
+
+def rewrite_as_standard_sympy(expr):
+    """Recursively rewrite every Wolfram node in *expr* to standard SymPy.
+
+    Walks bottom-up so a nested node is translated before its parent is rebuilt, and
+    leaves anything that is not a :class:`MathematicaExpr` untouched.
+    """
+    if isinstance(expr, (list, tuple)):
+        return type(expr)(rewrite_as_standard_sympy(item) for item in expr)
+    if not isinstance(expr, Basic):
+        return expr
+    args = getattr(expr, 'args', ())
+    if args:
+        new_args = [rewrite_as_standard_sympy(a) for a in args]
+        if any(new is not old for new, old in zip(new_args, args)):
+            try:
+                expr = expr.func(*new_args)
+            except (TypeError, ValueError):
+                pass
+    if isinstance(expr, MathematicaExpr):
+        return expr.rewrite_as_standard_sympy()
+    return expr
+
 
 class Set(MathematicaExpr):
     """Mathematica ``Set[symbol, expr]`` — a name/value binding marker.
@@ -1565,6 +1614,7 @@ def _head_name(expr) -> str:
 
 __all__ = [
     'Block',
+    'rewrite_as_standard_sympy',
     'Catch',
     'CompoundExpression',
     'Condition',
@@ -1606,3 +1656,19 @@ class Gamma(MathematicaExpr):
             return sympy.uppergamma(self.args[0], self.args[1])
         else:
             raise NotImplementedError
+
+    def rewrite_as_standard_sympy(self):
+        """Mathematica OVERLOADS Gamma by arity; SymPy uses two different functions.
+
+        ``Gamma[a]``    -> ``gamma(a)``          (complete)
+        ``Gamma[a, z]`` -> ``uppergamma(a, z)``  (UPPER incomplete)
+
+        This is the case that motivated the whole protocol: no name table can express
+        it, because which SymPy function is correct depends on how many arguments the
+        node has.
+        """
+        if len(self.args) == 1:
+            return sympy.gamma(*self.args, evaluate=False)
+        if len(self.args) == 2:
+            return sympy.uppergamma(*self.args, evaluate=False)
+        return self

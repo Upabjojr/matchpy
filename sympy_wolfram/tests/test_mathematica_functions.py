@@ -551,3 +551,78 @@ def test_nodes_are_importable_where_generated_code_expects_them():
     from rubi_rules.utils import rubi_utils
     for name in ('ExpIntegralEi', 'LogIntegral', 'ProductLog', 'Identity'):
         assert getattr(rubi_utils, name) is getattr(mf, name)
+
+
+# ---------------------------------------------------------------------------
+# 7. rewrite_as_standard_sympy() -- the Wolfram -> SymPy translation protocol
+#
+# Distinct from doit(): doit() EVALUATES with Mathematica semantics, this one only
+# swaps the head for the SymPy equivalent and stops, so the result is still a
+# function application whose arguments (wildcards, in a rule pattern) survive.
+# ---------------------------------------------------------------------------
+
+def test_rewrite_is_a_translation_not_an_evaluation():
+    """The whole point: it must NOT compute. A pattern's arguments have to survive."""
+    assert mf.Factorial(5).doit() == 120                     # doit computes
+    assert mf.Factorial(5).rewrite_as_standard_sympy() == sympy.factorial(5, evaluate=False)
+    assert mf.Factorial(5).rewrite_as_standard_sympy() != 120
+    assert mf.Zeta(2).doit() == sympy.pi ** 2 / 6
+    assert mf.Zeta(2).rewrite_as_standard_sympy().func is sympy.zeta
+
+
+def test_Gamma_rewrite_dispatches_on_arity():
+    """The case that motivated the protocol: Mathematica overloads Gamma, SymPy does
+    not, so no name table can express it -- the node must inspect its own arity."""
+    from sympy_wolfram.objects import Gamma
+    a, z = sympy.symbols('a z')
+    assert Gamma(a).rewrite_as_standard_sympy() == sympy.gamma(a)
+    assert Gamma(a, z).rewrite_as_standard_sympy() == sympy.uppergamma(a, z)
+
+
+def test_ProductLog_rewrite_moves_the_branch_index():
+    z, k = sympy.symbols('z k')
+    assert mf.ProductLog(z).rewrite_as_standard_sympy() == sympy.LambertW(z)
+    # Mathematica ProductLog[k, z] == SymPy LambertW(z, k)
+    assert mf.ProductLog(k, z).rewrite_as_standard_sympy() == sympy.LambertW(z, k)
+
+
+def test_PolyGamma_one_argument_form_becomes_order_zero():
+    z, n = sympy.symbols('z n')
+    assert mf.PolyGamma(z).rewrite_as_standard_sympy() == sympy.polygamma(0, z)
+    assert mf.PolyGamma(n, z).rewrite_as_standard_sympy() == sympy.polygamma(n, z)
+
+
+@pytest.mark.parametrize('name, args, target', [
+    ('BesselJ',       ('n', 'z'), sympy.besselj),
+    ('ExpIntegralE',  ('n', 'z'), sympy.expint),
+    ('ExpIntegralEi', ('z',),     sympy.Ei),
+    ('LogIntegral',   ('z',),     sympy.li),
+])
+def test_one_to_one_rewrites(name, args, target):
+    syms = sympy.symbols(' '.join(args))
+    syms = (syms,) if not isinstance(syms, tuple) else syms
+    assert getattr(mf, name)(*syms).rewrite_as_standard_sympy() == target(*syms)
+
+
+def test_Identity_rewrite_drops_the_head_entirely():
+    a = sympy.Symbol('a')
+    assert mf.Identity(a).rewrite_as_standard_sympy() == a
+
+
+def test_default_returns_self_when_there_is_no_sympy_equivalent():
+    """Most nodes model Wolfram LANGUAGE constructs (With/Module/Condition/Set). For
+    those, 'no standard equivalent' is a real answer, not an error -- which is why the
+    base implementation returns self rather than raising."""
+    from sympy_wolfram.objects import With, List, Set
+    x = sympy.Symbol('x')
+    node = With(List(Set(x, sympy.Integer(2))), x)
+    assert node.rewrite_as_standard_sympy() is node
+
+
+def test_recursive_helper_rewrites_nested_nodes():
+    from sympy_wolfram.objects import Gamma, rewrite_as_standard_sympy
+    a, z = sympy.symbols('a z')
+    nested = sympy.log(Gamma(a)) + mf.ProductLog(z)
+    assert rewrite_as_standard_sympy(nested) == sympy.log(sympy.gamma(a)) + sympy.LambertW(z)
+    # non-Wolfram input is returned untouched
+    assert rewrite_as_standard_sympy(a + z) == a + z

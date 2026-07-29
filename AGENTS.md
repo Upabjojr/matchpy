@@ -170,10 +170,28 @@ deferred node could never match, so the rule would be dead. Pinned by
 Two heads are *replaced* at generation time rather than translated, because neither
 is really a function: `Identity[z]` → `z` and `Complex[a,b]` → `(a + sympy.I*b)`.
 
-Careful with `ProductLog`: Mathematica puts the branch index **first**
-(`ProductLog[k,z]` = `LambertW(z,k)`). The rubi-level rename passes arguments
-straight through, so it is sound only while Rubi uses the one-argument form — a test
-fails loudly if a two-argument use ever appears.
+**`MathematicaExpr.rewrite_as_standard_sympy()`** is the general form of that
+override, for heads a name table *cannot* express. It is deliberately distinct from
+`doit()`:
+
+* `doit()` **evaluates** with Mathematica semantics — `Factorial(5).doit()` is `120`;
+* `rewrite_as_standard_sympy()` **translates** — it swaps the Wolfram head for the
+  SymPy one and stops, so the result is still a function application
+  (`factorial(5)`). That is what makes it usable on rule *patterns*, whose arguments
+  are wildcards that must survive.
+
+`Gamma` is the motivating case: Mathematica overloads it (`Gamma[a]` is the complete
+gamma function, `Gamma[a,z]` the upper incomplete one) where SymPy has two separate
+functions, so the *node* inspects its own arity and decides. `ProductLog` uses it to
+move the branch index (`ProductLog[k,z]` → `LambertW(z,k)`), and `PolyGamma[z]` to
+become `polygamma(0, z)`. The base implementation returns `self`, meaning "no standard
+equivalent" — true of most nodes, which model Wolfram *language* constructs
+(`With`, `Module`, `Condition`).
+
+The codegen applies it through the `rewrite` hook of `ffl_to_sympy_short_code`, which
+runs on the evaluated object *before* printing. Note the ordering constraint: the
+round-trip verifies the printed text against that object, so rewriting afterwards
+would always compare unequal and be silently discarded.
 
 ### Generated-code hygiene
 

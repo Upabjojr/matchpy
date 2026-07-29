@@ -14,7 +14,7 @@ from sympy import Integer, Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Ei, exp, expint, gamma, hyper, li, log,
+    Ei, exp, expint, hyper, li, log,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -98,7 +98,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**m_*expint(n_, x*_b_), x),
         constraints=(FreeQ([_b_, _d_, m_, n_], x), EqQ(m_ + n_, 0), Not(IntegerQ(m_)),),
-        replacement=-(x*_d_)**(m_ + 1)*hyper((m_ + 1, m_ + 1), (m_ + 2, m_ + 2), -x*_b_)/(_d_*(m_ + 1)**2) + (x*_d_)**m_*log(x)*gamma(m_ + 1)/(_b_*(x*_b_)**m_),
+        replacement=-(x*_d_)**(m_ + 1)*hyper((m_ + 1, m_ + 1), (m_ + 2, m_ + 2), -x*_b_)/(_d_*(m_ + 1)**2) + (x*_d_)**m_*Gamma(m_ + 1)*log(x)/(_b_*(x*_b_)**m_),
         module_name='8.3 Exponential integral functions',
         rule_number=5,
     ),

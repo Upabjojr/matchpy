@@ -173,13 +173,14 @@ class FFLConverter:
     _GENERATED_SYMPY_EXTRAS: Tuple[str, ...] = (
         'sqrt', 'exp', 'log', 'Abs', 'pi', 'I', 'oo',
         'root', 'diff', 'simplify', 'hyper', 'atan2',
-        # ExpIntegralEi/LogIntegral/ProductLog are emitted as their WOLFRAM class
-        # names, which evaluate eagerly to these SymPy objects. Both spellings must
-        # therefore resolve in the generated module and in the shortening namespace:
-        # once a rule's code evaluates, the printer may well render `Ei(...)` rather
-        # than `ExpIntegralEi(...)`, and a name that will not import makes the load
-        # probe drop the rule silently.
+        # Every SymPy function `MathematicaExpr.rewrite_as_standard_sympy()` can
+        # produce. A caller may bake that translation into generated code (see the
+        # `rewrite` hook of ffl_to_sympy_short_code), and the printed result names
+        # these BARE -- so they must resolve both in the generated module and in the
+        # shortening namespace, or the round-trip fails and the rewrite is silently
+        # discarded.
         'Ei', 'li', 'LambertW',
+        'gamma', 'uppergamma', 'factorial', 'zeta', 'polygamma', 'besselj', 'expint',
     )
 
     # Map targets that must NOT be exposed as bare names: the generated header binds
@@ -905,7 +906,8 @@ def ffl_to_sympy_code(
 
 
 def _simplify_code(code: str, ns: Dict[str, Any],
-                   str_printer: Optional[StrPrinter] = None) -> str:
+                   str_printer: Optional[StrPrinter] = None,
+                   rewrite: Optional[Any] = None) -> str:
     """Shorten *code* by round-tripping it through a printer, when that is safe.
 
     ``eval`` the code, print the resulting object with *str_printer*, and keep the
@@ -924,6 +926,12 @@ def _simplify_code(code: str, ns: Dict[str, Any],
     printer = str_printer if str_printer is not None else _wild_printer
     try:
         obj = eval(code, ns)
+        if rewrite is not None:
+            # A deliberate TRANSLATION applied before printing (e.g. Wolfram nodes ->
+            # standard SymPy). It must happen here, not after: the round-trip below
+            # verifies the printed text against `obj`, so rewriting afterwards would
+            # always compare unequal and silently discard the result.
+            obj = rewrite(obj)
         short = printer.doprint(obj)
         recovered = eval(short, ns)
         if isinstance(recovered, sympy.Basic):
@@ -944,8 +952,14 @@ def ffl_to_sympy_short_code(
     wildcards: Optional[Set[str]] = None,
     optional_wildcards: Optional[Set[str]] = None,
     str_printer: Optional[StrPrinter] = None,
+    rewrite: Optional[Any] = None,
 ) -> Tuple[str, List[str], list[str]]:
     """Like :func:`ffl_to_sympy_code` but with a simplification pass.
+
+    *rewrite*, when given, is a callable applied to the evaluated expression before it
+    is printed -- used by callers that want a deliberate translation baked into the
+    emitted code, e.g. ``sympy_wolfram.objects.rewrite_as_standard_sympy`` to turn
+    Wolfram nodes into their standard SymPy equivalents.
 
     Operates directly on an FFL structure, skipping Mathematica parsing.
 
@@ -996,7 +1010,7 @@ def ffl_to_sympy_short_code(
         ffl, reserved_symbols, namespace, custom_functions=custom_functions,
         wildcards=wildcards, optional_wildcards=optional_wildcards,
     )
-    return _simplify_code(code, namespace, str_printer), wild_defs, symbols
+    return _simplify_code(code, namespace, str_printer, rewrite), wild_defs, symbols
 
 
 # ---------------------------------------------------------------------------

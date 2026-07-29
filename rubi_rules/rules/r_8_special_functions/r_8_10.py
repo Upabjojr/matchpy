@@ -13,7 +13,7 @@ import sympy
 from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy import (
-    besselj, gamma, hyper,
+    besselj, hyper,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
@@ -72,7 +72,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(besselj(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, n_], x),),
-        replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*gamma(n_ + 2)),
+        replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*Gamma(n_ + 2)),
         module_name='8.10 Bessel functions',
         rule_number=3,
     ),
