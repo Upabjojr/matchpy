@@ -4453,8 +4453,8 @@ def FixInertTrigFunction(u, x):
     # not a sum. The rewrite u*(a*b+a*v)^n then rebuilt the IDENTICAL expression and
     # recursed on it forever: this single clause is the RecursionError behind the whole
     # (trig)^(n/2) family (11 corpus cases) and the uninterruptible hang alongside it.
-    M = _umatch(u, u_*(a_*(b_ + v_))**n_)
-    if M is not None and M[b_] != 0 and not eager_FreeQ(M[v_], x) and M[a_] != 1:
+    M = _umatch(u, u_*(a_*(b_ + v_))**n_, plain=('b',))
+    if M is not None and not eager_FreeQ(M[v_], x) and M[a_] != 1:
         return FixInertTrigFunction(M[u_]*(M[a_]*M[b_] + M[a_]*M[v_])**M[n_], x)
 
     # ---- (co)function of one power times power of another: TRIGa[v]^m*(c TRIGb[w])^n ----
@@ -4484,7 +4484,12 @@ def FixInertTrigFunction(u, x):
     for fa, fnum, fden, ftrig in [(tan_, sin_, cos_, sin_), (cot_, cos_, sin_, sin_),
                                   (tan_, sin_, cos_, cos_), (cot_, cos_, sin_, cos_)]:
         if has(fa) and has(ftrig):
-            M = _umatch(u, u_*fa(v_)**m_*(a_ + b_*ftrig(w_))**n_)
+            # `M[a_] != 0`: Rubi writes this as `(a_) + (b_.)*sin[w_]` -- a PLAIN Blank
+            # for the constant term, so it only matches a genuine SUM. SymPy's Wild
+            # binds a_ -> 0 and matches a bare `(b*sin(w))^n` too, firing a clause Rubi
+            # would skip. (Same over-match as the `(b_+v_)` clause above, which is what
+            # made this function recurse forever -- see that comment.)
+            M = _umatch(u, u_*fa(v_)**m_*(a_ + b_*ftrig(w_))**n_, plain=('a',))
             if M is not None and eager_IntegerQ(M[m_]):
                 return (fnum(M[v_])**M[m_]/fden(M[v_])**M[m_]) * \
                     FixInertTrigFunction(M[u_]*(M[a_] + M[b_]*ftrig(M[w_]))**M[n_], x)
@@ -4492,7 +4497,8 @@ def FixInertTrigFunction(u, x):
     # cot[v]^m*(a+b*(c*sin[w])^p)^n -> tan[v]^-m*(...)  ;  tan[v]^m*(a+b*(c*cos[w])^p)^n -> cot[v]^-m*(...)
     for fa, fr, ftrig in [(cot_, tan_, sin_), (tan_, cot_, cos_)]:
         if has(fa) and has(ftrig):
-            M = _umatch(u, fa(v_)**m_*(a_ + b_*(c_*ftrig(w_))**p_)**n_)
+            # `M[a_] != 0` -- plain Blank in Rubi, so a genuine sum is required.
+            M = _umatch(u, fa(v_)**m_*(a_ + b_*(c_*ftrig(w_))**p_)**n_, plain=('a',))
             if M is not None and eager_IntegerQ(M[m_]):
                 return fr(M[v_])**(-M[m_])*(M[a_] + M[b_]*(M[c_]*ftrig(M[w_]))**M[p_])**M[n_]
 
@@ -4564,12 +4570,43 @@ def _fix_factors(expr):
     return list(expr.args) if expr.is_Mul else [expr]
 
 
-def _umatch(u, pat):
-    # Like u.match(pat) but rejects degenerate collapses: SymPy will match a
-    # multi-factor pattern against a smaller product by dropping factors (and
-    # their wilds).  A genuine match binds EVERY wild in the pattern (an
-    # x-free coefficient of 1 or additive 0 is still bound explicitly), so we
-    # require completeness.  The "rest" wild ``u_`` is optional (default 1).
+def _umatch(u, pat, plain=()):
+    """Like ``u.match(pat)`` but with Mathematica's blank semantics.
+
+    Two degenerate matches are rejected:
+
+    1. **Incomplete matches.** SymPy will match a multi-factor pattern against a
+       smaller product by dropping factors (and their wilds). A genuine match binds
+       EVERY wild in the pattern, so completeness is required. The "rest" wild ``u_``
+       is optional (default 1).
+
+    2. **Zero-bound PLAIN blanks** (``plain``). Rubi distinguishes ``a_`` (a plain
+       Blank, which must bind a real operand) from ``a_.`` (Optional, which defaults
+       to 0 in a Plus / 1 in a Times). SymPy's ``Wild`` has no such distinction and
+       happily binds ``a_ -> 0``, so a pattern like ``(a_ + b_*sin(w))**n_`` matches
+       a bare ``(b*sin(w))**n`` -- firing a clause Mathematica would skip. Pass the
+       names Rubi declares as plain blanks and they may not bind the additive
+       identity.
+
+       This is the bug class behind ``FixInertTrigFunction``'s infinite recursion
+       (``(b_+v_)`` matched a Times, so the rewrite rebuilt its own input) and behind
+       ``GeneralizedBinomialMatchQ`` answering False where Rubi answers True.
+
+    matchpy models this natively -- ``Wildcard.dot()`` is ``a_`` and
+    ``Wildcard.optional(name, default)`` is ``a_.`` -- and moving these clauses onto
+    matchpy would enforce it structurally rather than by convention. That is the right
+    long-term shape; it is not done here because ``FixInertTrigFunction`` alone is 61
+    clauses on a hot path (~20-30 ms/call already), and matchpy's commutative matcher
+    is what blows up exponentially in ``FixSimplify``. Until then this choke point
+    gives the same guarantee at no runtime cost: to fix one of the remaining sites,
+    add ``plain=(...)`` to its ``_umatch`` call.
+
+    To find which names Rubi declares plain, query the real thing::
+
+        Cases[DownValues[f][[All, 1]],
+              Verbatim[Plus][___, Verbatim[Pattern][_, Verbatim[Blank][]], ___],
+              Infinity]
+    """
     M = u.match(pat)
     if M is None:
         return None
@@ -4578,6 +4615,10 @@ def _umatch(u, pat):
             if w.name == 'u':
                 M[w] = S.One
             else:
+                return None
+    for name in plain:
+        for w, val in M.items():
+            if getattr(w, 'name', None) == name and val == 0:
                 return None
     return M
 
