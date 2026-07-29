@@ -6,7 +6,7 @@
 # Source: 3.1.1 (a+b log(c x^n))^p.m
 # Module: 3.1.1 (a+b log(c x^n))^p
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -17,7 +17,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -58,7 +58,7 @@ p_ = WildSymbol('p')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(log(x**_n_*_c_), x),
         constraints=(FreeQ([_c_, _n_], x),),
         replacement=-x*_n_ + x*log(x**_n_*_c_),
@@ -66,7 +66,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_], x), GtQ(_p_, 0), IntegerQ(2*_p_),),
         replacement=x*(_a_ + _b_*log(x**_n_*_c_))**_p_ - _b_*_n_*_p_*Int((_a_ + _b_*log(x**_n_*_c_))**(_p_ - 1), x),
@@ -74,7 +74,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_], x), LtQ(p_, -1), IntegerQ(2*p_),),
         replacement=x*(_a_ + _b_*log(x**_n_*_c_))**(p_ + 1)/(_b_*_n_*(p_ + 1)) - Int((_a_ + _b_*log(x**_n_*_c_))**(p_ + 1), x)/(_b_*_n_*(p_ + 1)),
@@ -82,7 +82,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/log(x*_c_), x),
         constraints=(FreeQ(_c_, x),),
         replacement=li(x*_c_)/_c_,
@@ -90,7 +90,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, p_], x), IntegerQ(1/_n_),),
         replacement=Subst(Int((x*_b_ + _a_)**p_*exp(x/_n_), x), x, log(x**_n_*_c_))/(_c_**(1/_n_)*_n_),
@@ -98,7 +98,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_a_ + _b_*log(x**_n_*_c_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, p_], x),),
         replacement=x*Subst(Int((x*_b_ + _a_)**p_*exp(x/_n_), x), x, log(x**_n_*_c_))/(_n_*(x**_n_*_c_)**(1/_n_)),

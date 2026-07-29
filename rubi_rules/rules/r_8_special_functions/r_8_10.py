@@ -6,18 +6,18 @@
 # Source: 8.10 Bessel functions.m
 # Module: 8.10 Bessel functions
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
 from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy import (
-    besselj, hyper,
+    besselj, gamma, hyper,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -53,7 +53,7 @@ n_ = WildSymbol('n')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(besselj(1, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=-besselj(0, x*_b_ + _a_)/_b_,
@@ -61,7 +61,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(besselj(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x), IGtQ(n_/2 + sympy.S(-1)/2, 0),),
         replacement=Int(besselj(n_ - 2, x*_b_ + _a_), x) - 2*besselj(n_ - 1, x*_b_ + _a_)/_b_,
@@ -69,10 +69,10 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(besselj(n_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, n_], x),),
-        replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*Gamma(n_ + 2)),
+        replacement=(x*_b_ + _a_)**(n_ + 1)*hyper((n_/2 + sympy.S.Half,), (n_ + 1, n_/2 + sympy.S(3)/2), -(x*_b_ + _a_)**2/4)/(2**n_*_b_*gamma(n_ + 2)),
         module_name='8.10 Bessel functions',
         rule_number=3,
     ),

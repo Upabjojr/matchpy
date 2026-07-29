@@ -158,7 +158,7 @@ class TestRuleTranslation:
         ]
         code = self.t._translate_rule(ffl, 1, "module_name")
         assert code is not None
-        assert 'RubiRulePattern' in code
+        assert 'SymPyReplacementPattern' in code
         assert 'FreeQ(m_, x)' in code
         assert 'NeQ(m_, -1)' in code
 
@@ -301,7 +301,7 @@ class TestModuleGeneration:
         t = RubiRuleTranslator()
         code = t.translate_module(rules, 'test', 'test.m')
         assert 'RULES = [' in code
-        assert 'RubiRulePattern(' in code
+        assert 'SymPyReplacementPattern(' in code
 
     def test_generated_module_importable(self):
         """Generated code can be exec'd and produces RULES list."""
@@ -942,3 +942,51 @@ class TestWolframHeadTranslationLayering:
         assert not two_arg, (
             'two-argument LambertW found; _EXTRA_SYMPY_HEADS["ProductLog"] must become '
             'an argument-reordering wrapper: ' + '; '.join(two_arg))
+
+
+class TestPatternsContainOnlyMatchableHeads:
+    """A rule PATTERN may only mention heads a caller's expression can actually
+    contain. Anything else is a rule that can never fire.
+
+    The allowed non-SymPy heads are deliberate:
+      * ``Int``           -- the integrator's own head, what a pattern matches against;
+      * ``Inert*``        -- Rubi's inert trig markers, produced by the DeactivateTrig
+                             dispatch before matching (see the trig-deactivation notes);
+      * ``WildHeadApp`` / ``WildHeadDeriv`` -- the function-head-wildcard machinery.
+
+    Everything else must be a real SymPy callable, so that e.g. Mathematica's
+    ``Gamma[n, a+b x]`` is matched as ``uppergamma(n, a+b*x)`` -- which is what a
+    caller passes -- rather than as the Wolfram ``Gamma`` node.
+    """
+
+    ALLOWED_NON_SYMPY = {'Int', 'WildHeadApp', 'WildHeadDeriv'}
+
+    def test_no_unmatchable_head_in_any_pattern(self):
+        import sympy
+        offenders = {}
+        for path, text in TestGeneratedRulesetInvariants()._all_text():
+            for line in text.splitlines():
+                line = line.strip()
+                if not line.startswith('pattern=Int('):
+                    continue
+                for head in re.findall(r'(?<![\w.])([A-Za-z_][A-Za-z0-9_]*)\s*\(',
+                                       line[len('pattern='):]):
+                    if hasattr(sympy, head) or head in self.ALLOWED_NON_SYMPY:
+                        continue
+                    if head.startswith('Inert'):
+                        continue
+                    offenders.setdefault(head, str(path))
+        assert not offenders, (
+            'pattern heads that no caller expression can contain: ' + repr(offenders))
+
+    def test_Gamma_is_split_by_arity(self):
+        """Mathematica overloads Gamma: Gamma[a] is the complete gamma function,
+        Gamma[a, z] the UPPER INCOMPLETE one -- two different SymPy functions, so it
+        cannot be a name mapping."""
+        from rubi_rules.codegen.generate import _rewrite_gamma_arity
+        assert _rewrite_gamma_arity(['Gamma', 'a']) == ['Gamma$Complete', 'a']
+        assert _rewrite_gamma_arity(['Gamma', 'a', 'z']) == ['Gamma$Upper', 'a', 'z']
+        assert _rewrite_gamma_arity(['Log', ['Gamma', 'v']]) == ['Log', ['Gamma$Complete', 'v']]
+        # and the generated rules really do use both SymPy functions
+        joined = '\n'.join(t for _p, t in TestGeneratedRulesetInvariants()._all_text())
+        assert 'uppergamma(' in joined and 'gamma(' in joined

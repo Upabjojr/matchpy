@@ -39,6 +39,6 @@ matchpy_to_sympy = conversion.matchpy_to_sympy
 # a matchpy ManyToOneReplacer from rules made of SymPy patterns/replacements/constraints
 # (ordinary SymPy objects mixed with WildSymbol) -- with NO dependency on sympy_wolfram
 # or rubi_rules. Import matchpy + sympy_matching and you can define your own matcher.
-from .constraint import SympyMatchingConstraint
-from .matching_rule import SympyMatchingRule, build_replacer, build_tracing_replacer
+from .constraint import SymPyMatchingConstraint
+from .matching_rule import SymPyReplacementPattern, build_replacer, build_tracing_replacer
 from .conversion import register_head_converter

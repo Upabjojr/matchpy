@@ -7,7 +7,7 @@ Usage (from matchpy-wip/matchpy/ directory):
 
 The script reads the pre-computed fullformlist JSON produced from the Rubi
 Mathematica repository and translates every entry into a Python module of
-RubiRulePattern definitions.
+SymPyReplacementPattern definitions.
 
 Defaults:
     --json     : rubi_fullformlist_results.json
@@ -35,6 +35,30 @@ from sympy import Symbol as _sympy_Symbol
 # =============================================================================
 # Rubi-specific FFL helpers (operate on Int[integrand, x_Symbol] structure)
 # =============================================================================
+
+def _rewrite_gamma_arity(node):
+    """Split Mathematica's overloaded ``Gamma`` by arity, for the rubi layer.
+
+    ``Gamma[a]`` is the complete gamma function (SymPy ``gamma``) while
+    ``Gamma[a, z]`` is the UPPER INCOMPLETE one (SymPy ``uppergamma``) -- one Wolfram
+    head, two different SymPy functions, so it cannot be expressed as a name mapping
+    the way the other overrides in ``_EXTRA_SYMPY_HEADS`` are. Rewriting the head to a
+    private arity-tagged name lets the ordinary mapping machinery finish the job.
+
+    Without this the rules kept the Wolfram ``Gamma`` NODE in their patterns, which no
+    caller's expression can ever match (they pass ``gamma(a)`` / ``uppergamma(a, z)``),
+    so all 17 of those rules were dead.
+    """
+    if not isinstance(node, list) or not node:
+        return node
+    rewritten = [_rewrite_gamma_arity(child) for child in node]
+    if rewritten[0] == 'Gamma':
+        if len(rewritten) == 2:
+            rewritten[0] = 'Gamma$Complete'
+        elif len(rewritten) == 3:
+            rewritten[0] = 'Gamma$Upper'
+    return rewritten
+
 
 def _rubi_override_sympy_names() -> Dict[str, Any]:
     """Bare SymPy names introduced by the rubi_rules-level overrides.
@@ -553,6 +577,10 @@ _EXTRA_SYMPY_HEADS: Dict[str, str] = {
     # Gamma and related
     # NOTE: Gamma is NOT here — it needs a 2-arg wrapper (see RUBI_UTILS_MAP)
     'LogGamma': 'sympy.loggamma',
+    # Mathematica's Gamma is overloaded by arity; _rewrite_gamma_arity tags the head
+    # so each arity can map to the right SymPy function.
+    'Gamma$Complete': 'sympy.gamma',
+    'Gamma$Upper': 'sympy.uppergamma',
     'PolyGamma': 'sympy.polygamma',
     'Factorial': 'sympy.factorial',
     # Other special functions
@@ -860,13 +888,13 @@ def group_entries_by_output(entries: List[dict]) -> Dict[str, dict]:
 # =============================================================================
 
 class RubiRuleTranslator:
-    """Translate FFL rules into Python source with RubiRulePattern objects."""
+    """Translate FFL rules into Python source with SymPyReplacementPattern objects."""
 
     def __init__(self):
         self._converter = FFLConverter()
 
     def translate_module(self, rules: List, module_name: str, source_file: str = '') -> str:
-        """Translate FFL rules into a Python module with RubiRulePattern list."""
+        """Translate FFL rules into a Python module with SymPyReplacementPattern list."""
         all_non_optional, all_optional, all_symbols = _collect_wildcards_from_rules(
             self._converter, rules)
 
@@ -970,7 +998,7 @@ class RubiRuleTranslator:
 # Source: {source_file}
 # Module: {module_name}
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -980,7 +1008,7 @@ from sympy.logic.boolalg import Or, Not, And
 {_sympy_import_line()}
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, HeadRef, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils.inert_functions import (
@@ -1061,7 +1089,7 @@ Max = Symbol('Max')
     #   head wilds   F_[..] -> WildHeadApp[..] so a wildcard can BE a function head
     #   translate    integrand / replacement / constraints -> Python code strings
     #   validate     the emitted rule actually loads
-    #   emit         the RubiRulePattern(...) text
+    #   emit         the SymPyReplacementPattern(...) text
 
     @staticmethod
     def _split_conditions(rhs):
@@ -1200,7 +1228,7 @@ Max = Symbol('Max')
 
     def _translate_rule(self, ffl, rule_number: int, module_name: str,
                         load_ns: dict = None) -> Optional[str]:
-        """Translate one ``SetDelayed`` FFL rule into RubiRulePattern source text.
+        """Translate one ``SetDelayed`` FFL rule into SymPyReplacementPattern source text.
 
         Returns None when `ffl` is not an integration rule at all (see the
         `non_rules` counter in translate_module); raises ValueError when it is one
@@ -1208,6 +1236,7 @@ Max = Symbol('Max')
         """
         if not (isinstance(ffl, list) and len(ffl) >= 3 and ffl[0] == 'SetDelayed'):
             return None
+        ffl = _rewrite_gamma_arity(ffl)
         lhs, rhs = ffl[1], ffl[2]
         if not isinstance(lhs, list) or lhs[0] != 'Int':
             return None  # a utility predicate defined in a rule file, not a rule
@@ -1258,7 +1287,7 @@ Max = Symbol('Max')
             conditions, reserved, plain_wilds, opt_wilds, short_ns=short_ns)
 
         probe = (
-            f"RubiRulePattern(pattern=Int({pattern_code}, x), "
+            f"SymPyReplacementPattern(pattern=Int({pattern_code}, x), "
             f"constraints={constraints_frag}, replacement={replacement_code}, "
             f"module_name={module_name!r}, rule_number={rule_number})"
         )
@@ -1270,7 +1299,7 @@ Max = Symbol('Max')
             for g in dropped_guards
         ]
         lines_out += [
-            f"    RubiRulePattern(",
+            f"    SymPyReplacementPattern(",
             f"        pattern=Int({pattern_code}, x),",
             f"        constraints={constraints_frag},",
             f"        replacement={replacement_code},",

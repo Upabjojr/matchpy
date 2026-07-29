@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 from sympy_matching.conversion import to_matchpy_expression, matchpy_to_sympy
-from rubi_rules.base_objects import Int, RubiRulePattern, build_tracing_replacer
+from rubi_rules.base_objects import Int, SymPyReplacementPattern, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ
 
 
@@ -45,7 +45,7 @@ class TestRuleLoading:
     def test_rules_load(self):
         from rubi_rules.rules.r_1_algebraic_functions.r_1_1_binomial_products.r_1_1_1_linear.r_1_1_1_1 import RULES
         assert len(RULES) == 5
-        assert all(isinstance(r, RubiRulePattern) for r in RULES)
+        assert all(isinstance(r, SymPyReplacementPattern) for r in RULES)
 
     def test_build_replacer(self, replacer):
         assert len(replacer.matcher.patterns) == 5
@@ -132,12 +132,12 @@ class TestConstraints:
 # --- Test: Manual rule construction ---
 
 class TestManualRules:
-    """Test building rules manually with RubiRulePattern."""
+    """Test building rules manually with SymPyReplacementPattern."""
 
     def test_custom_rule(self):
         x = Symbol('x')
         n_ = WildSymbol('n_')
-        rule = RubiRulePattern(
+        rule = SymPyReplacementPattern(
             pattern=Int(x**n_, x),
             constraints=(FreeQ(n_, x), NeQ(n_, -1)),
             replacement=x**(n_ + 1) / (n_ + 1),

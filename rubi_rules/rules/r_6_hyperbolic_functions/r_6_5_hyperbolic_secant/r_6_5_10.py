@@ -6,7 +6,7 @@
 # Source: 6.5.10 (c+d x)^m (a+b sech)^n.m
 # Module: 6.5.10 (c+d x)^m (a+b sech)^n
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -55,7 +55,7 @@ v_ = WildSymbol('v')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*sech(v_)**_n_, x),
         constraints=(FreeQ([_m_, _n_], x), LinearQ([u_, v_], x), Not(LinearMatchQ([u_, v_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*sech(ExpandToSum(v_, x))**_n_, x),
@@ -63,7 +63,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*csch(v_)**_n_, x),
         constraints=(FreeQ([_m_, _n_], x), LinearQ([u_, v_], x), Not(LinearMatchQ([u_, v_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*csch(ExpandToSum(v_, x))**_n_, x),

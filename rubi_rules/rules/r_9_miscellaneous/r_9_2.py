@@ -6,7 +6,7 @@
 # Source: 9.2 Derivative integration rules.m, 9.2 Piecewise linear functions.m
 # Module: 9.2 Derivative integration rules
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, WildHeadApp, WildHeadDeriv, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -76,7 +76,7 @@ v_ = WildSymbol('v')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([f_, n_], x),),
         replacement=WFDeriv(f_, x, n_ - 1),
@@ -84,7 +84,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((F_**(x*_b_ + _a_)*_c_)**_p_*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, _c_, f_, F_, _p_], x), IGtQ(n_, 0),),
         replacement=-_b_*_p_*Int((F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ - 1), x)*log(F_) + (F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ - 1),
@@ -92,7 +92,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((F_**(x*_b_ + _a_)*_c_)**_p_*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, _c_, f_, F_, _p_], x), ILtQ(n_, 0),),
         replacement=(F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_)/(_b_*_p_*log(F_)) - Int((F_**(x*_b_ + _a_)*_c_)**_p_*WFDeriv(f_, x, n_ + 1), x)/(_b_*_p_*log(F_)),
@@ -100,7 +100,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(sin(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, f_], x), IGtQ(n_, 0),),
         replacement=-_b_*Int(WFDeriv(f_, x, n_ - 1)*cos(x*_b_ + _a_), x) + WFDeriv(f_, x, n_ - 1)*sin(x*_b_ + _a_),
@@ -108,7 +108,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(cos(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, f_], x), IGtQ(n_, 0),),
         replacement=_b_*Int(WFDeriv(f_, x, n_ - 1)*sin(x*_b_ + _a_), x) + WFDeriv(f_, x, n_ - 1)*cos(x*_b_ + _a_),
@@ -116,7 +116,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(sin(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, f_], x), ILtQ(n_, 0),),
         replacement=Int(WFDeriv(f_, x, n_ + 1)*cos(x*_b_ + _a_), x)/_b_ - WFDeriv(f_, x, n_)*cos(x*_b_ + _a_)/_b_,
@@ -124,7 +124,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(cos(x*_b_ + _a_)*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([_a_, _b_, f_], x), ILtQ(n_, 0),),
         replacement=-Int(WFDeriv(f_, x, n_ + 1)*sin(x*_b_ + _a_), x)/_b_ + WFDeriv(f_, x, n_)*sin(x*_b_ + _a_)/_b_,
@@ -132,7 +132,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadDeriv(f_, x, n_), x),
         constraints=(FreeQ([f_, n_], x), FunctionOfQ(WFDeriv(f_, x, n_ - 1), u_, x),),
         replacement=Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, n_ - 1)),
@@ -140,7 +140,7 @@ RULES = [
         rule_number=8,
     ),
     # Rule 9
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*(_a_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + _a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x)), x),
         constraints=(FreeQ([_a_, f_, g_], x), FunctionOfQ(WFApply(f_, x)*WFApply(g_, x), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)*WFApply(g_, x), u_, x), x), x), x, WFApply(f_, x)*WFApply(g_, x)),
@@ -148,7 +148,7 @@ RULES = [
         rule_number=9,
     ),
     # Rule 10
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _a_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, f_, g_, m_], x), EqQ(m1_, m_ - 1), FunctionOfQ(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1), u_, x), x), x), x, WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)),
@@ -156,7 +156,7 @@ RULES = [
         rule_number=10,
     ),
     # Rule 11
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _a_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
         constraints=(FreeQ([_a_, f_, g_, m_, n_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), FunctionOfQ(WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)*WFDeriv(g_, x, n_ - 1)),
@@ -164,7 +164,7 @@ RULES = [
         rule_number=11,
     ),
     # Rule 12
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadApp(f_, x)**_p_*(_a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x) + _b_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, _p_], x), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x), u_, x),),
         replacement=_b_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x), u_, x), x), x), x, WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)),
@@ -172,7 +172,7 @@ RULES = [
         rule_number=12,
     ),
     # Rule 13
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, m_, _p_], x), EqQ(m1_, m_ - 1), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x),),
         replacement=_b_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x), x), x), x, WFApply(g_, x)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1)),
@@ -180,7 +180,7 @@ RULES = [
         rule_number=13,
     ),
     # Rule 14
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, m_, _q_], x), EqQ(m1_, m_ - 1), EqQ(_a_*(_q_ + 1), _b_), FunctionOfQ(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1), u_, x), x), x), x, WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)),
@@ -188,7 +188,7 @@ RULES = [
         rule_number=14,
     ),
     # Rule 15
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, m_, n_, _p_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), EqQ(_a_, _b_*(_p_ + 1)), FunctionOfQ(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1), u_, x),),
         replacement=_b_*Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)),
@@ -196,7 +196,7 @@ RULES = [
         rule_number=15,
     ),
     # Rule 16
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadApp(f_, x)**_p_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x) + _b_*WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, _p_, _q_], x), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1), u_, x), x), x), x, WFApply(f_, x)**(_p_ + 1)*WFApply(g_, x)**(_q_ + 1))/(_p_ + 1),
@@ -204,7 +204,7 @@ RULES = [
         rule_number=16,
     ),
     # Rule 17
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*WildHeadApp(g_, x)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadApp(g_, x) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, 1)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, m_, _p_, _q_], x), EqQ(m1_, m_ - 1), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1), u_, x), x), x), x, WFApply(g_, x)**(_q_ + 1)*WFDeriv(f_, x, m_ - 1)**(_p_ + 1))/(_p_ + 1),
@@ -212,7 +212,7 @@ RULES = [
         rule_number=17,
     ),
     # Rule 18
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_*WildHeadDeriv(f_, x, m1_)**_p_*WildHeadDeriv(g_, x, n1_)**_q_*(_a_*WildHeadDeriv(f_, x, m_)*WildHeadDeriv(g_, x, n1_) + _b_*WildHeadDeriv(f_, x, m1_)*WildHeadDeriv(g_, x, n_)), x),
         constraints=(FreeQ([_a_, _b_, f_, g_, m_, n_, _p_, _q_], x), EqQ(m1_, m_ - 1), EqQ(n1_, n_ - 1), EqQ(_a_*(_q_ + 1), _b_*(_p_ + 1)), FunctionOfQ(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1), u_, x),),
         replacement=_a_*Subst(Int(SimplifyIntegrand(SubstFor(WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1), u_, x), x), x), x, WFDeriv(f_, x, m_ - 1)**(_p_ + 1)*WFDeriv(g_, x, n_ - 1)**(_q_ + 1))/(_p_ + 1),
@@ -220,7 +220,7 @@ RULES = [
         rule_number=18,
     ),
     # Rule 19
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x), x),
         constraints=(FreeQ([f_, g_], x),),
         replacement=WFApply(f_, x)*WFApply(g_, x),
@@ -228,7 +228,7 @@ RULES = [
         rule_number=19,
     ),
     # Rule 20
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((-WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x))*WildHeadApp(g_, x)**(-2), x),
         constraints=(FreeQ([f_, g_], x),),
         replacement=WFApply(f_, x)/WFApply(g_, x),
@@ -236,7 +236,7 @@ RULES = [
         rule_number=20,
     ),
     # Rule 21
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((-WildHeadApp(f_, x)*WildHeadDeriv(g_, x, 1) + WildHeadDeriv(f_, x, 1)*WildHeadApp(g_, x))*(WildHeadApp(f_, x)*WildHeadApp(g_, x))**(-1), x),
         constraints=(FreeQ([f_, g_], x),),
         replacement=log(WFApply(f_, x)/WFApply(g_, x)),
@@ -244,7 +244,7 @@ RULES = [
         rule_number=21,
     ),
     # Rule 22
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_, x),
         constraints=(FreeQ(_m_, x), PiecewiseLinearQ(u_, x),),
         replacement=With({c: Simplify(D(u_, x))}, Star(1/c, Subst(Int(x**_m_, x), x, u_))),
@@ -252,7 +252,7 @@ RULES = [
         rule_number=22,
     ),
     # Rule 23
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(v_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star((-a*v_ + b*u_)/a, Int(1/u_, x)) + b*x/a),
@@ -260,7 +260,7 @@ RULES = [
         rule_number=23,
     ),
     # Rule 24
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), GtQ(n_, 0), NeQ(n_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star((-a*v_ + b*u_)/a, Int(v_**(n_ - 1)/u_, x)) + v_**n_/(a*n_)),
@@ -268,7 +268,7 @@ RULES = [
         rule_number=24,
     ),
     # Rule 25
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(u_*v_), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(a/(-a*v_ + b*u_), Int(1/u_, x)) + Star(b/(-a*v_ + b*u_), Int(1/v_, x))),
@@ -276,7 +276,7 @@ RULES = [
         rule_number=25,
     ),
     # Rule 26
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(v_)/Rt((-a*v_ + b*u_)/a, 2))/(a*Rt((-a*v_ + b*u_)/a, 2))),
@@ -284,7 +284,7 @@ RULES = [
         rule_number=26,
     ),
     # Rule 27
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(u_*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ((u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)))/Simplify(D(u_, x))),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -2*atanh(sqrt(v_)/Rt((a*v_ - b*u_)/a, 2))/(a*Rt((a*v_ - b*u_)/a, 2))),
@@ -292,7 +292,7 @@ RULES = [
         rule_number=27,
     ),
     # Rule 28
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), LtQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, v_**(n_ + 1)/((n_ + 1)*(-a*v_ + b*u_)) - Star(a/(-a*v_ + b*u_), Int(v_**(n_ + 1)/u_, x))),
@@ -300,7 +300,7 @@ RULES = [
         rule_number=28,
     ),
     # Rule 29
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(v_**n_/u_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(IntegerQ(n_)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, v_**(n_ + 1)*hyper((1, n_ + 1), (n_ + 2,), -a*v_/(-a*v_ + b*u_))/((n_ + 1)*(-a*v_ + b*u_))),
@@ -308,7 +308,7 @@ RULES = [
         rule_number=29,
     ),
     # Rule 30
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), PosQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atanh(sqrt(u_)*Rt(a*b, 2)/(a*sqrt(v_)))/Rt(a*b, 2)),
@@ -316,7 +316,7 @@ RULES = [
         rule_number=30,
     ),
     # Rule 31
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(sqrt(u_)*sqrt(v_)), x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0), NegQ(Simplify(D(u_, x))*Simplify(D(v_, x))),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, 2*atan(sqrt(u_)*Rt(-a*b, 2)/(a*sqrt(v_)))/Rt(-a*b, 2)),
@@ -324,7 +324,7 @@ RULES = [
         rule_number=31,
     ),
     # Rule 32
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(FreeQ([m_, n_], x), PiecewiseLinearQ(u_, v_, x), EqQ(m_ + n_ + 2, 0), NeQ(m_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_))),
@@ -332,7 +332,7 @@ RULES = [
         rule_number=32,
     ),
     # Rule 33
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**_n_, x),
         constraints=(FreeQ([m_, _n_], x), PiecewiseLinearQ(u_, v_, x), NeQ(m_, -1), Or(And(LtQ(m_, -1), GtQ(_n_, 0), Not(And(ILtQ(m_ + _n_, -2), Or(FractionQ(m_), GeQ(m_ + 2*_n_ + 1, 0))))), And(IGtQ(_n_, 0), IGtQ(m_, 0), LeQ(_n_, m_)), And(IGtQ(_n_, 0), Not(IntegerQ(m_))), And(ILtQ(m_, 0), Not(IntegerQ(_n_)))), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(b*_n_/(a*(m_ + 1)), Int(u_**(m_ + 1)*v_**(_n_ - 1), x)) + u_**(m_ + 1)*v_**_n_/(a*(m_ + 1))),
@@ -340,7 +340,7 @@ RULES = [
         rule_number=33,
     ),
     # Rule 34
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**_n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + _n_ + 2, 0), GtQ(_n_, 0), NeQ(m_ + _n_ + 1, 0), Not(And(IGtQ(m_, 0), Or(Not(IntegerQ(_n_)), LtQ(0, m_, _n_)))), Not(ILtQ(m_ + _n_, -2)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(_n_*(-a*v_ + b*u_)/(a*(m_ + _n_ + 1)), Int(u_**m_*v_**(_n_ - 1), x)) + u_**(m_ + 1)*v_**_n_/(a*(m_ + _n_ + 1))),
@@ -348,7 +348,7 @@ RULES = [
         rule_number=34,
     ),
     # Rule 35
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 1, 0), Not(RationalQ(n_)), SumSimplerQ(n_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -Star(n_*(-a*v_ + b*u_)/(a*(m_ + n_ + 1)), Int(u_**m_*v_**Simplify(n_ - 1), x)) + u_**(m_ + 1)*v_**n_/(a*(m_ + n_ + 1))),
@@ -356,7 +356,7 @@ RULES = [
         rule_number=35,
     ),
     # Rule 36
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), NeQ(m_ + n_ + 2, 0), LtQ(m_, -1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_)) + Star(b*(m_ + n_ + 2)/((m_ + 1)*(-a*v_ + b*u_)), Int(u_**(m_ + 1)*v_**n_, x))),
@@ -364,7 +364,7 @@ RULES = [
         rule_number=36,
     ),
     # Rule 37
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(RationalQ(m_)), SumSimplerQ(m_, 1), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, -u_**(m_ + 1)*v_**(n_ + 1)/((m_ + 1)*(-a*v_ + b*u_)) + Star(b*(m_ + n_ + 2)/((m_ + 1)*(-a*v_ + b*u_)), Int(u_**Simplify(m_ + 1)*v_**n_, x))),
@@ -372,7 +372,7 @@ RULES = [
         rule_number=37,
     ),
     # Rule 38
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_*v_**n_, x),
         constraints=(PiecewiseLinearQ(u_, v_, x), Not(IntegerQ(m_)), Not(IntegerQ(n_)), NeQ(u_*Simplify(D(v_, x)) - v_*Simplify(D(u_, x)), 0),),
         replacement=With({a: Simplify(D(u_, x)), b: Simplify(D(v_, x))}, u_**m_*v_**(n_ + 1)*hyper((-m_, n_ + 1), (n_ + 2,), -a*v_/(-a*v_ + b*u_))/(b*(b*u_/(-a*v_ + b*u_))**m_*(n_ + 1))),
@@ -380,7 +380,7 @@ RULES = [
         rule_number=38,
     ),
     # Rule 39
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_n_*log(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0),),
         replacement=With({c: Simplify(D(u_, x))}, -Int(u_**_n_, x) - Star(c*_n_/_b_, Int(u_**(_n_ - 1)*(x*_b_ + _a_)*log(x*_b_ + _a_), x)) + u_**_n_*(x*_b_ + _a_)*log(x*_b_ + _a_)/_b_),
@@ -388,7 +388,7 @@ RULES = [
         rule_number=39,
     ),
     # Rule 40
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_n_*(x*_b_ + _a_)**_m_*log(x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _m_], x), PiecewiseLinearQ(u_, x), Not(LinearQ(u_, x)), GtQ(_n_, 0), NeQ(_m_, -1),),
         replacement=With({c: Simplify(D(u_, x))}, -Star(c*_n_/(_b_*(_m_ + 1)), Int(u_**(_n_ - 1)*(x*_b_ + _a_)**(_m_ + 1)*log(x*_b_ + _a_), x)) - Star(1/(_m_ + 1), Int(u_**_n_*(x*_b_ + _a_)**_m_, x)) + u_**_n_*(x*_b_ + _a_)**(_m_ + 1)*log(x*_b_ + _a_)/(_b_*(_m_ + 1))),

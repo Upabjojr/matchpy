@@ -6,7 +6,7 @@
 # Source: 8.7 Zeta function.m
 # Module: 8.7 Zeta function
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -17,7 +17,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -59,7 +59,7 @@ s_ = WildSymbol('s')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(zeta(2, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_], x),),
         replacement=Int(polygamma(1, x*_b_ + _a_), x),
@@ -67,7 +67,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, s_], x), NeQ(s_, 1), NeQ(s_, 2),),
         replacement=-zeta(s_ - 1, x*_b_ + _a_)/(_b_*(s_ - 1)),
@@ -75,7 +75,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_*zeta(2, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), RationalQ(_m_),),
         replacement=Int((x*_d_ + _c_)**_m_*polygamma(1, x*_b_ + _a_), x),
@@ -83,7 +83,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_*zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, s_], x), NeQ(s_, 1), NeQ(s_, 2), GtQ(_m_, 0),),
         replacement=_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*zeta(s_ - 1, x*_b_ + _a_), x)/(_b_*(s_ - 1)) - (x*_d_ + _c_)**_m_*zeta(s_ - 1, x*_b_ + _a_)/(_b_*(s_ - 1)),
@@ -91,7 +91,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_*zeta(s_, x*_b_ + _a_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, s_], x), NeQ(s_, 1), NeQ(s_, 2), LtQ(_m_, -1),),
         replacement=_b_*s_*Int((x*_d_ + _c_)**(_m_ + 1)*zeta(s_ + 1, x*_b_ + _a_), x)/(_d_*(_m_ + 1)) + (x*_d_ + _c_)**(_m_ + 1)*zeta(s_, x*_b_ + _a_)/(_d_*(_m_ + 1)),

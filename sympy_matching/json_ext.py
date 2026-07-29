@@ -165,7 +165,7 @@ register_wrapped_value_deserializer('sympy', _deserialize_sympy_value)
 # =============================================================================
 # Python tuple serialization -- for multi-variable constraint args
 # =============================================================================
-# SympyMatchingConstraint.__new__ (sympy_matching/constraint.py) normalises list
+# SymPyMatchingConstraint.__new__ (sympy_matching/constraint.py) normalises list
 # args to tuples so that constraint.args is always hashable (required by SymPy
 # Basic.__hash__). When a constraint such as the Wolfram FreeQ(['a', 'b'], x) is
 # serialised its first arg is the Python tuple (Symbol('a'), Symbol('b')) and

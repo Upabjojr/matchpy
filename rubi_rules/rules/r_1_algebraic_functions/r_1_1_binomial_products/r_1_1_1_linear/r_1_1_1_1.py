@@ -6,7 +6,7 @@
 # Source: 1.1.1.1 (a+b x)^m.m
 # Module: 1.1.1.1 (a+b x)^m
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -17,7 +17,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -55,7 +55,7 @@ u_ = WildSymbol('u')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/x, x),
         constraints=(),
         replacement=log(x),
@@ -63,7 +63,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_, x),
         constraints=(FreeQ(_m_, x), NeQ(_m_, -1),),
         replacement=x**(_m_ + 1)/(_m_ + 1),
@@ -71,7 +71,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(x*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_], x),),
         replacement=log(x*_b_ + a_)/_b_,
@@ -79,7 +79,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_b_ + _a_)**m_, x),
         constraints=(FreeQ([_a_, _b_, m_], x), NeQ(m_, -1),),
         replacement=(x*_b_ + _a_)**(m_ + 1)/(_b_*(m_ + 1)),
@@ -87,7 +87,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_a_ + _b_*u_)**m_, x),
         constraints=(FreeQ([_a_, _b_, m_], x), LinearQ(u_, x), NeQ(u_, x),),
         replacement=Subst(Int((x*_b_ + _a_)**m_, x), x, u_)/Coefficient(u_, x, 1),

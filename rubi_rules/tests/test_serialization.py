@@ -2,7 +2,7 @@
 """Tests for serialization/deserialization of Rubi rules and replacers.
 
 Tests that:
-- RubiRulePattern expressions (pattern + replacement) survive JSON roundtrip
+- SymPyReplacementPattern expressions (pattern + replacement) survive JSON roundtrip
 - Constraint objects can be serialized and deserialized
 - A full replacer can be serialized, deserialized, and still integrates correctly
 """
@@ -23,7 +23,7 @@ import sympy_matching  # registers json_ext handlers
 from matchpy.matching.json_serialization import serialize_wrapped_value, deserialize_wrapped_value
 from sympy_matching.json_ext import deserialize_sympy_expr
 
-from rubi_rules.base_objects import Int, RubiRulePattern, _rubi_integrator, build_tracing_replacer
+from rubi_rules.base_objects import Int, SymPyReplacementPattern, _rubi_integrator, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ, PositiveQ, NegativeQ
 
 
@@ -146,14 +146,14 @@ class TestExpressionSerialization:
 
 
 # =============================================================================
-# Test: Full RubiRulePattern serialization
+# Test: Full SymPyReplacementPattern serialization
 # =============================================================================
 
-class TestRubiRulePatternSerialization:
-    """Test that a full RubiRulePattern can be serialized and deserialized."""
+class TestSymPyReplacementPatternSerialization:
+    """Test that a full SymPyReplacementPattern can be serialized and deserialized."""
 
     def _serialize_rule(self, rule):
-        """Serialize a RubiRulePattern to JSON-safe dict."""
+        """Serialize a SymPyReplacementPattern to JSON-safe dict."""
         constraints_data = []
         for c in rule.constraints:
             # Use SymPy's func(*args) invariant: store class name + args
@@ -168,7 +168,7 @@ class TestRubiRulePatternSerialization:
         }
 
     def _deserialize_rule(self, data):
-        """Deserialize a RubiRulePattern from a dict."""
+        """Deserialize a SymPyReplacementPattern from a dict."""
         wild_cache = {}
         pattern = deserialize_sympy_expr(data['pattern'], wild_cache)
         replacement = deserialize_sympy_expr(data['replacement'], wild_cache)
@@ -183,7 +183,7 @@ class TestRubiRulePatternSerialization:
             args = [deserialize_wrapped_value(a) for a in cd['args']]
             constraints.append(cls(*args))
 
-        return RubiRulePattern(
+        return SymPyReplacementPattern(
             pattern=pattern,
             constraints=tuple(constraints),
             replacement=replacement,
@@ -192,7 +192,7 @@ class TestRubiRulePatternSerialization:
         )
 
     def test_simple_rule_roundtrip(self, x):
-        rule = RubiRulePattern(
+        rule = SymPyReplacementPattern(
             pattern=Int(1/x, x),
             constraints=(),
             replacement=log(x),
@@ -207,7 +207,7 @@ class TestRubiRulePatternSerialization:
 
     def test_rule_with_constraints(self, x, wild_symbols):
         a_, b_, m_, n_ = wild_symbols
-        rule = RubiRulePattern(
+        rule = SymPyReplacementPattern(
             pattern=Int(x**m_, x),
             constraints=(FreeQ(m_, x), NeQ(m_, -1)),
             replacement=x**(m_ + 1)/(m_ + 1),
@@ -225,7 +225,7 @@ class TestRubiRulePatternSerialization:
 
     def test_full_json_string_roundtrip(self, x, wild_symbols):
         a_, b_, m_, n_ = wild_symbols
-        rule = RubiRulePattern(
+        rule = SymPyReplacementPattern(
             pattern=Int((a_ + b_*x)**m_, x),
             constraints=(FreeQ(a_, x), FreeQ(b_, x), FreeQ(m_, x), NeQ(m_, -1)),
             replacement=(a_ + b_*x)**(m_ + 1) / (b_*(m_ + 1)),
@@ -249,7 +249,7 @@ class TestFunctionalRoundtrip:
     """Test that serialized rules rebuild a working replacer."""
 
     def _serialize_rules(self, rules):
-        """Serialize a list of RubiRulePattern."""
+        """Serialize a list of SymPyReplacementPattern."""
         result = []
         for rule in rules:
             constraints_data = []
@@ -266,7 +266,7 @@ class TestFunctionalRoundtrip:
         return result
 
     def _deserialize_rules(self, data_list):
-        """Deserialize a list of RubiRulePattern using shared wild_cache."""
+        """Deserialize a list of SymPyReplacementPattern using shared wild_cache."""
         cls_map = {'FreeQ': FreeQ, 'NeQ': NeQ, 'IntegerQ': IntegerQ,
                    'PositiveQ': PositiveQ, 'NegativeQ': NegativeQ}
         rules = []
@@ -279,7 +279,7 @@ class TestFunctionalRoundtrip:
                 cls = cls_map[cd['cls']]
                 args = [deserialize_wrapped_value(a) for a in cd['args']]
                 constraints.append(cls(*args))
-            rules.append(RubiRulePattern(
+            rules.append(SymPyReplacementPattern(
                 pattern=pattern, constraints=tuple(constraints), replacement=replacement,
                 module_name="TEST",
                 rule_number=1,
@@ -288,7 +288,7 @@ class TestFunctionalRoundtrip:
 
     def test_single_rule_integrate(self, x):
         """Serialize 1 rule, rebuild, integrate."""
-        rules = [RubiRulePattern(
+        rules = [SymPyReplacementPattern(
                     pattern=Int(1/x, x), constraints=(), replacement=log(x),
                     module_name="TEST",
                     rule_number=1,
@@ -307,7 +307,7 @@ class TestFunctionalRoundtrip:
         """Serialize power rule with constraints, rebuild, integrate."""
         a_, b_, m_, n_ = wild_symbols
         rules = [
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int(x**m_, x),
                 constraints=(FreeQ(m_, x), NeQ(m_, -1)),
                 replacement=x**(m_ + 1)/(m_ + 1),
@@ -335,15 +335,15 @@ class TestFunctionalRoundtrip:
         """Serialize multiple rules, rebuild, integrate different expressions."""
         a_, b_, m_, n_ = wild_symbols
         rules = [
-            RubiRulePattern(pattern=Int(1/x, x), constraints=(), replacement=log(x)),
-            RubiRulePattern(
+            SymPyReplacementPattern(pattern=Int(1/x, x), constraints=(), replacement=log(x)),
+            SymPyReplacementPattern(
                 pattern=Int(x**m_, x),
                 constraints=(FreeQ(m_, x), NeQ(m_, -1)),
                 replacement=x**(m_ + 1)/(m_ + 1),
                 module_name="TEST",
                 rule_number=1,
             ),
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int(1/(a_ + b_*x), x),
                 constraints=(FreeQ(a_, x), FreeQ(b_, x)),
                 replacement=log(a_ + b_*x)/b_,
@@ -432,28 +432,28 @@ class TestManyToOneReplacerSerialization:
         """Build a replacer with multiple rules."""
         a_, b_, m_, n_ = wild_symbols
         rules = [
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int(1/x, x),
                 constraints=(),
                 replacement=log(x),
                 module_name="TEST",
                 rule_number=1,
             ),
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int(x**m_, x),
                 constraints=(FreeQ(m_, x), NeQ(m_, -1)),
                 replacement=x**(m_ + 1)/(m_ + 1),
                 module_name="TEST",
                 rule_number=2,
             ),
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int(1/(a_ + b_*x), x),
                 constraints=(FreeQ(a_, x), FreeQ(b_, x)),
                 replacement=log(a_ + b_*x)/b_,
                 module_name="TEST",
                 rule_number=3,
             ),
-            RubiRulePattern(
+            SymPyReplacementPattern(
                 pattern=Int((a_ + b_*x)**m_, x),
                 constraints=(FreeQ(a_, x), FreeQ(b_, x), FreeQ(m_, x), NeQ(m_, -1)),
                 replacement=(a_ + b_*x)**(m_ + 1)/(b_*(m_ + 1)),

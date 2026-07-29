@@ -6,7 +6,7 @@
 # Source: 1.2.2.4 (f x)^m (d+e x^2)^q (a+b x^2+c x^4)^p.m
 # Module: 1.2.2.4 (f x)^m (d+e x^2)^q (a+b x^2+c x^4)^p
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -75,7 +75,7 @@ q_ = WildSymbol('q')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_)**q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _e_, _p_, q_], x), Not(IntegerQ(q_)), IntegerQ(_m_/2 + sympy.S(-1)/2),),
         replacement=_e_**(sympy.S.Half - _m_/2)*Subst(Int((x*_e_)**(_m_/2 + q_ + sympy.S(-1)/2)*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**2)/2,
@@ -83,7 +83,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_)**q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, _e_, _p_, q_], x), Not(IntegerQ(q_)), IntegerQ(_m_/2 + sympy.S(-1)/2),),
         replacement=_e_**(sympy.S.Half - _m_/2)*Subst(Int((x*_e_)**(_m_/2 + q_ + sympy.S(-1)/2)*(x**2*_c_ + a_)**_p_, x), x, x**2)/2,
@@ -91,7 +91,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_)**q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _m_, _p_, q_], x), Not(IntegerQ(q_)),),
         replacement=_e_**IntPart(q_)*(x**2*_e_)**FracPart(q_)*Int((x*_f_)**(_m_ + 2*q_)*(x**4*_c_ + x**2*_b_ + a_)**_p_, x)/(_f_**(2*IntPart(q_))*(x*_f_)**(2*FracPart(q_))),
@@ -99,7 +99,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_)**q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, _e_, _f_, _m_, _p_, q_], x), Not(IntegerQ(q_)),),
         replacement=_e_**IntPart(q_)*(x**2*_e_)**FracPart(q_)*Int((x*_f_)**(_m_ + 2*q_)*(x**4*_c_ + a_)**_p_, x)/(_f_**(2*IntPart(q_))*(x*_f_)**(2*FracPart(q_))),
@@ -107,7 +107,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _p_, _q_], x),),
         replacement=Subst(Int((x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**2)/2,
@@ -115,7 +115,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _p_, _q_], x),),
         replacement=Subst(Int((x*_e_ + d_)**_q_*(x**2*_c_ + a_)**_p_, x), x, x**2)/2,
@@ -123,7 +123,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, p_, _q_], x), EqQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)), IGtQ(_m_/2 + sympy.S.Half, 0),),
         replacement=Subst(Int(x**(_m_/2 + sympy.S(-1)/2)*(x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**p_, x), x, x**2)/2,
@@ -131,7 +131,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, p_, _q_], x), EqQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=(x**4*_c_ + x**2*_b_ + a_)**FracPart(p_)*Int((x*_f_)**_m_*(x**2*_c_ + _b_/2)**(2*p_)*(x**2*_e_ + d_)**_q_, x)/(_c_**IntPart(p_)*(x**2*_c_ + _b_/2)**(2*FracPart(p_))),
@@ -139,7 +139,7 @@ RULES = [
         rule_number=8,
     ),
     # Rule 9
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _p_, _q_], x), IntegerQ(_m_/2 + sympy.S(-1)/2),),
         replacement=Subst(Int(x**(_m_/2 + sympy.S(-1)/2)*(x*_e_ + d_)**_q_*(x**2*_c_ + x*_b_ + a_)**_p_, x), x, x**2)/2,
@@ -147,7 +147,7 @@ RULES = [
         rule_number=9,
     ),
     # Rule 10
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _p_, _q_], x), IntegerQ(_m_/2 + sympy.S.Half),),
         replacement=Subst(Int(x**(_m_/2 + sympy.S(-1)/2)*(x*_e_ + d_)**_q_*(x**2*_c_ + a_)**_p_, x), x, x**2)/2,
@@ -155,7 +155,7 @@ RULES = [
         rule_number=10,
     ),
     # Rule 11
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2, 0), IntegerQ(_p_),),
         replacement=Int((x*_f_)**_m_*(x**2*_e_ + d_)**(_p_ + _q_)*(x**2*_c_/_e_ + a_/d_)**_p_, x),
@@ -163,7 +163,7 @@ RULES = [
         rule_number=11,
     ),
     # Rule 12
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _q_, _m_, _q_], x), EqQ(a_*_e_**2 + _c_*d_**2, 0), IntegerQ(_p_),),
         replacement=Int((x*_f_)**_m_*(x**2*_e_ + d_)**(_p_ + _q_)*(x**2*_c_/_e_ + a_/d_)**_p_, x),
@@ -171,7 +171,7 @@ RULES = [
         rule_number=12,
     ),
     # Rule 13
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, p_, q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2, 0), Not(IntegerQ(p_)),),
         replacement=(x**4*_c_ + x**2*_b_ + a_)**FracPart(p_)*Int((x*_f_)**_m_*(x**2*_e_ + d_)**(p_ + q_)*(x**2*_c_/_e_ + a_/d_)**p_, x)/((x**2*_e_ + d_)**FracPart(p_)*(x**2*_c_/_e_ + a_/d_)**FracPart(p_)),
@@ -179,7 +179,7 @@ RULES = [
         rule_number=13,
     ),
     # Rule 14
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, p_, q_], x), EqQ(a_*_e_**2 + _c_*d_**2, 0), Not(IntegerQ(p_)),),
         replacement=(x**4*_c_ + a_)**FracPart(p_)*Int((x*_f_)**_m_*(x**2*_e_ + d_)**(p_ + q_)*(x**2*_c_/_e_ + a_/d_)**p_, x)/((x**2*_e_ + d_)**FracPart(p_)*(x**2*_c_/_e_ + a_/d_)**FracPart(p_)),
@@ -187,7 +187,7 @@ RULES = [
         rule_number=14,
     ),
     # Rule 15
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), ILtQ(q_, -1), IGtQ(_m_/2, 0),),
         replacement=x*_e_**(-_m_/2 - 2*_p_)*(-d_)**(_m_/2 - 1)*(x**2*_e_ + d_)**(q_ + 1)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_/(2*(q_ + 1)) + _e_**(-_m_/2 - 2*_p_)*Int((x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((2*x**_m_*_e_**(_m_/2 + 2*_p_)*(q_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**_p_ - (-d_)**(_m_/2 - 1)*(x**2*_e_*(2*q_ + 3) + d_)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_)/(x**2*_e_ + d_)), x), x)/(2*(q_ + 1)),
@@ -195,7 +195,7 @@ RULES = [
         rule_number=15,
     ),
     # Rule 16
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), IGtQ(_p_, 0), ILtQ(q_, -1), IGtQ(_m_/2, 0),),
         replacement=x*_e_**(-_m_/2 - 2*_p_)*(-d_)**(_m_/2 - 1)*(x**2*_e_ + d_)**(q_ + 1)*(a_*_e_**2 + _c_*d_**2)**_p_/(2*(q_ + 1)) + _e_**(-_m_/2 - 2*_p_)*Int((x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((2*x**_m_*_e_**(_m_/2 + 2*_p_)*(q_ + 1)*(x**4*_c_ + a_)**_p_ - (-d_)**(_m_/2 - 1)*(a_*_e_**2 + _c_*d_**2)**_p_*(x**2*_e_*(2*q_ + 3) + d_))/(x**2*_e_ + d_)), x), x)/(2*(q_ + 1)),
@@ -203,7 +203,7 @@ RULES = [
         rule_number=16,
     ),
     # Rule 17
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), ILtQ(q_, -1), ILtQ(m_/2, 0),),
         replacement=x*_e_**(-m_/2 - 2*_p_)*(-d_)**(m_/2 - 1)*(x**2*_e_ + d_)**(q_ + 1)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_/(2*(q_ + 1)) + (-d_)**(m_/2 - 1)*Int(x**m_*(x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((2*_e_**(2*_p_)*(-d_)**(1 - m_/2)*(q_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**_p_ - (x**2*_e_*(2*q_ + 3) + d_)*(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2)**_p_/(x**m_*_e_**(m_/2)))/(x**2*_e_ + d_)), x), x)/(2*_e_**(2*_p_)*(q_ + 1)),
@@ -211,7 +211,7 @@ RULES = [
         rule_number=17,
     ),
     # Rule 18
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), IGtQ(_p_, 0), ILtQ(q_, -1), ILtQ(m_/2, 0),),
         replacement=x*_e_**(-m_/2 - 2*_p_)*(-d_)**(m_/2 - 1)*(x**2*_e_ + d_)**(q_ + 1)*(a_*_e_**2 + _c_*d_**2)**_p_/(2*(q_ + 1)) + (-d_)**(m_/2 - 1)*Int(x**m_*(x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(Together((2*_e_**(2*_p_)*(-d_)**(1 - m_/2)*(q_ + 1)*(x**4*_c_ + a_)**_p_ - (a_*_e_**2 + _c_*d_**2)**_p_*(x**2*_e_*(2*q_ + 3) + d_)/(x**m_*_e_**(m_/2)))/(x**2*_e_ + d_)), x), x)/(2*_e_**(2*_p_)*(q_ + 1)),
@@ -219,7 +219,7 @@ RULES = [
         rule_number=18,
     ),
     # Rule 19
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), IGtQ(_q_, -2),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x), x),
@@ -227,7 +227,7 @@ RULES = [
         rule_number=19,
     ),
     # Rule 20
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, _q_], x), IGtQ(_p_, 0), IGtQ(_q_, -2),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x), x),
@@ -235,7 +235,7 @@ RULES = [
         rule_number=20,
     ),
     # Rule 21
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), LtQ(q_, -1), GtQ(_m_, 0),),
         replacement=With({Qx: PolynomialQuotient((x**4*_c_ + x**2*_b_ + a_)**_p_, x**2*_e_ + d_, x), R: Coeff(PolynomialRemainder((x**4*_c_ + x**2*_b_ + a_)**_p_, x**2*_e_ + d_, x), x, 0)}, -R*(x*_f_)**(_m_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*_f_*(q_ + 1)) + _f_*Int((x*_f_)**(_m_ - 1)*(x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(2*Qx*x*d_*(q_ + 1) + R*x*(_m_ + 2*q_ + 3), x), x)/(2*d_*(q_ + 1))),
@@ -243,7 +243,7 @@ RULES = [
         rule_number=21,
     ),
     # Rule 22
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), IGtQ(_p_, 0), LtQ(q_, -1), GtQ(_m_, 0),),
         replacement=With({Qx: PolynomialQuotient((x**4*_c_ + a_)**_p_, x**2*_e_ + d_, x), R: Coeff(PolynomialRemainder((x**4*_c_ + a_)**_p_, x**2*_e_ + d_, x), x, 0)}, -R*(x*_f_)**(_m_ + 1)*(x**2*_e_ + d_)**(q_ + 1)/(2*d_*_f_*(q_ + 1)) + _f_*Int((x*_f_)**(_m_ - 1)*(x**2*_e_ + d_)**(q_ + 1)*ExpandToSum(2*Qx*x*d_*(q_ + 1) + R*x*(_m_ + 2*q_ + 3), x), x)/(2*d_*(q_ + 1))),
@@ -251,7 +251,7 @@ RULES = [
         rule_number=22,
     ),
     # Rule 23
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), LtQ(m_, -1),),
         replacement=With({Qx: PolynomialQuotient((x**4*_c_ + x**2*_b_ + a_)**_p_, x*_f_, x), R: PolynomialRemainder((x**4*_c_ + x**2*_b_ + a_)**_p_, x*_f_, x)}, R*(x*_f_)**(m_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(d_*_f_*(m_ + 1)) + Int((x*_f_)**(m_ + 2)*(x**2*_e_ + d_)**_q_*ExpandToSum(Qx*d_*_f_*(m_ + 1)/x - R*_e_*(m_ + 2*_q_ + 3), x), x)/(d_*_f_**2*(m_ + 1))),
@@ -259,7 +259,7 @@ RULES = [
         rule_number=23,
     ),
     # Rule 24
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _q_], x), IGtQ(_p_, 0), LtQ(m_, -1),),
         replacement=With({Qx: PolynomialQuotient((x**4*_c_ + a_)**_p_, x*_f_, x), R: PolynomialRemainder((x**4*_c_ + a_)**_p_, x*_f_, x)}, R*(x*_f_)**(m_ + 1)*(x**2*_e_ + d_)**(_q_ + 1)/(d_*_f_*(m_ + 1)) + Int((x*_f_)**(m_ + 2)*(x**2*_e_ + d_)**_q_*ExpandToSum(Qx*d_*_f_*(m_ + 1)/x - R*_e_*(m_ + 2*_q_ + 3), x), x)/(d_*_f_**2*(m_ + 1))),
@@ -267,7 +267,7 @@ RULES = [
         rule_number=24,
     ),
     # Rule 25
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(_p_, 0), Not(IntegerQ(_q_)), NeQ(_m_ + 4*_p_ + 2*_q_ + 1, 0),),
         replacement=_c_**_p_*_f_**(1 - 4*_p_)*(x*_f_)**(_m_ + 4*_p_ - 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_e_*(_m_ + 4*_p_ + 2*_q_ + 1)) + Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*ExpandToSum(-x**(4*_p_ - 2)*_c_**_p_*d_*(_m_ + 4*_p_ - 1) + _e_*(-x**(4*_p_)*_c_**_p_ + (x**4*_c_ + x**2*_b_ + a_)**_p_)*(_m_ + 4*_p_ + 2*_q_ + 1), x), x)/(_e_*(_m_ + 4*_p_ + 2*_q_ + 1)),
@@ -275,7 +275,7 @@ RULES = [
         rule_number=25,
     ),
     # Rule 26
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, _q_], x), IGtQ(_p_, 0), Not(IntegerQ(_q_)), NeQ(_m_ + 4*_p_ + 2*_q_ + 1, 0),),
         replacement=_c_**_p_*_f_**(1 - 4*_p_)*(x*_f_)**(_m_ + 4*_p_ - 1)*(x**2*_e_ + d_)**(_q_ + 1)/(_e_*(_m_ + 4*_p_ + 2*_q_ + 1)) + Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*ExpandToSum(-x**(4*_p_ - 2)*_c_**_p_*d_*(_m_ + 4*_p_ - 1) + _e_*(-x**(4*_p_)*_c_**_p_ + (x**4*_c_ + a_)**_p_)*(_m_ + 4*_p_ + 2*_q_ + 1), x), x)/(_e_*(_m_ + 4*_p_ + 2*_q_ + 1)),
@@ -283,7 +283,7 @@ RULES = [
         rule_number=26,
     ),
     # Rule 27
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, p_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), FractionQ(m_), IntegerQ(p_),),
         replacement=With({k: Denominator(m_)}, k*Subst(Int(x**(k*(m_ + 1) - 1)*(x**(2*k)*_e_/_f_**2 + d_)**_q_*(x**(4*k)*_c_/_f_**4 + x**(2*k)*_b_/_f_**k + a_)**p_, x), x, (x*_f_)**(1/k))/_f_),
@@ -291,7 +291,7 @@ RULES = [
         rule_number=27,
     ),
     # Rule 28
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, p_, _q_], x), FractionQ(m_), IntegerQ(p_),),
         replacement=With({k: Denominator(m_)}, k*Subst(Int(x**(k*(m_ + 1) - 1)*(x**(2*k)*_e_/_f_ + d_)**_q_*(x**(4*k)*_c_/_f_ + a_)**p_, x), x, (x*_f_)**(1/k))/_f_),
@@ -299,7 +299,7 @@ RULES = [
         rule_number=28,
     ),
     # Rule 29
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), GtQ(_p_, 0), LtQ(_m_, -1), Ne(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=(x*_f_)**(_m_ + 1)*(x**2*_e_*(_m_ + 1) + d_*(_m_ + 4*_p_ + 3))*(x**4*_c_ + x**2*_b_ + a_)**_p_/(_f_*(_m_ + 1)*(_m_ + 4*_p_ + 3)) + 2*_p_*Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + x**2*_b_ + a_)**(_p_ - 1)*Simp(x**2*(_b_*_e_*(_m_ + 1) - 2*_c_*d_*(_m_ + 4*_p_ + 3)) + 2*a_*_e_*(_m_ + 1) - _b_*d_*(_m_ + 4*_p_ + 3), x), x)/(_f_**2*(_m_ + 1)*(_m_ + 4*_p_ + 3)),
@@ -307,7 +307,7 @@ RULES = [
         rule_number=29,
     ),
     # Rule 30
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(_m_, -1), Ne(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=(x*_f_)**(_m_ + 1)*(x**4*_c_ + a_)**_p_*(x**2*_e_*(_m_ + 1) + d_*(_m_ + 4*_p_ + 3))/(_f_*(_m_ + 1)*(_m_ + 4*_p_ + 3)) + 4*_p_*Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + a_)**(_p_ - 1)*(-x**2*_c_*d_*(_m_ + 4*_p_ + 3) + a_*_e_*(_m_ + 1)), x)/(_f_**2*(_m_ + 1)*(_m_ + 4*_p_ + 3)),
@@ -315,7 +315,7 @@ RULES = [
         rule_number=30,
     ),
     # Rule 31
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), GtQ(_p_, 0), NeQ(_m_ + 4*_p_ + 1, 0), NeQ(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=2*_p_*Int((x*_f_)**_m_*(x**4*_c_ + x**2*_b_ + a_)**(_p_ - 1)*Simp(x**2*(2*a_*_c_*_e_*(_m_ + 4*_p_ + 1) - _b_**2*_e_*(_m_ + 2*_p_ + 1) + _b_*_c_*d_*(_m_ + 4*_p_ + 3)) - a_*_b_*_e_*(_m_ + 1) + 2*a_*_c_*d_*(_m_ + 4*_p_ + 3), x), x)/(_c_*(_m_ + 4*_p_ + 1)*(_m_ + 4*_p_ + 3)) + (x*_f_)**(_m_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**_p_*(x**2*_c_*_e_*(_m_ + 4*_p_ + 1) + 2*_b_*_e_*_p_ + _c_*d_*(_m_ + 4*_p_ + 3))/(_c_*_f_*(_m_ + 4*_p_ + 1)*(_m_ + 4*_p_ + 3)),
@@ -323,7 +323,7 @@ RULES = [
         rule_number=31,
     ),
     # Rule 32
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), GtQ(_p_, 0), NeQ(_m_ + 4*_p_ + 1, 0), NeQ(_m_ + 4*_p_ + 3, 0), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=4*a_*_p_*Int((x*_f_)**_m_*(x**4*_c_ + a_)**(_p_ - 1)*Simp(x**2*_e_*(_m_ + 4*_p_ + 1) + d_*(_m_ + 4*_p_ + 3), x), x)/((_m_ + 4*_p_ + 1)*(_m_ + 4*_p_ + 3)) + (x*_f_)**(_m_ + 1)*(x**4*_c_ + a_)**_p_*(x**2*_c_*_e_*(_m_ + 4*_p_ + 1) + _c_*d_*(_m_ + 4*_p_ + 3))/(_c_*_f_*(_m_ + 4*_p_ + 1)*(_m_ + 4*_p_ + 3)),
@@ -331,7 +331,7 @@ RULES = [
         rule_number=32,
     ),
     # Rule 33
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), LtQ(_p_, -1), GtQ(_m_, 1), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=-_f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + x**2*_b_ + a_)**(_p_ + 1)*Simp(-x**2*(_b_*_e_ - 2*_c_*d_)*(_m_ + 4*_p_ + 5) + (_m_ - 1)*(-2*a_*_e_ + _b_*d_), x), x)/((2*_p_ + 2)*(-4*a_*_c_ + _b_**2)) + _f_*(x*_f_)**(_m_ - 1)*(-x**2*(_b_*_e_ - 2*_c_*d_) - 2*a_*_e_ + _b_*d_)*(x**4*_c_ + x**2*_b_ + a_)**(_p_ + 1)/((2*_p_ + 2)*(-4*a_*_c_ + _b_**2)),
@@ -339,7 +339,7 @@ RULES = [
         rule_number=33,
     ),
     # Rule 34
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_], x), LtQ(_p_, -1), GtQ(_m_, 1), IntegerQ(2*_p_), Or(IntegerQ(_p_), IntegerQ(_m_)),),
         replacement=-_f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + a_)**(_p_ + 1)*(-x**2*_c_*d_*(_m_ + 4*_p_ + 5) + a_*_e_*(_m_ - 1)), x)/(4*a_*_c_*(_p_ + 1)) + _f_*(x*_f_)**(_m_ - 1)*(x**4*_c_ + a_)**(_p_ + 1)*(-x**2*_c_*d_ + a_*_e_)/(4*a_*_c_*(_p_ + 1)),
@@ -347,7 +347,7 @@ RULES = [
         rule_number=34,
     ),
     # Rule 35
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), LtQ(p_, -1), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=Int((x*_f_)**_m_*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)*Simp(x**2*_c_*(-2*a_*_e_ + _b_*d_)*(_m_ + 4*p_ + 7) - a_*_b_*_e_*(_m_ + 1) + d_*(-2*a_*_c_*(_m_ + 4*p_ + 5) + _b_**2*(_m_ + 2*p_ + 3)), x), x)/(2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2)) - (x*_f_)**(_m_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)*(x**2*_c_*(-2*a_*_e_ + _b_*d_) - a_*_b_*_e_ + d_*(-2*a_*_c_ + _b_**2))/(2*a_*_f_*(p_ + 1)*(-4*a_*_c_ + _b_**2)),
@@ -355,7 +355,7 @@ RULES = [
         rule_number=35,
     ),
     # Rule 36
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), LtQ(p_, -1), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=Int((x*_f_)**_m_*(x**4*_c_ + a_)**(p_ + 1)*Simp(x**2*_e_*(_m_ + 4*p_ + 7) + d_*(_m_ + 4*p_ + 5), x), x)/(4*a_*(p_ + 1)) - (x*_f_)**(_m_ + 1)*(x**2*_e_ + d_)*(x**4*_c_ + a_)**(p_ + 1)/(4*a_*_f_*(p_ + 1)),
@@ -363,7 +363,7 @@ RULES = [
         rule_number=36,
     ),
     # Rule 37
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, p_], x), NeQ(-4*a_*_c_ + _b_**2, 0), GtQ(_m_, 1), NeQ(_m_ + 4*p_ + 3, 0), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=_e_*_f_*(x*_f_)**(_m_ - 1)*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(_c_*(_m_ + 4*p_ + 3)) - _f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + x**2*_b_ + a_)**p_*Simp(x**2*(_b_*_e_*(_m_ + 2*p_ + 1) - _c_*d_*(_m_ + 4*p_ + 3)) + a_*_e_*(_m_ - 1), x), x)/(_c_*(_m_ + 4*p_ + 3)),
@@ -371,7 +371,7 @@ RULES = [
         rule_number=37,
     ),
     # Rule 38
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, p_], x), GtQ(_m_, 1), NeQ(_m_ + 4*p_ + 3, 0), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=_e_*_f_*(x*_f_)**(_m_ - 1)*(x**4*_c_ + a_)**(p_ + 1)/(_c_*(_m_ + 4*p_ + 3)) - _f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + a_)**p_*(-x**2*_c_*d_*(_m_ + 4*p_ + 3) + a_*_e_*(_m_ - 1)), x)/(_c_*(_m_ + 4*p_ + 3)),
@@ -379,7 +379,7 @@ RULES = [
         rule_number=38,
     ),
     # Rule 39
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, p_], x), NeQ(-4*a_*_c_ + _b_**2, 0), LtQ(_m_, -1), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=d_*(x*_f_)**(_m_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(a_*_f_*(_m_ + 1)) + Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + x**2*_b_ + a_)**p_*Simp(-x**2*_c_*d_*(_m_ + 4*p_ + 5) + a_*_e_*(_m_ + 1) - _b_*d_*(_m_ + 2*p_ + 3), x), x)/(a_*_f_**2*(_m_ + 1)),
@@ -387,7 +387,7 @@ RULES = [
         rule_number=39,
     ),
     # Rule 40
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, p_], x), LtQ(_m_, -1), IntegerQ(2*p_), Or(IntegerQ(p_), IntegerQ(_m_)),),
         replacement=d_*(x*_f_)**(_m_ + 1)*(x**4*_c_ + a_)**(p_ + 1)/(a_*_f_*(_m_ + 1)) + Int((x*_f_)**(_m_ + 2)*(x**4*_c_ + a_)**p_*(-x**2*_c_*d_*(_m_ + 4*p_ + 5) + a_*_e_*(_m_ + 1)), x)/(a_*_f_**2*(_m_ + 1)),
@@ -395,7 +395,7 @@ RULES = [
         rule_number=40,
     ),
     # Rule 41
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(-a_*_e_**2 + _c_*d_**2, 0), GtQ(d_/_e_, 0), PosQ(_c_*(-_b_*_e_ + 2*_c_*d_)/_e_),),
         replacement=With({r: Rt(_c_*(-_b_*_e_ + 2*_c_*d_)/_e_, 2)}, _e_*Int((x*_f_)**_m_/(-r*x + x**2*_c_ + _c_*d_/_e_), x)/2 + _e_*Int((x*_f_)**_m_/(r*x + x**2*_c_ + _c_*d_/_e_), x)/2),
@@ -403,7 +403,7 @@ RULES = [
         rule_number=41,
     ),
     # Rule 42
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), EqQ(-a_*_e_**2 + _c_*d_**2, 0), GtQ(d_/_e_, 0),),
         replacement=With({r: Rt(2*_c_**2*d_/_e_, 2)}, _e_*Int((x*_f_)**_m_/(-r*x + x**2*_c_ + _c_*d_/_e_), x)/2 + _e_*Int((x*_f_)**_m_/(r*x + x**2*_c_ + _c_*d_/_e_), x)/2),
@@ -411,7 +411,7 @@ RULES = [
         rule_number=42,
     ),
     # Rule 43
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0),),
         replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, (_e_/2 - (-_b_*_e_ + 2*_c_*d_)/(2*q))*Int((x*_f_)**_m_/(q/2 + x**2*_c_ + _b_/2), x) + (_e_/2 + (-_b_*_e_ + 2*_c_*d_)/(2*q))*Int((x*_f_)**_m_/(-q/2 + x**2*_c_ + _b_/2), x)),
@@ -419,7 +419,7 @@ RULES = [
         rule_number=43,
     ),
     # Rule 44
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x),),
         replacement=With({q: Rt(-a_*_c_, 2)}, (-_e_/2 - _c_*d_/(2*q))*Int((x*_f_)**_m_/(q - x**2*_c_), x) + (_e_/2 - _c_*d_/(2*q))*Int((x*_f_)**_m_/(q + x**2*_c_), x)),
@@ -427,7 +427,7 @@ RULES = [
         rule_number=44,
     ),
     # Rule 45
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(_q_), IntegerQ(_m_),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + x**2*_b_ + a_), x), x),
@@ -435,7 +435,7 @@ RULES = [
         rule_number=45,
     ),
     # Rule 46
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), IntegerQ(_m_),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + a_), x), x),
@@ -443,7 +443,7 @@ RULES = [
         rule_number=46,
     ),
     # Rule 47
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(_q_), Not(IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_, (x**2*_e_ + d_)**_q_/(x**4*_c_ + x**2*_b_ + a_), x), x),
@@ -451,7 +451,7 @@ RULES = [
         rule_number=47,
     ),
     # Rule 48
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), IntegerQ(_q_), Not(IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_, (x**2*_e_ + d_)**_q_/(x**4*_c_ + a_), x), x),
@@ -459,7 +459,7 @@ RULES = [
         rule_number=48,
     ),
     # Rule 49
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), GtQ(q_, 0), GtQ(_m_, 3),),
         replacement=_f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**(q_ - 1)*(x**2*_c_*_e_ - _b_*_e_ + _c_*_d_), x)/_c_**2 - _f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**(q_ - 1)*Simp(x**2*(a_*_c_*_e_ - _b_**2*_e_ + _b_*_c_*_d_) + a_*(-_b_*_e_ + _c_*_d_), x)/(x**4*_c_ + x**2*_b_ + a_), x)/_c_**2,
@@ -467,7 +467,7 @@ RULES = [
         rule_number=49,
     ),
     # Rule 50
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, q_], x), Not(IntegerQ(q_)), GtQ(_m_, 3),),
         replacement=-a_*_f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x)/_c_ + _f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**q_, x)/_c_,
@@ -475,7 +475,7 @@ RULES = [
         rule_number=50,
     ),
     # Rule 51
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), GtQ(q_, 0), GtQ(_m_, 1), LeQ(_m_, 3),),
         replacement=_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ - 1), x)/_c_ - _f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ - 1)*Simp(-x**2*(-_b_*_e_ + _c_*_d_) + a_*_e_, x)/(x**4*_c_ + x**2*_b_ + a_), x)/_c_,
@@ -483,7 +483,7 @@ RULES = [
         rule_number=51,
     ),
     # Rule 52
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), Not(IntegerQ(q_)), GtQ(q_, 0), GtQ(_m_, 1), LeQ(_m_, 3),),
         replacement=_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ - 1), x)/_c_ - _f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ - 1)*Simp(-x**2*_c_*_d_ + a_*_e_, x)/(x**4*_c_ + a_), x)/_c_,
@@ -491,7 +491,7 @@ RULES = [
         rule_number=52,
     ),
     # Rule 53
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), GtQ(q_, 0), LtQ(m_, 0),),
         replacement=_d_*Int((x*_f_)**m_*(x**2*_e_ + _d_)**(q_ - 1), x)/a_ - Int((x*_f_)**(m_ + 2)*(x**2*_e_ + _d_)**(q_ - 1)*Simp(x**2*_c_*_d_ - a_*_e_ + _b_*_d_, x)/(x**4*_c_ + x**2*_b_ + a_), x)/(a_*_f_**2),
@@ -499,7 +499,7 @@ RULES = [
         rule_number=53,
     ),
     # Rule 54
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), Not(IntegerQ(q_)), GtQ(q_, 0), LtQ(m_, 0),),
         replacement=_d_*Int((x*_f_)**m_*(x**2*_e_ + _d_)**(q_ - 1), x)/a_ + Int((x*_f_)**(m_ + 2)*(x**2*_e_ + _d_)**(q_ - 1)*Simp(-x**2*_c_*_d_ + a_*_e_, x)/(x**4*_c_ + a_), x)/(a_*_f_**2),
@@ -507,7 +507,7 @@ RULES = [
         rule_number=54,
     ),
     # Rule 55
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), LtQ(q_, -1), GtQ(_m_, 3),),
         replacement=_d_**2*_f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**q_, x)/(a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2) - _f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**(q_ + 1)*Simp(x**2*(-a_*_e_ + _b_*_d_) + a_*_d_, x)/(x**4*_c_ + x**2*_b_ + a_), x)/(a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2),
@@ -515,7 +515,7 @@ RULES = [
         rule_number=55,
     ),
     # Rule 56
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), Not(IntegerQ(q_)), LtQ(q_, -1), GtQ(_m_, 3),),
         replacement=-a_*_f_**4*Int((x*_f_)**(_m_ - 4)*(-x**2*_e_ + _d_)*(x**2*_e_ + _d_)**(q_ + 1)/(x**4*_c_ + a_), x)/(a_*_e_**2 + _c_*_d_**2) + _d_**2*_f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*_e_ + _d_)**q_, x)/(a_*_e_**2 + _c_*_d_**2),
@@ -523,7 +523,7 @@ RULES = [
         rule_number=56,
     ),
     # Rule 57
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), LtQ(q_, -1), GtQ(_m_, 1), LeQ(_m_, 3),),
         replacement=-_d_*_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**q_, x)/(a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2) + _f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ + 1)*Simp(x**2*_c_*_d_ + a_*_e_, x)/(x**4*_c_ + x**2*_b_ + a_), x)/(a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2),
@@ -531,7 +531,7 @@ RULES = [
         rule_number=57,
     ),
     # Rule 58
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + _d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), Not(IntegerQ(q_)), LtQ(q_, -1), GtQ(_m_, 1), LeQ(_m_, 3),),
         replacement=-_d_*_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**q_, x)/(a_*_e_**2 + _c_*_d_**2) + _f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_e_ + _d_)**(q_ + 1)*Simp(x**2*_c_*_d_ + a_*_e_, x)/(x**4*_c_ + a_), x)/(a_*_e_**2 + _c_*_d_**2),
@@ -539,7 +539,7 @@ RULES = [
         rule_number=58,
     ),
     # Rule 59
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), LtQ(q_, -1),),
         replacement=_e_**2*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_, x)/(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2) + Int((x*_f_)**_m_*(x**2*_e_ + d_)**(q_ + 1)*Simp(-x**2*_c_*_e_ - _b_*_e_ + _c_*d_, x)/(x**4*_c_ + x**2*_b_ + a_), x)/(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2),
@@ -547,7 +547,7 @@ RULES = [
         rule_number=59,
     ),
     # Rule 60
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_], x), Not(IntegerQ(q_)), LtQ(q_, -1),),
         replacement=_c_*Int((x*_f_)**_m_*(-x**2*_e_ + d_)*(x**2*_e_ + d_)**(q_ + 1)/(x**4*_c_ + a_), x)/(a_*_e_**2 + _c_*d_**2) + _e_**2*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_, x)/(a_*_e_**2 + _c_*d_**2),
@@ -555,7 +555,7 @@ RULES = [
         rule_number=60,
     ),
     # Rule 61
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), IntegerQ(_m_),),
         replacement=Int(ExpandIntegrand((x**2*_e_ + d_)**q_, (x*_f_)**_m_/(x**4*_c_ + x**2*_b_ + a_), x), x),
@@ -563,7 +563,7 @@ RULES = [
         rule_number=61,
     ),
     # Rule 62
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, q_], x), Not(IntegerQ(q_)), IntegerQ(_m_),),
         replacement=Int(ExpandIntegrand((x**2*_e_ + d_)**q_, (x*_f_)**_m_/(x**4*_c_ + a_), x), x),
@@ -571,7 +571,7 @@ RULES = [
         rule_number=62,
     ),
     # Rule 63
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(q_)), Not(IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**q_, 1/(x**4*_c_ + x**2*_b_ + a_), x), x),
@@ -579,7 +579,7 @@ RULES = [
         rule_number=63,
     ),
     # Rule 64
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, q_], x), Not(IntegerQ(q_)), Not(IntegerQ(_m_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**q_, 1/(x**4*_c_ + a_), x), x),
@@ -587,7 +587,7 @@ RULES = [
         rule_number=64,
     ),
     # Rule 65
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, q_], x), NeQ(-4*a_*_c_ + _b_**2, 0),),
         replacement=With({r: Rt(-4*a_*_c_ + _b_**2, 2)}, 2*_c_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(-r + 2*x**2*_c_ + _b_), x)/r - 2*_c_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(r + 2*x**2*_c_ + _b_), x)/r),
@@ -595,7 +595,7 @@ RULES = [
         rule_number=65,
     ),
     # Rule 66
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(x**4*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, q_], x),),
         replacement=With({r: Rt(-a_*_c_, 2)}, -_c_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(r - x**2*_c_), x)/(2*r) - _c_*Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_/(r + x**2*_c_), x)/(2*r)),
@@ -603,7 +603,7 @@ RULES = [
         rule_number=66,
     ),
     # Rule 67
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**4*_c_ + x**2*_b_ + _a_)**_p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), GtQ(_p_, 0), LtQ(m_, -2),),
         replacement=Int((x*_f_)**m_*(x**2*(-_a_*_e_ + _b_*_d_) + _a_*_d_)*(x**4*_c_ + x**2*_b_ + _a_)**(_p_ - 1), x)/_d_**2 + (_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2)*Int((x*_f_)**(m_ + 4)*(x**4*_c_ + x**2*_b_ + _a_)**(_p_ - 1)/(x**2*_e_ + _d_), x)/(_d_**2*_f_**4),
@@ -611,7 +611,7 @@ RULES = [
         rule_number=67,
     ),
     # Rule 68
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**4*_c_ + a_)**_p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, -2),),
         replacement=a_*Int((x*_f_)**m_*(-x**2*_e_ + _d_)*(x**4*_c_ + a_)**(_p_ - 1), x)/_d_**2 + (a_*_e_**2 + _c_*_d_**2)*Int((x*_f_)**(m_ + 4)*(x**4*_c_ + a_)**(_p_ - 1)/(x**2*_e_ + _d_), x)/(_d_**2*_f_**4),
@@ -619,7 +619,7 @@ RULES = [
         rule_number=68,
     ),
     # Rule 69
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**4*_c_ + x**2*_b_ + _a_)**_p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), GtQ(_p_, 0), LtQ(m_, 0),),
         replacement=Int((x*_f_)**m_*(x**2*_c_*_d_ + _a_*_e_)*(x**4*_c_ + x**2*_b_ + _a_)**(_p_ - 1), x)/(_d_*_e_) - (_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2)*Int((x*_f_)**(m_ + 2)*(x**4*_c_ + x**2*_b_ + _a_)**(_p_ - 1)/(x**2*_e_ + _d_), x)/(_d_*_e_*_f_**2),
@@ -627,7 +627,7 @@ RULES = [
         rule_number=69,
     ),
     # Rule 70
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**m_*(x**4*_c_ + a_)**_p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), GtQ(_p_, 0), LtQ(m_, 0),),
         replacement=Int((x*_f_)**m_*(x**4*_c_ + a_)**(_p_ - 1)*(x**2*_c_*_d_ + a_*_e_), x)/(_d_*_e_) - (a_*_e_**2 + _c_*_d_**2)*Int((x*_f_)**(m_ + 2)*(x**4*_c_ + a_)**(_p_ - 1)/(x**2*_e_ + _d_), x)/(_d_*_e_*_f_**2),
@@ -635,7 +635,7 @@ RULES = [
         rule_number=70,
     ),
     # Rule 71
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**4*_c_ + x**2*_b_ + _a_)**p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), LtQ(p_, -1), GtQ(_m_, 2),),
         replacement=_d_**2*_f_**4*Int((x*_f_)**(_m_ - 4)*(x**4*_c_ + x**2*_b_ + _a_)**(p_ + 1)/(x**2*_e_ + _d_), x)/(_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2) - _f_**4*Int((x*_f_)**(_m_ - 4)*(x**2*(-_a_*_e_ + _b_*_d_) + _a_*_d_)*(x**4*_c_ + x**2*_b_ + _a_)**p_, x)/(_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2),
@@ -643,7 +643,7 @@ RULES = [
         rule_number=71,
     ),
     # Rule 72
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**4*_c_ + a_)**p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), LtQ(p_, -1), GtQ(_m_, 2),),
         replacement=-a_*_f_**4*Int((x*_f_)**(_m_ - 4)*(-x**2*_e_ + _d_)*(x**4*_c_ + a_)**p_, x)/(a_*_e_**2 + _c_*_d_**2) + _d_**2*_f_**4*Int((x*_f_)**(_m_ - 4)*(x**4*_c_ + a_)**(p_ + 1)/(x**2*_e_ + _d_), x)/(a_*_e_**2 + _c_*_d_**2),
@@ -651,7 +651,7 @@ RULES = [
         rule_number=72,
     ),
     # Rule 73
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**4*_c_ + x**2*_b_ + _a_)**p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(-4*_a_*_c_ + _b_**2, 0), LtQ(p_, -1), GtQ(_m_, 0),),
         replacement=-_d_*_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + x**2*_b_ + _a_)**(p_ + 1)/(x**2*_e_ + _d_), x)/(_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2) + _f_**2*Int((x*_f_)**(_m_ - 2)*(x**2*_c_*_d_ + _a_*_e_)*(x**4*_c_ + x**2*_b_ + _a_)**p_, x)/(_a_*_e_**2 - _b_*_d_*_e_ + _c_*_d_**2),
@@ -659,7 +659,7 @@ RULES = [
         rule_number=73,
     ),
     # Rule 74
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**4*_c_ + a_)**p_/(x**2*_e_ + _d_), x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_], x), LtQ(p_, -1), GtQ(_m_, 0),),
         replacement=-_d_*_e_*_f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + a_)**(p_ + 1)/(x**2*_e_ + _d_), x)/(a_*_e_**2 + _c_*_d_**2) + _f_**2*Int((x*_f_)**(_m_ - 2)*(x**4*_c_ + a_)**p_*(x**2*_c_*_d_ + a_*_e_), x)/(a_*_e_**2 + _c_*_d_**2),
@@ -667,7 +667,7 @@ RULES = [
         rule_number=74,
     ),
     # Rule 75
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**2/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), NeQ(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2, 0), PosQ(_c_/a_), EqQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=-Int((-x**2*_e_ + d_)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(2*_e_) + Int(1/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/(2*_e_),
@@ -675,7 +675,7 @@ RULES = [
         rule_number=75,
     ),
     # Rule 76
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**2/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), NeQ(a_*_e_**2 + _c_*d_**2, 0), PosQ(_c_/a_), EqQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=-Int((-x**2*_e_ + d_)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(2*_e_) + Int(1/sqrt(x**4*_c_ + a_), x)/(2*_e_),
@@ -683,7 +683,7 @@ RULES = [
         rule_number=76,
     ),
     # Rule 77
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**2/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), NeQ(a_*_e_**2 - _b_*d_*_e_ + _c_*d_**2, 0), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, a_*d_*(q*d_ + _e_)*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(-a_*_e_**2 + _c_*d_**2) - a_*(q*d_ + _e_)*Int(1/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/(-a_*_e_**2 + _c_*d_**2)),
@@ -691,7 +691,7 @@ RULES = [
         rule_number=77,
     ),
     # Rule 78
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**2/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), NeQ(a_*_e_**2 + _c_*d_**2, 0), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, a_*d_*(q*d_ + _e_)*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(-a_*_e_**2 + _c_*d_**2) - a_*(q*d_ + _e_)*Int(1/sqrt(x**4*_c_ + a_), x)/(-a_*_e_**2 + _c_*d_**2)),
@@ -699,7 +699,7 @@ RULES = [
         rule_number=78,
     ),
     # Rule 79
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), PosQ(_c_/a_), EqQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=d_**2*Int(1/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/_e_**2 - Int((-x**2*_e_ + d_)/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/_e_**2,
@@ -707,7 +707,7 @@ RULES = [
         rule_number=79,
     ),
     # Rule 80
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), PosQ(_c_/a_), EqQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=d_**2*Int(1/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/_e_**2 - Int((-x**2*_e_ + d_)/sqrt(x**4*_c_ + a_), x)/_e_**2,
@@ -715,7 +715,7 @@ RULES = [
         rule_number=80,
     ),
     # Rule 81
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0), EqQ(-a_*_e_*Rt(_c_/a_, 2) + 2*_c_*d_, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, d_**2*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(_e_*(-q*d_ + _e_)) - Int((-q*x**2 + 1)/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/(q*_e_)),
@@ -723,7 +723,7 @@ RULES = [
         rule_number=81,
     ),
     # Rule 82
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0), EqQ(-a_*_e_*Rt(_c_/a_, 2) + 2*_c_*d_, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, d_**2*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(_e_*(-q*d_ + _e_)) - Int((-q*x**2 + 1)/sqrt(x**4*_c_ + a_), x)/(q*_e_)),
@@ -731,7 +731,7 @@ RULES = [
         rule_number=82,
     ),
     # Rule 83
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, d_**2*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(_e_*(-q*d_ + _e_)) + (q*a_*_e_ - 2*_c_*d_)*Int(1/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/(_c_*_e_*(-q*d_ + _e_)) - Int((-q*x**2 + 1)/sqrt(x**4*_c_ + x**2*_b_ + a_), x)/(q*_e_)),
@@ -739,7 +739,7 @@ RULES = [
         rule_number=83,
     ),
     # Rule 84
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**4/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), PosQ(_c_/a_), NeQ(-a_*_e_**2 + _c_*d_**2, 0),),
         replacement=With({q: Rt(_c_/a_, 2)}, d_**2*Int((q*x**2 + 1)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(_e_*(-q*d_ + _e_)) + (q*a_*_e_ - 2*_c_*d_)*Int(1/sqrt(x**4*_c_ + a_), x)/(_c_*_e_*(-q*d_ + _e_)) - Int((-q*x**2 + 1)/sqrt(x**4*_c_ + a_), x)/(q*_e_)),
@@ -747,7 +747,7 @@ RULES = [
         rule_number=84,
     ),
     # Rule 85
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(m_/2, 2),),
         replacement=x**(m_ - 5)*sqrt(x**4*_c_ + x**2*_b_ + a_)/(_c_*_e_*(m_ - 3)) - Int(x**(m_ - 6)*Simp(x**4*(_b_*_e_*(m_ - 4) + _c_*d_*(m_ - 3)) + x**2*(a_*_e_*(m_ - 5) + _b_*d_*(m_ - 4)) + a_*d_*(m_ - 5), x)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(_c_*_e_*(m_ - 3)),
@@ -755,7 +755,7 @@ RULES = [
         rule_number=85,
     ),
     # Rule 86
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), IGtQ(m_/2, 2),),
         replacement=x**(m_ - 5)*sqrt(x**4*_c_ + a_)/(_c_*_e_*(m_ - 3)) - Int(x**(m_ - 6)*Simp(x**4*_c_*d_*(m_ - 3) + x**2*a_*_e_*(m_ - 5) + a_*d_*(m_ - 5), x)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(_c_*_e_*(m_ - 3)),
@@ -763,7 +763,7 @@ RULES = [
         rule_number=86,
     ),
     # Rule 87
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), ILtQ(m_/2, 0),),
         replacement=x**(m_ + 1)*sqrt(x**4*_c_ + x**2*_b_ + a_)/(a_*d_*(m_ + 1)) - Int(x**(m_ + 2)*Simp(x**4*_c_*_e_*(m_ + 3) + x**2*(_b_*_e_*(m_ + 2) + _c_*d_*(m_ + 3)) + a_*_e_*(m_ + 1) + _b_*d_*(m_ + 2), x)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x)/(a_*d_*(m_ + 1)),
@@ -771,7 +771,7 @@ RULES = [
         rule_number=87,
     ),
     # Rule 88
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), ILtQ(m_/2, 0),),
         replacement=x**(m_ + 1)*sqrt(x**4*_c_ + a_)/(a_*d_*(m_ + 1)) - Int(x**(m_ + 2)*Simp(x**4*_c_*_e_*(m_ + 3) + x**2*_c_*d_*(m_ + 3) + a_*_e_*(m_ + 1), x)/((x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x)/(a_*d_*(m_ + 1)),
@@ -779,7 +779,7 @@ RULES = [
         rule_number=88,
     ),
     # Rule 89
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/(sqrt(x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), IntegerQ(m_/2),),
         replacement=x**3*sqrt(_e_ + d_/x**2)*sqrt(_c_ + _b_/x**2 + a_/x**4)*Int(x**(m_ - 3)/(sqrt(_e_ + d_/x**2)*sqrt(_c_ + _b_/x**2 + a_/x**4)), x)/(sqrt(x**2*_e_ + d_)*sqrt(x**4*_c_ + x**2*_b_ + a_)),
@@ -787,7 +787,7 @@ RULES = [
         rule_number=89,
     ),
     # Rule 90
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_/(sqrt(x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)), x),
         constraints=(FreeQ([a_, _c_, d_, _e_], x), IntegerQ(m_/2),),
         replacement=x**3*sqrt(_c_ + a_/x**4)*sqrt(_e_ + d_/x**2)*Int(x**(m_ - 3)/(sqrt(_c_ + a_/x**4)*sqrt(_e_ + d_/x**2)), x)/(sqrt(x**2*_e_ + d_)*sqrt(x**4*_c_ + a_)),
@@ -795,7 +795,7 @@ RULES = [
         rule_number=90,
     ),
     # Rule 91
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), LtQ(p_, -1), IGtQ(q_, 1), IGtQ(m_/2, 0),),
         replacement=With({f: Coeff(PolynomialRemainder(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x), x, 0), g: Coeff(PolynomialRemainder(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x), x, 2)}, x*(-f*(-2*a_*_c_ + _b_**2) + g*a_*_b_ - x**2*_c_*(f*_b_ - 2*g*a_))*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2)) + Int((x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)*Simp(ExpandToSum(-2*f*a_*_c_*(4*p_ + 5) + f*_b_**2*(2*p_ + 3) - g*a_*_b_ + x**2*_c_*(4*p_ + 7)*(f*_b_ - 2*g*a_) + 2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2)*PolynomialQuotient(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x), x), x), x)/(2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2))),
@@ -803,7 +803,7 @@ RULES = [
         rule_number=91,
     ),
     # Rule 92
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_], x), NeQ(-4*a_*_c_ + _b_**2, 0), LtQ(p_, -1), IGtQ(q_, 1), ILtQ(m_/2, 0),),
         replacement=With({f: Coeff(PolynomialRemainder(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x), x, 0), g: Coeff(PolynomialRemainder(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x), x, 2)}, x*(-f*(-2*a_*_c_ + _b_**2) + g*a_*_b_ - x**2*_c_*(f*_b_ - 2*g*a_))*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2)) + Int(x**m_*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)*Simp(ExpandToSum(x**(2 - m_)*_c_*(4*p_ + 7)*(f*_b_ - 2*g*a_) + 2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2)*PolynomialQuotient(x**m_*(x**2*_e_ + d_)**q_, x**4*_c_ + x**2*_b_ + a_, x)/x**m_ + (-2*f*a_*_c_*(4*p_ + 5) + f*_b_**2*(2*p_ + 3) - g*a_*_b_)/x**m_, x), x), x)/(2*a_*(p_ + 1)*(-4*a_*_c_ + _b_**2))),
@@ -811,7 +811,7 @@ RULES = [
         rule_number=92,
     ),
     # Rule 93
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _p_, _q_], x), NeQ(-4*a_*_c_ + _b_**2, 0), Or(IGtQ(_p_, 0), IGtQ(_q_, 0), IntegersQ(_m_, _q_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x), x),
@@ -819,7 +819,7 @@ RULES = [
         rule_number=93,
     ),
     # Rule 94
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, _p_, _q_], x), Or(IGtQ(_p_, 0), IGtQ(_q_, 0), IntegersQ(_m_, _q_)),),
         replacement=Int(ExpandIntegrand((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x), x),
@@ -827,7 +827,7 @@ RULES = [
         rule_number=94,
     ),
     # Rule 95
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**q_*(x**4*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, p_], x), Not(IntegerQ(p_)), ILtQ(q_, 0),),
         replacement=(x*_f_)**_m_*Int(ExpandIntegrand(x**_m_*(x**4*_c_ + a_)**p_, (-x**2*_e_/(-x**4*_e_**2 + d_**2) + d_/(-x**4*_e_**2 + d_**2))**(-q_), x), x)/x**_m_,
@@ -835,7 +835,7 @@ RULES = [
         rule_number=95,
     ),
     # Rule 96
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, d_, _e_, _f_, _m_, _p_, _q_], x),),
         replacement=Unintegrable((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + x**2*_b_ + a_)**_p_, x),
@@ -843,7 +843,7 @@ RULES = [
         rule_number=96,
     ),
     # Rule 97
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, _f_, _m_, _p_, _q_], x),),
         replacement=Unintegrable((x*_f_)**_m_*(x**2*_e_ + d_)**_q_*(x**4*_c_ + a_)**_p_, x),

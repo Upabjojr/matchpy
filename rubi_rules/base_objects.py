@@ -38,10 +38,10 @@ from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
 
 # The generic SymPy -> matchpy pattern-matching-rule machinery lives in sympy_matching
 # now (it is not Rubi-specific -- see sympy_matching.matching_rule). Re-exported here so
-# the generated rules, codegen and tests keep importing `RubiRulePattern` /
+# the generated rules, codegen and tests keep importing `SymPyReplacementPattern` /
 # `build_tracing_replacer` / the private helpers from rubi_rules.base_objects unchanged.
 from sympy_matching.matching_rule import (
-    SympyMatchingRule,
+    SymPyReplacementPattern,
     build_tracing_replacer,
     ENFORCE_MATCHQ,
     _make_matchpy_constraint,
@@ -52,9 +52,6 @@ from sympy_matching.matching_rule import (
     _extract_wild_names,
     _mentions_matchq,
 )
-
-# Backward-compat alias: the generated Rubi rules import `RubiRulePattern`.
-RubiRulePattern = SympyMatchingRule
 
 
 class Int(sympy.Function):
@@ -87,7 +84,7 @@ class _RubiIntegrator:
             return direct_file
         return normalized.rstrip('/') + '/**/*.py'
 
-    def load_rule_patterns(self, pattern: str = '**') -> tuple[RubiRulePattern, ...]:
+    def load_rule_patterns(self, pattern: str = '**') -> tuple[SymPyReplacementPattern, ...]:
         import importlib.util
 
         glob_pattern = self._normalize_rule_glob(pattern)
@@ -185,7 +182,7 @@ _rubi_integrator = _RubiIntegrator()
 def load_rule_patterns(
     pattern: str = '**',
     integrator: _RubiIntegrator | None = None,
-) -> tuple[RubiRulePattern, ...]:
+) -> tuple[SymPyReplacementPattern, ...]:
     integrator = integrator or _RubiIntegrator()
     return integrator.load_rule_patterns(pattern)
 

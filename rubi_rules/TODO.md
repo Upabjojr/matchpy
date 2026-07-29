@@ -103,8 +103,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] generated rules contain stuff like: With(List(Set(Symbol('g'), ... ) ==> could you please avoid defining Symbol('g') in the rule? All symbols should be defined at the beginning of the file.
 - [ ] remember to document IDENTITY_ELEMENT as optional matching character.
 - [ ] remove not used variables from generated rules.
-- [X] RubiConstraint ==> rename and make it a subtype of MathematicaExpr? (done: renamed to MathematicaConstraint, now a subclass of (MathematicaExpr, SympyMatchingConstraint) in sympy_wolfram/constraints.py)
-- [X] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even RubiRulePattern should be renamed and moved to sympy_matching/ ? (done: generic base SympyMatchingConstraint + SympyMatchingRule live in sympy_matching/; MathematicaConstraint moved to sympy_wolfram/; RubiRulePattern is now an alias of SympyMatchingRule)
+- [X] RubiConstraint ==> rename and make it a subtype of MathematicaExpr? (done: renamed to MathematicaConstraint, now a subclass of (MathematicaExpr, SymPyMatchingConstraint) in sympy_wolfram/constraints.py)
+- [X] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even SymPyReplacementPattern should be renamed and moved to sympy_matching/ ? (done: generic base SymPyMatchingConstraint + SymPyReplacementPattern live in sympy_matching/; MathematicaConstraint moved to sympy_wolfram/; SymPyReplacementPattern is now an alias of SymPyReplacementPattern)
 - [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ. (partially done: renamed to FreeOf, not removed)
 - [ ] rename MatchPy classes that have a naming conflict with SymPy classes.
 - [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
@@ -116,8 +116,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
       rubi_rules/, despite being standard Mathematica library. Can you please fix and check no other inconsistency with Mathematica standard library?
 - [ ] rebuild rubi test suite
 - [X] lift replacement rule building to sympy_matching/ (done: build_tracing_replacer / _make_replacement_fn in sympy_matching/matching_rule.py)
-- [ ] rename SympyMatchingRule to RewriteRule, SymPyRewriteRule, Rule, MatchingRule? (MAYBE: SymPyReplacementRule)
-- [ ] rename SympyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not. (MAYBE: SymPyMatchingConstraint)
+- [ ] rename SymPyReplacementPattern to RewriteRule, SymPyRewriteRule, Rule, MatchingRule? (MAYBE: SymPyReplacementRule)
+- [ ] rename SymPyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not. (MAYBE: SymPyMatchingConstraint)
 
 Strange warning:
 

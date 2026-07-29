@@ -6,7 +6,7 @@
 # Source: 4.3.2.3 (g tan)^p (a+b tan)^m (c+d tan)^n.m
 # Module: 4.3.2.3 (g tan)^p (a+b tan)^m (c+d tan)^n
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils.inert_functions import (
@@ -71,7 +71,7 @@ q_ = WildSymbol('q')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_))**_p_*(a_ + _b_*InertTan(x*_f_ + _e_))**m_*(c_ + _d_*InertTan(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, _g_, m_, n_, _p_], x),),
         replacement=Unintegrable((_g_*tan(x*_f_ + _e_))**_p_*(a_ + _b_*tan(x*_f_ + _e_))**m_*(c_ + _d_*tan(x*_f_ + _e_))**n_, x),
@@ -79,7 +79,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertCot(x*_f_ + _e_))**p_*(_a_ + _b_*InertTan(x*_f_ + _e_))**_m_*(c_ + _d_*InertTan(x*_f_ + _e_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _f_, _g_, p_], x), Not(IntegerQ(p_)), IntegerQ(_m_), IntegerQ(_n_),),
         replacement=_g_**(_m_ + _n_)*Int((_g_*cot(x*_f_ + _e_))**(-_m_ - _n_ + p_)*(_a_*cot(x*_f_ + _e_) + _b_)**_m_*(c_*cot(x*_f_ + _e_) + _d_)**_n_, x),
@@ -87,7 +87,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_))**p_*(_a_ + _b_*InertCot(x*_f_ + _e_))**_m_*(c_ + _d_*InertCot(x*_f_ + _e_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _f_, _g_, p_], x), Not(IntegerQ(p_)), IntegerQ(_m_), IntegerQ(_n_),),
         replacement=_g_**(_m_ + _n_)*Int((_g_*tan(x*_f_ + _e_))**(-_m_ - _n_ + p_)*(_a_*tan(x*_f_ + _e_) + _b_)**_m_*(c_*tan(x*_f_ + _e_) + _d_)**_n_, x),
@@ -95,7 +95,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_)**q_)**p_*(_a_ + _b_*InertTan(x*_f_ + _e_))**_m_*(c_ + _d_*InertTan(x*_f_ + _e_))**_n_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _f_, _g_, _m_, _n_, p_, q_], x), Not(IntegerQ(p_)), Not(And(IntegerQ(_m_), IntegerQ(_n_))),),
         replacement=(_g_*tan(x*_f_ + _e_)**q_)**p_*Int((_g_*tan(x*_f_ + _e_))**(p_*q_)*(_a_ + _b_*tan(x*_f_ + _e_))**_m_*(c_ + _d_*tan(x*_f_ + _e_))**_n_, x)/(_g_*tan(x*_f_ + _e_))**(p_*q_),
@@ -103,7 +103,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_))**_p_*(a_ + _b_*InertTan(x*_f_ + _e_))**_m_*(c_ + _d_*InertCot(x*_f_ + _e_))**_n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, _g_, _m_, _p_], x), IntegerQ(_n_),),
         replacement=_g_**_n_*Int((_g_*tan(x*_f_ + _e_))**(-_n_ + _p_)*(a_ + _b_*tan(x*_f_ + _e_))**_m_*(c_*tan(x*_f_ + _e_) + _d_)**_n_, x),
@@ -111,7 +111,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertTan(x*_f_ + _e_))**_m_*(c_ + _d_*InertCot(x*_f_ + _e_))**n_*InertTan(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, n_], x), Not(IntegerQ(n_)), IntegerQ(_m_), IntegerQ(_p_),),
         replacement=Int((c_ + _d_*cot(x*_f_ + _e_))**n_*(a_*cot(x*_f_ + _e_) + _b_)**_m_*cot(x*_f_ + _e_)**(-_m_ - _p_), x),
@@ -119,7 +119,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_))**p_*(a_ + _b_*InertTan(x*_f_ + _e_))**_m_*(c_ + _d_*InertCot(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, _g_, n_, p_], x), Not(IntegerQ(n_)), IntegerQ(_m_), Not(IntegerQ(p_)),),
         replacement=(_g_*tan(x*_f_ + _e_))**p_*Int((c_ + _d_*cot(x*_f_ + _e_))**n_*(a_*cot(x*_f_ + _e_) + _b_)**_m_*cot(x*_f_ + _e_)**(-_m_ - p_), x)*cot(x*_f_ + _e_)**p_,
@@ -127,7 +127,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertTan(x*_f_ + _e_))**_p_*(a_ + _b_*InertTan(x*_f_ + _e_))**m_*(c_ + _d_*InertCot(x*_f_ + _e_))**n_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, _f_, _g_, m_, n_, _p_], x), Not(IntegerQ(n_)), Not(IntegerQ(m_)),),
         replacement=(_g_*tan(x*_f_ + _e_))**n_*(c_ + _d_*cot(x*_f_ + _e_))**n_*Int((_g_*tan(x*_f_ + _e_))**(-n_ + _p_)*(a_ + _b_*tan(x*_f_ + _e_))**m_*(c_*tan(x*_f_ + _e_) + _d_)**n_, x)/(c_*tan(x*_f_ + _e_) + _d_)**n_,

@@ -6,7 +6,7 @@
 # Source: 1.4.2 Algebraic function normalization.m
 # Module: 1.4.2 Algebraic function normalization
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -15,7 +15,7 @@ from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports bel
 from sympy.logic.boolalg import Not, And
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -80,7 +80,7 @@ z_ = WildSymbol('z')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**m_, x),
         constraints=(FreeQ(m_, x), LinearQ(u_, x), Not(LinearMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**m_, x),
@@ -88,7 +88,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_n_, x),
         constraints=(FreeQ([_m_, _n_], x), LinearQ([u_, v_], x), Not(LinearMatchQ([u_, v_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_n_, x),
@@ -96,7 +96,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_n_*w_**_p_, x),
         constraints=(FreeQ([_m_, _n_, _p_], x), LinearQ([u_, v_, w_], x), Not(LinearMatchQ([u_, v_, w_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_n_*ExpandToSum(w_, x)**_p_, x),
@@ -104,7 +104,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_n_*w_**_p_*z_**_q_, x),
         constraints=(FreeQ([_m_, _n_, _p_, _q_], x), LinearQ([u_, v_, w_, z_], x), Not(LinearMatchQ([u_, v_, w_, z_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_n_*ExpandToSum(w_, x)**_p_*ExpandToSum(z_, x)**_q_, x),
@@ -112,7 +112,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**p_, x),
         constraints=(FreeQ(p_, x), BinomialQ(u_, x), Not(BinomialMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**p_, x),
@@ -120,7 +120,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*(x*_c_)**_m_, x),
         constraints=(FreeQ([_c_, _m_, _p_], x), BinomialQ(u_, x), Not(BinomialMatchQ(u_, x)),),
         replacement=Int((x*_c_)**_m_*ExpandToSum(u_, x)**_p_, x),
@@ -128,7 +128,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*v_**_q_, x),
         constraints=(FreeQ([_p_, _q_], x), BinomialQ([u_, v_], x), EqQ(BinomialDegree(u_, x) - BinomialDegree(v_, x), 0), Not(BinomialMatchQ([u_, v_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_p_*ExpandToSum(v_, x)**_q_, x),
@@ -136,7 +136,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*v_**_q_*(x*_e_)**_m_, x),
         constraints=(FreeQ([_e_, _m_, _p_, _q_], x), BinomialQ([u_, v_], x), EqQ(BinomialDegree(u_, x) - BinomialDegree(v_, x), 0), Not(BinomialMatchQ([u_, v_], x)),),
         replacement=Int((x*_e_)**_m_*ExpandToSum(u_, x)**_p_*ExpandToSum(v_, x)**_q_, x),
@@ -144,7 +144,7 @@ RULES = [
         rule_number=8,
     ),
     # Rule 9
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_p_*w_**_q_, x),
         constraints=(FreeQ([_m_, _p_, _q_], x), BinomialQ([u_, v_, w_], x), EqQ(BinomialDegree(u_, x) - BinomialDegree(v_, x), 0), EqQ(BinomialDegree(u_, x) - BinomialDegree(w_, x), 0), Not(BinomialMatchQ([u_, v_, w_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_p_*ExpandToSum(w_, x)**_q_, x),
@@ -152,7 +152,7 @@ RULES = [
         rule_number=9,
     ),
     # Rule 10
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*v_**_q_*z_**_r_*(x*_g_)**_m_, x),
         constraints=(FreeQ([_g_, _m_, _p_, _q_, _r_], x), BinomialQ([u_, v_, z_], x), EqQ(BinomialDegree(u_, x) - BinomialDegree(v_, x), 0), EqQ(BinomialDegree(u_, x) - BinomialDegree(z_, x), 0), Not(BinomialMatchQ([u_, v_, z_], x)),),
         replacement=Int((x*_g_)**_m_*ExpandToSum(u_, x)**_p_*ExpandToSum(v_, x)**_q_*ExpandToSum(z_, x)**_r_, x),
@@ -160,7 +160,7 @@ RULES = [
         rule_number=10,
     ),
     # Rule 11
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**p_, x),
         constraints=(FreeQ(p_, x), GeneralizedBinomialQ(u_, x), Not(GeneralizedBinomialMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**p_, x),
@@ -168,7 +168,7 @@ RULES = [
         rule_number=11,
     ),
     # Rule 12
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*(x*_c_)**_m_, x),
         constraints=(FreeQ([_c_, _m_, _p_], x), GeneralizedBinomialQ(u_, x), Not(GeneralizedBinomialMatchQ(u_, x)),),
         replacement=Int((x*_c_)**_m_*ExpandToSum(u_, x)**_p_, x),
@@ -176,7 +176,7 @@ RULES = [
         rule_number=12,
     ),
     # Rule 13
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**p_, x),
         constraints=(FreeQ(p_, x), QuadraticQ(u_, x), Not(QuadraticMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**p_, x),
@@ -184,7 +184,7 @@ RULES = [
         rule_number=13,
     ),
     # Rule 14
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_p_, x),
         constraints=(FreeQ([_m_, _p_], x), LinearQ(u_, x), QuadraticQ(v_, x), Not(And(LinearMatchQ(u_, x), QuadraticMatchQ(v_, x))),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_p_, x),
@@ -192,7 +192,7 @@ RULES = [
         rule_number=14,
     ),
     # Rule 15
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_m_*v_**_n_*w_**_p_, x),
         constraints=(FreeQ([_m_, _n_, _p_], x), LinearQ([u_, v_], x), QuadraticQ(w_, x), Not(And(LinearMatchQ([u_, v_], x), QuadraticMatchQ(w_, x))),),
         replacement=Int(ExpandToSum(u_, x)**_m_*ExpandToSum(v_, x)**_n_*ExpandToSum(w_, x)**_p_, x),
@@ -200,7 +200,7 @@ RULES = [
         rule_number=15,
     ),
     # Rule 16
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*v_**_q_, x),
         constraints=(FreeQ([_p_, _q_], x), QuadraticQ([u_, v_], x), Not(QuadraticMatchQ([u_, v_], x)),),
         replacement=Int(ExpandToSum(u_, x)**_p_*ExpandToSum(v_, x)**_q_, x),
@@ -208,7 +208,7 @@ RULES = [
         rule_number=16,
     ),
     # Rule 17
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*v_**_q_*z_**_m_, x),
         constraints=(FreeQ([_m_, _p_, _q_], x), LinearQ(z_, x), QuadraticQ([u_, v_], x), Not(And(LinearMatchQ(z_, x), QuadraticMatchQ([u_, v_], x))), Not(MatchQ(((z_)**(_m_) * (u_)**(_p_) * (v_)**(_q_)), Condition((((_d_ + (_e_ * x)))**(_m_) * ((_f_ + (_g_ * x)))**(Integer(2)) * ((_a_ + (_b_ * x) + (_c_ * (x)**(Integer(2)))))**(_t_)), FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _t_], x)))), Not(MatchQ(((z_)**(_m_) * (u_)**(_p_) * (v_)**(_q_)), Condition((((_d_ + (_e_ * x)))**(_m_) * ((_f_ + (_g_ * x)))**(Integer(2)) * ((_a_ + (_c_ * (x)**(Integer(2)))))**(_t_)), FreeQ([_a_, _c_, _d_, _e_, _f_, _g_, _t_], x)))),),
         replacement=Int(ExpandToSum(u_, x)**_p_*ExpandToSum(v_, x)**_q_*ExpandToSum(z_, x)**_m_, x),
@@ -216,7 +216,7 @@ RULES = [
         rule_number=17,
     ),
     # Rule 18
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**p_, x),
         constraints=(FreeQ(p_, x), TrinomialQ(u_, x), Not(TrinomialMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**p_, x),
@@ -224,7 +224,7 @@ RULES = [
         rule_number=18,
     ),
     # Rule 19
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*(x*_d_)**_m_, x),
         constraints=(FreeQ([_d_, _m_, _p_], x), TrinomialQ(u_, x), Not(TrinomialMatchQ(u_, x)),),
         replacement=Int((x*_d_)**_m_*ExpandToSum(u_, x)**_p_, x),
@@ -232,7 +232,7 @@ RULES = [
         rule_number=19,
     ),
     # Rule 20
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_q_*v_**_p_, x),
         constraints=(FreeQ([_p_, _q_], x), BinomialQ(u_, x), TrinomialQ(v_, x), Not(And(BinomialMatchQ(u_, x), TrinomialMatchQ(v_, x))),),
         replacement=Int(ExpandToSum(u_, x)**_q_*ExpandToSum(v_, x)**_p_, x),
@@ -240,7 +240,7 @@ RULES = [
         rule_number=20,
     ),
     # Rule 21
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_q_*v_**_p_, x),
         constraints=(FreeQ([_p_, _q_], x), BinomialQ(u_, x), BinomialQ(v_, x), Not(And(BinomialMatchQ(u_, x), BinomialMatchQ(v_, x))),),
         replacement=Int(ExpandToSum(u_, x)**_q_*ExpandToSum(v_, x)**_p_, x),
@@ -248,7 +248,7 @@ RULES = [
         rule_number=21,
     ),
     # Rule 22
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*z_**_q_*(x*_f_)**_m_, x),
         constraints=(FreeQ([_f_, _m_, _p_, _q_], x), BinomialQ(z_, x), TrinomialQ(u_, x), Not(And(BinomialMatchQ(z_, x), TrinomialMatchQ(u_, x))),),
         replacement=Int((x*_f_)**_m_*ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x)**_q_, x),
@@ -256,7 +256,7 @@ RULES = [
         rule_number=22,
     ),
     # Rule 23
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*z_**_q_*(x*_f_)**_m_, x),
         constraints=(FreeQ([_f_, _m_, _p_, _q_], x), BinomialQ(z_, x), BinomialQ(u_, x), Not(And(BinomialMatchQ(z_, x), BinomialMatchQ(u_, x))),),
         replacement=Int((x*_f_)**_m_*ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x)**_q_, x),
@@ -264,7 +264,7 @@ RULES = [
         rule_number=23,
     ),
     # Rule 24
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(Px_*u_**_p_*z_**_q_, x),
         constraints=(FreeQ([_p_, _q_], x), PolyQ(Px_, x), BinomialQ(z_, x), TrinomialQ(u_, x), Not(And(BinomialMatchQ(z_, x), TrinomialMatchQ(u_, x))),),
         replacement=Int(Px_*ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x)**_q_, x),
@@ -272,7 +272,7 @@ RULES = [
         rule_number=24,
     ),
     # Rule 25
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(Px_*u_**_p_*z_**_q_, x),
         constraints=(FreeQ([_p_, _q_], x), BinomialQ(z_, x), BinomialQ(u_, x), Not(And(BinomialMatchQ(z_, x), BinomialMatchQ(u_, x))),),
         replacement=Int(Px_*ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x)**_q_, x),
@@ -280,7 +280,7 @@ RULES = [
         rule_number=25,
     ),
     # Rule 26
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**p_, x),
         constraints=(FreeQ(p_, x), GeneralizedTrinomialQ(u_, x), Not(GeneralizedTrinomialMatchQ(u_, x)),),
         replacement=Int(ExpandToSum(u_, x)**p_, x),
@@ -288,7 +288,7 @@ RULES = [
         rule_number=26,
     ),
     # Rule 27
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*(x*_d_)**_m_, x),
         constraints=(FreeQ([_d_, _m_, _p_], x), GeneralizedTrinomialQ(u_, x), Not(GeneralizedTrinomialMatchQ(u_, x)),),
         replacement=Int((x*_d_)**_m_*ExpandToSum(u_, x)**_p_, x),
@@ -296,7 +296,7 @@ RULES = [
         rule_number=27,
     ),
     # Rule 28
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*z_, x),
         constraints=(FreeQ(_p_, x), BinomialQ(z_, x), GeneralizedTrinomialQ(u_, x), EqQ(BinomialDegree(z_, x) - GeneralizedTrinomialDegree(u_, x), 0), Not(And(BinomialMatchQ(z_, x), GeneralizedTrinomialMatchQ(u_, x))),),
         replacement=Int(ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x), x),
@@ -304,7 +304,7 @@ RULES = [
         rule_number=28,
     ),
     # Rule 29
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_**_p_*z_*(x*_f_)**_m_, x),
         constraints=(FreeQ([_f_, _m_, _p_], x), BinomialQ(z_, x), GeneralizedTrinomialQ(u_, x), EqQ(BinomialDegree(z_, x) - GeneralizedTrinomialDegree(u_, x), 0), Not(And(BinomialMatchQ(z_, x), GeneralizedTrinomialMatchQ(u_, x))),),
         replacement=Int((x*_f_)**_m_*ExpandToSum(u_, x)**_p_*ExpandToSum(z_, x), x),

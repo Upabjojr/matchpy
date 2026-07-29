@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Wolfram-flavoured base class for pattern constraints.
 
-The GENERIC constraint base -- :class:`~sympy_matching.constraint.SympyMatchingConstraint`
+The GENERIC constraint base -- :class:`~sympy_matching.constraint.SymPyMatchingConstraint`
 -- and its helpers (``_normalize_constraint_arg``, ``_collect_wildcards_from_args``,
 ``_resolve_with_substitution``) live in ``sympy_matching`` now, since they are not
 Wolfram-specific: they are the constraint half of the reusable "SymPy + WildSymbol ->
@@ -9,10 +9,10 @@ matchpy ManyToOneReplacer" machinery.
 
 ``MathematicaConstraint`` here is a THIN Wolfram-layer subclass that merely adds the
 :class:`~sympy_wolfram.objects.MathematicaExpr` node identity on top of
-``SympyMatchingConstraint`` (so a Wolfram predicate is a first-class Mathematica-inspired
+``SymPyMatchingConstraint`` (so a Wolfram predicate is a first-class Mathematica-inspired
 SymPy node, like every other object in this package). All the machinery -- argument
 normalisation, ``variables``, ``check`` protocol, ``_resolve`` -- is inherited unchanged
-from ``SympyMatchingConstraint``.
+from ``SymPyMatchingConstraint``.
 
 The helpers are re-exported from this module for backward compatibility (several
 ``rubi_rules`` modules and tests import ``_resolve_with_substitution`` etc. from here).
@@ -27,7 +27,7 @@ from sympy_wolfram.objects import MathematicaExpr
 # Generic base + helpers now live in sympy_matching; re-exported here so existing
 # `from sympy_wolfram.constraints import _resolve_with_substitution` imports keep working.
 from sympy_matching.constraint import (
-    SympyMatchingConstraint,
+    SymPyMatchingConstraint,
     _normalize_constraint_arg,
     _collect_wildcards_from_args,
     _resolve_with_substitution,
@@ -35,26 +35,26 @@ from sympy_matching.constraint import (
 
 __all__ = [
     'MathematicaConstraint',
-    'SympyMatchingConstraint',
+    'SymPyMatchingConstraint',
     '_normalize_constraint_arg',
     '_collect_wildcards_from_args',
     '_resolve_with_substitution',
 ]
 
 
-class MathematicaConstraint(MathematicaExpr, SympyMatchingConstraint):
+class MathematicaConstraint(MathematicaExpr, SymPyMatchingConstraint):
     """A Wolfram-language pattern constraint.
 
     Adds the :class:`~sympy_wolfram.objects.MathematicaExpr` identity on top of
-    :class:`~sympy_matching.constraint.SympyMatchingConstraint`; everything else
+    :class:`~sympy_matching.constraint.SymPyMatchingConstraint`; everything else
     (arg normalisation, ``variables``, ``check``, ``_resolve*``) is inherited.
 
     MRO is ``MathematicaConstraint -> MathematicaExpr -> Expr -> ... ->
-    SympyMatchingConstraint -> Boolean -> Basic``. Because ``Expr`` precedes
-    ``SympyMatchingConstraint`` there, the four members ``Expr`` would otherwise
+    SymPyMatchingConstraint -> Boolean -> Basic``. Because ``Expr`` precedes
+    ``SymPyMatchingConstraint`` there, the four members ``Expr`` would otherwise
     supply -- ``__new__``, ``doit``, ``_evaluate``, ``free_symbols`` -- are
     re-declared here so the constraint (not the generic Expr) behaviour wins;
-    ``variables``/``check``/``_resolve*`` are unique to ``SympyMatchingConstraint``
+    ``variables``/``check``/``_resolve*`` are unique to ``SymPyMatchingConstraint``
     and resolve to it naturally.
     """
 
@@ -64,7 +64,7 @@ class MathematicaConstraint(MathematicaExpr, SympyMatchingConstraint):
     def __new__(cls, *args, **kwargs):
         # Use the generic constraint constructor (normalise args, build via Boolean),
         # NOT Expr.__new__ which Expr would otherwise supply first in the MRO.
-        return SympyMatchingConstraint.__new__(cls, *args, **kwargs)
+        return SymPyMatchingConstraint.__new__(cls, *args, **kwargs)
 
     def doit(self, **kwargs):
         # A constraint is a predicate, not a reducible expression; MathematicaExpr's
@@ -74,7 +74,7 @@ class MathematicaConstraint(MathematicaExpr, SympyMatchingConstraint):
     def _evaluate(self, **kwargs):
         return self
 
-    # SympyMatchingConstraint.free_symbols returns set(), but Expr.free_symbols precedes
+    # SymPyMatchingConstraint.free_symbols returns set(), but Expr.free_symbols precedes
     # it in the MRO, so re-declare it here.
     @property
     def free_symbols(self):

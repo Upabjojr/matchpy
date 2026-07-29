@@ -8,7 +8,7 @@ mixed with :class:`~sympy_matching.wild.WildSymbol` -- into a matchpy
 ``matchpy`` and ``sympy_matching`` (NOT on ``sympy_wolfram`` or ``rubi_rules``),
 so any matcher (integration, equation/ODE solving, term rewriting, ...) can reuse it.
 
-- :class:`SympyMatchingRule` -- one (pattern, constraints, replacement) rule.
+- :class:`SymPyReplacementPattern` -- one (pattern, constraints, replacement) rule.
 - :func:`build_replacer` (alias ``build_tracing_replacer``) -- assemble a
   ManyToOneReplacer from rules; each
   replacement returns ``(result, (rule.module_name, rule.rule_number))`` so the
@@ -17,8 +17,8 @@ so any matcher (integration, equation/ODE solving, term rewriting, ...) can reus
   callback and translate SymPy/logic constraints into matchpy ``CustomConstraint``s.
 
 History: lifted out of ``rubi_rules.base_objects`` (was Rubi-specific by location
-only). ``rubi_rules.base_objects`` re-exports these names (``RubiRulePattern`` is an
-alias of ``SympyMatchingRule``) so existing Rubi imports keep working.
+only), where it was called ``RubiRulePattern``/``SympyMatchingRule``.
+``rubi_rules.base_objects`` re-exports these names so Rubi imports stay unchanged.
 """
 import functools
 from typing import Any, List, Tuple
@@ -33,14 +33,14 @@ from matchpy.functions import ReplacementRule
 
 from sympy_matching.conversion import matchpy_to_sympy
 from sympy_matching.wild import WildSymbol
-from sympy_matching.constraint import SympyMatchingConstraint, _resolve_with_substitution
+from sympy_matching.constraint import SymPyMatchingConstraint, _resolve_with_substitution
 
 
-class SympyMatchingRule(BaseModel):
+class SymPyReplacementPattern(BaseModel):
     """A single pattern-matching rule in SymPy form.
 
     - ``pattern``: a SymPy expression (with WildSymbols) to match.
-    - ``constraints``: a tuple of SymPy guards (``SympyMatchingConstraint`` subclasses
+    - ``constraints``: a tuple of SymPy guards (``SymPyMatchingConstraint`` subclasses
       and/or bare SymPy Booleans like ``Ne(...)``, composed with Not/And/Or).
     - ``replacement``: a SymPy expression (with the same WildSymbols) produced on match.
     - ``module_name`` / ``rule_number``: an optional label for tracing/reporting.
@@ -93,7 +93,7 @@ def _extract_wild_names(constraint_obj):
     """Extract the wildcard names a constraint depends on.
 
     A constraint reaches us as an arbitrary expression tree: a
-    SympyMatchingConstraint (which publishes its wilds via ``.variables`` --
+    SymPyMatchingConstraint (which publishes its wilds via ``.variables`` --
     ``free_symbols`` is empty on those), a Boolean wrapper (Not/Or/And), a bare
     SymPy relational over WildSymbols, or a deferred ``MathematicaExpr`` such as
     ``If(RationalQ(n_), GtQ(n_, 1), SumSimplerQ(n_, -2))`` that WRAPS inner
@@ -202,8 +202,8 @@ def _make_constraint_checker(constraint_obj, variables):
             return all(c(**kwargs) for c in inner_checkers)
         return check_and
 
-    # SympyMatchingConstraint (incl. Wolfram's MathematicaConstraint): use .check().
-    if isinstance(constraint_obj, SympyMatchingConstraint):
+    # SymPyMatchingConstraint (incl. Wolfram's MathematicaConstraint): use .check().
+    if isinstance(constraint_obj, SymPyMatchingConstraint):
         def check_constraint(**kwargs):
             try:
                 return constraint_obj.check(**kwargs)
@@ -222,7 +222,7 @@ def _make_constraint_checker(constraint_obj, variables):
         return check_constraint
 
     # Generic SymPy Boolean guard (a bare relational like Ne(GCD(m+1,n),1), NOT a
-    # SympyMatchingConstraint). Resolve its wildcards the SAME way -- through
+    # SymPyMatchingConstraint). Resolve its wildcards the SAME way -- through
     # _resolve_with_substitution, keyed by wildcard_name.
     #
     # Why the dedicated path: the guard's variables are WildSymbols, which cross the
@@ -252,7 +252,7 @@ def _make_matchpy_constraint(constraint_obj, pattern_wilds):
 
     ``pattern_wilds`` is the mapping of wildcard names the PATTERN binds (from
     :func:`_collect_wild_symbols`); only those may be declared to MatchPy.
-    Handles SympyMatchingConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
+    Handles SymPyMatchingConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
     """
     # A constraint may mention variables the PATTERN does not bind (MatchQ scopes its
     # inner pattern's variables to itself). MatchPy can only supply what it matched, and
@@ -318,8 +318,8 @@ def _make_tracing_replacement_fn(replacement_expr, rule):
     return _replacement
 
 
-def build_replacer(rules: List[SympyMatchingRule]) -> ManyToOneReplacer:
-    """Assemble a matchpy ManyToOneReplacer from SympyMatchingRule objects.
+def build_replacer(rules: List[SymPyReplacementPattern]) -> ManyToOneReplacer:
+    """Assemble a matchpy ManyToOneReplacer from SymPyReplacementPattern objects.
 
     Each rule's SymPy pattern/constraints/replacement are converted to matchpy form;
     the replacement callback returns ``(result, (module_name, rule_number))`` so the

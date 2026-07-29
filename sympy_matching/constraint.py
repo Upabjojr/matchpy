@@ -5,7 +5,7 @@ This is layer-independent: it depends only on ``sympy`` and (lazily) on
 ``sympy_matching`` itself -- NOT on ``sympy_wolfram`` or ``rubi_rules``. It is the
 constraint half of the reusable "SymPy + WildSymbol -> matchpy ManyToOneReplacer"
 machinery (see :mod:`sympy_matching.matching_rule`): any project can subclass
-:class:`SympyMatchingConstraint`, implement :meth:`check`, and feed instances as
+:class:`SymPyMatchingConstraint`, implement :meth:`check`, and feed instances as
 rule guards without pulling in Wolfram/Rubi.
 
 History: this class used to be ``MathematicaConstraint`` in ``sympy_wolfram`` (and
@@ -16,7 +16,7 @@ adds the Mathematica-node (``MathematicaExpr``) identity on top.
 
 Design
 ------
-``SympyMatchingConstraint`` derives from :class:`sympy.logic.boolalg.Boolean`, so a
+``SymPyMatchingConstraint`` derives from :class:`sympy.logic.boolalg.Boolean`, so a
 constraint is a first-class SymPy node that composes with the logic operators::
 
     Not(FreeQ(a, x))             -- negation
@@ -228,7 +228,7 @@ def _resolve_with_substitution(expr, substitution):
 # Base class
 # ---------------------------------------------------------------------------
 
-class SympyMatchingConstraint(Boolean):
+class SymPyMatchingConstraint(Boolean):
     """Abstract base class for a SymPy pattern-matching constraint (rule guard).
 
     A constraint receives the matched wildcard values (as SymPy expressions) via

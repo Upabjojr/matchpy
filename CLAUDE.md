@@ -22,7 +22,7 @@ file only highlights the things most likely to trip you up.
   and regenerate with `python -B -m rubi_rules.codegen.generate`.
 - MatchPy expression types are **`matchpy._typed.TypedModel`s** (a lightweight
   annotation-checked base that REPLACED pydantic in `matchpy/` — do not reintroduce
-  pydantic there). `SympyMatchingRule` (in `sympy_matching/`) still uses pydantic's
+  pydantic there). `SymPyReplacementPattern` (in `sympy_matching/`) still uses pydantic's
   `BaseModel`; that is the only layer where pydantic remains a dependency.
 - Keep the `# -*- coding: utf-8 -*-` header on every file.
 - Register new SymPy↔MatchPy heads via `register_sympy_head` / the `SYMPY_NODES`

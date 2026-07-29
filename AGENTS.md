@@ -118,7 +118,7 @@ The Rubi Mathematica source is translated into Python in two stages:
 
 ```
 Rubi .m rules → (precomputed) FFL JSON → codegen/generate.py
-    → rubi_rules/rules/**.py  (RubiRulePattern objects)
+    → rubi_rules/rules/**.py  (SymPyReplacementPattern objects)
     → build_tracing_replacer() → MatchPy ManyToOneReplacer
     → rubi_integrate(expr, x)  → SymPy antiderivative
 ```
@@ -198,9 +198,9 @@ Two post-processing behaviours worth knowing, because both fail **silently**:
 
 - `matchpy/expressions/` — `expressions.py` (`TypedModel` expression types), `constraints.py`, `substitution.py`, `functions.py`; `matchpy/_typed.py` — the `TypedModel` base
 - `matchpy/matching/` — `one_to_one.py`, `many_to_one.py`, `syntactic.py` (discrimination net), `bipartite.py`, `hopcroft_karp.py`, `code_generation.py`, `json_serialization.py`
-- `sympy_matching/` — `operations.py` (the `SYMPY_NODES` head table), `conversion.py` (singledispatch converters), `wild.py`, `registered_heads.py`, `json_ext.py`, `constraint.py` (`SympyMatchingConstraint`, the generic SymPy-side constraint base), `matching_rule.py` (`SympyMatchingRule`, `build_tracing_replacer`, `_make_matchpy_constraint`, `_make_replacement_fn` — the generic rule/replacer machinery, no Wolfram/Rubi dependency)
-- `sympy_wolfram/` — `parser.py` (text→FFL), `interpreter.py` (FFL→SymPy), `objects.py` (`MathematicaExpr` + language constructs), `constraints.py` (`MathematicaConstraint`, a thin subclass of `(MathematicaExpr, SympyMatchingConstraint)` — formerly `RubiConstraint`), `mathematica_functions.py` + `functions_eager.py` (standard Wolfram function nodes: `GCD`, `Sign`, `Floor`, `LeafCount`, …)
-- `rubi_rules/base_objects.py` — `Int`, `rubi_integrate`, `load_rule_patterns`; re-exports the `sympy_matching` rule machinery (`RubiRulePattern` is an alias of `SympyMatchingRule`, `build_tracing_replacer` comes from `sympy_matching.matching_rule`)
+- `sympy_matching/` — `operations.py` (the `SYMPY_NODES` head table), `conversion.py` (singledispatch converters), `wild.py`, `registered_heads.py`, `json_ext.py`, `constraint.py` (`SymPyMatchingConstraint`, the generic SymPy-side constraint base), `matching_rule.py` (`SymPyReplacementPattern`, `build_tracing_replacer`, `_make_matchpy_constraint`, `_make_replacement_fn` — the generic rule/replacer machinery, no Wolfram/Rubi dependency)
+- `sympy_wolfram/` — `parser.py` (text→FFL), `interpreter.py` (FFL→SymPy), `objects.py` (`MathematicaExpr` + language constructs), `constraints.py` (`MathematicaConstraint`, a thin subclass of `(MathematicaExpr, SymPyMatchingConstraint)` — formerly `RubiConstraint`), `mathematica_functions.py` + `functions_eager.py` (standard Wolfram function nodes: `GCD`, `Sign`, `Floor`, `LeafCount`, …)
+- `rubi_rules/base_objects.py` — `Int`, `rubi_integrate`, `load_rule_patterns`; re-exports the `sympy_matching` rule machinery (`SymPyReplacementPattern` is an alias of `SymPyReplacementPattern`, `build_tracing_replacer` comes from `sympy_matching.matching_rule`)
 - `rubi_rules/rules/` — **auto-generated; DO NOT EDIT** (organized `r_1_algebraic_functions/…`, mirroring the Rubi Mathematica tree)
 - `rubi_rules/codegen/` — `parse_rubi_to_ffl.py` and `generate.py` (the FFL→Python rule generator)
 - `rubi_rules/utils/` — constraint helpers (`FreeQ`, `NeQ`, `IGtQ`, …) and Rubi utility functions
@@ -209,7 +209,7 @@ Two post-processing behaviours worth knowing, because both fail **silently**:
 ## Environment & running
 
 - **Python 3.10 or newer** (`setup.cfg` sets `python_requires = >=3.10`; the newer packages use 3.10+ syntax like `str | None`).
-- Core runtime deps: `multiset` (matchpy), plus `sympy` and `pydantic` for the layers above `matchpy/` (`sympy_matching.matching_rule.SympyMatchingRule` is a pydantic `BaseModel`; only `matchpy/` itself is pydantic-free). Install dev extras with `make init` (`pip install .[develop]`).
+- Core runtime deps: `multiset` (matchpy), plus `sympy` and `pydantic` for the layers above `matchpy/` (`sympy_matching.matching_rule.SymPyReplacementPattern` is a pydantic `BaseModel`; only `matchpy/` itself is pydantic-free). Install dev extras with `make init` (`pip install .[develop]`).
 - **MatchPy core tests + doctests:** `make test` (`py.test tests/ --doctest-modules matchpy/ README.rst docs/example.rst`)
 - **A single package's tests:** `pytest rubi_rules/tests/` (or `sympy_wolfram/tests/`, `sympy_matching/`, …)
 - **One test file:** `pytest rubi_rules/tests/test_integrals_r_1_1_1_1.py -x`
@@ -220,7 +220,7 @@ Two post-processing behaviours worth knowing, because both fail **silently**:
 
 - **Every file starts with `# -*- coding: utf-8 -*-`.** Keep it.
 - Respect the import stack in the [enforcement matrix](#enforcement-matrix) — never introduce an up-stack or sideways import.
-- MatchPy value classes subclass **`matchpy._typed.TypedModel`** (Pydantic was removed for speed). Declare fields via class annotations; use `field(default_factory=...)` (from `matchpy._typed`) for mutable defaults (list/dict/set). `TypedModel.__init__(**kwargs)` assigns fields, applies defaults, and enforces a **shallow** `isinstance` type-check per field at construction (outer type only — `List[X]` is checked as `list`). Private attrs (`_name`) aren't fields; a subclass may turn an inherited field into a bare `ClassVar` (fixed class-level value) and it stops being an instance field. Don't reintroduce a Pydantic dependency **inside `matchpy/`** — the ban is scoped to the core package; higher layers still use pydantic (e.g. `SympyMatchingRule`).
+- MatchPy value classes subclass **`matchpy._typed.TypedModel`** (Pydantic was removed for speed). Declare fields via class annotations; use `field(default_factory=...)` (from `matchpy._typed`) for mutable defaults (list/dict/set). `TypedModel.__init__(**kwargs)` assigns fields, applies defaults, and enforces a **shallow** `isinstance` type-check per field at construction (outer type only — `List[X]` is checked as `list`). Private attrs (`_name`) aren't fields; a subclass may turn an inherited field into a bare `ClassVar` (fixed class-level value) and it stops being an instance field. Don't reintroduce a Pydantic dependency **inside `matchpy/`** — the ban is scoped to the core package; higher layers still use pydantic (e.g. `SymPyReplacementPattern`).
 - Prefer the existing **singledispatch** converters in `sympy_matching/conversion.py` when adding SymPy↔MatchPy support; register new heads through `register_sympy_head` / the `SYMPY_NODES` table in `sympy_matching/operations.py`.
 - **Never hand-edit `rubi_rules/rules/**`.** Change `codegen/generate.py` (or the source FFL) and regenerate. Each generated file carries an `AUTO-GENERATED -- DO NOT EDIT` banner.
 - The canonical integration variable in rule files is `Symbol('x')`; `rubi_integrate` substitutes when the caller passes a different variable (see the docstring in `base_objects.py`).

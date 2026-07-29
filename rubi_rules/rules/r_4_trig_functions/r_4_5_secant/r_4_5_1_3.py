@@ -6,7 +6,7 @@
 # Source: 4.5.1.3 (d sin)^n (a+b sec)^m.m
 # Module: 4.5.1.3 (d sin)^n (a+b sec)^m
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils.inert_functions import (
@@ -64,7 +64,7 @@ p_ = WildSymbol('p')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertCos(x*_f_ + _e_))**_p_*(a_ + _b_*InertCsc(x*_f_ + _e_))**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, _p_], x), IntegerQ(_m_),),
         replacement=Int((_g_*cos(x*_f_ + _e_))**_p_*(a_*sin(x*_f_ + _e_) + _b_)**_m_/sin(x*_f_ + _e_)**_m_, x),
@@ -72,7 +72,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertCsc(x*_f_ + _e_))**m_*InertCos(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, m_], x), IntegerQ(_p_/2 + sympy.S(-1)/2), EqQ(a_**2 - _b_**2, 0),),
         replacement=-_b_**(1 - _p_)*Subst(Int(x**(-_p_ - 1)*(x*_b_ - a_)**(_p_/2 + sympy.S(-1)/2)*(x*_b_ + a_)**(m_ + _p_/2 + sympy.S(-1)/2), x), x, csc(x*_f_ + _e_))/_f_,
@@ -80,7 +80,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertCsc(x*_f_ + _e_))**m_*InertCos(x*_f_ + _e_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, m_], x), IntegerQ(_p_/2 + sympy.S(-1)/2), NeQ(a_**2 - _b_**2, 0),),
         replacement=-Subst(Int(x**(-_p_ - 1)*(x - 1)**(_p_/2 + sympy.S(-1)/2)*(x + 1)**(_p_/2 + sympy.S(-1)/2)*(x*_b_ + a_)**m_, x), x, csc(x*_f_ + _e_))/_f_,
@@ -88,7 +88,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertCsc(x*_f_ + _e_))**m_/InertCos(x*_f_ + _e_)**2, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, m_], x),),
         replacement=_b_*m_*Int((a_ + _b_*csc(x*_f_ + _e_))**(m_ - 1)*csc(x*_f_ + _e_), x) + (a_ + _b_*csc(x*_f_ + _e_))**m_*tan(x*_f_ + _e_)/_f_,
@@ -96,7 +96,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertCos(x*_f_ + _e_))**_p_*(a_ + _b_*InertCsc(x*_f_ + _e_))**m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, m_, _p_], x), Or(EqQ(a_**2 - _b_**2, 0), IntegersQ(2*m_, _p_)),),
         replacement=(a_ + _b_*csc(x*_f_ + _e_))**FracPart(m_)*Int((_g_*cos(x*_f_ + _e_))**_p_*(a_*sin(x*_f_ + _e_) + _b_)**m_/sin(x*_f_ + _e_)**m_, x)*sin(x*_f_ + _e_)**FracPart(m_)/(a_*sin(x*_f_ + _e_) + _b_)**FracPart(m_),
@@ -104,7 +104,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertCos(x*_f_ + _e_))**_p_*(a_ + _b_*InertCsc(x*_f_ + _e_))**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, _m_, _p_], x),),
         replacement=Unintegrable((_g_*cos(x*_f_ + _e_))**_p_*(a_ + _b_*csc(x*_f_ + _e_))**_m_, x),
@@ -112,7 +112,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_g_*InertSec(x*_f_ + _e_))**p_*(a_ + _b_*InertCsc(x*_f_ + _e_))**_m_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, _g_, _m_, p_], x), Not(IntegerQ(p_)),),
         replacement=_g_**IntPart(p_)*(_g_*sec(x*_f_ + _e_))**FracPart(p_)*Int((a_ + _b_*csc(x*_f_ + _e_))**_m_/cos(x*_f_ + _e_)**p_, x)*cos(x*_f_ + _e_)**FracPart(p_),

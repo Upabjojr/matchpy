@@ -6,7 +6,7 @@
 # Source: 1.2.3.1 (a+b x^n+c x^(2 n))^p.m
 # Module: 1.2.3.1 (a+b x^n+c x^(2 n))^p
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -18,7 +18,7 @@ from sympy import (
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -67,7 +67,7 @@ u_ = WildSymbol('u')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_], x), EqQ(_n2_, 2*n_), LtQ(n_, 0), IntegerQ(_p_),),
         replacement=Int(x**(2*n_*_p_)*(_c_ + _b_/x**n_ + a_/x**(2*n_))**_p_, x),
@@ -75,7 +75,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, p_], x), EqQ(_n2_, 2*n_), FractionQ(n_),),
         replacement=With({k: Denominator(n_)}, k*Subst(Int(x**(k - 1)*(x**(2*k*n_)*_c_ + x**(k*n_)*_b_ + a_)**p_, x), x, x**(1/k))),
@@ -83,7 +83,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, p_], x), EqQ(_n2_, 2*n_), ILtQ(n_, 0),),
         replacement=-Subst(Int((a_ + _b_/x**n_ + _c_/x**(2*n_))**p_/x**2, x), x, 1/x),
@@ -91,7 +91,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**_n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _n_, p_], x), EqQ(_n2_, 2*_n_), EqQ(-4*a_*_c_ + _b_**2, 0),),
         replacement=(x**(2*_n_)*_c_ + x**_n_*_b_ + a_)**p_*Int((2*x**_n_*_c_ + _b_)**(2*p_), x)/(2*x**_n_*_c_ + _b_)**(2*p_),
@@ -99,7 +99,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, n_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(p_, 0),),
         replacement=Int(ExpandIntegrand((x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x), x),
@@ -107,7 +107,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, n_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), ILtQ(p_, -1),),
         replacement=-x*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_b_*_c_ - 2*a_*_c_ + _b_**2)/(a_*n_*(p_ + 1)*(-4*a_*_c_ + _b_**2)) + Int((x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_b_*_c_*(n_*(2*p_ + 3) + 1) - 2*a_*_c_ + _b_**2 + n_*(p_ + 1)*(-4*a_*_c_ + _b_**2)), x)/(a_*n_*(p_ + 1)*(-4*a_*_c_ + _b_**2)),
@@ -115,7 +115,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(x**n_*_b_ + x**n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_], x), EqQ(n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_/2, 0), NegQ(-4*a_*_c_ + _b_**2),),
         replacement=With({q: Rt(a_/_c_, 2)}, With({r: Rt(2*q - _b_/_c_, 2)}, Int((r - x**(n_/2))/(q - r*x**(n_/2) + x**n_), x)/(2*q*r*_c_) + Int((r + x**(n_/2))/(q + r*x**(n_/2) + x**n_), x)/(2*q*r*_c_))),
@@ -123,7 +123,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(x**n_*_b_ + x**n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_], x), EqQ(n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0),),
         replacement=With({q: Rt(-4*a_*_c_ + _b_**2, 2)}, _c_*Int(1/(-q/2 + x**n_*_c_ + _b_/2), x)/q - _c_*Int(1/(q/2 + x**n_*_c_ + _b_/2), x)/q),
@@ -131,7 +131,7 @@ RULES = [
         rule_number=8,
     ),
     # Rule 9
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, n_, p_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)),),
         replacement=a_**IntPart(p_)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**FracPart(p_)*Int((2*x**n_*_c_/(_b_ - sqrt(-4*a_*_c_ + _b_**2)) + 1)**p_*(2*x**n_*_c_/(_b_ + sqrt(-4*a_*_c_ + _b_**2)) + 1)**p_, x)/((2*x**n_*_c_/(_b_ - Rt(-4*a_*_c_ + _b_**2, 2)) + 1)**FracPart(p_)*(2*x**n_*_c_/(_b_ + Rt(-4*a_*_c_ + _b_**2, 2)) + 1)**FracPart(p_)),
@@ -139,7 +139,7 @@ RULES = [
         rule_number=9,
     ),
     # Rule 10
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((a_ + _b_*u_**n_ + _c_*u_**_n2_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, n_, p_], x), EqQ(_n2_, 2*n_), LinearQ(u_, x), NeQ(u_, x),),
         replacement=Subst(Int((x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x), x, u_)/Coefficient(u_, x, 1),
@@ -147,7 +147,7 @@ RULES = [
         rule_number=10,
     ),
     # Rule 11
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**mn_*_b_ + x**_n_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _n_], x), EqQ(mn_, -_n_), IntegerQ(_p_), PosQ(_n_),),
         replacement=Int((x**(2*_n_)*_c_ + x**_n_*a_ + _b_)**_p_/x**(_n_*_p_), x),
@@ -155,7 +155,7 @@ RULES = [
         rule_number=11,
     ),
     # Rule 12
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((x**mn_*_b_ + x**_n_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _n_, p_], x), EqQ(mn_, -_n_), Not(IntegerQ(p_)), PosQ(_n_),),
         replacement=x**(_n_*FracPart(p_))*(x**_n_*_c_ + a_ + _b_/x**_n_)**FracPart(p_)*Int((x**(2*_n_)*_c_ + x**_n_*a_ + _b_)**p_/x**(_n_*p_), x)/(x**(2*_n_)*_c_ + x**_n_*a_ + _b_)**FracPart(p_),

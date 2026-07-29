@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """The reusable SymPy -> matchpy rule machinery works with ONLY matchpy + sympy_matching.
 
-This is the acceptance test for the refactor that lifted ``SympyMatchingRule`` /
-``SympyMatchingConstraint`` / ``build_tracing_replacer`` out of rubi_rules/sympy_wolfram:
+This is the acceptance test for the refactor that lifted ``SymPyReplacementPattern`` /
+``SymPyMatchingConstraint`` / ``build_tracing_replacer`` out of rubi_rules/sympy_wolfram:
 a caller can define pattern-matching rules over ordinary SymPy expressions mixed with
 ``WildSymbol`` -- with custom constraints -- and build a working matchpy
 ``ManyToOneReplacer``, importing NOTHING from ``sympy_wolfram`` or ``rubi_rules``.
@@ -16,15 +16,15 @@ from sympy import Symbol, Integer, sin, cos
 # Only matchpy + sympy_matching -- no sympy_wolfram, no rubi_rules.
 from sympy_matching import (
     WildSymbol,
-    SympyMatchingRule,
-    SympyMatchingConstraint,
+    SymPyReplacementPattern,
+    SymPyMatchingConstraint,
     build_tracing_replacer,
     to_matchpy_expression,
     matchpy_to_sympy,
 )
 
 
-class _IsInteger(SympyMatchingConstraint):
+class _IsInteger(SymPyMatchingConstraint):
     """Custom constraint: the matched value must be an explicit SymPy Integer."""
     def __init__(self, u):
         self._u = self.args[0]
@@ -61,7 +61,7 @@ def test_layer_purity_no_wolfram_or_rubi():
 def test_build_replacer_and_match_with_constraint():
     a_ = WildSymbol('a')
     # Rule: sin(a_) -> a_ + 1, but only when a_ is an integer.
-    rule = SympyMatchingRule(
+    rule = SymPyReplacementPattern(
         pattern=sin(a_),
         constraints=(_IsInteger(a_),),
         replacement=a_ + 1,
@@ -81,9 +81,9 @@ def test_build_replacer_and_match_with_constraint():
 
 
 def test_bare_sympy_boolean_constraint():
-    """A plain SymPy relational (no SympyMatchingConstraint subclass) also works as a guard."""
+    """A plain SymPy relational (no SymPyMatchingConstraint subclass) also works as a guard."""
     a_ = WildSymbol('a')
-    rule = SympyMatchingRule(
+    rule = SymPyReplacementPattern(
         pattern=cos(a_),
         constraints=(sympy.Ne(a_, 0),),           # fire only when a_ != 0
         replacement=a_ ** 2,
@@ -98,7 +98,7 @@ def test_bare_sympy_boolean_constraint():
 
 
 def test_constraint_is_sympy_boolean_and_composes():
-    """A SympyMatchingConstraint is a SymPy Boolean, so Not/And/Or compose."""
+    """A SymPyMatchingConstraint is a SymPy Boolean, so Not/And/Or compose."""
     a_ = WildSymbol('a')
     c = _IsInteger(a_)
     assert isinstance(c, sympy.logic.boolalg.Boolean)

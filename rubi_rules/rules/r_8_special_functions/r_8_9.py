@@ -6,7 +6,7 @@
 # Source: 8.9 Product logarithm function.m
 # Module: 8.9 Product logarithm function
 #
-# This file contains Rubi integration rules as RubiRulePattern objects.
+# This file contains Rubi integration rules as SymPyReplacementPattern objects.
 # Re-run the generator to update.
 # =============================================================================
 import sympy
@@ -14,11 +14,11 @@ from sympy import Symbol
 from rubi_rules.utils.rubi_utils import *  # bare-name access; sympy imports below override any conflicts (e.g. Not)
 from sympy.logic.boolalg import Or, Not, And
 from sympy import (
-    Ei, LambertW, erf, erfi, exp, log, pi, sqrt,
+    Ei, LambertW, erf, erfi, exp, log, pi, sqrt, uppergamma,
 )
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from rubi_rules.base_objects import Int, RubiRulePattern
+from rubi_rules.base_objects import Int, SymPyReplacementPattern
 # Inert trig markers (Rubi's lowercase sin/cos/... patterns). Distinct opaque heads,
 # NOT subclasses of sympy.sin -- see rubi-trig-deactivation-dispatch project note.
 from rubi_rules.utils import (
@@ -69,7 +69,7 @@ u_ = WildSymbol('u')
 
 RULES = [
     # Rule 1
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), LtQ(p_, -1),),
         replacement=p_*Int((_c_*LambertW(x*_b_ + _a_))**(p_ + 1)/(LambertW(x*_b_ + _a_) + 1), x)/(_c_*(p_ + 1)) + (_c_*LambertW(x*_b_ + _a_))**p_*(x*_b_ + _a_)/(_b_*(p_ + 1)),
@@ -77,7 +77,7 @@ RULES = [
         rule_number=1,
     ),
     # Rule 2
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + _a_))**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_], x), Not(LtQ(_p_, -1)),),
         replacement=-_p_*Int((_c_*LambertW(x*_b_ + _a_))**_p_/(LambertW(x*_b_ + _a_) + 1), x) + (_c_*LambertW(x*_b_ + _a_))**_p_*(x*_b_ + _a_)/_b_,
@@ -85,7 +85,7 @@ RULES = [
         rule_number=2,
     ),
     # Rule 3
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + a_))**_p_*(x*_f_ + _e_)**_m_, x),
         constraints=(FreeQ([a_, _b_, _c_, _e_, _f_, _p_], x), IGtQ(_m_, 0),),
         replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand((_c_*LambertW(x))**_p_, (x*_f_ - a_*_f_ + _b_*_e_)**_m_, x), x), x, x*_b_ + a_),
@@ -93,7 +93,7 @@ RULES = [
         rule_number=3,
     ),
     # Rule 4
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x**n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, n_, _p_], x), Or(EqQ(n_*(_p_ - 1), -1), And(IntegerQ(_p_ + sympy.S(-1)/2), EqQ(n_*(_p_ + sympy.S(-1)/2), -1))),),
         replacement=x*(_c_*LambertW(x**n_*_a_))**_p_ - n_*_p_*Int((_c_*LambertW(x**n_*_a_))**_p_/(LambertW(x**n_*_a_) + 1), x),
@@ -101,7 +101,7 @@ RULES = [
         rule_number=4,
     ),
     # Rule 5
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x**n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, n_], x), Or(And(IntegerQ(_p_), EqQ(n_*(_p_ + 1), -1)), And(IntegerQ(_p_ + sympy.S(-1)/2), EqQ(n_*(_p_ + sympy.S.Half), -1))),),
         replacement=x*(_c_*LambertW(x**n_*_a_))**_p_/(n_*_p_ + 1) + n_*_p_*Int((_c_*LambertW(x**n_*_a_))**(_p_ + 1)/(LambertW(x**n_*_a_) + 1), x)/(_c_*(n_*_p_ + 1)),
@@ -109,7 +109,7 @@ RULES = [
         rule_number=5,
     ),
     # Rule 6
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x**n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, _p_], x), ILtQ(n_, 0),),
         replacement=-Subst(Int((_c_*LambertW(_a_/x**n_))**_p_/x**2, x), x, 1/x),
@@ -117,7 +117,7 @@ RULES = [
         rule_number=6,
     ),
     # Rule 7
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, _m_, _n_, _p_], x), NeQ(_m_, -1), Or(And(IntegerQ(_p_ + sympy.S(-1)/2), IGtQ(2*Simplify(_p_ + (_m_ + 1)/_n_), 0)), And(Not(IntegerQ(_p_ + sympy.S(-1)/2)), IGtQ(Simplify(_p_ + (_m_ + 1)/_n_) + 1, 0))),),
         replacement=x**(_m_ + 1)*(_c_*LambertW(x**_n_*_a_))**_p_/(_m_ + 1) - _n_*_p_*Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(LambertW(x**_n_*_a_) + 1), x)/(_m_ + 1),
@@ -125,7 +125,7 @@ RULES = [
         rule_number=7,
     ),
     # Rule 8
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, _m_, _n_, _p_], x), Or(EqQ(_m_, -1), And(IntegerQ(_p_ + sympy.S(-1)/2), ILtQ(Simplify(_p_ + (_m_ + 1)/_n_) + sympy.S(-1)/2, 0)), And(Not(IntegerQ(_p_ + sympy.S(-1)/2)), ILtQ(Simplify(_p_ + (_m_ + 1)/_n_), 0))),),
         replacement=x**(_m_ + 1)*(_c_*LambertW(x**_n_*_a_))**_p_/(_m_ + _n_*_p_ + 1) + _n_*_p_*Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**(_p_ + 1)/(LambertW(x**_n_*_a_) + 1), x)/(_c_*(_m_ + _n_*_p_ + 1)),
@@ -133,7 +133,7 @@ RULES = [
         rule_number=8,
     ),
     # Rule 9
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, _m_], x),),
         replacement=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_/(LambertW(x*_a_) + 1), x) + Int(x**_m_*(_c_*LambertW(x*_a_))**(_p_ + 1)/(LambertW(x*_a_) + 1), x)/_c_,
@@ -141,7 +141,7 @@ RULES = [
         rule_number=9,
     ),
     # Rule 10
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**n_*_a_))**_p_, x),
         constraints=(FreeQ([_a_, _c_, _p_], x), ILtQ(n_, 0), IntegerQ(_m_), NeQ(_m_, -1),),
         replacement=-Subst(Int(x**(-_m_ - 2)*(_c_*LambertW(_a_/x**n_))**_p_, x), x, 1/x),
@@ -149,7 +149,7 @@ RULES = [
         rule_number=10,
     ),
     # Rule 11
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=(x*_b_ + _a_)/(_b_*_d_*LambertW(x*_b_ + _a_)),
@@ -157,7 +157,7 @@ RULES = [
         rule_number=11,
     ),
     # Rule 12
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(LambertW(x*_b_ + _a_)/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=x*_d_ - Int(1/(_d_*LambertW(x*_b_ + _a_) + _d_), x),
@@ -165,15 +165,15 @@ RULES = [
         rule_number=12,
     ),
     # Rule 13
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(_d_*LambertW(x*_b_ + _a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), GtQ(p_, 0),),
         replacement=-_c_*p_*Int((_c_*LambertW(x*_b_ + _a_))**(p_ - 1)/(_d_*LambertW(x*_b_ + _a_) + _d_), x) + _c_*(_c_*LambertW(x*_b_ + _a_))**(p_ - 1)*(x*_b_ + _a_)/(_b_*_d_),
         module_name='8.9 Product logarithm function',
         rule_number=13,
     ),
     # Rule 14
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/((d_ + _d_*LambertW(x*_b_ + _a_))*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _d_], x),),
         replacement=Ei(LambertW(x*_b_ + _a_))/(_b_*_d_),
@@ -181,15 +181,15 @@ RULES = [
         rule_number=14,
     ),
     # Rule 15
-    RubiRulePattern(
-        pattern=Int(1/(sqrt(_c_*LambertW(x*_b_ + _a_))*(d_ + _d_*LambertW(x*_b_ + _a_))), x),
+    SymPyReplacementPattern(
+        pattern=Int(1/(sqrt(_c_*LambertW(x*_b_ + _a_))*(_d_*LambertW(x*_b_ + _a_) + d_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), PosQ(_c_),),
         replacement=Rt(pi*_c_, 2)*erfi(sqrt(_c_*LambertW(x*_b_ + _a_))/Rt(_c_, 2))/(_b_*_c_*_d_),
         module_name='8.9 Product logarithm function',
         rule_number=15,
     ),
     # Rule 16
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(sqrt(_c_*LambertW(x*_b_ + _a_))*(d_ + _d_*LambertW(x*_b_ + _a_))), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), NegQ(_c_),),
         replacement=Rt(-pi*_c_, 2)*erf(sqrt(_c_*LambertW(x*_b_ + _a_))/Rt(-_c_, 2))/(_b_*_c_*_d_),
@@ -197,7 +197,7 @@ RULES = [
         rule_number=16,
     ),
     # Rule 17
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + _a_))**p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_], x), LtQ(p_, -1),),
         replacement=-Int((_c_*LambertW(x*_b_ + _a_))**(p_ + 1)/(_d_*LambertW(x*_b_ + _a_) + _d_), x)/(_c_*(p_ + 1)) + (_c_*LambertW(x*_b_ + _a_))**p_*(x*_b_ + _a_)/(_b_*_d_*(p_ + 1)),
@@ -205,23 +205,23 @@ RULES = [
         rule_number=17,
     ),
     # Rule 18
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x*_b_ + _a_))**_p_/(d_ + _d_*LambertW(x*_b_ + _a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x*_b_ + _a_))**_p_/(_d_*LambertW(x*_b_ + _a_) + d_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _p_], x),),
-        replacement=(_c_*LambertW(x*_b_ + _a_))**_p_*Gamma(_p_ + 1, -LambertW(x*_b_ + _a_))/(_b_*_d_*(-LambertW(x*_b_ + _a_))**_p_),
+        replacement=(_c_*LambertW(x*_b_ + _a_))**_p_*uppergamma(_p_ + 1, -LambertW(x*_b_ + _a_))/(_b_*_d_*(-LambertW(x*_b_ + _a_))**_p_),
         module_name='8.9 Product logarithm function',
         rule_number=18,
     ),
     # Rule 19
-    RubiRulePattern(
-        pattern=Int((x*_f_ + _e_)**_m_/(_d_*LambertW(x*_b_ + a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int((x*_f_ + _e_)**_m_/(d_ + _d_*LambertW(x*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), IGtQ(_m_, 0),),
         replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand(1/(_d_*LambertW(x) + _d_), (x*_f_ - a_*_f_ + _b_*_e_)**_m_, x), x), x, x*_b_ + a_),
         module_name='8.9 Product logarithm function',
         rule_number=19,
     ),
     # Rule 20
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x*_b_ + a_))**_p_*(x*_f_ + _e_)**_m_/(d_ + _d_*LambertW(x*_b_ + a_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_, _p_], x), IGtQ(_m_, 0),),
         replacement=_b_**(-_m_ - 1)*Subst(Int(ExpandIntegrand((_c_*LambertW(x))**_p_/(_d_*LambertW(x) + _d_), (x*_f_ - a_*_f_ + _b_*_e_)**_m_, x), x), x, x*_b_ + a_),
@@ -229,7 +229,7 @@ RULES = [
         rule_number=20,
     ),
     # Rule 21
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(_d_*LambertW(x**n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _d_], x), ILtQ(n_, 0),),
         replacement=-Subst(Int(1/(x**2*(_d_*LambertW(_a_/x**n_) + _d_)), x), x, 1/x),
@@ -237,15 +237,15 @@ RULES = [
         rule_number=21,
     ),
     # Rule 22
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _n_, _p_], x), EqQ(_n_*(_p_ - 1), -1),),
         replacement=x*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/_d_,
         module_name='8.9 Product logarithm function',
         rule_number=22,
     ),
     # Rule 23
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(LambertW(x**_n_*_a_)**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _d_], x), IntegerQ(_p_), EqQ(_n_*_p_, -1),),
         replacement=_a_**_p_*Ei(-_p_*LambertW(x**_n_*_a_))/(_d_*_n_),
@@ -253,15 +253,15 @@ RULES = [
         rule_number=23,
     ),
     # Rule 24
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), IntegerQ(1/_n_), EqQ(p_, sympy.S.Half - 1/_n_), PosQ(_c_*_n_),),
         replacement=Rt(pi*_c_*_n_, 2)*erfi(sqrt(_c_*LambertW(x**_n_*_a_))/Rt(_c_*_n_, 2))/(_a_**(1/_n_)*_c_**(1/_n_)*_d_*_n_),
         module_name='8.9 Product logarithm function',
         rule_number=24,
     ),
     # Rule 25
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x**_n_*_a_))**p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), IntegerQ(1/_n_), EqQ(p_, sympy.S.Half - 1/_n_), NegQ(_c_*_n_),),
         replacement=Rt(-pi*_c_*_n_, 2)*erf(sqrt(_c_*LambertW(x**_n_*_a_))/Rt(-_c_*_n_, 2))/(_a_**(1/_n_)*_c_**(1/_n_)*_d_*_n_),
@@ -269,23 +269,23 @@ RULES = [
         rule_number=25,
     ),
     # Rule 26
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), GtQ(_n_, 0), GtQ(_n_*(_p_ - 1) + 1, 0),),
         replacement=x*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/_d_ - _c_*(_n_*(_p_ - 1) + 1)*Int((_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x),
         module_name='8.9 Product logarithm function',
         rule_number=26,
     ),
     # Rule 27
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_], x), GtQ(_n_, 0), LtQ(_n_*_p_ + 1, 0),),
         replacement=x*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*(_n_*_p_ + 1)) - Int((_c_*LambertW(x**_n_*_a_))**(_p_ + 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x)/(_c_*(_n_*_p_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=27,
     ),
     # Rule 28
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int((_c_*LambertW(x**n_*_a_))**_p_/(d_ + _d_*LambertW(x**n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _p_], x), ILtQ(n_, 0),),
         replacement=-Subst(Int((_c_*LambertW(_a_/x**n_))**_p_/(x**2*(_d_*LambertW(_a_/x**n_) + _d_)), x), x, 1/x),
@@ -293,15 +293,15 @@ RULES = [
         rule_number=28,
     ),
     # Rule 29
-    RubiRulePattern(
-        pattern=Int(x**_m_/(_d_*LambertW(x*_a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int(x**_m_/(d_ + _d_*LambertW(x*_a_)), x),
         constraints=(FreeQ([_a_, _d_], x), GtQ(_m_, 0),),
         replacement=x**(_m_ + 1)/(_d_*(_m_ + 1)*LambertW(x*_a_)) - _m_*Int(x**_m_/((_d_*LambertW(x*_a_) + _d_)*LambertW(x*_a_)), x)/(_m_ + 1),
         module_name='8.9 Product logarithm function',
         rule_number=29,
     ),
     # Rule 30
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(1/(x*(d_ + _d_*LambertW(x*_a_))), x),
         constraints=(FreeQ([_a_, _d_], x),),
         replacement=log(LambertW(x*_a_))/_d_,
@@ -309,7 +309,7 @@ RULES = [
         rule_number=30,
     ),
     # Rule 31
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_/(d_ + _d_*LambertW(x*_a_)), x),
         constraints=(FreeQ([_a_, _d_], x), LtQ(_m_, -1),),
         replacement=x**(_m_ + 1)/(_d_*(_m_ + 1)) - Int(x**_m_*LambertW(x*_a_)/(_d_*LambertW(x*_a_) + _d_), x),
@@ -317,47 +317,47 @@ RULES = [
         rule_number=31,
     ),
     # Rule 32
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_/(d_ + _d_*LambertW(x*_a_)), x),
         constraints=(FreeQ([_a_, _d_, _m_], x), Not(IntegerQ(_m_)),),
-        replacement=x**_m_*Gamma(_m_ + 1, (-_m_ - 1)*LambertW(x*_a_))*exp(-_m_*LambertW(x*_a_))/(_a_*_d_*((-_m_ - 1)*LambertW(x*_a_))**_m_*(_m_ + 1)),
+        replacement=x**_m_*exp(-_m_*LambertW(x*_a_))*uppergamma(_m_ + 1, (-_m_ - 1)*LambertW(x*_a_))/(_a_*_d_*((-_m_ - 1)*LambertW(x*_a_))**_m_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=32,
     ),
     # Rule 33
-    RubiRulePattern(
-        pattern=Int(1/(x*(d_ + _d_*LambertW(x**_n_*_a_))), x),
+    SymPyReplacementPattern(
+        pattern=Int(1/(x*(_d_*LambertW(x**_n_*_a_) + d_)), x),
         constraints=(FreeQ([_a_, _d_, _n_], x),),
         replacement=log(LambertW(x**_n_*_a_))/(_d_*_n_),
         module_name='8.9 Product logarithm function',
         rule_number=33,
     ),
     # Rule 34
-    RubiRulePattern(
-        pattern=Int(x**_m_/(d_ + _d_*LambertW(x**n_*_a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int(x**_m_/(_d_*LambertW(x**n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _d_], x), IntegerQ(_m_), ILtQ(n_, 0), NeQ(_m_, -1),),
         replacement=-Subst(Int(x**(-_m_ - 2)/(_d_*LambertW(_a_/x**n_) + _d_), x), x, 1/x),
         module_name='8.9 Product logarithm function',
         rule_number=34,
     ),
     # Rule 35
-    RubiRulePattern(
-        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(x*(_d_*LambertW(x**_n_*_a_) + d_)), x),
+    SymPyReplacementPattern(
+        pattern=Int((_c_*LambertW(x**_n_*_a_))**_p_/(x*(d_ + _d_*LambertW(x**_n_*_a_))), x),
         constraints=(FreeQ([_a_, _c_, _d_, _n_, _p_], x),),
         replacement=(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*_n_*_p_),
         module_name='8.9 Product logarithm function',
         rule_number=35,
     ),
     # Rule 36
-    RubiRulePattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_, _p_], x), NeQ(_m_, -1), EqQ(_m_ + _n_*(_p_ - 1), -1),),
         replacement=x**(_m_ + 1)*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=36,
     ),
     # Rule 37
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*LambertW(x**_n_*_a_)**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _d_, _m_, _n_], x), IntegerQ(_p_), EqQ(_m_ + _n_*_p_, -1),),
         replacement=_a_**_p_*Ei(-_p_*LambertW(x**_n_*_a_))/(_d_*_n_),
@@ -365,15 +365,15 @@ RULES = [
         rule_number=37,
     ),
     # Rule 38
-    RubiRulePattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
+    SymPyReplacementPattern(
+        pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_], x), NeQ(_m_, -1), IntegerQ(p_ + sympy.S(-1)/2), EqQ(_m_ + _n_*(p_ + sympy.S(-1)/2), -1), PosQ(_c_/(p_ + sympy.S(-1)/2)),),
         replacement=_a_**(p_ + sympy.S(-1)/2)*_c_**(p_ + sympy.S(-1)/2)*Rt(pi*_c_/(p_ + sympy.S(-1)/2), 2)*erf(sqrt(_c_*LambertW(x**_n_*_a_))/Rt(_c_/(p_ + sympy.S(-1)/2), 2))/(_d_*_n_),
         module_name='8.9 Product logarithm function',
         rule_number=38,
     ),
     # Rule 39
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_], x), NeQ(_m_, -1), IntegerQ(p_ + sympy.S(-1)/2), EqQ(_m_ + _n_*(p_ + sympy.S(-1)/2), -1), NegQ(_c_/(p_ + sympy.S(-1)/2)),),
         replacement=_a_**(p_ + sympy.S(-1)/2)*_c_**(p_ + sympy.S(-1)/2)*Rt(-pi*_c_/(p_ + sympy.S(-1)/2), 2)*erfi(sqrt(_c_*LambertW(x**_n_*_a_))/Rt(-_c_/(p_ + sympy.S(-1)/2), 2))/(_d_*_n_),
@@ -381,7 +381,7 @@ RULES = [
         rule_number=39,
     ),
     # Rule 40
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*LambertW(x**_n_*_a_) + d_), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_, _p_], x), NeQ(_m_, -1), GtQ(Simplify(_p_ + (_m_ + 1)/_n_), 1),),
         replacement=x**(_m_ + 1)*_c_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*(_m_ + 1)) - _c_*(_m_ + _n_*(_p_ - 1) + 1)*Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**(_p_ - 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x)/(_m_ + 1),
@@ -389,7 +389,7 @@ RULES = [
         rule_number=40,
     ),
     # Rule 41
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _n_, _p_], x), NeQ(_m_, -1), LtQ(Simplify(_p_ + (_m_ + 1)/_n_), 0),),
         replacement=x**(_m_ + 1)*(_c_*LambertW(x**_n_*_a_))**_p_/(_d_*(_m_ + _n_*_p_ + 1)) - (_m_ + 1)*Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**(_p_ + 1)/(_d_*LambertW(x**_n_*_a_) + _d_), x)/(_c_*(_m_ + _n_*_p_ + 1)),
@@ -397,15 +397,15 @@ RULES = [
         rule_number=41,
     ),
     # Rule 42
-    RubiRulePattern(
-        pattern=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_/(_d_*LambertW(x*_a_) + d_), x),
+    SymPyReplacementPattern(
+        pattern=Int(x**_m_*(_c_*LambertW(x*_a_))**_p_/(d_ + _d_*LambertW(x*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _m_, _p_], x), NeQ(_m_, -1),),
-        replacement=x**_m_*(_c_*LambertW(x*_a_))**_p_*((-_m_ - 1)*LambertW(x*_a_))**(-_m_ - _p_)*Gamma(_m_ + _p_ + 1, (-_m_ - 1)*LambertW(x*_a_))*exp(-_m_*LambertW(x*_a_))/(_a_*_d_*(_m_ + 1)),
+        replacement=x**_m_*(_c_*LambertW(x*_a_))**_p_*((-_m_ - 1)*LambertW(x*_a_))**(-_m_ - _p_)*exp(-_m_*LambertW(x*_a_))*uppergamma(_m_ + _p_ + 1, (-_m_ - 1)*LambertW(x*_a_))/(_a_*_d_*(_m_ + 1)),
         module_name='8.9 Product logarithm function',
         rule_number=42,
     ),
     # Rule 43
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(x**_m_*(_c_*LambertW(x**_n_*_a_))**_p_/(d_ + _d_*LambertW(x**_n_*_a_)), x),
         constraints=(FreeQ([_a_, _c_, _d_, _p_], x), NeQ(_m_, -1), IntegerQ(_m_), LtQ(_n_, 0),),
         replacement=-Subst(Int(x**(-_m_ - 2)*(_c_*LambertW(_a_/x**_n_))**_p_/(_d_*LambertW(_a_/x**_n_) + _d_), x), x, 1/x),
@@ -413,7 +413,7 @@ RULES = [
         rule_number=43,
     ),
     # Rule 44
-    RubiRulePattern(
+    SymPyReplacementPattern(
         pattern=Int(u_, x),
         constraints=(FunctionOfQ(LambertW(x), u_, x),),
         replacement=Subst(Int(SimplifyIntegrand((x + 1)*SubstFor(LambertW(x), u_, x)*exp(x), x), x), x, LambertW(x)),

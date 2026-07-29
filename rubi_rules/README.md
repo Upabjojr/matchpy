@@ -118,7 +118,7 @@ rubi_integrate(1/x, x,      pattern='r_1_algebraic_functions/**')
 ## How it works (short version)
 
 Rubi's `.m` rules are translated by `codegen/generate.py` into Python
-`RubiRulePattern` objects under `rules/` (auto-generated — do not edit). Each rule
+`SymPyReplacementPattern` objects under `rules/` (auto-generated — do not edit). Each rule
 is a SymPy pattern + constraints + replacement. `rubi_integrate` converts the
 integral to a MatchPy expression, matches rules, and applies replacements,
 reducing `Int(...)` nodes depth-first until the integral is solved. Rule match
