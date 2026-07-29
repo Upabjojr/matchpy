@@ -14,6 +14,7 @@ Covers:
 """
 import ast
 import importlib
+import math
 
 import pytest
 import sympy
@@ -626,3 +627,93 @@ def test_recursive_helper_rewrites_nested_nodes():
     assert rewrite_as_standard_sympy(nested) == sympy.log(sympy.gamma(a)) + sympy.LambertW(z)
     # non-Wolfram input is returned untouched
     assert rewrite_as_standard_sympy(a + z) == a + z
+
+
+# ---------------------------------------------------------------------------
+# 8. Numeric cross-check of rewrite_as_standard_sympy() against real Mathematica
+# ---------------------------------------------------------------------------
+
+# Every entry below is (Wolfram head, exact args, Re, Im) where the two floats are
+# what REAL Mathematica returned for N[head[args], 25] -- captured by running the
+# expressions through wolframscript, not by trusting the documentation.
+#
+# Structural agreement is not enough for these heads. The translation reorders
+# arguments (ProductLog[k, z] -> LambertW(z, k)), changes arity (PolyGamma[z] ->
+# polygamma(0, z)) and picks between same-family functions (Gamma[a, z] is the
+# UPPER incomplete gamma, so uppergamma and never lowergamma). Each of those is a
+# silent wrong-answer bug that type checks and matches fine -- only numbers catch it.
+# The points were chosen to be discriminating: negative and complex arguments, and
+# for ProductLog the k = -1 branch, where swapping the arguments gives a different
+# finite value rather than an error.
+MATHEMATICA_REFERENCE_VALUES = [
+    ('Gamma', ('37/10',), 4.170651783796603, 0.0),
+    ('Gamma', ('-5/2',), -0.9453087204829419, 0.0),
+    ('Gamma', ('1/2 + 6*I/5',), 0.22298482861259625, -0.30830839880793004),
+    ('Gamma', ('23/10', '17/10',), 0.6803740490674334, 0.0),
+    ('Gamma', ('1/2', '3',), 0.025356509323463443, 0.0),
+    ('Gamma', ('-3/2', '2',), 0.011832994103345998, 0.0),
+    ('Gamma', ('1 + I', '2 - I/2',), 0.002290564090173998, 0.1560931329893612),
+    ('Gamma', ('5', '1/10',), 23.999998159727596, 0.0),
+    ('BesselJ', ('0', '5/2',), -0.048383776468198, 0.0),
+    ('BesselJ', ('3/2', '16/5',), 0.43713398386173985, 0.0),
+    ('BesselJ', ('2', '-13/10',), 0.18302669876873764, 0.0),
+    ('BesselJ', ('1/2', '1 + I',), 0.9679012828901307, 0.060204606214281704),
+    ('BesselJ', ('-1', '7/3',), -0.5337007898361258, 0.0),
+    ('ExpIntegralE', ('1', '2',), 0.04890051070806112, 0.0),
+    ('ExpIntegralE', ('5/2', '7/10',), 0.19522126482361293, 0.0),
+    ('ExpIntegralE', ('0', '3/2',), 0.14875344009895322, 0.0),
+    ('ExpIntegralE', ('1', '1 + I',), 0.00028162445198141834, -0.17932453503935894),
+    ('ExpIntegralE', ('3', '1/4',), 0.32468412597814367, 0.0),
+    ('ExpIntegralEi', ('3/2',), 3.301285449129798, 0.0),
+    ('ExpIntegralEi', ('-2',), -0.04890051070806112, 0.0),
+    ('ExpIntegralEi', ('3/10 + 11*I/10',), 0.6809884385414778, 2.4979824731744684),
+    ('ExpIntegralEi', ('1/20',), -2.3678845985793746, 0.0),
+    ('LogIntegral', ('2',), 1.045163780117493, 0.0),
+    ('LogIntegral', ('1/2',), -0.37867104306108795, 0.0),
+    ('LogIntegral', ('37/10',), 2.7449413517896906, 0.0),
+    ('LogIntegral', ('3/2 + I',), 0.9555492098621429, 1.5677515696641124),
+    ('Factorial', ('5',), 120.0, 0.0),
+    ('Factorial', ('1/2',), 0.886226925452758, 0.0),
+    ('Factorial', ('-1/2',), 1.772453850905516, 0.0),
+    ('Factorial', ('0',), 1.0, 0.0),
+    ('Factorial', ('21/10',), 2.197620278392477, 0.0),
+    ('PolyGamma', ('5/2',), 0.7031566406452432, 0.0),
+    ('PolyGamma', ('-3/2',), 0.7031566406452432, 0.0),
+    ('PolyGamma', ('1 + I',), 0.09465032062247698, 1.0766740474685812),
+    ('PolyGamma', ('1', '5/2',), 0.49035775610023485, 0.0),
+    ('PolyGamma', ('2', '7/10',), -6.434992874190923, 0.0),
+    ('PolyGamma', ('3', '6/5',), 3.24499486472578, 0.0),
+    ('PolyGamma', ('0', '1/3',), -3.1320337800208065, 0.0),
+    ('ProductLog', ('1',), 0.5671432904097838, 0.0),
+    ('ProductLog', ('-1/5',), -0.25917110181907377, 0.0),
+    ('ProductLog', ('2 + I',), 0.8906840692020068, 0.22072564954715954),
+    ('ProductLog', ('1/100',), 0.009901473843595012, 0.0),
+    ('ProductLog', ('-1', '-1/5',), -2.5426413577735265, 0.0),
+    ('ProductLog', ('0', '2',), 0.8526055020137255, 0.0),
+    ('ProductLog', ('-1', '-1/10',), -3.577152063957297, 0.0),
+    ('ProductLog', ('-1', '-1/4',), -2.15329236411035, 0.0),
+    ('Zeta', ('5/2',), 1.341487257250917, 0.0),
+    ('Zeta', ('-3/2',), -0.025485201889833036, 0.0),
+    ('Zeta', ('1/2 + 14*I',), 0.02224114260999359, -0.10325812326645006),
+    ('Zeta', ('5/2', '13/10',), 0.7832185539082374, 0.0),
+    ('Zeta', ('3', '7/10',), 3.2174964370954613, 0.0),
+    ('Zeta', ('2', '1/4',), 17.19732915450711, 0.0),
+    ('Identity', ('37/10',), 3.7, 0.0),
+    ('Identity', ('1 + I',), 1.0, 1.0),
+]
+
+
+@pytest.mark.parametrize('head, args, expected_re, expected_im', MATHEMATICA_REFERENCE_VALUES)
+def test_rewrite_matches_mathematica_numerically(head, args, expected_re, expected_im):
+    """The rewritten SymPy expression must evaluate to what Mathematica evaluates to."""
+    import sympy_wolfram.objects as _objects
+    node = getattr(mf, head, None) or getattr(_objects, head)
+    sargs = [sympy.sympify(a) for a in args]
+    rewritten = node(*sargs).rewrite_as_standard_sympy()
+    value = sympy.sympify(sympy.N(rewritten, 25))
+    got_re, got_im = float(sympy.re(value)), float(sympy.im(value))
+    assert math.isfinite(got_re) and math.isfinite(got_im), (
+        f'{head}{args} rewrote to a non-finite value: {rewritten}')
+    for got, want, part in ((got_re, expected_re, 'Re'), (got_im, expected_im, 'Im')):
+        assert abs(got - want) <= 1e-9 * max(1.0, abs(got), abs(want)), (
+            f'{part} of {head}{args} -> {rewritten}: got {got!r}, Mathematica gives {want!r}')
