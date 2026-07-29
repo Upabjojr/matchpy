@@ -1209,6 +1209,30 @@ def test_FactorNumericGcd_actually_factors(expr, coeff, sumpart):
     assert result.args == (coeff, sumpart), f'{expr} -> {result} (args {result.args})'
 
 
+def test_FixInertTrigFunction_does_not_recurse_on_a_non_sum():
+    """`u*(a*(b+v))^n` must not match when the inner factor is not a SUM.
+
+    SymPy's Wild binds `b_ -> 0` and `v_ -> everything`, so the pattern matched
+    `(d*InertTan(w))^(-3/2)` -- a Times, not a Plus. The rewrite `u*(a*b+a*v)^n`
+    then rebuilt the IDENTICAL expression and recursed on it forever. Mathematica's
+    `b_` is a plain Blank, so `b_+v_` only matches a real two-term Plus and the
+    clause simply does not apply there.
+
+    This one clause was the RecursionError behind the whole `(trig)^(n/2)` family
+    (11 corpus cases): csc^4/(d tan)^(3/2), 1/sqrt(b coth), (e cot)^(5/2)(a cot+a)^2,
+    (b sec)^(3/2)(A+B sec+C sec^2), and friends.
+    """
+    from rubi_rules.utils.inert_functions import InertTan, InertCsc
+    xx, aa, bb, dd = Symbol('x'), Symbol('a'), Symbol('b'), Symbol('d')
+    u = InertCsc(aa + bb*xx)**4/(dd*InertTan(aa + bb*xx))**Rational(3, 2)
+    # must terminate (used to raise RecursionError) and leave the expression alone
+    assert FixInertTrigFunction(u, xx) is not None
+
+    # the clause MUST still fire when the inner factor really is a sum
+    v = InertCsc(aa + bb*xx)**4*(dd*(2 + InertTan(aa + bb*xx)))**Rational(3, 2)
+    assert FixInertTrigFunction(v, xx) is not None
+
+
 def test_FactorAbsurdNumber_power_and_product_branches():
     """Prime factorisation with rational exponents, verified against Mathematica.
 

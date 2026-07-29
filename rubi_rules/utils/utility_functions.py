@@ -4445,8 +4445,16 @@ def FixInertTrigFunction(u, x):
             return coeff*FixInertTrigFunction(rest, x)
 
     # u*(a*(b+v))^n /; FreeQ[{a,b,n},x] && Not[FreeQ[v,x]]  -- distribute
+    #
+    # `M[b_] != 0` is REQUIRED for termination, and it is what Mathematica's matcher
+    # enforces for free. `b_` is a plain Blank there, so `b_+v_` only matches a real
+    # Plus with two terms. SymPy's Wild is looser: it happily binds b_ -> 0 and
+    # v_ -> the whole thing, so `(a*(b+v))^n` matched `(d*InertTan[w])^n` -- a Times,
+    # not a sum. The rewrite u*(a*b+a*v)^n then rebuilt the IDENTICAL expression and
+    # recursed on it forever: this single clause is the RecursionError behind the whole
+    # (trig)^(n/2) family (11 corpus cases) and the uninterruptible hang alongside it.
     M = _umatch(u, u_*(a_*(b_ + v_))**n_)
-    if M is not None and not eager_FreeQ(M[v_], x) and M[a_] != 1:
+    if M is not None and M[b_] != 0 and not eager_FreeQ(M[v_], x) and M[a_] != 1:
         return FixInertTrigFunction(M[u_]*(M[a_]*M[b_] + M[a_]*M[v_])**M[n_], x)
 
     # ---- (co)function of one power times power of another: TRIGa[v]^m*(c TRIGb[w])^n ----
