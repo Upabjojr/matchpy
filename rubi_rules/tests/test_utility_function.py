@@ -1224,7 +1224,14 @@ def test_eager_NumericQ_does_not_evalf_an_inert_derivative():
     The short-circuits match Mathematica: NumericQ is False for anything holding a
     symbol, for a list, and for an unevaluatable Derivative.
     """
-    from sympy import Derivative, Function as SymFunction
+    from sympy import Derivative
+    # Use the port's REAL InertSin, never a fresh `Function('InertSin')`: sympy caches
+    # Function.__new__ on (cls, args) and two same-named UndefinedFunction classes hash
+    # EQUAL, so building an instance from a duplicate class poisons the cache -- a later
+    # `InertSin(x)` comes back with `.func` pointing at the duplicate, and every
+    # `f.func is InertSin` identity test (InertReciprocalQ, ...) silently fails.
+    # That is exactly how this test broke test_InertTrigQ in a full-suite run.
+    from rubi_rules.utils.utility_functions import InertSin as _RealInertSin
     xx = Symbol('x')
     # numeric -> True
     assert eager_NumericQ(S(4)) is True
@@ -1235,7 +1242,7 @@ def test_eager_NumericQ_does_not_evalf_an_inert_derivative():
     assert eager_NumericQ(xx) is False
     assert eager_NumericQ(2*xx) is False
     assert eager_NumericQ([S(1), S(2)]) is False
-    assert eager_NumericQ(Derivative(SymFunction('InertSin')(xx), xx)) is False
+    assert eager_NumericQ(Derivative(_RealInertSin(xx), xx)) is False
 
 
 def test_FunctionOfTanQ_even_power_of_a_sum_does_not_crash():

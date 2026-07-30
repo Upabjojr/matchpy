@@ -4522,7 +4522,10 @@ def FixInertTrigFunction(u, x):
             # binds a_ -> 0 and matches a bare `(b*sin(w))^n` too, firing a clause Rubi
             # would skip. (Same over-match as the `(b_+v_)` clause above, which is what
             # made this function recurse forever -- see that comment.)
-            M = _umatch(u, u_*fa(v_)**m_*(a_ + b_*ftrig(w_))**n_, plain=('a',))
+            # Rubi's clause here is `(u_)` -- a PLAIN Blank -- so a spare factor is
+            # REQUIRED; see the nonunit note in _umatch.
+            M = _umatch(u, u_*fa(v_)**m_*(a_ + b_*ftrig(w_))**n_,
+                        plain=('a',), nonunit=('u',))
             if M is not None and eager_IntegerQ(M[m_]):
                 return (fnum(M[v_])**M[m_]/fden(M[v_])**M[m_]) * \
                     FixInertTrigFunction(M[u_]*(M[a_] + M[b_]*ftrig(M[w_]))**M[n_], x)
@@ -4603,7 +4606,7 @@ def _fix_factors(expr):
     return list(expr.args) if expr.is_Mul else [expr]
 
 
-def _umatch(u, pat, plain=()):
+def _umatch(u, pat, plain=(), nonunit=()):
     """Like ``u.match(pat)`` but with Mathematica's blank semantics.
 
     Two degenerate matches are rejected:
@@ -4652,6 +4655,19 @@ def _umatch(u, pat, plain=()):
     for name in plain:
         for w, val in M.items():
             if getattr(w, 'name', None) == name and val == 0:
+                return None
+    # `nonunit` is the MULTIPLICATIVE counterpart of `plain`: names Rubi writes as a
+    # plain Blank in a product position, which therefore must bind a real factor and
+    # cannot be the implicit 1. The `u` default below treats `u_` as optional for every
+    # clause, but Rubi uses BOTH forms -- e.g. of its two tan+sin clauses,
+    #   FixInertTrigFunction[(u_)*((a_)+(b_.)sin[w_])^(n_.)*tan[v_]^(m_.), x]   <- plain
+    #   FixInertTrigFunction[(u_.)*(cos[v_](b_.)+(a_.)sin[v_])^(n_.)*tan[v_]^(m_.), x]
+    # only the second permits the default. Without this, `tan^2 (2+3 sin)^(5/2)` (no
+    # spare factor) matched the first clause with u -> 1 and was rewritten to
+    # sin^2/cos^2 (2+3 sin)^(5/2), where Mathematica leaves it ALONE.
+    for name in nonunit:
+        for w, val in M.items():
+            if getattr(w, 'name', None) == name and val == S.One:
                 return None
     return M
 
