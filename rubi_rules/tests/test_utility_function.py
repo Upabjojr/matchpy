@@ -1209,6 +1209,50 @@ def test_FactorNumericGcd_actually_factors(expr, coeff, sumpart):
     assert result.args == (coeff, sumpart), f'{expr} -> {result} (args {result.args})'
 
 
+def test_eager_NumericQ_does_not_evalf_an_inert_derivative():
+    """`NumericQ` must not call `N()` on a symbolic expression.
+
+    sympy's `Derivative.evalf` is `self.doit().evalf(prec, **options)`, and `doit()`
+    cannot make progress on a derivative of an UNDEFINED function -- the Inert* trig
+    markers are AppliedUndef, so `Derivative(InertSin(x), x).doit()` returns the SAME
+    object and `evalf` recurses until the stack dies.
+
+    Reached during ordinary constraint checking (NegQ -> PosQ -> PosAux -> NumericQ),
+    it killed `sec(e+f x)^3/sqrt(d tan(e+f x))`, `(d tan(a+b x))^(5/2) csc(a+b x)^3`
+    and `1/(sqrt(e sin(c+d x)) (a+b cos(c+d x)))` with RecursionError.
+
+    The short-circuits match Mathematica: NumericQ is False for anything holding a
+    symbol, for a list, and for an unevaluatable Derivative.
+    """
+    from sympy import Derivative, Function as SymFunction
+    xx = Symbol('x')
+    # numeric -> True
+    assert eager_NumericQ(S(4)) is True
+    assert eager_NumericQ(Rational(3, 2)) is True
+    assert bool(eager_NumericQ(pi)) is True
+    assert bool(eager_NumericQ(sqrt(S(2)))) is True
+    # symbolic / non-numeric -> False, and crucially WITHOUT recursing
+    assert eager_NumericQ(xx) is False
+    assert eager_NumericQ(2*xx) is False
+    assert eager_NumericQ([S(1), S(2)]) is False
+    assert eager_NumericQ(Derivative(SymFunction('InertSin')(xx), xx)) is False
+
+
+def test_FunctionOfTanQ_even_power_of_a_sum_does_not_crash():
+    """Rubi: `FunctionOfTanhQ[Expand[u[[1]]^2], v, x]` -- `v, x` belong to the OUTER
+    predicate, and `Expand` takes exactly one argument.
+
+    A misplaced closing paren passed them to `Expand`, so any integrand reaching this
+    branch (an even power of a SUM of trig/hyperbolic terms) died with
+    `TypeError: Expand() takes 1 positional argument but 3 were given` instead of
+    answering the predicate -- e.g. `x*sqrt(a*sec(x)**4)*csc(x)*sec(x)`.
+    Both FunctionOfTanQ and FunctionOfTanhQ had it identically.
+    """
+    xx = Symbol('x')
+    assert FunctionOfTanQ((sin(xx) + cos(xx))**2, xx, xx) is True
+    assert FunctionOfTanhQ((sinh(xx) + cosh(xx))**2, xx, xx) is True
+
+
 def test_FixInertTrigFunction_does_not_recurse_on_a_non_sum():
     """`u*(a*(b+v))^n` must not match when the inner factor is not a SUM.
 

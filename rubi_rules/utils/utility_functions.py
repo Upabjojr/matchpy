@@ -37,13 +37,13 @@ from sympy.core.containers import Dict, Tuple
 from sympy.core.evalf import N
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (Function, WildFunction, expand, expand_trig)
+from sympy.core.function import (Function, WildFunction, expand, expand_trig, Derivative)
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo, Exp1)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, SympifyError
 from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import im, re, Abs, sign
@@ -789,6 +789,34 @@ def SinhCoshQ(f):
 # no Rubi coupling); imported at the top of this module.
 
 def eager_NumericQ(u):
+    """Mathematica ``NumericQ[u]`` — True iff *u* is a numeric quantity.
+
+    Decides the symbolic cases WITHOUT calling ``N()``. sympy's ``Derivative.evalf``
+    is literally ``self.doit().evalf(prec, **options)``, and ``doit()`` cannot make
+    progress on a derivative of an UNDEFINED function -- our ``Inert*`` trig markers
+    are ``AppliedUndef``, so ``Derivative(InertSin(x), x).doit()`` returns the SAME
+    object and ``evalf`` recurses until the stack dies.
+
+    That path was reached during ordinary constraint checking
+    (``NegQ -> PosQ -> PosAux -> NumericQ``) and killed integrals such as
+    ``sec(e+f x)^3/sqrt(d tan(e+f x))``, ``(d tan(a+b x))^(5/2) csc(a+b x)^3`` and
+    ``1/(sqrt(e sin(c+d x)) (a+b cos(c+d x)))`` with ``RecursionError``.
+
+    The short-circuits are also what Mathematica answers: ``NumericQ`` is False for
+    anything containing a symbol, and for a list.
+    """
+    if isinstance(u, (tuple, list, Tuple)):
+        return False
+    try:
+        u = sympify(u)
+    except (SympifyError, TypeError, AttributeError):
+        return False
+    if getattr(u, 'free_symbols', None):
+        return False
+    # An unevaluatable Derivative is not a numeric quantity -- and is exactly what
+    # makes evalf loop, so it must be rejected before N() is reached.
+    if u.has(Derivative):
+        return False
     return N(u).is_number
 
 def ListQ(u):
@@ -4137,7 +4165,12 @@ def FunctionOfTanhQ(u, v, x):
         if eager_EvenQ(u.exp) and eager_HyperbolicQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
         elif eager_EvenQ(u.args[1]) and eager_SumQ(u.args[0]):
-            return FunctionOfTanhQ(Expand(u.args[0]**2, v, x))
+            # Rubi: FunctionOfTanhQ[Expand[u[[1]]^2], v, x] -- the v, x belong to the
+            # OUTER call. A misplaced paren passed them to Expand, which takes one
+            # argument, so this raised
+            #   TypeError: Expand() takes 1 positional argument but 3 were given
+            # instead of answering the predicate (e.g. x*sqrt(a*sec(x)^4)*csc(x)*sec(x)).
+            return FunctionOfTanhQ(Expand(u.args[0]**2), v, x)
     if eager_ProductQ(u):
         lst = []
         for i in u.args:
@@ -5742,7 +5775,9 @@ def FunctionOfTanQ(u, v, x):
         if eager_EvenQ(u.exp) and eager_TrigQ(u.base) and IntegerQuotientQ(u.base.args[0], v):
             return True
         elif eager_EvenQ(u.exp) and eager_SumQ(u.base):
-            return FunctionOfTanQ(Expand(u.base**2, v, x))
+            # Rubi: FunctionOfTanQ[Expand[u[[1]]^2], v, x] -- same misplaced paren as in
+            # FunctionOfTanhQ; Expand takes one argument.
+            return FunctionOfTanQ(Expand(u.base**2), v, x)
     if eager_ProductQ(u):
         lst = []
         for i in u.args:
