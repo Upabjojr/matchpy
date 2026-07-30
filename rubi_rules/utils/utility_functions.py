@@ -2819,9 +2819,23 @@ def QuotientOfLinearsMatchQ(u, x):
         b = Wild('b', exclude=[x])
         d = Wild('d', exclude=[x])
         c = Wild('c', exclude=[x])
-        e = Wild('e')
+        # Rubi: MatchQ[u, e_.*((a_. + b_. x)/(c_. + d_. x)) /; FreeQ[{a,b,c,d,e}, x]]
+        # -- `e` is in the FreeQ list, so the outer factor must be FREE OF x. Without
+        # exclude=[x] the Wild absorbed x-dependent factors and the predicate answered
+        # True for things that are not a quotient of linears at all:
+        #   x*(3 + 4x)/(2 + 4x)        -> matched with e = x        (Rubi: False)
+        #   (1 + x)(3 + 4x^2)/(2 + 4x) -> matched with e = 1 + x    (Rubi: False)
+        # A wrongly-True match here lets the quotient-of-linears rules fire on
+        # integrands they do not apply to.
+        e = Wild('e', exclude=[x])
         Match = u.match(e*(a + b*x)/(c + d*x))
-        if Match and len(Match) == 5:
+        # `b` and `d` may not be 0. In `a_. + b_. x` the `b_. x` addend must be
+        # structurally PRESENT -- Mathematica's Optional supplies a default coefficient,
+        # never a missing term -- whereas a SymPy Wild happily binds b -> 0 and matches
+        # a CONSTANT numerator. Without this, `1/(2+4x)` and `1/x` reported True where
+        # Rubi reports False. (`a` and `c` MAY be 0: Rubi matches x/(3+4x) with a = 0
+        # and (1+2x)/x with c = 0.)
+        if Match and len(Match) == 5 and Match[b] != 0 and Match[d] != 0:
             return True
         else:
             return False
@@ -5171,17 +5185,23 @@ def KnownTrigIntegrandQ(lst, u, x):
 
     return False
 
+# Rubi passes LOWERCASE heads here -- `KnownTrigIntegrandQ[{sin,cos},u,x]` -- and in
+# Rubi lowercase sin/cos/tan/... are the INERT trig markers (`Rubi`sin`), not the
+# active Sin/Cos. Passing SymPy's ACTIVE sin/cos made these predicates answer False
+# for every integrand the rules actually hand them: the guarded rules match on
+# `InertSin(...)`/`InertTan(...)` patterns, so `u_` always binds inert trig. That
+# silently disabled all 64 rules guarded by these four predicates.
 def eager_KnownSineIntegrandQ(u, x):
-    return KnownTrigIntegrandQ([sin, cos], u, x)
+    return KnownTrigIntegrandQ([InertSin, InertCos], u, x)
 
 def eager_KnownTangentIntegrandQ(u, x):
-    return KnownTrigIntegrandQ([tan], u, x)
+    return KnownTrigIntegrandQ([InertTan], u, x)
 
 def eager_KnownCotangentIntegrandQ(u, x):
-    return KnownTrigIntegrandQ([cot], u, x)
+    return KnownTrigIntegrandQ([InertCot], u, x)
 
 def eager_KnownSecantIntegrandQ(u, x):
-    return KnownTrigIntegrandQ([sec, csc], u, x)
+    return KnownTrigIntegrandQ([InertSec, InertCsc], u, x)
 
 def eager_TryPureTanSubst(u, x):
     a_ = Wild('a', exclude=[x])
@@ -5198,11 +5218,15 @@ def eager_TryPureTanSubst(u, x):
                     G = match[G_]
                     if eager_MemberQ([tan, cot, tanh, coth], G.func):
                         if eager_LinearQ(G.args[0], x):
-                            return True
+                            # Rubi returns Not[MatchQ[...]]: a MATCH means the pure-tan
+                            # substitution must NOT be tried. This was returning True on
+                            # a match -- the predicate was inverted end to end, so Rubi
+                            # tried the substitution in exactly the cases it must skip.
+                            return False
     except:
         pass
 
-    return False
+    return True
 
 def TryTanhSubst(u, x):
     if eager_LogQ(u):
@@ -5968,23 +5992,40 @@ def eager_EulerIntegrandQ(expr, x):
     p = Wild('p', exclude=[x, 0])
     u = Wild('u')
     v = Wild('v')
+    # Rubi parenthesises the LAST conjunct:
+    #   ... && QuadraticQ[u,x] && (Not[RationalQ[p]] || ILtQ[p,0] && Not[BinomialQ[u,x]])
+    # Python's `and` binds tighter than `or`, so dropping those parentheses turned the
+    # guard into `(everything && Not[RationalQ[p]]) || (ILtQ[p,0] && Not[BinomialQ[u,x]])`
+    # -- the right-hand disjunct then returned True on its own, bypassing FreeQ,
+    # IntegerQ and QuadraticQ entirely. Also `1/2` was Python float division; Rubi's
+    # `n+1/2` is an EXACT rational and IntegerQ[2.] is False in Mathematica.
     # Pattern 1
     M = expr.match((a*x + b*u**n)**p)
     if M:
-        if len(M) == 5 and eager_FreeQ([M[a], M[b]], x) and eager_IntegerQ(M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_Not(eager_RationalQ(M[p])) or NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x)):
+        if (len(M) == 5 and eager_FreeQ([M[a], M[b]], x) and eager_IntegerQ(M[n] + S(1)/2)
+                and eager_QuadraticQ(M[u], x)
+                and (eager_Not(eager_RationalQ(M[p]))
+                     or (NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x))))):
             return True
     # Pattern 2
     M = expr.match(v**m*(a*x + b*u**n)**p)
     if M:
-        if len(M) == 6 and eager_FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v]) and eager_IntegersQ(2*M[m], M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_Not(eager_RationalQ(M[p])) or NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x)):
+        if (len(M) == 6 and eager_FreeQ([M[a], M[b]], x) and ZeroQ(M[u] - M[v])
+                and eager_IntegersQ(2*M[m], M[n] + S(1)/2) and eager_QuadraticQ(M[u], x)
+                and (eager_Not(eager_RationalQ(M[p]))
+                     or (NegativeIntegerQ(M[p]) and eager_Not(eager_BinomialQ(M[u], x))))):
             return True
     # Pattern 3
     M = expr.match(u**n*v**p)
     if M:
-        if len(M) == 3 and NegativeIntegerQ(M[p]) and eager_IntegerQ(M[n] + 1/2) and eager_QuadraticQ(M[u], x) and eager_QuadraticQ(M[v], x) and eager_Not(eager_BinomialQ(M[v], x)):
+        if (len(M) == 3 and NegativeIntegerQ(M[p]) and eager_IntegerQ(M[n] + S(1)/2)
+                and eager_QuadraticQ(M[u], x) and eager_QuadraticQ(M[v], x)
+                and eager_Not(eager_BinomialQ(M[v], x))):
             return True
-    else:
-        return False
+    # Rubi's final catch-all definition is `EulerIntegrandQ[u_,x_Symbol] := False`.
+    # This used to fall off the end (returning None) whenever a pattern matched but
+    # its guard failed.
+    return False
 
 def eager_FunctionOfSquareRootOfQuadratic(u, *args):
     if len(args) == 1:

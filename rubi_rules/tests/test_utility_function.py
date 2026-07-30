@@ -1073,11 +1073,55 @@ def test_GeneralizedTrinomialMatchQ():
     assert not eager_GeneralizedTrinomialMatchQ(7 + 2*x**6 + 3*x**5, x)
     assert eager_GeneralizedTrinomialMatchQ(x**2 + x**3 + x**4, x)
 
-def test_QuotientOfLinearsMatchQ():
-    assert QuotientOfLinearsMatchQ((1 + x)*(3 + 4*x**2)/(2 + 4*x), x)
-    assert not QuotientOfLinearsMatchQ(x*(3 + 4*x**2)/(2 + 4*x**3), x)
-    assert QuotientOfLinearsMatchQ(x*(3 + 4*x)/(2 + 4*x), x)
-    assert QuotientOfLinearsMatchQ(2*(3 + 4*x)/(2 + 4*x), x)
+# Rubi: MatchQ[u, e_.*((a_. + b_. x)/(c_. + d_. x)) /; FreeQ[{a,b,c,d,e}, x]]
+# EVERY expected value below was read off Rubi 4.17.3.0, not derived from our code.
+QUOTIENT_OF_LINEARS_CASES = [
+    # genuine quotients of linears
+    ('(1+2x)/(3+4x)',        lambda x, _: (1 + 2*x)/(3 + 4*x),          True),
+    ('x/(3+4x)',             lambda x, _: x/(3 + 4*x),                  True),   # a = 0 is fine
+    ('(3+4x)/(2+4x)',        lambda x, _: (3 + 4*x)/(2 + 4*x),          True),
+    ('(1+2x)/x',             lambda x, _: (1 + 2*x)/x,                  True),   # c = 0 is fine
+    ('2(3+4x)/(2+4x)',       lambda x, _: 2*(3 + 4*x)/(2 + 4*x),        True),   # e free of x
+    ('a(b+c x)/(d+e x)',     lambda x, y: y['a']*(y['b'] + y['c']*x)/(y['d'] + y['e']*x), True),
+    # outer factor DEPENDS on x -> Rubi's FreeQ[e, x] rejects
+    ('x(3+4x)/(2+4x)',       lambda x, _: x*(3 + 4*x)/(2 + 4*x),        False),
+    ('(1+x)(3+4x^2)/(2+4x)', lambda x, _: (1 + x)*(3 + 4*x**2)/(2 + 4*x), False),
+    ('x^2(1+x)/(2+x)',       lambda x, _: x**2*(1 + x)/(2 + x),         False),
+    ('sqrt(x)(1+x)/(2+x)',   lambda x, _: sqrt(x)*(1 + x)/(2 + x),      False),
+    # numerator/denominator not linear
+    ('x(3+4x^2)/(2+4x^3)',   lambda x, _: x*(3 + 4*x**2)/(2 + 4*x**3),  False),
+    ('(3+4x^2)/(2+4x)',      lambda x, _: (3 + 4*x**2)/(2 + 4*x),       False),
+    ('(3+4x)/(2+4x^2)',      lambda x, _: (3 + 4*x)/(2 + 4*x**2),       False),
+    # the `b_. x` / `d_. x` addend must be PRESENT -- a constant is not linear here
+    ('1/(2+4x)',             lambda x, _: 1/(2 + 4*x),                  False),
+    ('1/x',                  lambda x, _: 1/x,                          False),
+    # degenerate
+    ('x',                    lambda x, _: x,                            False),
+    ('5',                    lambda x, _: S(5),                         False),
+]
+
+
+@pytest.mark.parametrize('label, build, expected', QUOTIENT_OF_LINEARS_CASES)
+def test_QuotientOfLinearsMatchQ(label, build, expected):
+    """Cross-verified against Rubi 4.17.3.0 -- all 17 values, not just the easy ones.
+
+    TWO separate Wild-vs-Blank defects lived here, and a 4-case test only caught the
+    first:
+
+    * `e` lacked ``exclude=[x]`` although Rubi lists it in ``FreeQ[{a,b,c,d,e}, x]``,
+      so an x-DEPENDENT outer factor was absorbed and `x(3+4x)/(2+4x)` reported True.
+    * `b`/`d` could bind 0, collapsing the "linear" to a CONSTANT -- Mathematica's
+      Optional supplies a default coefficient, never a missing addend -- so
+      `1/(2+4x)` and `1/x` reported True.
+
+    A wrongly-True answer here lets the quotient-of-linears rules fire on integrands
+    they do not apply to, which is how the earlier PolyQ defect produced a wrong
+    antiderivative.
+    """
+    syms = {n: Symbol(n) for n in 'abcde'}
+    xx = Symbol('x')
+    assert QuotientOfLinearsMatchQ(build(xx, syms), xx) is expected
+
 
 def test_PolynomialTermQ():
     assert PolynomialTermQ(S(3), x)   # Rubi: FreeQ constant is a polynomial term
@@ -1862,22 +1906,64 @@ def test_KnownTrigIntegrandQ():
     assert KnownTrigIntegrandQ([sin], (a + b*func)**m*(c + d*func + e*func**2), x)
     assert not KnownTrigIntegrandQ([cos], (a + b*func)**m, x)
 
-def test_KnownSineIntegrandQ():
-    assert eager_KnownSineIntegrandQ((a + b*sin(a + b*x))**m, x)
+def test_Known_star_IntegrandQ_tests_INERT_trig():
+    """Every value cross-checked against Rubi 4.17.3.0.
 
-def test_KnownTangentIntegrandQ():
-    assert eager_KnownTangentIntegrandQ((a + b*tan(a + b*x))**m, x)
+    Rubi calls ``KnownTrigIntegrandQ[{sin,cos},u,x]`` with LOWERCASE heads, and in Rubi
+    lowercase sin/cos/tan/... are the INERT trig markers (``Rubi`sin``), not the active
+    ``Sin``/``Cos``. The port passed SymPy's ACTIVE sin/cos, so these four predicates
+    answered False for every integrand the rules actually hand them -- the guarded rules
+    match on ``InertSin(...)``/``InertTan(...)`` patterns, so ``u_`` always binds inert
+    trig. That silently disabled all 64 rules guarded by these predicates.
+    """
+    from rubi_rules.utils.inert_functions import (InertSin, InertCos, InertTan,
+                                                  InertCot, InertSec, InertCsc)
+    # Use the port's REAL inert heads, never a fresh Function('InertSin'): sympy caches
+    # Function.__new__ on (cls, args) and same-named UndefinedFunction classes hash
+    # equal, so a duplicate poisons the cache and breaks `.func is InertSin`.
+    C = Symbol('C')  # the module's shared symbols do not include C
+    sn, cs = InertSin(e + f*x), InertCos(e + f*x)
+    assert eager_KnownSineIntegrandQ(S(1), x) is True
+    assert eager_KnownSineIntegrandQ((a + b*sn)**m, x) is True
+    assert eager_KnownSineIntegrandQ((a + b*cs)**m, x) is True
+    assert eager_KnownSineIntegrandQ(sn, x) is True
+    assert eager_KnownSineIntegrandQ(A + C*sn**2, x) is True
+    assert eager_KnownSineIntegrandQ(A + B*sn + C*sn**2, x) is True
+    assert eager_KnownSineIntegrandQ((a + b*sn)**m*(A + B*sn), x) is True
+    # ACTIVE trig is NOT a known sine integrand -- this is the whole point.
+    assert eager_KnownSineIntegrandQ((a + b*sin(e + f*x))**m, x) is False
+    # wrong family, and a nonlinear trig argument
+    assert eager_KnownSineIntegrandQ((a + b*InertTan(e + f*x))**m, x) is False
+    assert eager_KnownSineIntegrandQ((a + b*InertSin(e + f*x**2))**m, x) is False
 
-def test_KnownCotangentIntegrandQ():
-    assert eager_KnownCotangentIntegrandQ((a + b*cot(a + b*x))**m, x)
-
-def test_KnownSecantIntegrandQ():
-    assert eager_KnownSecantIntegrandQ((a + b*sec(a + b*x))**m, x)
+    assert eager_KnownTangentIntegrandQ((a + b*InertTan(e + f*x))**m, x) is True
+    assert eager_KnownTangentIntegrandQ((a + b*sn)**m, x) is False
+    assert eager_KnownCotangentIntegrandQ((a + b*InertCot(e + f*x))**m, x) is True
+    assert eager_KnownSecantIntegrandQ((a + b*InertSec(e + f*x))**m, x) is True
+    assert eager_KnownSecantIntegrandQ((a + b*InertCsc(e + f*x))**m, x) is True
+    assert eager_KnownSecantIntegrandQ((a + b*InertTan(e + f*x))**m, x) is False
 
 def test_TryPureTanSubst():
-    assert eager_TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x)
-    assert eager_TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x)
-    assert not eager_TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x)
+    """Every value cross-checked against Rubi 4.17.3.0.
+
+    Rubi's body is ``Not[MatchQ[u, F_[c_.*(a_.+b_.*G_[v_])] /; ...]]`` -- a MATCH means
+    the pure-tan substitution must NOT be tried. The port returned True on a match, so
+    the predicate was inverted end to end and the substitution was attempted in exactly
+    the cases Rubi skips (and skipped everywhere else). The old test asserted the
+    inverted behaviour, so it locked the bug in.
+    """
+    # matching -> False (do NOT try the substitution)
+    assert eager_TryPureTanSubst(atan(c*(a + b*tan(a + b*x))), x) is False
+    assert eager_TryPureTanSubst(atanh(c*(a + b*cot(a + b*x))), x) is False
+    assert eager_TryPureTanSubst(acot(b*tanh(x)), x) is False
+    # non-matching -> True
+    assert eager_TryPureTanSubst(log(x), x) is True
+    assert eager_TryPureTanSubst(sin(x), x) is True
+    assert eager_TryPureTanSubst(x**S(2), x) is True
+    assert eager_TryPureTanSubst(atan(x), x) is True
+    assert eager_TryPureTanSubst(atan(a*sin(x)), x) is True      # G not in {Tan,Cot,Tanh,Coth}
+    assert eager_TryPureTanSubst(atan(tan(x**S(2))), x) is True  # v not linear in x
+    assert eager_TryPureTanSubst(tan(c*(a + b*cot(a + b*x))), x) is True  # F not an inverse
 
 def test_TryPureTanhSubst():
     assert not TryPureTanhSubst(log(x), x)
@@ -2200,9 +2286,31 @@ def test_FunctionOfLog():
     assert not eager_FunctionOfLog(2*sin(x)*2,x)
 
 def test_EulerIntegrandQ():
-    assert eager_EulerIntegrandQ((2*x + 3*((x + 1)**3)**(S(3)/2))**(-3), x)
-    assert not eager_EulerIntegrandQ((2*x + (2*x**2)**2)**3, x)
-    assert not eager_EulerIntegrandQ(3*x**2 + 5*x + 1, x)
+    """Every value cross-checked against Rubi 4.17.3.0.
+
+    Rubi parenthesises the last conjunct::
+
+        ... && QuadraticQ[u,x] && (Not[RationalQ[p]] || ILtQ[p,0] && Not[BinomialQ[u,x]])
+
+    Python's ``and`` binds tighter than ``or``, so dropping those parentheses turned the
+    guard into ``(everything && Not[RationalQ[p]]) || (ILtQ[p,0] && Not[BinomialQ[u,x]])``
+    -- the right-hand disjunct then answered True on its own, bypassing FreeQ, IntegerQ
+    and QuadraticQ entirely. The old test asserted that bypass as the expected result.
+    """
+    h = S(3)/2
+    # (x+1)^3 is NOT quadratic, so Rubi rejects these however negative the exponent is.
+    assert eager_EulerIntegrandQ((2*x + 3*((x + 1)**3)**h)**(-3), x) is False
+    assert eager_EulerIntegrandQ((2*x + 3*((x + 1)**3)**h)**(-1), x) is False
+    # x^2+1 IS quadratic -- but it is also a binomial, so ILtQ[p,0] branch fails...
+    assert eager_EulerIntegrandQ((2*x + 3*(x**2 + 1)**h)**(-1), x) is False
+    # ...while a non-rational exponent satisfies Not[RationalQ[p]] and passes.
+    assert eager_EulerIntegrandQ((2*x + 3*(x**2 + 1)**h)**p, x) is True
+    # positive rational exponent: neither disjunct holds
+    assert eager_EulerIntegrandQ((2*x + 3*(x**2 + 1)**h)**2, x) is False
+    assert eager_EulerIntegrandQ((x**2 + 1)**h*(2*x + 3*(x**2 + 1)**h)**(-1), x) is False
+    assert eager_EulerIntegrandQ((2*x + (2*x**2)**2)**3, x) is False
+    assert eager_EulerIntegrandQ(3*x**2 + 5*x + 1, x) is False
+    assert eager_EulerIntegrandQ(x**2, x) is False
 
 def test_Divides():
     assert not eager_Divides(x, a*x**2, x)

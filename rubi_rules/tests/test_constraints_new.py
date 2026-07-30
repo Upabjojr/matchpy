@@ -461,13 +461,30 @@ class TestFunctionOfTrigOfLinearQ:
 # =============================================================================
 
 
+# These four predicates test Rubi's INERT trig markers, not the active functions.
+# Rubi calls `KnownTrigIntegrandQ[{sin,cos},u,x]` with LOWERCASE heads, which in Rubi
+# are the inert markers (`Rubi`sin`). The rules guarded by these predicates all match
+# on `InertSin(...)`/`InertTan(...)` patterns, so the bound `u` is always inert trig.
+# Every value below was read off Rubi 4.17.3.0. The earlier version of these tests
+# asserted `check(u=sin(x)) == True` for ACTIVE trig, which Rubi answers False -- they
+# were written from the port's behaviour rather than from Rubi, and so kept a defect
+# alive that disabled all 64 rules guarded by these predicates.
+from rubi_rules.utils.inert_functions import (InertSin, InertCos, InertTan,
+                                              InertCot, InertSec, InertCsc)
+
+
 class TestKnownSineIntegrandQ:
     """Tests for KnownSineIntegrandQ constraint."""
 
     def test_sine_integrand(self):
         c = KnownSineIntegrandQ('u', x)
-        assert c.check(u=sin(x)) == True
-        assert c.check(u=cos(2*x + 1)) == True
+        assert c.check(u=InertSin(x)) == True
+        assert c.check(u=InertCos(2*x + 1)) == True
+
+    def test_active_trig_is_not_a_known_sine_integrand(self):
+        c = KnownSineIntegrandQ('u', x)
+        assert c.check(u=sin(x)) == False
+        assert c.check(u=cos(2*x + 1)) == False
 
     def test_unity(self):
         c = KnownSineIntegrandQ('u', x)
@@ -475,6 +492,7 @@ class TestKnownSineIntegrandQ:
 
     def test_not_sine(self):
         c = KnownSineIntegrandQ('u', x)
+        assert c.check(u=InertTan(x)) == False
         assert c.check(u=tan(x)) == False
 
 
@@ -483,12 +501,16 @@ class TestKnownTangentIntegrandQ:
 
     def test_tangent_integrand(self):
         c = KnownTangentIntegrandQ('u', x)
-        assert c.check(u=tan(x)) == True
-        assert c.check(u=tan(3*x + 2)) == True
+        assert c.check(u=InertTan(x)) == True
+        assert c.check(u=InertTan(3*x + 2)) == True
+
+    def test_active_tangent_is_rejected(self):
+        c = KnownTangentIntegrandQ('u', x)
+        assert c.check(u=tan(x)) == False
 
     def test_not_tangent(self):
         c = KnownTangentIntegrandQ('u', x)
-        assert c.check(u=sin(x)) == False
+        assert c.check(u=InertSin(x)) == False
 
 
 class TestKnownSecantIntegrandQ:
@@ -496,12 +518,16 @@ class TestKnownSecantIntegrandQ:
 
     def test_secant_integrand(self):
         c = KnownSecantIntegrandQ('u', x)
-        assert c.check(u=sec(x)) == True
-        assert c.check(u=csc(2*x)) == True
+        assert c.check(u=InertSec(x)) == True
+        assert c.check(u=InertCsc(2*x)) == True
+
+    def test_active_secant_is_rejected(self):
+        c = KnownSecantIntegrandQ('u', x)
+        assert c.check(u=sec(x)) == False
 
     def test_not_secant(self):
         c = KnownSecantIntegrandQ('u', x)
-        assert c.check(u=sin(x)) == False
+        assert c.check(u=InertSin(x)) == False
 
 
 class TestKnownCotangentIntegrandQ:
@@ -509,11 +535,16 @@ class TestKnownCotangentIntegrandQ:
 
     def test_cotangent_integrand(self):
         c = KnownCotangentIntegrandQ('u', x)
-        assert c.check(u=cot(x)) == True
+        assert c.check(u=InertCot(x)) == True
+        assert c.check(u=S.One) == True
+
+    def test_active_cotangent_is_rejected(self):
+        c = KnownCotangentIntegrandQ('u', x)
+        assert c.check(u=cot(x)) == False
 
     def test_not_cotangent(self):
         c = KnownCotangentIntegrandQ('u', x)
-        assert c.check(u=cos(x)) == False
+        assert c.check(u=InertCos(x)) == False
 
 
 # =============================================================================
