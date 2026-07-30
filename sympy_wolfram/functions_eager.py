@@ -71,9 +71,32 @@ def eager_FreeQ(nodes, var):
     """
     var = _ensure_sympy(var)
     if isinstance(nodes, (tuple, list)):
-        return not any(S(_ensure_sympy(expr)).has(var) for expr in nodes)
-    nodes = S(_ensure_sympy(nodes))
-    return not nodes.has(var)
+        return not any(_freeq_scalar(S(_ensure_sympy(e)), var) for e in nodes)
+    return not _freeq_scalar(S(_ensure_sympy(nodes)), var)
+
+
+@_functools.lru_cache(maxsize=200000)
+def _freeq_has(expr, var):
+    """``expr.has(var)`` -- MEMOISED, because the rule matcher asks this constantly.
+
+    Measured on `(a + b*cos(c + d*x))^(-4/3)`: **55,000+ FreeQ calls for only 16 DFS
+    rule applications** -- roughly 3,400 per application, since every candidate rule
+    carries FreeQ guards over its wildcards -- on expressions reaching ~1,800 nodes.
+    `.has` walks the whole tree each time, so this is the hot loop behind the
+    "integrand hangs but Rubi does it in 1-8s" cases, and the reason SIGALRM starves
+    (the time is inside C-level sympy traversal with no bytecode boundary).
+
+    Pure: same (expr, var) always gives the same answer, and both are immutable
+    SymPy objects, so caching is sound.
+    """
+    return expr.has(var)
+
+
+def _freeq_scalar(expr, var):
+    try:
+        return _freeq_has(expr, var)
+    except TypeError:            # unhashable -> compute without caching
+        return expr.has(var)
 
 
 def head_to_class(obj):

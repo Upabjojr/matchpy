@@ -816,7 +816,11 @@ def test_LeadTerm():
     assert LeadTerm(a + b + c) == a
 
 def test_RemainingTerms():
-    assert RemainingTerms(a*b*c) == a*b*c
+    """Rubi: ``If[SumQ[u], Rest[u], 0]`` -- a NON-sum has NO remaining terms.
+    Verified against Rubi 4.17.3.0: RemainingTerms[a b c] is **0**; this asserted
+    a*b*c, which double-counts the term wherever a caller reassembles
+    LeadTerm(u) + RemainingTerms(u)."""
+    assert RemainingTerms(a*b*c) == 0      # MMA-verified
     assert RemainingTerms(a + b + c) == b + c
 
 def test_LeadFactor():
@@ -1397,9 +1401,20 @@ def test_FactorOrder():
     assert FactorOrder(a, b) == 1
 
 def test_Smallest():
+    """Rubi's Smallest is the value CLOSEST TO ZERO, not the minimum::
+
+        If[num1 > 0, If[num2 > 0, Min[..], 0], If[num2 > 0, 0, Max[..]]]
+
+    Values checked against Rubi 4.17.3.0: Smallest[-1,-2] is **-1** (this asserted -2,
+    encoding a plain Min), Smallest[-1,2] is 0, Smallest[{3,1,2}] is 1.
+    CommonFactors uses it to pick the common exponent to extract, so the sign
+    convention decides which common power comes out.
+    """
     assert Smallest([2, 1, 3, 4]) == 1
     assert Smallest(1, 2) == 1
-    assert Smallest(-1, -2) == -2
+    assert Smallest(-1, -2) == -1          # MMA-verified: closest to zero
+    assert Smallest(-1, 2) == 0            # opposite signs -> 0
+    assert Smallest([S(3), S(1), S(2)]) == 1
 
 def test_MostMainFactorPosition():
     assert MostMainFactorPosition([S(1), S(2), S(3)]) == 1

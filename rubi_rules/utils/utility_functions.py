@@ -1953,9 +1953,12 @@ def LeadTerm(u):
     return u
 
 def RemainingTerms(u):
+    """Rubi: ``If[SumQ[u], Rest[u], 0]`` — a NON-sum has no remaining terms, so 0.
+    This returned the input itself, which double-counts the term in every caller
+    that adds ``LeadTerm(u) + RemainingTerms(u)`` back together."""
     if eager_SumQ(u):
         return eager_Rest(u)
-    return u
+    return S(0)
 
 def LeadFactor(u):
     # returns the leading factor of u.
@@ -3398,13 +3401,32 @@ def FactorOrder(u, v):
     return Order(u, v)
 
 def Smallest(num1, num2=None):
+    """Rubi ``Smallest`` — the value CLOSEST TO ZERO, not the minimum::
+
+        Smallest[num1_, num2_] :=
+          If[num1 > 0, If[num2 > 0, Min[num1, num2], 0],
+                       If[num2 > 0, 0, Max[num1, num2]]]
+
+    So opposite signs give 0, and two negatives give the MAXIMUM (`Smallest[-1,-2]`
+    is -1, not -2). This was a plain ``Min``.
+
+    It matters: ``CommonFactors`` uses it to choose the common exponent to extract
+    (``num = Smallest[lst4]; common = common*base^num``). Picking -2 where Rubi picks
+    -1 extracts the WRONG common power, so the residuals do not shrink -- expressions
+    keep growing instead of being factored down.
+    """
     if num2 is None:
         lst = num1
         num = lst[0]
         for i in eager_Rest(lst):
             num = Smallest(num, i)
         return num
-    return Min(num1, num2)
+    try:
+        if num1 > 0:
+            return Min(num1, num2) if num2 > 0 else S(0)
+        return S(0) if num2 > 0 else Max(num1, num2)
+    except TypeError:          # non-comparable (symbolic) -> keep the old behaviour
+        return Min(num1, num2)
 
 def OrderedQ(l):
     return l == Sort(l)
