@@ -561,8 +561,12 @@ def test_FactorSquareFree():
     assert FactorSquareFree(x**5 - x**3 - x**2 + 1) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
 
 def test_FactorSquareFreeList():
-    assert FactorSquareFreeList(x**5-x**3-x**2 + 1) == [[1, 1], [x**3 + 2*x**2 + 2*x + 1, 1], [x - 1, 2]]
+    """Mathematica orders the factors by DEGREE ASCENDING; SymPy's sqf_list orders by
+    multiplicity. All values verified against Mathematica 12.2."""
+    assert FactorSquareFreeList(x**5-x**3-x**2 + 1) == [[1, 1], [x - 1, 2], [x**3 + 2*x**2 + 2*x + 1, 1]]
     assert FactorSquareFreeList(x**4 - 2*x**2 + 1) == [[1, 1], [x**2 - 1, 2]]
+    assert FactorSquareFreeList((x - 1)**2*(x + 2)**3) == [[1, 1], [x - 1, 2], [x + 2, 3]]
+    assert FactorSquareFreeList((x**2 + 1)*(x - 3)**4) == [[1, 1], [x - 3, 4], [x**2 + 1, 1]]
 
 def test_PerfectPowerTest():
     assert not PerfectPowerTest(sqrt(x), x)
@@ -668,9 +672,27 @@ def test_NumericQ():
 # interaction it guards is still covered by test_SignOfFactor_complex_numeric_factor below.
 
 def test_CoefficientList():
+    """Every value cross-checked against Mathematica 12.2.
+
+    Mathematica does NOT return {} for a non-polynomial: it collects the terms whose
+    power of x is a non-negative integer and drops everything else into the degree-0
+    slot. Only `CoefficientList[0, x]` is {}. The old `assert ... == []` for sqrt(x)
+    recorded the port's shortcut rather than Mathematica's behaviour.
+    """
     assert CoefficientList(1 + a*x, x) == [1, a]
     assert CoefficientList(1 + a*x**3, x) == [1, 0, 0, a]
-    assert CoefficientList(sqrt(x), x) == []
+    assert CoefficientList(x**2 + 1, x) == [1, 0, 1]
+    assert CoefficientList(a*x**2 + b, x) == [b, 0, a]
+    assert CoefficientList(S(5), x) == [5]
+    assert CoefficientList(S(0), x) == []
+    # non-polynomials: the whole term lands in the degree-0 slot
+    assert CoefficientList(sqrt(x), x) == [sqrt(x)]
+    assert CoefficientList(sin(x), x) == [sin(x)]
+    assert CoefficientList(exp(x), x) == [exp(x)]
+    assert CoefficientList(1/x, x) == [1/x]
+    # mixed: integer powers are still extracted around the non-polynomial part
+    assert CoefficientList(sqrt(x) + x**2, x) == [sqrt(x), 0, 1]
+    assert CoefficientList(x**(S(3)/2) + x, x) == [x**(S(3)/2), 1]
 
 def test_ReplaceAll():
     assert eager_ReplaceAll(x, {x: a}) == a
@@ -722,9 +744,32 @@ def test_RemoveContent():
     assert RemoveContent(a + b*x, x) == a + b*x
 
 def test_ExpandAlgebraicFunction():
-    assert ExpandAlgebraicFunction((a + b)*x, x) == a*x + b*x
-    assert ExpandAlgebraicFunction((a + b)**2*x, x)== a**2*x + 2*a*b*x + b**2*x
-    assert ExpandAlgebraicFunction((a + b)**2*x**2, x) == a**2*x**2 + 2*a*b*x**2 + b**2*x**2
+    """Every value cross-checked against Rubi 4.17.3.0.
+
+    Both Rubi definitions are guarded by ``!FreeQ[u, x]``; the port declared
+    ``u = Wild('u', exclude=[x])``, the exact opposite, so it was wrong in BOTH
+    directions -- it expanded sums free of x, and failed to expand the
+    ``v_.*u_Plus^n_`` form because the x-dependent base was excluded. All three of the
+    old assertions were cases Rubi leaves untouched.
+    """
+    # sums FREE of x are left alone -- these three were the old (wrong) expectations
+    assert ExpandAlgebraicFunction((a + b)*x, x) == (a + b)*x
+    assert ExpandAlgebraicFunction((a + b)**2*x, x) == (a + b)**2*x
+    assert ExpandAlgebraicFunction((a + b)**2*x**2, x) == (a + b)**2*x**2
+    # definition 1: Map[#*v &, u] over an x-DEPENDENT Plus factor
+    assert ExpandAlgebraicFunction((a + x)*v, x) == a*v + v*x
+    assert ExpandAlgebraicFunction((a + x)*b, x) == a*b + b*x
+    assert ExpandAlgebraicFunction(sqrt(x)*(a + x), x) == a*sqrt(x) + x**(S(3)/2)
+    # Rubi maps over ONE Plus factor -- it is not a full expand
+    assert ExpandAlgebraicFunction((a + x)*(b + x), x) == a*(b + x) + x*(b + x)
+    assert ExpandAlgebraicFunction((a + x)**2*(b + x), x) == b*(a + x)**2 + x*(a + x)**2
+    # definition 2: v_. * u_Plus^n_ with n a positive integer
+    assert ExpandAlgebraicFunction((a + x)**2*v, x) == a**2*v + 2*a*v*x + v*x**2
+    assert ExpandAlgebraicFunction((a + x)**3, x) == a**3 + 3*a**2*x + 3*a*x**2 + x**3
+    # n not a positive integer -> untouched
+    assert ExpandAlgebraicFunction((a + x)**(S(1)/2)*v, x) == v*sqrt(a + x)
+    assert ExpandAlgebraicFunction((a + x)**(-2)*v, x) == v/(a + x)**2
+    assert ExpandAlgebraicFunction(x, x) == x
 
 def test_CollectReciprocals():
     assert CollectReciprocals(-1/(1 + 1*x) - 1/(1 - 1*x), x) == -2/(-x**2 + 1)
@@ -1003,7 +1048,13 @@ def test_NonnumericFactors():
     assert NonnumericFactors(log(a)) == log(a)
 
 def test_Prepend():
-    assert Prepend([1, 2, 3], [4, 5]) == [4, 5, 1, 2, 3]
+    """Mathematica NESTS the prepended element: Prepend[{1,2,3},{4,5}] is
+    {{4,5},1,2,3}. Verified against Mathematica 12.2. The old expectation
+    ([4,5,1,2,3]) recorded a splicing convention that had already caused a real bug
+    in CombineExponents."""
+    assert Prepend([1, 2, 3], [4, 5]) == [[4, 5], 1, 2, 3]
+    assert Prepend([1, 2, 3], 4) == [4, 1, 2, 3]
+    assert Prepend([], 4) == [4]
 
 def test_SumSimplerQ():
     assert not eager_SumSimplerQ(S(4 + x),S(3 + x**3))

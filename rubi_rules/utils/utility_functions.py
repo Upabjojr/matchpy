@@ -32,6 +32,7 @@ def _pure_expr_cache(maxsize):
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.sorting import default_sort_key
 from sympy.core.basic import Basic
 from sympy.core.containers import Dict, Tuple
 from sympy.core.evalf import N
@@ -1328,10 +1329,29 @@ def eager_PosQ(u):
     return PosAux(TogetherSimplify(u))
 
 def CoefficientList(u, x):
+    """Mathematica's ``CoefficientList`` does NOT give up on a non-polynomial: it
+    collects the terms whose power of x is a non-negative integer and drops everything
+    else into the degree-0 slot. ``CoefficientList[Sqrt[x]+x^2, x]`` is
+    ``{Sqrt[x], 0, 1}``, ``CoefficientList[1/x, x]`` is ``{1/x}`` and
+    ``CoefficientList[Sin[x], x]`` is ``{Sin[x]}`` -- only ``CoefficientList[0, x]``
+    is ``{}``. This used to return ``[]`` for every non-polynomial, which also made the
+    ``lst[-1]`` in ExpandIntegrand's With31 raise IndexError instead of returning a
+    value. Values cross-checked against Mathematica 12.2.
+    """
+    u = sympify(u)
+    if u == S(0):
+        return []
     if eager_PolynomialQ(u, x):
         return list(reversed(Poly(u, x).all_coeffs()))
-    else:
-        return []
+    buckets = {}
+    for term in Add.make_args(Expand(u)):
+        coeff, expo = term.as_coeff_exponent(x)
+        if expo.is_Integer and expo >= 0 and not coeff.has(x):
+            key = int(expo)
+        else:
+            key, coeff = 0, term
+        buckets[key] = buckets.get(key, S(0)) + coeff
+    return [buckets.get(i, S(0)) for i in range(max(buckets) + 1)]
 
 def eager_ReplaceAll(expr, args):
     if isinstance(args, (tuple, list)):
@@ -1822,38 +1842,48 @@ def NonfreeTerms(u, x):
         return S(0)
 
 def ExpandAlgebraicFunction(expr, x):
-    if eager_ProductQ(expr):
-        u_ = Wild('u', exclude=[x])
-        n_ = Wild('n', exclude=[x])
-        v_ = Wild('v')
-        pattern = u_*v_
-        match = expr.match(pattern)
-        if match:
-            keys = [u_, v_]
-            if len(keys) == len(match):
-                u, v = tuple([match[i] for i in keys])
-                if eager_SumQ(v):
-                    u, v = v, u
-                if not eager_FreeQ(u, x) and eager_SumQ(u):
-                    result = 0
-                    for i in u.args:
-                        result += i*v
-                    return result
+    """Port of Rubi's two ``ExpandAlgebraicFunction`` definitions::
 
-        pattern = u_**n_*v_
-        match = expr.match(pattern)
-        if match:
-            keys = [u_, n_, v_]
-            if len(keys) == len(match):
-                u, n, v = tuple([match[i] for i in keys])
-                if PositiveIntegerQ(n) and eager_SumQ(u):
-                    w = Expand(u**n)
-                    result = 0
-                    for i in w.args:
-                        result += i*v
-                    return result
+        ExpandAlgebraicFunction[u_Plus*v_, x_Symbol] :=
+            Map[Function[#*v], u] /; !FreeQ[u, x]
+        ExpandAlgebraicFunction[v_.*u_Plus^n_, x_Symbol] :=
+            With[{w = Expand[u^n, x]}, Map[Function[#*v], w] /; SumQ[w]] /;
+                IGtQ[n, 0] && !FreeQ[u, x]
+
+    The previous version declared ``u = Wild('u', exclude=[x])`` -- the exact OPPOSITE
+    of Rubi's ``!FreeQ[u, x]`` -- so it was wrong in both directions: it expanded sums
+    that are FREE of x (``(a+b)*x`` became ``a*x + b*x``; Rubi leaves it alone), and it
+    failed to expand the ``u_Plus^n_`` form because the x-dependent base was excluded
+    (``(a+x)**2*v`` came back unchanged; Rubi gives ``a^2 v + 2 a v x + v x^2``).
+
+    Note Rubi maps over ONE Plus factor and leaves the rest intact -- it is not a full
+    expand: ``(a+x)*(b+x)`` gives ``a*(b+x) + x*(b+x)``. All values cross-checked
+    against Rubi 4.17.3.0.
+    """
+    if eager_ProductQ(expr):
+        args = list(expr.args)
+        # definition 1 -- a Plus factor that DEPENDS on x
+        for i, factor in enumerate(args):
+            if eager_SumQ(factor) and not eager_FreeQ(factor, x):
+                v = Mul(*(args[:i] + args[i + 1:]))
+                return Add(*[t*v for t in factor.args])
+        # definition 2 -- (Plus)^n with n a positive integer and an x-dependent base
+        for i, factor in enumerate(args):
+            if (eager_PowerQ(factor) and eager_SumQ(factor.base)
+                    and PositiveIntegerQ(factor.exp) and not eager_FreeQ(factor.base, x)):
+                w = Expand(factor.base**factor.exp)
+                if eager_SumQ(w):
+                    v = Mul(*(args[:i] + args[i + 1:]))
+                    return Add(*[t*v for t in w.args])
+    elif (eager_PowerQ(expr) and eager_SumQ(expr.base)
+            and PositiveIntegerQ(expr.exp) and not eager_FreeQ(expr.base, x)):
+        # `v_.` is Optional, so a bare (a+x)^3 matches definition 2 with v -> 1
+        w = Expand(expr.base**expr.exp)
+        if eager_SumQ(w):
+            return w
 
     return expr
+
 
 def _reciprocal_of_linear_parts(term, x):
     """If ``term == e/(a + b*x)`` with ``e, a, b`` free of x and b != 0, return
@@ -2190,11 +2220,18 @@ def eager_GeneralizedTrinomialQ(u, x):
     return ListQ(GeneralizedTrinomialParts(u, x))
 
 def FactorSquareFreeList(poly):
+    """Mathematica orders the factors by DEGREE ASCENDING; SymPy's ``sqf_list`` orders
+    them by multiplicity, so ``x^5-x^3-x^2+1`` came back as
+    ``{{1,1},{cubic,1},{-1+x,2}}`` where Mathematica gives
+    ``{{1,1},{-1+x,2},{cubic,1}}``. Verified against Mathematica 12.2 on three
+    polynomials. (The one caller, ``PerfectPowerTest``, is order-independent -- it
+    takes a GCD of the exponents and a product -- so this is fidelity, not a fix.)
+    """
     r = sqf_list(poly)
-    result = [[1, 1]]
-    for i in r[1]:
-        result.append(list(i))
-    return result
+    factors = [list(i) for i in r[1]]
+    factors.sort(key=lambda fe: (Poly(fe[0]).total_degree() if fe[0].free_symbols else 0,
+                                 default_sort_key(fe[0])))
+    return [[1, 1]] + factors
 
 def PerfectPowerTest(u, x):
     # If u (x) is equivalent to a polynomial raised to an integer power greater than 1,
@@ -3055,9 +3092,17 @@ def SumSimplerAuxQ(u, v):
         return v!=0 and NonnumericFactors(u)==NonnumericFactors(v) and (NumericFactor(u)/NumericFactor(v)<-1/2 or NumericFactor(u)/NumericFactor(v)==-1/2 and NumericFactor(u)<0)
 
 def Prepend(l1, l2):
-    if not isinstance(l2, (tuple, list)):
-        return [l2] + l1
-    return l2 + l1
+    """Mathematica's ``Prepend[list, elem]`` NESTS the new element, whatever it is:
+    ``Prepend[{1,2,3}, {4,5}]`` is ``{{4,5},1,2,3}``, not ``{4,5,1,2,3}``.
+
+    This used to CONCATENATE when ``l2`` was a list, which silently spliced a
+    ``[base, exponent]`` pair into its container -- the defect behind the old
+    ``CombineExponents`` breakage. The two in-port callers had been written around the
+    splicing behaviour (passing ``[scalar]`` instead of ``scalar``) and are un-wrapped
+    to match. Rubi's only list-passing call site is CombineExponents, which this port
+    implements with plain list operations, so nothing else depends on the old shape.
+    """
+    return [l2] + list(l1)
 
 def Drop(lst, n):
     if isinstance(lst, (tuple, list)):
@@ -3997,9 +4042,9 @@ def UnifyTerm(term, lst, x):
         return [term]
     tmp = eager_Simplify(eager_First(lst)/term)
     if eager_FreeQ(tmp, x):
-        return Prepend(eager_Rest(lst), [(1+tmp)*term])
+        return Prepend(eager_Rest(lst), (1+tmp)*term)
     else:
-        return Prepend(UnifyTerm(term, eager_Rest(lst), x), [eager_First(lst)])
+        return Prepend(UnifyTerm(term, eager_Rest(lst), x), eager_First(lst))
 
 def CalculusQ(u):
     return False
