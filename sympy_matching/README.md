@@ -227,7 +227,154 @@ True
 
 ---
 
-## 7. Assembling a rule
+## 7. Constraints: `FreeOf` and friends
+
+Structure alone is often not enough. A pattern such as `a_*x + b_` matches almost
+anything unless you also demand that `a` and `b` do not themselves involve `x` — the
+difference between "a linear expression in x" and "any sum whatsoever". Constraints are
+predicates evaluated **after** the structure matches and the wildcards are bound; if one
+fails, that match is rejected and the matcher moves on.
+
+### `FreeOf` — the bound expression must not contain a symbol
+
+`FreeOf(variables, symbol)` succeeds when none of the expressions bound to `variables`
+contains an atom of that name anywhere in its tree. It is the constraint you reach for
+constantly when writing rules over a distinguished variable.
+
+```python
+>>> from matchpy import Pattern, is_match, Wildcard, Operation, Arity, NamedAtom
+>>> from matchpy.expressions.constraints import FreeOf
+>>> f = Operation.new('f', Arity.binary)
+>>> x_, y_ = Wildcard.dot('x'), Wildcard.dot('y')
+>>> pattern = Pattern(f(x_, y_), FreeOf('y', 'x'))       # y must not contain 'x'
+>>> is_match(f(NamedAtom('x'), NamedAtom('a')), pattern)
+True
+>>> is_match(f(NamedAtom('x'), NamedAtom('x')), pattern)
+False
+
+```
+
+### Argument shapes
+
+A **group** of variables can be given at once; the constraint holds only if *every*
+member is free of the symbol, so one grouped constraint is equivalent to several
+single ones:
+
+```python
+>>> both = Pattern(f(x_, y_), FreeOf(['x', 'y'], 'z'))
+>>> is_match(f(NamedAtom('a'), NamedAtom('b')), both)
+True
+>>> is_match(f(NamedAtom('a'), NamedAtom('z')), both)     # y contains z
+False
+
+```
+
+Names may be given as bare strings, or as the objects that carry them — a wildcard
+(via `wildcard_name`) or a symbol (via `name`) can be passed directly, so you need not
+hand-write the string form:
+
+```python
+>>> a_, b_ = WildSymbol('a'), WildSymbol('b')
+>>> FreeOf([a_, b_], Symbol('x'))
+FreeOf(('a', 'b'), 'x')
+>>> FreeOf([a_, b_], Symbol('x')).variables == frozenset({'a', 'b'})
+True
+
+```
+
+These are the same shapes a higher-layer predicate such as `sympy_wolfram`'s `FreeQ`
+accepts, so the two are interchangeable at the call site.
+
+`FreeOf` is a dedicated constraint rather than a lambda: it traverses iteratively with
+an early exit, avoids closure indirection, and has a readable `repr`, which matters when
+a rule set holds thousands of them.
+
+```python
+>>> FreeOf('y', 'x').variables
+frozenset({'y'})
+
+```
+
+### Constraints on a SymPy-side rule
+
+In a `SymPyReplacementPattern` the guards are ordinary SymPy `Boolean`s over the
+wildcards. Below, the power rule must not fire for `m = -1`, where the antiderivative is
+a logarithm and `x**(m+1)/(m+1)` would divide by zero:
+
+```python
+>>> from sympy import Ne
+>>> from sympy_matching.matching_rule import SymPyReplacementPattern, build_replacer
+>>> from sympy_matching.conversion import matchpy_to_sympy
+>>> m_ = WildSymbol('m')
+>>> power_rule = SymPyReplacementPattern(
+...     pattern=Int(x**m_, x),
+...     constraints=(Ne(m_, -1),),
+...     replacement=x**(m_ + 1)/(m_ + 1),
+...     module_name='doc example',
+...     rule_number=1,
+... )
+>>> replacer = build_replacer([power_rule])
+>>> rewritten, fired = replacer.replace(to_matchpy_expression(Int(x**3, x)))
+>>> matchpy_to_sympy(rewritten)
+x**4/4
+>>> fired
+('doc example', 1)
+
+```
+
+The guard genuinely blocks the excluded case — with `m = -1` the structure still
+matches, but the constraint rejects it, so the integral comes back untouched instead of
+being rewritten to a division by zero:
+
+```python
+>>> matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(x**-1, x))))
+Int(1/x, x)
+
+```
+
+### Writing your own
+
+Subclass `SymPyMatchingConstraint` and implement `check`, which receives the bound
+wildcards as keyword arguments named after their `wildcard_name` (§2) and returns a
+bool. `variables` is derived automatically from the constraint's arguments.
+
+```python
+>>> from sympy_matching.constraint import SymPyMatchingConstraint
+>>> class IsEven(SymPyMatchingConstraint):
+...     """The bound expression must be an even integer."""
+...     def check(self, **bindings):
+...         value = bindings[self.args[0].wildcard_name]
+...         return value.is_integer and value.is_even
+>>> IsEven(m_).variables
+('m',)
+>>> IsEven(m_).check(m=Symbol('q', integer=True, even=True))
+True
+>>> IsEven(m_).check(m=Symbol('q', integer=True, odd=True))
+False
+
+```
+
+Because these constraints subclass SymPy's `Boolean`, they compose with the logic
+operators, and the rule machinery evaluates the combination lazily — `Or` stops at the
+first success, `And` at the first failure — so an expensive guard placed after a cheap
+one is only reached when the cheap one passes:
+
+```python
+>>> from sympy import And, Not
+>>> from sympy.logic.boolalg import Boolean
+>>> isinstance(Not(IsEven(m_)), Boolean)
+True
+>>> isinstance(And(Ne(m_, -1), IsEven(m_)), Boolean)
+True
+
+```
+
+Dialect-specific predicate families are built on this base rather than added here — for
+example `sympy_wolfram` supplies a Wolfram-named `FreeQ` over the same idea.
+
+---
+
+## 8. Assembling a rule
 
 `SymPyReplacementPattern` bundles a pattern, its constraints and its replacement;
 `build_replacer` compiles a list of them into a MatchPy `ManyToOneReplacer`. Constraints

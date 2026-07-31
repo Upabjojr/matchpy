@@ -26,7 +26,7 @@ You can also create a subclass of the :class:`Constraint` class to create your o
 """
 import inspect
 from collections import OrderedDict
-from typing import Callable, FrozenSet, Dict
+from typing import Callable, FrozenSet, Dict, Iterable, Tuple, Union
 from functools import cached_property
 
 from .._typed import TypedModel
@@ -254,13 +254,44 @@ class CustomConstraint(Constraint):  # pylint: disable=too-few-public-methods
         return cc
 
 
+def _constraint_name(obj) -> str:
+    """Name of `obj` for constraint purposes: a plain string, or a named object.
+
+    Accepts a bare name, or anything carrying one -- a pattern wildcard exposes
+    ``wildcard_name``, a symbol exposes ``name``. This is what lets `FreeOf` be called
+    with the same argument shapes as a higher-layer predicate that works in objects
+    rather than strings, without this module knowing anything about those layers.
+    """
+    for attr in ('wildcard_name', 'name'):
+        value = getattr(obj, attr, None)
+        if isinstance(value, str) and value:
+            return value
+    if isinstance(obj, str):
+        return obj
+    return str(obj)
+
+
+def _constraint_names(obj) -> Tuple[str, ...]:
+    """Normalise one name, or an iterable of them, to a tuple of names."""
+    if isinstance(obj, str) or not isinstance(obj, Iterable):
+        return (_constraint_name(obj),)
+    return tuple(_constraint_name(o) for o in obj)
+
+
 class FreeOf(Constraint):
-    """Constraint that checks an expression is free of a given symbol.
+    """Constraint that checks expressions are free of a given symbol.
 
-    FreeOf(variable, symbol_name) succeeds when the expression bound to `variable`
-    does NOT contain a NamedAtom with name `symbol_name` anywhere in its tree.
+    ``FreeOf(variables, symbol)`` succeeds when NONE of the expressions bound to
+    `variables` contains an atom named `symbol` anywhere in its tree.
 
-    This is analogous to Mathematica's FreeQ[expr, x].
+    The argument shapes mirror the higher-layer ``FreeQ`` predicate, so the two are
+    interchangeable at the call site:
+
+    * one variable or MANY -- ``FreeOf('a', 'x')`` and ``FreeOf(['a', 'b'], 'x')``;
+      a group succeeds only if EVERY member is free of the symbol, so the second is
+      exactly ``FreeOf('a', 'x')`` and ``FreeOf('b', 'x')`` together;
+    * names as bare strings, or as the objects carrying them -- a pattern wildcard
+      (``wildcard_name``) or a symbol (``name``) may be passed directly.
 
     Optimized over a CustomConstraint because:
     - Uses a dedicated iterative traversal with early exit (no generator overhead)
@@ -279,32 +310,55 @@ class FreeOf(Constraint):
         True
         >>> is_match(f(NamedAtom('x'), NamedAtom('x')), pattern)
         False
+
+        A group of variables, all of which must be free of the symbol::
+
+        >>> both = Pattern(f(x_, y_), FreeOf(['x', 'y'], 'z'))
+        >>> is_match(f(NamedAtom('a'), NamedAtom('b')), both)
+        True
+        >>> is_match(f(NamedAtom('a'), NamedAtom('z')), both)
+        False
     """
 
-    variable: str
+    variable: Union[str, Tuple[str, ...]]
     symbol_name: str
 
-    def __init__(self, variable: str, symbol_name: str, **kwargs) -> None:
+    def __init__(self, variables, symbol_name, **kwargs) -> None:
         """
         Args:
-            variable:
-                The name of the pattern variable whose bound expression will be checked.
+            variables:
+                The pattern variable whose bound expression will be checked, or an
+                iterable of them (all must be free of the symbol). Each may be a bare
+                name or an object carrying one (``wildcard_name`` / ``name``).
             symbol_name:
-                The name of the symbol that must NOT appear anywhere in the expression.
+                The symbol that must NOT appear anywhere in those expressions, as a
+                name or as an object carrying one.
         """
-        super().__init__(variable=variable, symbol_name=symbol_name, **kwargs)
+        names = _constraint_names(variables)
+        # A single variable is stored unwrapped so that `.variable`, `repr` and equality
+        # are unchanged for existing callers.
+        stored = names[0] if len(names) == 1 else names
+        super().__init__(variable=stored,
+                         symbol_name=_constraint_name(symbol_name), **kwargs)
+
+    @property
+    def variable_names(self) -> Tuple[str, ...]:
+        """The checked variables, always as a tuple -- one entry or many."""
+        return self.variable if isinstance(self.variable, tuple) else (self.variable,)
 
     @cached_property
     def variables(self) -> FrozenSet[str]:
-        return frozenset({self.variable})
+        return frozenset(self.variable_names)
 
     def __call__(self, match: substitution.Substitution) -> bool:
-        try:
-            expr = match[self.variable]
-        except KeyError:
-            return True  # Variable not yet bound; will be re-checked later
-
-        return self._is_free(expr)
+        for name in self.variable_names:
+            try:
+                expr = match[name]
+            except KeyError:
+                continue  # Variable not yet bound; will be re-checked later
+            if not self._is_free(expr):
+                return False
+        return True
 
     def _is_free(self, expr) -> bool:
         """Check that expr does not contain an atom with the given name.
@@ -336,6 +390,8 @@ class FreeOf(Constraint):
         return True
 
     def __str__(self):
+        if isinstance(self.variable, tuple):
+            return 'FreeOf([{}], {})'.format(', '.join(self.variable), self.symbol_name)
         return 'FreeOf({}, {})'.format(self.variable, self.symbol_name)
 
     def __repr__(self):
@@ -352,5 +408,5 @@ class FreeOf(Constraint):
         return hash(('FreeOf', self.variable, self.symbol_name))
 
     def with_renamed_vars(self, renaming: Dict[str, str]) -> 'FreeOf':
-        new_variable = renaming.get(self.variable, self.variable)
-        return FreeOf(new_variable, self.symbol_name)
+        renamed = tuple(renaming.get(n, n) for n in self.variable_names)
+        return FreeOf(renamed, self.symbol_name)

@@ -7,6 +7,7 @@ from matchpy.expressions.expressions import (
 from matchpy.expressions.constraints import FreeOf
 from matchpy.matching.one_to_one import match as match_one_to_one
 from matchpy.matching.many_to_one import ManyToOneMatcher
+from matchpy.expressions.substitution import Substitution
 
 # ─── Test fixtures ────────────────────────────────────────────────────────────
 
@@ -242,3 +243,66 @@ class TestFreeQManyToOne:
         labels = [label for label, _ in results]
         assert 'u_free' in labels
         assert 'v_free' in labels
+
+
+class TestFreeOfApi:
+    """`FreeOf` accepts the same argument shapes as the higher-layer `FreeQ` predicate.
+
+    `FreeQ(expr_vars, free_of)` takes either one variable or a list of them, given as
+    objects rather than bare strings. `FreeOf` accepts all of those, so the two are
+    interchangeable at the call site, while the original single-string form keeps
+    working unchanged.
+    """
+
+    def test_a_group_of_variables_all_must_be_free(self):
+        f = Operation.new('f', Arity.binary)
+        x_, y_ = Wildcard.dot('x'), Wildcard.dot('y')
+        pattern = Pattern(f(x_, y_), FreeOf(['x', 'y'], 'z'))
+
+        def matches(subject):
+            return bool(list(match_one_to_one(subject, pattern)))
+
+        assert matches(f(NamedAtom('a'), NamedAtom('b'))) is True
+        assert matches(f(NamedAtom('z'), NamedAtom('b'))) is False
+        assert matches(f(NamedAtom('a'), NamedAtom('z'))) is False
+
+    def test_a_group_equals_the_separate_constraints(self):
+        grouped = FreeOf(['a', 'b'], 'x')
+        assert grouped.variables == FreeOf('a', 'x').variables | FreeOf('b', 'x').variables
+
+    def test_names_may_be_objects_that_carry_them(self):
+        """Anything exposing `wildcard_name` or `name` may be passed instead of a str."""
+        class _Wild:
+            wildcard_name = 'a'
+
+        class _Sym:
+            name = 'x'
+
+        assert FreeOf(_Wild(), _Sym()).variables == frozenset({'a'})
+        assert FreeOf(_Wild(), _Sym()).symbol_name == 'x'
+        assert FreeOf([_Wild(), _Wild()], _Sym()).variables == frozenset({'a'})
+
+    def test_single_variable_form_is_unchanged(self):
+        """The original API must be untouched -- `variable` stays a bare string."""
+        c = FreeOf('u', 'x')
+        assert c.variable == 'u'
+        assert repr(c) == "FreeOf('u', 'x')"
+        assert str(c) == 'FreeOf(u, x)'
+
+    def test_grouped_str_shows_the_group(self):
+        assert str(FreeOf(['a', 'b'], 'x')) == 'FreeOf([a, b], x)'
+
+    def test_renaming_maps_every_variable_in_a_group(self):
+        renamed = FreeOf(['a', 'b'], 'x').with_renamed_vars({'a': 'a2'})
+        assert renamed.variables == frozenset({'a2', 'b'})
+        assert renamed.symbol_name == 'x'
+
+    def test_grouped_equality_and_hash(self):
+        assert FreeOf(['a', 'b'], 'x') == FreeOf(['a', 'b'], 'x')
+        assert FreeOf(['a', 'b'], 'x') != FreeOf(['a', 'c'], 'x')
+        assert len({FreeOf(['a', 'b'], 'x'), FreeOf(['a', 'b'], 'x')}) == 1
+
+    def test_an_unbound_variable_defers_rather_than_failing(self):
+        """A variable not yet bound is re-checked later, exactly as in the single form."""
+        assert FreeOf(['a', 'b'], 'x')(Substitution({'a': NamedAtom('q')})) is True
+        assert FreeOf(['a', 'b'], 'x')(Substitution({'a': NamedAtom('x')})) is False
