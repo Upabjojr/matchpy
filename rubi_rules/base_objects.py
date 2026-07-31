@@ -24,6 +24,7 @@ already-inert forms, so the fallback never re-fires. See the project memory note
 ``rubi-trig-deactivation-dispatch``.
 """
 import os
+import functools
 import re
 from pathlib import Path
 import sympy
@@ -251,34 +252,33 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
 
 # ── DFS integrator with path-aware cycle detection ───────────────────────────
 
+def _is_rubi_giveup(expr) -> bool:
+    """True if `expr` carries Rubi's explicit give-up marker `Unintegrable`.
+
+    Matched by type NAME: round-tripping a rule's replacement through MatchPy can turn
+    the `rubi_utils.Unintegrable` node into a plain undefined Function of the same name.
+    """
+    return any(type(a).__name__ == 'Unintegrable' for a in sympy.preorder_traversal(expr))
+
+
 def _dfs_is_clean(expr) -> bool:
     """True if `expr` is a finished antiderivative: no unresolved `Int`, no
-    `CannotIntegrate` marker, and no degenerate `zoo`/`nan` value.
+    `CannotIntegrate`/`Unintegrable` marker, and no degenerate `zoo`/`nan` value.
 
-    `CannotIntegrate` is matched by head *name*: round-tripping a rule's
-    replacement through MatchPy can turn the `rubi_utils.CannotIntegrate` node into
-    a plain undefined `Function('CannotIntegrate')`, so an isinstance/atoms check
-    against the imported class misses it.
+    The markers are matched by head *name*: round-tripping a rule's replacement through
+    MatchPy can turn the `rubi_utils` node into a plain undefined `Function` of the same
+    name, so an isinstance/atoms check against the imported class misses it.
 
-    A result containing `zoo` (ComplexInfinity) or `nan` is a degenerate
-    evaluation (a coefficient divided by zero, etc.), never a valid closed form.
-    Rejecting it here keeps such a result from being preferred over the correct
-    finite one when several rules match and the matcher's (hash-ordered) yield
-    order happens to surface the degenerate rule first -- otherwise the returned
-    antiderivative varies run-to-run.
+    A result containing `zoo` (ComplexInfinity) or `nan` is a degenerate evaluation (a
+    coefficient divided by zero, etc.), never a valid closed form. Rejecting it here
+    keeps such a result from being preferred over the correct finite one when several
+    rules match and the matcher's yield order happens to surface the degenerate rule
+    first -- otherwise the returned antiderivative varies run-to-run.
     """
     if expr.atoms(Int):
         return False
     if expr.has(sympy.zoo, sympy.nan):
         return False
-    # `Unintegrable` is Rubi's explicit give-up marker (Defer[Int]); a result carrying
-    # it is NOT finished. It was missing here (and, being a MathematicaExpr rather
-    # than a sympy.Function, the atoms(Function) check below never saw it), so e.g.
-    # the whole-sum fast path accepted 4.3.7#6 -- whose replacement IS Unintegrable --
-    # for the trivially splittable Int[4*I + cot(c+d x)], surfacing "Unintegrable"
-    # from (a+I a tan)^3*cot instead of the closed form. Checked by type NAME in one
-    # tree walk (round-tripping through MatchPy can turn either marker into a plain
-    # undefined Function of the same name).
     return not any(type(a).__name__ in ('CannotIntegrate', 'Unintegrable')
                    for a in sympy.preorder_traversal(expr))
 
@@ -302,6 +302,22 @@ def _assert_no_leaked_wildcards(expr, rule):
             f"replacement was not evaluated at fire time. result={expr}")
 
 
+from rubi_rules.rule_order import (  # noqa: E402
+    RUBI_LOAD_ORDER, NOT_IN_RUBI_LOAD_LIST)
+
+_LOAD_INDEX = {name: i for i, name in enumerate(RUBI_LOAD_ORDER)}
+
+
+def _module_title(mod: str) -> str:
+    """The descriptive part of a module name, with the leading section number dropped."""
+    return re.sub(r'^[\d.]+\s*', '', mod or '').strip().lower()
+
+
+_TITLE_INDEX = {}
+for _i, _name in enumerate(RUBI_LOAD_ORDER):
+    _TITLE_INDEX.setdefault(_module_title(_name), _i)
+
+
 def _rule_id(replacement):
     """(module_name, rule_number) id parsed from a tracing replacement fn's qualname."""
     qn = getattr(replacement, '__qualname__', '')
@@ -314,23 +330,54 @@ def _rule_id(replacement):
     return (qn or repr(replacement), None)
 
 
+@functools.lru_cache(maxsize=None)
+def _module_load_index(mod: str) -> tuple:
+    """Rubi.m's load position for a rule module, as a sort key.
+
+    Rubi's priority is the ORDER ITS FILES ARE LOADED BY ``Rubi.m`` -- an explicit
+    sequence that is NOT sorted by the dotted section number (it loads
+    "9.2 Piecewise linear functions" at position 69 and "9.1 Derivative integration
+    rules" at 199). Keying on the section number, as this used to, disagrees with the
+    real order in 22 places.
+
+    Matching is by full name first, then by TITLE (the text after the section number),
+    because the codegen sourced a Rubi checkout whose section numbers have since
+    shifted: our "1.3.1 P(x)^p" is Rubi's "1.3.3 P(x)^p". That covers 201 of our 207
+    modules; the remaining 6 have no counterpart in this Rubi and keep a section-number
+    ordering placed AFTER every module Rubi actually loads.
+    """
+    if mod not in NOT_IN_RUBI_LOAD_LIST:
+        idx = _LOAD_INDEX.get(mod)
+        if idx is None:
+            idx = _TITLE_INDEX.get(_module_title(mod))
+        if idx is not None:
+            return (0, idx, ())
+    # Not in Rubi's load list at all: the obsolete alternate-numbering files the codegen
+    # picked up by walking the directory ("9.2 Derivative integration rules",
+    # "9.4 Miscellaneous integration rules"), plus the few modules whose section numbers
+    # drifted between Rubi checkouts. They sort AFTER everything Rubi actually loads, so
+    # they can never pre-empt a real rule -- but they stay available as a last resort.
+    # Deleting them instead loses `Int[Sin[3a+3bx] Csc[a+bx]/(c+dx)]`, which they are
+    # currently the only rules here able to integrate.
+    m = re.match(r'[\d.]+', mod or '')
+    section = tuple(int(p) for p in m.group().split('.') if p) if m else ()
+    return (1, section, mod or '')
+
+
 def _rule_priority(replacement):
     """Sort key restoring Rubi's ordered first-match priority.
 
-    Rubi tries its rules in LOAD ORDER -- by file (its dotted section number
-    ``1.1.3.2``), then by position within the file (the rule number). MatchPy instead
-    yields matches in an internal hash order, so when several rules match the same
-    integrand the first *clean* result is arbitrary. That silently picks the wrong rule
-    when two rules both integrate cleanly but only the earlier one is valid here -- e.g.
-    the GCD reduction ``1.1.3.2:[16]`` (substitute x^2, giving the real cubic result)
-    MUST beat the root-sum ``1.1.3.2:[37]`` (whose ``(-1)^(m/2)`` is imaginary for odd m)
-    for ``Int[x/(a+b x^6)]``. Sorting the matches by this key before trying them makes
-    the first clean result the one Rubi itself would apply.
+    Rubi tries its rules in LOAD ORDER -- by file, then by position within the file (the
+    rule number). MatchPy instead yields matches in an internal hash order, so when
+    several rules match the same integrand the first *clean* result is arbitrary. That
+    silently picks the wrong rule when two rules both integrate cleanly but only the
+    earlier one is valid here -- e.g. the GCD reduction ``1.1.3.2:[16]`` (substitute
+    x^2, giving the real cubic result) MUST beat the root-sum ``1.1.3.2:[37]`` (whose
+    ``(-1)^(m/2)`` is imaginary for odd m) for ``Int[x/(a+b x^6)]``. Sorting the matches
+    by this key before trying them makes the first clean result the one Rubi would apply.
     """
     mod, num = _rule_id(replacement)
-    m = re.match(r'[\d.]+', mod or '')
-    section = tuple(int(p) for p in m.group().split('.') if p) if m else ()
-    return (section, mod or '', num if num is not None else 1 << 30)
+    return (_module_load_index(mod or ''), num if num is not None else 1 << 30)
 
 
 def _dfs_reduce_result(result, x, path, replacer, applied, budget, trace=None):
@@ -580,6 +627,17 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         # zoo/nan result is never a useful partial answer -- skip it entirely so a
         # pure-degenerate integrand is left unevaluated (honest "unsolved") rather
         # than returning a wrong zoo.
+        # `Unintegrable` is Rubi's explicit give-up: Mathematica applies the FIRST
+        # matching rule and stops, so once this one fires every rule still to come is
+        # one Rubi would never have reached (the candidates are in Rubi's own priority
+        # order). Continuing past it made the DFS hunt for an antiderivative Rubi had
+        # already declared not to exist -- `Int[(a+b sec)^(3/2)/sec^(5/3)]` ran >300s
+        # here versus 0.39s in Rubi, firing 107 rules in a repeating cycle.
+        if _is_rubi_giveup(reduced):
+            _record(rule, 'accepted (Unintegrable -- Rubi stops here)')
+            applied.append(rule)
+            applied.extend(local)
+            return reduced, False
         _record(rule, 'candidate (non-clean)')
         if fallback is None and not reduced.has(sympy.zoo, sympy.nan):
             fallback = (reduced, rule, local)
