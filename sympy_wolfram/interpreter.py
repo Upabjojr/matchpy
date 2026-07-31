@@ -676,19 +676,35 @@ class FFLConverter:
         # Symbol. (The bare class itself is not an Expr and cannot sit in a constraint's args.)
         if atom in self._HEAD_FUNCTION_NAMES and atom in self.func_map:
             return f"HeadRef({self.func_map[atom]})"
-        # Known wildcard references
-        if atom in self._wildcards_optional:
-            var_name = f'_{atom}_'
-            if var_name not in self._eval_ns:
-                ws = WildSymbol(atom, optional_value=IDENTITY_ELEMENT)
-                self._eval_ns[var_name] = ws
-            return var_name
-        if atom in self._wildcards_non_optional:
-            var_name = f'{atom}_'
-            if var_name not in self._eval_ns:
-                ws = WildSymbol(atom)
-                self._eval_ns[var_name] = ws
-            return var_name
+        # Known wildcard references.
+        #
+        # ONLY outside a pattern. Inside a pattern a bare atom is a LITERAL symbol, and
+        # Mathematica keeps it independent of a same-named pattern variable:
+        # `MatchQ[d + 5 W, d + d_.*W]` is True -- the literal `d` matches itself while
+        # the variable binds 5. Resolving bare atoms here unconditionally made the
+        # translation ORDER-DEPENDENT, because these sets fill up as conversion walks the
+        # tree: `d + d_.*W` came out correctly as `Symbol('d') + _d_*W`, but the very same
+        # Mathematica expression written `d_.*W + d` (Plus is orderless, so they are the
+        # SAME expression) came out as `_d_*W + _d_` -- which then demands both be equal
+        # and no longer matches `d + 5 W`.
+        #
+        # On the REPLACEMENT / CONSTRAINT side there are no `Pattern[...]` nodes at all --
+        # wildcards appear as bare atoms and MUST resolve to the bound values. That side
+        # is converted with `is_pattern=False` (and the caller pre-seeds the names via
+        # `wildcards=` / `optional_wildcards=`), so it is unaffected.
+        if not is_pattern:
+            if atom in self._wildcards_optional:
+                var_name = f'_{atom}_'
+                if var_name not in self._eval_ns:
+                    ws = WildSymbol(atom, optional_value=IDENTITY_ELEMENT)
+                    self._eval_ns[var_name] = ws
+                return var_name
+            if atom in self._wildcards_non_optional:
+                var_name = f'{atom}_'
+                if var_name not in self._eval_ns:
+                    ws = WildSymbol(atom)
+                    self._eval_ns[var_name] = ws
+                return var_name
         # A scoping local (declared in an enclosing Module/With/Block binding list) is
         # emitted BARE -- it is declared once at the top of the generated module, so
         # bindings read `Module({r: ...}, ...)` instead of building `Symbol('r')`
@@ -901,7 +917,18 @@ def ffl_to_sympy_code(
         namespace[identifier] = Symbol(wolfram_name)
     namespace.update(caller_entries)
 
-    code = converter.convert(ffl)
+    # A conversion with NO caller-supplied wildcard names is a PATTERN: its wildcards
+    # arrive as `Pattern[...]`/`Optional[...]` nodes, and any BARE atom is a LITERAL
+    # symbol that Mathematica keeps independent of a same-named pattern variable
+    # (`MatchQ[d + 5 W, d + d_.*W]` is True). Passing `is_pattern` through is what stops
+    # a literal being rewritten into the wildcard, which used to make the translation
+    # ORDER-DEPENDENT -- `d + d_.*W` converted correctly while the identical (Plus is
+    # orderless) `d_.*W + d` did not.
+    #
+    # A conversion WITH caller-supplied names is the replacement/constraint side, where
+    # wildcards legitimately appear as bare atoms and must resolve to the bound values.
+    is_pattern = not (wildcards or optional_wildcards)
+    code = converter.convert(ffl, is_pattern=is_pattern)
     return code, converter.wild_defs, sorted(converter._symbols)
 
 

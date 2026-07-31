@@ -118,6 +118,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [X] lift replacement rule building to sympy_matching/ (done: build_tracing_replacer / _make_replacement_fn in sympy_matching/matching_rule.py)
 - [ ] rename SymPyReplacementPattern to RewriteRule, SymPyRewriteRule, Rule, MatchingRule? (MAYBE: SymPyReplacementRule)
 - [ ] rename SymPyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not. (MAYBE: SymPyMatchingConstraint)
+- [ ] optimize FreeOf in matchPy, and make it not a constraint? Link FreeQ to FreeOf ?
 
 Strange warning:
 

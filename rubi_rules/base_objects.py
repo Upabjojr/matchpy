@@ -622,17 +622,10 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
             applied.append(rule)
             applied.extend(local)
             return reduced, False
-        # A terminal result that still has an Int/CannotIntegrate: keep the first
-        # one as a fallback, but keep looking for a clean result. A degenerate
-        # zoo/nan result is never a useful partial answer -- skip it entirely so a
-        # pure-degenerate integrand is left unevaluated (honest "unsolved") rather
-        # than returning a wrong zoo.
-        # `Unintegrable` is Rubi's explicit give-up: Mathematica applies the FIRST
-        # matching rule and stops, so once this one fires every rule still to come is
-        # one Rubi would never have reached (the candidates are in Rubi's own priority
-        # order). Continuing past it made the DFS hunt for an antiderivative Rubi had
-        # already declared not to exist -- `Int[(a+b sec)^(3/2)/sec^(5/3)]` ran >300s
-        # here versus 0.39s in Rubi, firing 107 rules in a repeating cycle.
+        # `Unintegrable` is Rubi's explicit give-up. The candidates are in Rubi's own
+        # priority order, so once it fires every rule still to come is one Mathematica
+        # would never have reached -- stop rather than hunting for an antiderivative
+        # Rubi has already declared not to exist.
         if _is_rubi_giveup(reduced):
             _record(rule, 'accepted (Unintegrable -- Rubi stops here)')
             applied.append(rule)
@@ -641,7 +634,11 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         _record(rule, 'candidate (non-clean)')
         if fallback is None and not reduced.has(sympy.zoo, sympy.nan):
             fallback = (reduced, rule, local)
-
+        # A terminal result that still has an Int/CannotIntegrate: keep the first
+        # one as a fallback, but keep looking for a clean result. A degenerate
+        # zoo/nan result is never a useful partial answer -- skip it entirely so a
+        # pure-degenerate integrand is left unevaluated (honest "unsolved") rather
+        # than returning a wrong zoo.
     if fallback is not None:
         reduced, rule, local = fallback
         _record(rule, 'accepted (fallback)')
