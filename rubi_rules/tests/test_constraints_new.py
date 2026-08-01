@@ -907,3 +907,78 @@ class TestPolyQResolvesSecondArg:
     def test_accepts_genuine_polynomial_in_v(self):
         a, b = Symbol('a'), Symbol('b')
         assert self._polyq((a + b*x)**4 + (a + b*x)**2, a + b*x, Integer(2))
+
+
+class TestBooleanPoisonedEvaluationDoesNotCrash:
+    """A deferred node that signals "no result" by returning False must not crash guards.
+
+    Several Rubi helpers return False as their failure value. When such a node sits
+    under arithmetic in a guard's argument (e.g. a negation), ``doit(deep=True)``
+    rebuilds the parent as ``Mul(-1, False)`` -- sympy 1.x still constructs it, with a
+    deprecation warning -- and the poisoned value later drives ``simplify`` into
+    infinite recursion, aborting the WHOLE integration with a RecursionError (seen on
+    ``Int[(c+d x)^4 Gamma[n, a+b x]]``). The `_resolve` in ``sympy_wolfram.constraints``
+    now treats a boolean NESTED inside arithmetic as a failed evaluation and keeps the
+    unevaluated form, so the guard compares symbolically and simply answers False --
+    which is what Mathematica does.
+    """
+
+    def test_eqq_over_a_false_returning_node_is_false_not_a_crash(self):
+        import sympy
+        from sympy_wolfram.objects import MathematicaExpr
+        from rubi_rules.utils.constraints_rubi import EqQ
+
+        class _FailsWithFalse(MathematicaExpr):
+            """Minimal Rubi-style helper: evaluation signals failure by returning False."""
+            def __new__(cls, u):
+                return sympy.Expr.__new__(cls, u)
+
+            def _evaluate(self, **kwargs):
+                return False
+
+        u_ = WildSymbol('u')
+        guard = EqQ(1 - _FailsWithFalse(u_), 2)
+        # must neither raise nor return True; the comparison cannot hold
+        assert guard.check(u=Symbol('z')) is False
+
+    def test_a_whole_boolean_result_is_still_passed_through(self):
+        """Only NESTED booleans are poison; a node that legitimately evaluates to a
+        bare boolean keeps doing so (predicates handle those natively)."""
+        import sympy
+        from sympy_wolfram.objects import MathematicaExpr
+
+        class _EvaluatesToFalse(MathematicaExpr):
+            def __new__(cls, u):
+                return sympy.Expr.__new__(cls, u)
+
+            def _evaluate(self, **kwargs):
+                return sympy.false
+
+        node = _EvaluatesToFalse(Symbol('z'))
+        assert node.doit() is sympy.false
+
+
+class TestMathematicaExprIsCommutative:
+    """Every Wolfram node models a scalar, so it must DECLARE commutativity.
+
+    With ``is_commutative`` left as None, sympy computed **False** for any Add
+    containing a Wolfram node and then refused to distribute numeric coefficients over
+    it; ``Abs``/``signsimp`` flip-flopped between the two sign forms of
+    ``-1 - IntPart(m, 1)`` forever, aborting ``Int[(c+d x)^4 Gamma[n, a+b x]]`` with a
+    RecursionError. A generic ``Function('f')(m, 1)`` -- which is commutative -- never
+    looped, which is what isolated the missing declaration.
+    """
+
+    def test_nodes_and_containing_adds_are_commutative(self):
+        from rubi_rules.utils.rubi_utils import IntPart
+        m = Symbol('m')
+        assert IntPart(m, 1).is_commutative is True
+        assert (-1 - IntPart(m, 1)).is_commutative is True
+
+    def test_negation_distributes_and_abs_terminates(self):
+        import sympy
+        from rubi_rules.utils.rubi_utils import IntPart
+        m = Symbol('m')
+        assert -(-1 - IntPart(m, 1)) == IntPart(m, 1) + 1
+        # this exact call used to recurse to the interpreter limit
+        assert sympy.Abs(-1 - IntPart(m, 1)) == sympy.Abs(IntPart(m, 1) + 1)

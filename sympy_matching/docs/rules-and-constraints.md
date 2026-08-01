@@ -46,7 +46,10 @@ only `sympy`, `matchpy` and `sympy_matching`.
 
 `build_replacer` compiles a list of rules into a MatchPy `ManyToOneReplacer` — one
 discrimination net that matches all patterns simultaneously, which is what makes rule
-sets of thousands of patterns practical.
+sets of thousands of patterns practical (see "One matcher, all rules at once" in
+[`../README.md`](../README.md) for the algorithm and a demonstration). Build it once
+per rule set and reuse it; the compilation cost is meant to be amortised over many
+subjects.
 
 ```python
 >>> replacer = build_replacer([power_rule])

@@ -119,6 +119,17 @@ class MathematicaExpr(Expr):
     1
     """
 
+    # Every Wolfram node models a SCALAR value, so it commutes. Without this, sympy
+    # computes ``is_commutative = None`` for the node and **False** for any Add/Mul
+    # containing one -- and then refuses to distribute a numeric coefficient over that
+    # Add. ``-(-1 - IntPart(m, 1))`` stayed as ``Mul(-1, Add(...))``, and Abs/signsimp
+    # then flip-flopped between the two sign forms forever: a RecursionError that
+    # aborted the whole integration (seen on ``Int[(c+d x)^4 Gamma[n, a+b x]]``; a
+    # generic ``Function('f')(m, 1)``, which IS commutative, does not loop). It also
+    # silently made every simplification treat Wolfram-node expressions as
+    # noncommutative.
+    is_commutative = True
+
     def doit(self, **kwargs):
         # MEMOISED (bounded): a deferred node's evaluation is a pure function of the
         # node (all _evaluate implementations delegate to eager utilities of the

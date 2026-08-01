@@ -114,7 +114,22 @@ class MathematicaConstraint(MathematicaExpr, SymPyMatchingConstraint):
                     # as-is -- the predicates handle those natively.
                     if not isinstance(evaluated, sympy.Basic) and isinstance(evaluated, (int, float, complex)):
                         evaluated = sympy.sympify(evaluated)
-                    resolved = evaluated
+                    # A BooleanAtom NESTED inside arithmetic marks a FAILED evaluation:
+                    # several Rubi helpers signal "no result" by returning False, and if
+                    # such a node sits under e.g. a negation, doit(deep=True) rebuilds
+                    # the parent as Mul(-1, False) -- which sympy 1.x still constructs
+                    # (with a deprecation warning) and which then drives simplify into
+                    # infinite recursion, aborting the whole integration with a
+                    # RecursionError (seen on Int[(c+d x)^4 Gamma[n, a+b x]]). Keep the
+                    # UNEVALUATED form instead: the guard then compares symbolically and
+                    # comes out False, which is what Mathematica does. A boolean as the
+                    # WHOLE result stays legitimate -- predicates handle those natively.
+                    from sympy.logic.boolalg import BooleanAtom
+                    poisoned = (isinstance(evaluated, sympy.Basic)
+                                and not isinstance(evaluated, BooleanAtom)
+                                and evaluated.atoms(BooleanAtom))
+                    if not poisoned:
+                        resolved = evaluated
             except Exception:
                 pass
         return resolved

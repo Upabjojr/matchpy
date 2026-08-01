@@ -1,13 +1,61 @@
 # `sympy_matching` — SymPy expressions as MatchPy patterns
 
-Write MatchPy patterns using ordinary SymPy syntax. A `WildSymbol` behaves like a normal
-`Symbol` inside a SymPy tree, and becomes a MatchPy wildcard on conversion — so patterns
-can be built, manipulated and printed with the usual SymPy machinery.
+Write MatchPy patterns using ordinary SymPy syntax, and match **an entire rule set in
+one pass**. A `WildSymbol` behaves like a normal `Symbol` inside a SymPy tree and
+becomes a MatchPy wildcard on conversion, so patterns can be built, manipulated and
+printed with the usual SymPy machinery; the rules built from them are then compiled
+*once* into a single many-to-one matcher and applied together — the design that keeps
+rule sets of thousands of patterns practical (§ "One matcher, all rules at once").
 
 This package has no dependency on any computer-algebra dialect; for how Wolfram
 `FullForm` is translated *into* these objects, see `sympy_wolfram/README.md`.
 
-Every example below is a doctest, executed by `sympy_matching/tests/test_readme.py`.
+Every example below is a doctest, executed by `sympy_matching/tests/test_docs.py`.
+
+---
+
+## One matcher, all rules at once
+
+The naive way to apply a rule set is a loop: for each rule, try its pattern against
+the subject. That costs one full traversal *per rule*, every time — hopeless when the
+rule set has thousands of entries and the rewrite system probes candidates millions of
+times.
+
+MatchPy's `ManyToOneMatcher` (Krebber's many-to-one algorithm) is the reason this
+package exists. Patterns are **loaded once** into a single discrimination-net-style
+matcher that shares their common structure; matching a subject then walks subject and
+net together, so **one traversal reports every pattern that matches, with its
+bindings** — work is shared across all patterns that begin alike, instead of repeated
+per rule.
+
+```python
+>>> from sympy import Symbol, sin
+>>> from matchpy import ManyToOneMatcher, Pattern
+>>> from sympy_matching.wild import WildSymbol
+>>> from sympy_matching.matching_rule import to_matchpy_expression
+>>> x = Symbol('x')
+>>> u_, b_ = WildSymbol('u'), WildSymbol('b')
+>>> matcher = ManyToOneMatcher()
+>>> for pat in (sin(u_)**2, sin(x)**2, b_*sin(u_), u_ + b_):     # load once...
+...     matcher.add(Pattern(to_matchpy_expression(pat)))
+>>> hits = list(matcher.match(to_matchpy_expression(sin(x)**2)))  # ...match ALL at once
+>>> len(hits)
+2
+>>> sorted(str(pattern) for pattern, bindings in hits)
+['Pow(sin(u_), 2)', 'Pow(sin(x), 2)']
+
+```
+
+One `match()` call found both applicable patterns — the literal one and the wildcard
+one (whose binding `u -> x` comes back alongside it) — without ever re-traversing the
+subject for the patterns that begin the same way, and rejecting the other two along
+the way.
+
+The economics follow from the shape of the workload: the matcher is built **once per
+rule-set load** and then queried for every subject a rewrite system ever looks at.
+Construction cost is amortised away; per-subject cost grows with how much the patterns
+*differ*, not with how many there are. `build_replacer` (§8) packages exactly this:
+rules in, one compiled `ManyToOneReplacer` out, reused for every replacement.
 
 ---
 
@@ -376,8 +424,12 @@ example `sympy_wolfram` supplies a Wolfram-named `FreeQ` over the same idea.
 ## 8. Assembling a rule
 
 `SymPyReplacementPattern` bundles a pattern, its constraints and its replacement;
-`build_replacer` compiles a list of them into a MatchPy `ManyToOneReplacer`. Constraints
-are ordinary SymPy Booleans (or `SymPyMatchingConstraint`s) over the wildcards.
+`build_replacer` compiles a list of them into a MatchPy `ManyToOneReplacer` — the
+load-once, match-all-at-once machinery from the top of this document, with the
+replacement and constraint plumbing attached. Build it **once** for a rule set and
+reuse it for every subject; do not rebuild per query, or the amortisation that makes
+many-to-one matching fast is thrown away. Constraints are ordinary SymPy Booleans (or
+`SymPyMatchingConstraint`s) over the wildcards.
 
 ```python
 >>> from sympy_matching.matching_rule import SymPyReplacementPattern, build_replacer
