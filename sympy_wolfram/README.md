@@ -182,15 +182,14 @@ Mathematica's own answers for `MatchQ[..., d + d_.*W]`:
 >>> from sympy import Symbol
 >>> from matchpy import ManyToOneMatcher, Pattern
 >>> from sympy_matching.matching_rule import to_matchpy_expression
->>> from rubi_rules.base_objects import Int
 >>> x, W, d = Symbol('x'), Symbol('W'), Symbol('d')
 >>> ns = {}
 >>> code, _, _ = ffl_to_sympy_code(['Plus', 'd', ['Times', optional, 'W']], namespace=ns)
 >>> pattern = eval(code, ns)
 >>> def matches(pat, subject):
 ...     m = ManyToOneMatcher()
-...     m.add(Pattern(to_matchpy_expression(Int(pat, x))))
-...     return bool(list(m.match(to_matchpy_expression(Int(subject, x)))))
+...     m.add(Pattern(to_matchpy_expression(pat)))
+...     return bool(list(m.match(to_matchpy_expression(subject))))
 >>> matches(pattern, d + d*W)      # Mathematica: True
 True
 >>> matches(pattern, 5 + 5*W)      # Mathematica: False -- literal d is not 5
@@ -211,5 +210,14 @@ pattern, which is why they are pinned by tests at both layers:
 
 * `sympy_wolfram/tests/test_blank_optional_semantics.py` — 37 cases, every expected
   value read directly off Mathematica 12.2;
-* `sympy_wolfram/tests/test_readme.py` and `sympy_matching/tests/test_readme.py` — these
+* `sympy_wolfram/tests/test_docs.py` and `sympy_matching/tests/test_docs.py` — these
   documents.
+
+## See also
+
+* [`docs/translating-mathematica.md`](docs/translating-mathematica.md) — the full
+  pipeline: notation → Full-Form List → SymPy code → live rule, with a worked example.
+* [`docs/nodes-and-evaluation.md`](docs/nodes-and-evaluation.md) — deferred
+  `MathematicaExpr` nodes, `doit()` vs `rewrite_as_standard_sympy()`, `eager_<Name>`
+  functions, and the constraint classes.
+* `sympy_matching/docs/` — the matching layer this package builds on.

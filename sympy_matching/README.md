@@ -68,12 +68,11 @@ The helper used below:
 ```python
 >>> from matchpy import ManyToOneMatcher, Pattern
 >>> from sympy_matching.matching_rule import to_matchpy_expression
->>> from rubi_rules.base_objects import Int
 >>> x = Symbol('x')
 >>> def matches(pattern, subject):
 ...     m = ManyToOneMatcher()
-...     m.add(Pattern(to_matchpy_expression(Int(pattern, x))))
-...     return bool(list(m.match(to_matchpy_expression(Int(subject, x)))))
+...     m.add(Pattern(to_matchpy_expression(pattern)))
+...     return bool(list(m.match(to_matchpy_expression(subject))))
 
 ```
 
@@ -307,14 +306,14 @@ a logarithm and `x**(m+1)/(m+1)` would divide by zero:
 >>> from sympy_matching.conversion import matchpy_to_sympy
 >>> m_ = WildSymbol('m')
 >>> power_rule = SymPyReplacementPattern(
-...     pattern=Int(x**m_, x),
+...     pattern=x**m_,
 ...     constraints=(Ne(m_, -1),),
 ...     replacement=x**(m_ + 1)/(m_ + 1),
 ...     module_name='doc example',
 ...     rule_number=1,
 ... )
 >>> replacer = build_replacer([power_rule])
->>> rewritten, fired = replacer.replace(to_matchpy_expression(Int(x**3, x)))
+>>> rewritten, fired = replacer.replace(to_matchpy_expression(x**3))
 >>> matchpy_to_sympy(rewritten)
 x**4/4
 >>> fired
@@ -327,8 +326,8 @@ matches, but the constraint rejects it, so the integral comes back untouched ins
 being rewritten to a division by zero:
 
 ```python
->>> matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(x**-1, x))))
-Int(1/x, x)
+>>> matchpy_to_sympy(replacer.replace(to_matchpy_expression(x**-1)))
+1/x
 
 ```
 
@@ -384,14 +383,14 @@ are ordinary SymPy Booleans (or `SymPyMatchingConstraint`s) over the wildcards.
 >>> from sympy_matching.matching_rule import SymPyReplacementPattern, build_replacer
 >>> m_ = WildSymbol('m')
 >>> rule = SymPyReplacementPattern(
-...     pattern=Int(x**m_, x),
+...     pattern=x**m_,
 ...     constraints=(),
 ...     replacement=x**(m_ + 1)/(m_ + 1),
 ...     module_name='doc example',
 ...     rule_number=1,
 ... )
 >>> replacer = build_replacer([rule])
->>> len(list(replacer.matcher.match(to_matchpy_expression(Int(x**3, x)))))
+>>> len(list(replacer.matcher.match(to_matchpy_expression(x**3))))
 1
 
 ```
