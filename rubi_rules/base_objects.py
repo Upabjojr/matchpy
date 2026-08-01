@@ -172,7 +172,7 @@ class _RubiIntegrator:
         pattern = self._normalize_rule_glob(pattern)
         if pattern not in self._replacer_cache:
             rules = list(self.load_rule_patterns(pattern))
-            replacer = build_tracing_replacer(rules)
+            replacer = build_tracing_replacer(rules, defer_constraint=_defer_expensive_guard)
             self._replacer_cache[pattern] = replacer
         return self._replacer_cache[pattern]
 
@@ -316,6 +316,29 @@ def _module_title(mod: str) -> str:
 _TITLE_INDEX = {}
 for _i, _name in enumerate(RUBI_LOAD_ORDER):
     _TITLE_INDEX.setdefault(_module_title(_name), _i)
+
+
+# Guard heads whose evaluation is comparable to a full integration step -- nested
+# integrations (`IntHide` is literally `Int` with steps hidden), `DerivativeDivides`,
+# polynomial division, expression-wide rewrites. A constraint mentioning any of these
+# is DEFERRED by `build_replacer` (see `sympy_matching.matching_rule`): it is not
+# attached to the matchpy Pattern but evaluated at ATTEMPT time, in rule-priority
+# order, only until the first winner -- which is Mathematica's own evaluation order
+# (one rule at a time, first match wins; guards of later rules never run). Without
+# this, sorting the matcher's yields by priority exhausted the generator and paid
+# every catch-all's nested integration per candidate (RUBI_PORT_DEFECTS.md §33).
+EXPENSIVE_GUARD_HEADS = (
+    'IntHide', 'DerivativeDivides', 'ExpandIntegrand', 'FunctionOfLinear',
+    'PolynomialQuotient', 'PolynomialRemainder', 'SubstForFractionalPower',
+    'InverseFunctionFreeQ', 'FunctionOfSquareRootOfQuadratic', 'SimplifyIntegrand',
+    'NormalizeIntegrand', 'FunctionOfExponential', 'PowerVariableExpn',
+)
+
+
+def _defer_expensive_guard(constraint) -> bool:
+    """`defer_constraint` policy for `build_replacer`: defer the expensive heads."""
+    text = str(constraint)
+    return any(head in text for head in EXPENSIVE_GUARD_HEADS)
 
 
 def _rule_id(replacement):

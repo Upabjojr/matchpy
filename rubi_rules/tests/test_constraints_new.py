@@ -982,3 +982,37 @@ class TestMathematicaExprIsCommutative:
         assert -(-1 - IntPart(m, 1)) == IntPart(m, 1) + 1
         # this exact call used to recurse to the interpreter limit
         assert sympy.Abs(-1 - IntPart(m, 1)) == sympy.Abs(IntPart(m, 1) + 1)
+
+
+class TestExpensiveGuardDeferralPolicy:
+    """The Rubi-side policy for `build_replacer(defer_constraint=...)`.
+
+    Guards that recursively invoke the integrator (`IntHide` is literally `Int` with
+    steps hidden) or do heavy algebra must be DEFERRED to attempt time; with them
+    attached to the matchpy Pattern, sorting the matcher's yields by priority paid a
+    full sub-integration per catch-all candidate before the first (correct, cheap)
+    rule was ever attempted -- `Int[(c+d x)^7/(a+b x)^7]` hung >120 s while its
+    winning rule `1.1.1.2:[12]` sorted first the whole time (defects §33).
+    """
+
+    def test_expensive_heads_are_deferred(self):
+        from rubi_rules.base_objects import _defer_expensive_guard, EXPENSIVE_GUARD_HEADS
+        from rubi_rules.utils.constraints_wolfram import FreeQ
+        from sympy import Symbol
+        u_ = WildSymbol('u')
+        x = Symbol('x')
+        # a real shape from the ruleset: InverseFunctionFreeQ(IntHide(v, x), x)
+        from rubi_rules.utils.rubi_utils import IntHide
+        from rubi_rules.utils.constraints_rubi import EqQ
+        assert _defer_expensive_guard(EqQ(IntHide(u_, x), 0)) is True
+        for head in EXPENSIVE_GUARD_HEADS:
+            assert _defer_expensive_guard(Symbol(head)) is True
+
+    def test_cheap_guards_stay_on_the_pattern(self):
+        from rubi_rules.base_objects import _defer_expensive_guard
+        from rubi_rules.utils.constraints_wolfram import FreeQ, IntegerQ
+        from sympy import Symbol
+        u_ = WildSymbol('u')
+        x = Symbol('x')
+        assert _defer_expensive_guard(FreeQ(u_, x)) is False
+        assert _defer_expensive_guard(IntegerQ(u_)) is False

@@ -318,23 +318,74 @@ def _make_tracing_replacement_fn(replacement_expr, rule):
     return _replacement
 
 
-def build_replacer(rules: List[SymPyReplacementPattern]) -> ManyToOneReplacer:
+def _wrap_with_deferred_guards(replacement_fn, deferred_checkers):
+    """Run the deferred guards at attempt time; a failure IS a failed condition.
+
+    Raising StopIteration is the existing convention for "this rule's Condition
+    failed" -- every consumer already catches it and moves to the next candidate, so
+    deferring guards here changes WHEN they run, never the accept/reject outcome.
+    """
+    def _guarded(**match_dict):
+        for checker in deferred_checkers:
+            if not checker(**match_dict):
+                raise StopIteration
+        return replacement_fn(**match_dict)
+    for attr in ('__qualname__', '__module__', '_rubi_replacement_expr'):
+        try:
+            setattr(_guarded, attr, getattr(replacement_fn, attr))
+        except AttributeError:
+            pass
+    return _guarded
+
+
+def build_replacer(rules: List[SymPyReplacementPattern], defer_constraint=None) -> ManyToOneReplacer:
     """Assemble a matchpy ManyToOneReplacer from SymPyReplacementPattern objects.
 
     Each rule's SymPy pattern/constraints/replacement are converted to matchpy form;
     the replacement callback returns ``(result, (module_name, rule_number))`` so the
     firing rule can always be traced. (Historic alias: ``build_tracing_replacer``.)
+
+    ``defer_constraint`` is an optional predicate over a rule constraint. A constraint
+    for which it returns True is NOT attached to the matchpy Pattern; it is deferred
+    into the replacement callback and evaluated at ATTEMPT time, raising StopIteration
+    on failure (the ordinary "condition failed" signal).
+
+    Why a caller might want this: consumers that sort the matcher's yields by rule
+    priority EXHAUST the match generator, and matchpy evaluates Pattern-attached
+    constraints for EVERY candidate during enumeration. A guard whose evaluation is
+    itself expensive (in a rewrite system: one that recursively invokes the system)
+    then runs once per candidate before the first rule is ever attempted. Deferring
+    such guards restores first-match-wins economics: they run in attempt order, only
+    until the first winner. Which guards are "expensive" is DOMAIN knowledge -- this
+    layer is agnostic; the caller supplies the predicate (for the Rubi rule set, see
+    ``rubi_rules.base_objects``).
+
+    Guards kept on the Pattern still prune commutative enumeration, which is what
+    keeps matching a many-thousand-rule net tractable -- so a predicate should defer
+    only what is genuinely expensive.
     """
     replacer = ManyToOneReplacer()
     for rule in rules:
         matchpy_pattern_expr = to_matchpy_expression(rule.pattern)
         pattern_wilds = _collect_wild_symbols(rule.pattern)
+        cheap, expensive = [], []
+        for constraint in rule.constraints:
+            target = expensive if (defer_constraint is not None
+                                   and defer_constraint(constraint)) else cheap
+            target.append(constraint)
         matchpy_constraints = [
             _make_matchpy_constraint(constraint, pattern_wilds)
-            for constraint in rule.constraints
+            for constraint in cheap
         ]
         pattern = Pattern(matchpy_pattern_expr, *matchpy_constraints)
         replacement_fn = _make_tracing_replacement_fn(rule.replacement, rule)
+        if expensive:
+            variables = set(pattern_wilds)
+            deferred_checkers = [
+                _make_constraint_checker(constraint, variables)
+                for constraint in expensive
+            ]
+            replacement_fn = _wrap_with_deferred_guards(replacement_fn, deferred_checkers)
         replacer.add(ReplacementRule(pattern, replacement_fn))
     return replacer
 

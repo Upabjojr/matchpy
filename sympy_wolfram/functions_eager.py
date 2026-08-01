@@ -505,9 +505,22 @@ def eager_Discriminant(p, x):
 
 def _eager_apart_impl(u, x):
     u = sympify(u)
-    if u.is_rational_function(x):
-        return apart(u, x)
-    return u
+    if not u.is_rational_function(x):
+        return u
+    # TERMWISE over a sum. Partial-fraction decomposition is unique (polynomial part
+    # plus proper fractions over the denominator-power basis), so aparting each addend
+    # and letting Add collect like denominators yields the same decomposition as
+    # aparting the combined quotient -- without ever COMBINING the sum over a common
+    # denominator first, which is what sympy's `apart` does and where it dies on
+    # parameter-heavy input: re-aparting the 8-term decomposition of
+    # (c+d x)^7/(a+b x)^7 recombines over b^7 (a+b x)^7 and grinds sympy's heuristic
+    # GCD through giant-integer arithmetic (>240 s; each addend alone takes
+    # milliseconds). Mathematica's Apart handles the combined form fine, so termwise
+    # is a sympy-robustness measure, not a semantic change.
+    if u.is_Add:
+        return u.func(*[apart(t, x) if t.is_rational_function(x) else t
+                        for t in u.args])
+    return apart(u, x)
 
 
 _eager_apart_cached = _functools.lru_cache(maxsize=20000)(_eager_apart_impl)
