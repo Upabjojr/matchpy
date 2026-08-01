@@ -142,7 +142,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((A_ + _B_*InertTan(x*_f_ + _e_) + _C_*InertTan(x*_f_ + _e_)**2)/(_a_ + _b_*InertTan(x*_f_ + _e_)), x),
         constraints=(FreeQ([_a_, _b_, _e_, _f_, A_, _B_, _C_], x), NeQ(A_*_b_**2 - _B_*_a_*_b_ + _C_*_a_**2, 0), NeQ(_a_**2 + _b_**2, 0), NeQ(A_*_b_ - _B_*_a_ - _C_*_b_, 0),),
-        replacement=x*(A_*_a_ + _B_*_b_ - _C_*_a_)/(_a_**2 + _b_**2) - (A_*_b_ - _B_*_a_ - _C_*_b_)*Int(tan(x*_f_ + _e_), x)/(_a_**2 + _b_**2) + (A_*_b_**2 - _B_*_a_*_b_ + _C_*_a_**2)*Int((tan(x*_f_ + _e_)**2 + 1)/(_a_ + _b_*tan(x*_f_ + _e_)), x)/(_a_**2 + _b_**2),
+        replacement=x*(A_*_a_ + _B_*_b_ - _C_*_a_)/(_a_**2 + _b_**2) + (A_*_b_**2 - _B_*_a_*_b_ + _C_*_a_**2)*Int((tan(x*_f_ + _e_)**2 + 1)/(_a_ + _b_*tan(x*_f_ + _e_)), x)/(_a_**2 + _b_**2) - (A_*_b_ - _B_*_a_ - _C_*_b_)*Int(tan(x*_f_ + _e_), x)/(_a_**2 + _b_**2),
         module_name='4.3.4.1 (a+b tan)^m (A+B tan+C tan^2)',
         rule_number=10,
     ),

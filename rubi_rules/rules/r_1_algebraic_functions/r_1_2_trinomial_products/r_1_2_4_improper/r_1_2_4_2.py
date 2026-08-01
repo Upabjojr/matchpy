@@ -77,7 +77,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, _n_, _q_], x), EqQ(_r_, 2*_n_ - _q_), IntegerQ(_p_), PosQ(_n_ - _q_),),
-        replacement=Int(x**(_m_ + _p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**_p_, x),
+        replacement=Int(x**(_m_ + _p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**_p_, x),
         module_name='1.2.4.2 (d x)^m (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=2,
     ),
@@ -93,7 +93,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**_m_/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, _n_, _q_], x), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_), Or(And(EqQ(_m_, 1), EqQ(_n_, 3), EqQ(_q_, 2)), And(Or(EqQ(_m_, sympy.S.Half), EqQ(_m_, sympy.S(3)/2), EqQ(_m_, sympy.S.Half), EqQ(_m_, sympy.S(5)/2)), EqQ(_n_, 3), EqQ(_q_, 1))),),
-        replacement=x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)*Int(x**(_m_ - _q_/2)/sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
+        replacement=x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)*Int(x**(_m_ - _q_/2)/sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
         module_name='1.2.4.2 (d x)^m (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=4,
     ),
@@ -221,7 +221,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _m_, _n_, p_, _q_], x), EqQ(_r_, 2*_n_ - _q_), Not(IntegerQ(p_)), PosQ(_n_ - _q_),),
-        replacement=(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)**p_*Int(x**(_m_ + p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**p_, x)/(x**(p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**p_),
+        replacement=(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)**p_*Int(x**(_m_ + p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**p_, x)/(x**(p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**p_),
         module_name='1.2.4.2 (d x)^m (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=20,
     ),

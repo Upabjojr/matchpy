@@ -78,7 +78,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**_r_*_B_ + A_)*(x**_j_*_c_ + x**_n_*_b_ + x**_q_*_a_)**_p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, A_, _B_, _m_, _n_, _q_], x), EqQ(_r_, _n_ - _q_), EqQ(_j_, 2*_n_ - _q_), IntegerQ(_p_), PosQ(_n_ - _q_),),
-        replacement=Int(x**(_m_ + _p_*_q_)*(x**(_n_ - _q_)*_B_ + A_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**_p_, x),
+        replacement=Int(x**(_m_ + _p_*_q_)*(x**(_n_ - _q_)*_B_ + A_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**_p_, x),
         module_name='1.2.4.4 (f x)^m (d+e x^(n-q)) (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=1,
     ),
@@ -182,7 +182,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**_m_*(x**_j_*_B_ + A_)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, A_, _B_, _m_, _n_, _q_], x), EqQ(_j_, _n_ - _q_), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_), Or(EqQ(_m_, sympy.S.Half), EqQ(_m_, sympy.S(-1)/2)), EqQ(_n_, 3), EqQ(_q_, 1),),
-        replacement=x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)*Int(x**(_m_ - _q_/2)*(x**(_n_ - _q_)*_B_ + A_)/sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
+        replacement=x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)*Int(x**(_m_ - _q_/2)*(x**(_n_ - _q_)*_B_ + A_)/sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
         module_name='1.2.4.4 (f x)^m (d+e x^(n-q)) (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=14,
     ),

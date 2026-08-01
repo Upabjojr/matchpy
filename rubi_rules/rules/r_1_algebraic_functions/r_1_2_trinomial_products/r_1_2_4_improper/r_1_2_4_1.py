@@ -74,7 +74,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, _q_], x), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_), IntegerQ(p_),),
-        replacement=Int(x**(p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**p_, x),
+        replacement=Int(x**(p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**p_, x),
         module_name='1.2.4.1 (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=2,
     ),
@@ -82,7 +82,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(sqrt(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, _q_], x), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_),),
-        replacement=sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)*Int(x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_), x)/(x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)),
+        replacement=sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)*Int(x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_), x)/(x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)),
         module_name='1.2.4.1 (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=3,
     ),
@@ -98,7 +98,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(1/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, _q_], x), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_),),
-        replacement=x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)*Int(1/(x**(_q_/2)*sqrt(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
+        replacement=x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)*Int(1/(x**(_q_/2)*sqrt(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)), x)/sqrt(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_),
         module_name='1.2.4.1 (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=5,
     ),
@@ -122,7 +122,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**_n_*_b_ + x**_q_*_a_ + x**_r_*_c_)**p_, x),
         constraints=(FreeQ([_a_, _b_, _c_, _n_, p_, _q_], x), EqQ(_r_, 2*_n_ - _q_), PosQ(_n_ - _q_), Not(IntegerQ(p_)),),
-        replacement=(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)**p_*Int(x**(p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**p_, x)/(x**(p_*_q_)*(x**(_n_ - _q_)*_b_ + x**(2*_n_ - 2*_q_)*_c_ + _a_)**p_),
+        replacement=(x**_n_*_b_ + x**_q_*_a_ + x**(2*_n_ - _q_)*_c_)**p_*Int(x**(p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**p_, x)/(x**(p_*_q_)*(x**(2*_n_ - 2*_q_)*_c_ + x**(_n_ - _q_)*_b_ + _a_)**p_),
         module_name='1.2.4.1 (a x^q+b x^n+c x^(2 n-q))^p',
         rule_number=8,
     ),

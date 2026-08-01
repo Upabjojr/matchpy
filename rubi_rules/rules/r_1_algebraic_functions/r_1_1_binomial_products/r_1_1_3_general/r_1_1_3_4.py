@@ -389,7 +389,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_)**m_*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_], x), NeQ(-a_*_d_ + _b_*c_, 0), IGtQ(n_, 0), GtQ(q_, 0), LtQ(m_, -1), GtQ(p_, 0), IntBinomialQ(a_, _b_, c_, _d_, _e_, m_, n_, p_, q_, x),),
-        replacement=-n_*Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**(p_ - 1)*(x**n_*_d_ + c_)**(q_ - 1)*Simp(x**n_*_b_*_d_*(p_ + q_) + a_*_d_*q_ + _b_*c_*p_, x), x)/(_e_**n_*(m_ + 1)) + (x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_/(_e_*(m_ + 1)),
+        replacement=(x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_/(_e_*(m_ + 1)) - n_*Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**(p_ - 1)*(x**n_*_d_ + c_)**(q_ - 1)*Simp(x**n_*_b_*_d_*(p_ + q_) + a_*_d_*q_ + _b_*c_*p_, x), x)/(_e_**n_*(m_ + 1)),
         module_name='1.1.3.4 (e x)^m (a+b x^n)^p (c+d x^n)^q',
         rule_number=38,
     ),
@@ -405,7 +405,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_)**m_*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, p_], x), NeQ(-a_*_d_ + _b_*c_, 0), IGtQ(n_, 0), LtQ(0, q_, 1), LtQ(m_, -1), IntBinomialQ(a_, _b_, c_, _d_, _e_, m_, n_, p_, q_, x),),
-        replacement=-Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**(q_ - 1)*Simp(x**n_*_d_*(_b_*n_*(p_ + q_ + 1) + _b_*(m_ + 1)) + _b_*c_*(m_ + 1) + n_*(a_*_d_*q_ + _b_*c_*(p_ + 1)), x), x)/(a_*_e_**n_*(m_ + 1)) + (x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_d_ + c_)**q_/(a_*_e_*(m_ + 1)),
+        replacement=(x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_d_ + c_)**q_/(a_*_e_*(m_ + 1)) - Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**(q_ - 1)*Simp(x**n_*_d_*(_b_*n_*(p_ + q_ + 1) + _b_*(m_ + 1)) + _b_*c_*(m_ + 1) + n_*(a_*_d_*q_ + _b_*c_*(p_ + 1)), x), x)/(a_*_e_**n_*(m_ + 1)),
         module_name='1.1.3.4 (e x)^m (a+b x^n)^p (c+d x^n)^q',
         rule_number=40,
     ),
@@ -445,7 +445,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_)**m_*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_, x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_, p_, q_], x), NeQ(-a_*_d_ + _b_*c_, 0), IGtQ(n_, 0), LtQ(m_, -1), IntBinomialQ(a_, _b_, c_, _d_, _e_, m_, n_, p_, q_, x),),
-        replacement=-Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_*Simp(x**n_*_b_*_d_*(m_ + n_*(p_ + q_ + 2) + 1) + n_*(a_*_d_*q_ + _b_*c_*p_) + (a_*_d_ + _b_*c_)*(m_ + n_ + 1), x), x)/(a_*c_*_e_**n_*(m_ + 1)) + (x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_d_ + c_)**(q_ + 1)/(a_*c_*_e_*(m_ + 1)),
+        replacement=(x*_e_)**(m_ + 1)*(x**n_*_b_ + a_)**(p_ + 1)*(x**n_*_d_ + c_)**(q_ + 1)/(a_*c_*_e_*(m_ + 1)) - Int((x*_e_)**(m_ + n_)*(x**n_*_b_ + a_)**p_*(x**n_*_d_ + c_)**q_*Simp(x**n_*_b_*_d_*(m_ + n_*(p_ + q_ + 2) + 1) + n_*(a_*_d_*q_ + _b_*c_*p_) + (a_*_d_ + _b_*c_)*(m_ + n_ + 1), x), x)/(a_*c_*_e_**n_*(m_ + 1)),
         module_name='1.1.3.4 (e x)^m (a+b x^n)^p (c+d x^n)^q',
         rule_number=45,
     ),

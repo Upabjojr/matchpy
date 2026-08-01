@@ -2118,6 +2118,50 @@ def test_PowerVariableExpn():
     assert not eager_PowerVariableExpn((2*x)**3, 2, x)
     assert eager_PowerVariableExpn((2*x)**2, 4, x) == [4*x**3, 2, 1]
 
+def test_PowerVariableDegree_threads_its_accumulator():
+    """Rubi's Scan THREADS lst through the arguments; each refines the running GCD.
+
+    The port used to call every child with the ORIGINAL [m, c] and keep only the LAST
+    child's result, so an x-free trailing argument (the exponent -1 of ``(1+W)**-1``)
+    reset the answer to the untouched [m, c]. That returned g = 4 = m+1 here, the rule
+    guard ``NeQ[lst[[2]], m+1]`` rejected, and the ``Int[x^m F(x^n)]`` GCD reduction
+    never fired -- root cause of the Int[x^3 W(a x^2)^2] WRONG ANSWER (defects §27).
+    Expected values follow Rubi 4.17.3.0's definition (verified against its source).
+    """
+    from sympy import LambertW
+    u = 1/(LambertW(a*x**2) + 1)
+    assert PowerVariableDegree(u, 4, S(1), x) == [2, 1]
+    # an x-free trailing factor must NOT reset the accumulator
+    assert PowerVariableDegree(x**2*exp(x**4), 4, S(1), x) == [2, 1]
+
+
+def test_PowerVariableExpn_matches_rubi_and_stays_exact():
+    """Rubi: PowerVariableExpn[1/(1+W(a x^2)), 4, x] = {x^2/(1+W(a x)), 2, 1}.
+
+    Also guards the exact-arithmetic fix: ``x**(m/g)`` was Python float division, so the
+    result carried ``x**1.0`` and poisoned everything downstream.
+    """
+    from sympy import LambertW
+    u = 1/(LambertW(a*x**2) + 1)
+    result = eager_PowerVariableExpn(u, 4, x)
+    assert result == [x**2/(LambertW(a*x) + 1), 2, 1]
+    # every exponent must be an exact SymPy number, never a float
+    from sympy import Number as _Number
+    assert not any(e.is_Float for r in result[:1] for e in r.atoms(_Number))
+
+
+def test_PowerVariableSubst_maps_over_any_head():
+    """Rubi's general case is Map over ANY head, not just Mul/Add.
+
+    The port returned ``W(a x^2)`` (head LambertW) and Powers with a non-``c*x`` base
+    unchanged, silently producing the wrong substituted integrand.
+    """
+    from sympy import LambertW
+    assert PowerVariableSubst(LambertW(a*x**2), 2, x) == LambertW(a*x)
+    assert PowerVariableSubst(1/(LambertW(a*x**2) + 1), 2, x) == 1/(LambertW(a*x) + 1)
+    assert PowerVariableSubst(sin(x**4), 2, x) == sin(x**2)
+
+
 def test_FunctionOfQ():
     assert eager_FunctionOfQ(x**2, sqrt(-exp(2*x**2) + 1)*exp(x**2),x)
     assert not eager_FunctionOfQ(S(x**3), x*2, x)

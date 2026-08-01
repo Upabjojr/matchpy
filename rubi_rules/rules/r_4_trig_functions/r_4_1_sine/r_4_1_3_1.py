@@ -292,7 +292,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _B_*InertSin(x*_f_ + _e_))/(sqrt(_d_*InertSin(x*_f_ + _e_))*(a_ + _b_*InertSin(x*_f_ + _e_))**(sympy.S(3)/2)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_, _A_, _B_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=_d_*Int((_A_*_b_ - _B_*a_ + (_A_*a_ - _B_*_b_)*sin(x*_f_ + _e_))/((_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))), x)/(a_**2 - _b_**2) + (2*_A_*_b_ - 2*_B_*a_)*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)),
+        replacement=_d_*Int((_A_*_b_ - _B_*a_ + (_A_*a_ - _B_*_b_)*sin(x*_f_ + _e_))/((_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))), x)/(a_**2 - _b_**2) + (2*_A_*_b_ - 2*_B_*a_)*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))),
         module_name='4.1.3.1 (a+b sin)^m (c+d sin)^n (A+B sin)',
         rule_number=28,
     ),

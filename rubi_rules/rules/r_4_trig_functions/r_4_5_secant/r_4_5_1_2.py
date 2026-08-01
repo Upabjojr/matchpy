@@ -373,7 +373,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_d_*InertCsc(x*_f_ + _e_))**n_*(a_ + _b_*InertCsc(x*_f_ + _e_))**m_, x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_, m_, n_], x), EqQ(a_**2 - _b_**2, 0), Not(IntegerQ(m_)), GtQ(a_, 0), Not(IntegerQ(n_)), GtQ(a_*_d_/_b_, 0),),
-        replacement=-a_**(2 - n_)*(a_*_d_/_b_)**n_*Subst(Int((-x + a_)**(n_ - 1)*(-x + 2*a_)**(m_ + sympy.S(-1)/2)/sqrt(x), x), x, a_ - _b_*csc(x*_f_ + _e_))*cot(x*_f_ + _e_)/(_f_*sqrt(a_ - _b_*csc(x*_f_ + _e_))*sqrt(a_ + _b_*csc(x*_f_ + _e_))),
+        replacement=-a_**(2 - n_)*(a_*_d_/_b_)**n_*Subst(Int((-x + 2*a_)**(m_ + sympy.S(-1)/2)*(-x + a_)**(n_ - 1)/sqrt(x), x), x, a_ - _b_*csc(x*_f_ + _e_))*cot(x*_f_ + _e_)/(_f_*sqrt(a_ - _b_*csc(x*_f_ + _e_))*sqrt(a_ + _b_*csc(x*_f_ + _e_))),
         module_name='4.5.1.2 (d sec)^n (a+b sec)^m',
         rule_number=39,
     ),

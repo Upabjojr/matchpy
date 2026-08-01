@@ -156,7 +156,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**_m_*(x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), IGtQ(p_, 0), LtQ(_m_, -1),),
-        replacement=-n_*p_*Int((x*_d_)**(_m_ + n_)*(2*x**n_*_c_ + _b_)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ - 1), x)/(_d_**n_*(_m_ + 1)) + (x*_d_)**(_m_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_/(_d_*(_m_ + 1)),
+        replacement=(x*_d_)**(_m_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_/(_d_*(_m_ + 1)) - n_*p_*Int((x*_d_)**(_m_ + n_)*(2*x**n_*_c_ + _b_)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ - 1), x)/(_d_**n_*(_m_ + 1)),
         module_name='1.2.3.2 (d x)^m (a+b x^n+c x^(2 n))^p',
         rule_number=11,
     ),
@@ -204,7 +204,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**m_*(x**n_*_b_ + x**_n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, p_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), LtQ(m_, -1), IntegerQ(p_),),
-        replacement=-Int((x*_d_)**(m_ + n_)*(x**n_*_c_*(m_ + 2*n_*(p_ + 1) + 1) + _b_*(m_ + n_*(p_ + 1) + 1))*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x)/(a_*_d_**n_*(m_ + 1)) + (x*_d_)**(m_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ + 1)/(a_*_d_*(m_ + 1)),
+        replacement=(x*_d_)**(m_ + 1)*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(p_ + 1)/(a_*_d_*(m_ + 1)) - Int((x*_d_)**(m_ + n_)*(x**n_*_c_*(m_ + 2*n_*(p_ + 1) + 1) + _b_*(m_ + n_*(p_ + 1) + 1))*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**p_, x)/(a_*_d_**n_*(m_ + 1)),
         module_name='1.2.3.2 (d x)^m (a+b x^n+c x^(2 n))^p',
         rule_number=17,
     ),
@@ -212,7 +212,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**m_/(x**n_*_b_ + x**_n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_], x), EqQ(_n2_, 2*n_), NeQ(-4*a_*_c_ + _b_**2, 0), IGtQ(n_, 0), LtQ(m_, -1),),
-        replacement=-Int((x*_d_)**(m_ + n_)*(x**n_*_c_ + _b_)/(x**(2*n_)*_c_ + x**n_*_b_ + a_), x)/(a_*_d_**n_) + (x*_d_)**(m_ + 1)/(a_*_d_*(m_ + 1)),
+        replacement=(x*_d_)**(m_ + 1)/(a_*_d_*(m_ + 1)) - Int((x*_d_)**(m_ + n_)*(x**n_*_c_ + _b_)/(x**(2*n_)*_c_ + x**n_*_b_ + a_), x)/(a_*_d_**n_),
         module_name='1.2.3.2 (d x)^m (a+b x^n+c x^(2 n))^p',
         rule_number=18,
     ),

@@ -211,7 +211,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertSin(x*_f_ + _e_))**m_/InertTan(x*_f_ + _e_)**4, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0), LtQ(m_, -1), IntegerQ(2*m_),),
-        replacement=-(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(3*a_*_f_*sin(x*_f_ + _e_)**3) - Int((a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*Simp(6*a_**2 + a_*_b_*(m_ + 1)*sin(x*_f_ + _e_) - _b_**2*(m_ - 2)*(m_ - 1) - (3*a_**2 - _b_**2*m_*(m_ - 2))*sin(x*_f_ + _e_)**2, x)/sin(x*_f_ + _e_)**3, x)/(3*a_**2*_b_*(m_ + 1)) - (a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*(3*a_**2 + _b_**2*(m_ - 2))*cos(x*_f_ + _e_)/(3*a_**2*_b_*_f_*(m_ + 1)*sin(x*_f_ + _e_)**2),
+        replacement=-(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(3*a_*_f_*sin(x*_f_ + _e_)**3) - Int((a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*Simp(6*a_**2 + a_*_b_*(m_ + 1)*sin(x*_f_ + _e_) - _b_**2*(m_ - 2)*(m_ - 1) - (3*a_**2 - _b_**2*m_*(m_ - 2))*sin(x*_f_ + _e_)**2, x)/sin(x*_f_ + _e_)**3, x)/(3*a_**2*_b_*(m_ + 1)) - (3*a_**2 + _b_**2*(m_ - 2))*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(3*a_**2*_b_*_f_*(m_ + 1)*sin(x*_f_ + _e_)**2),
         module_name='4.1.1.3 (g tan)^p (a+b sin)^m',
         rule_number=19,
     ),
@@ -227,7 +227,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertSin(x*_f_ + _e_))**m_/InertTan(x*_f_ + _e_)**6, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_, m_], x), NeQ(a_**2 - _b_**2, 0), NeQ(m_, 1), IntegerQ(2*m_),),
-        replacement=a_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(_b_**2*_f_*m_*(m_ - 1)*sin(x*_f_ + _e_)**3) + (a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(_b_*_f_*m_*sin(x*_f_ + _e_)**2) - (a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(5*a_*_f_*sin(x*_f_ + _e_)**5) - _b_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*(m_ - 4)*cos(x*_f_ + _e_)/(20*a_**2*_f_*sin(x*_f_ + _e_)**4) + Int((a_ + _b_*sin(x*_f_ + _e_))**m_*Simp(60*a_**4 - 44*a_**2*_b_**2*m_*(m_ - 1) + a_*_b_*m_*(20*a_**2 - _b_**2*m_*(m_ - 1))*sin(x*_f_ + _e_) + _b_**4*m_*(m_ - 4)*(m_ - 3)*(m_ - 1) - (40*a_**4 - 20*a_**2*_b_**2*(m_ - 1)*(2*m_ + 1) + _b_**4*m_*(m_ - 4)*(m_ - 2)*(m_ - 1))*sin(x*_f_ + _e_)**2, x)/sin(x*_f_ + _e_)**4, x)/(20*a_**2*_b_**2*m_*(m_ - 1)),
+        replacement=a_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(_b_**2*_f_*m_*(m_ - 1)*sin(x*_f_ + _e_)**3) + (a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(_b_*_f_*m_*sin(x*_f_ + _e_)**2) - (a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*cos(x*_f_ + _e_)/(5*a_*_f_*sin(x*_f_ + _e_)**5) - _b_*(a_ + _b_*sin(x*_f_ + _e_))**(m_ + 1)*(m_ - 4)*cos(x*_f_ + _e_)/(20*a_**2*_f_*sin(x*_f_ + _e_)**4) + Int((a_ + _b_*sin(x*_f_ + _e_))**m_*Simp(60*a_**4 - 44*a_**2*_b_**2*m_*(m_ - 1) + a_*_b_*m_*(20*a_**2 - _b_**2*m_*(m_ - 1))*sin(x*_f_ + _e_) + _b_**4*m_*(m_ - 4)*(m_ - 3)*(m_ - 1) - (40*a_**4 - 20*a_**2*_b_**2*(2*m_ + 1)*(m_ - 1) + _b_**4*m_*(m_ - 4)*(m_ - 2)*(m_ - 1))*sin(x*_f_ + _e_)**2, x)/sin(x*_f_ + _e_)**4, x)/(20*a_**2*_b_**2*m_*(m_ - 1)),
         module_name='4.1.1.3 (g tan)^p (a+b sin)^m',
         rule_number=21,
     ),

@@ -561,7 +561,7 @@ RULES = [
     ),
     # Rule 56
     SymPyReplacementPattern(
-        pattern=Int(_u_*(_e_*(x**_n_*_b_ + _a_)**_q_*(x**n_*_d_ + c_)**_r_)**p_, x),
+        pattern=Int(_u_*(_e_*(x**n_*_d_ + c_)**_r_*(x**_n_*_b_ + _a_)**_q_)**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _n_, p_, _q_, _r_], x),),
         replacement=Star(Simp((_e_*(x**_n_*_b_ + _a_)**_q_*(x**_n_*_d_ + c_)**_r_)**p_/((x**_n_*_b_ + _a_)**(p_*_q_)*(x**_n_*_d_ + c_)**(p_*_r_))), Int(_u_*(x**_n_*_b_ + _a_)**(p_*_q_)*(x**_n_*_d_ + c_)**(p_*_r_), x)),
         module_name='1.4.1 Algebraic function simplification',

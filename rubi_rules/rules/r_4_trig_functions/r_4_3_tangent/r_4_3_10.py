@@ -200,7 +200,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_/(a_ + _b_*InertTan(x*_f_ + _e_ + pi*_k_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), IntegerQ(4*_k_), NeQ(a_**2 + _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=2*I*_b_*Int((x*_d_ + _c_)**_m_*exp(2*I*pi*_k_)*exp(Simp(2*I*(x*_f_ + _e_), x))/((a_ + I*_b_)**2 + (a_**2 + _b_**2)*exp(2*I*pi*_k_)*exp(Simp(2*I*(x*_f_ + _e_), x))), x) + (x*_d_ + _c_)**(_m_ + 1)/(_d_*(a_ + I*_b_)*(_m_ + 1)),
+        replacement=2*I*_b_*Int((x*_d_ + _c_)**_m_*exp(2*I*pi*_k_)*exp(Simp(2*I*(x*_f_ + _e_), x))/((a_**2 + _b_**2)*exp(2*I*pi*_k_)*exp(Simp(2*I*(x*_f_ + _e_), x)) + (a_ + I*_b_)**2), x) + (x*_d_ + _c_)**(_m_ + 1)/(_d_*(a_ + I*_b_)*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=16,
     ),
@@ -208,7 +208,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_/(a_ + _b_*InertTan(x*_f_ + _e_)), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(a_**2 + _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=2*I*_b_*Int((x*_d_ + _c_)**_m_*exp(Simp(2*I*(x*_f_ + _e_), x))/((a_ + I*_b_)**2 + (a_**2 + _b_**2)*exp(Simp(2*I*(x*_f_ + _e_), x))), x) + (x*_d_ + _c_)**(_m_ + 1)/(_d_*(a_ + I*_b_)*(_m_ + 1)),
+        replacement=2*I*_b_*Int((x*_d_ + _c_)**_m_*exp(Simp(2*I*(x*_f_ + _e_), x))/((a_**2 + _b_**2)*exp(Simp(2*I*(x*_f_ + _e_), x)) + (a_ + I*_b_)**2), x) + (x*_d_ + _c_)**(_m_ + 1)/(_d_*(a_ + I*_b_)*(_m_ + 1)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=17,
     ),
@@ -216,7 +216,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)/(a_ + _b_*InertTan(x*_f_ + _e_))**2, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(a_**2 + _b_**2, 0),),
-        replacement=-_b_*(x*_d_ + _c_)/(_f_*(a_ + _b_*tan(x*_f_ + _e_))*(a_**2 + _b_**2)) + Int((2*x*a_*_d_*_f_ + 2*a_*_c_*_f_ + _b_*_d_)/(a_ + _b_*tan(x*_f_ + _e_)), x)/(_f_*(a_**2 + _b_**2)) - (x*_d_ + _c_)**2/(2*_d_*(a_**2 + _b_**2)),
+        replacement=-_b_*(x*_d_ + _c_)/(_f_*(a_**2 + _b_**2)*(a_ + _b_*tan(x*_f_ + _e_))) + Int((2*x*a_*_d_*_f_ + 2*a_*_c_*_f_ + _b_*_d_)/(a_ + _b_*tan(x*_f_ + _e_)), x)/(_f_*(a_**2 + _b_**2)) - (x*_d_ + _c_)**2/(2*_d_*(a_**2 + _b_**2)),
         module_name='4.3.10 (c+d x)^m (a+b tan)^n',
         rule_number=18,
     ),

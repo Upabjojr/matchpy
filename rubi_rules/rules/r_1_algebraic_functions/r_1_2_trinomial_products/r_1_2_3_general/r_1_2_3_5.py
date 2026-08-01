@@ -140,7 +140,7 @@ RULES = [
     # Rule 7
     SymPyReplacementPattern(
         pattern=Int((x**n_*_b_ + x**_n2_*_c_ + a_)**_p_*(x**_n2_*_f_ + x**_n3_*_g_ + d_), x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _f_, _g_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(_n3_, 3*n_), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_**2*_g_*(n_ + 1) + _b_*_c_*d_*(n_*(_p_ + 1) + 1)*(n_*(2*_p_ + 3) + 1), 0), EqQ(a_**2*_f_*(n_ + 1) - a_*_c_*d_*(n_ + 1)*(2*n_*(_p_ + 1) + 1) + _b_**2*d_*(n_*(_p_ + 1) + 1)*(n_*(_p_ + 2) + 1), 0),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _f_, _g_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(_n3_, 3*n_), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_**2*_g_*(n_ + 1) + _b_*_c_*d_*(n_*(2*_p_ + 3) + 1)*(n_*(_p_ + 1) + 1), 0), EqQ(a_**2*_f_*(n_ + 1) - a_*_c_*d_*(n_ + 1)*(2*n_*(_p_ + 1) + 1) + _b_**2*d_*(n_*(_p_ + 1) + 1)*(n_*(_p_ + 2) + 1), 0),),
         replacement=x*d_*(-x**n_*_b_*(n_*(_p_ + 1) + 1) + a_*(n_ + 1))*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(_p_ + 1)/(a_**2*(n_ + 1)),
         module_name='1.2.3.5 P(x) (a+b x^n+c x^(2 n))^p',
         rule_number=7,
@@ -156,7 +156,7 @@ RULES = [
     # Rule 9
     SymPyReplacementPattern(
         pattern=Int((x**_n3_*_g_ + d_)*(x**n_*_b_ + x**_n2_*_c_ + a_)**_p_, x),
-        constraints=(FreeQ([a_, _b_, _c_, d_, _g_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(_n3_, 3*n_), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_**2*_g_*(n_ + 1) + _b_*_c_*d_*(n_*(_p_ + 1) + 1)*(n_*(2*_p_ + 3) + 1), 0), EqQ(a_*_c_*d_*(n_ + 1)*(2*n_*(_p_ + 1) + 1) - _b_**2*d_*(n_*(_p_ + 1) + 1)*(n_*(_p_ + 2) + 1), 0),),
+        constraints=(FreeQ([a_, _b_, _c_, d_, _g_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(_n3_, 3*n_), NeQ(-4*a_*_c_ + _b_**2, 0), EqQ(a_**2*_g_*(n_ + 1) + _b_*_c_*d_*(n_*(2*_p_ + 3) + 1)*(n_*(_p_ + 1) + 1), 0), EqQ(a_*_c_*d_*(n_ + 1)*(2*n_*(_p_ + 1) + 1) - _b_**2*d_*(n_*(_p_ + 1) + 1)*(n_*(_p_ + 2) + 1), 0),),
         replacement=x*d_*(-x**n_*_b_*(n_*(_p_ + 1) + 1) + a_*(n_ + 1))*(x**(2*n_)*_c_ + x**n_*_b_ + a_)**(_p_ + 1)/(a_**2*(n_ + 1)),
         module_name='1.2.3.5 P(x) (a+b x^n+c x^(2 n))^p',
         rule_number=9,

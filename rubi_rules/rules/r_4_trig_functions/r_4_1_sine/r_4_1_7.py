@@ -203,7 +203,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertSin(x*_f_ + _e_)**2)**p_, x),
         constraints=(FreeQ([a_, _b_, _e_, _f_], x), NeQ(a_ + _b_, 0), LtQ(p_, -1),),
-        replacement=-_b_*(a_ + _b_*sin(x*_f_ + _e_)**2)**(p_ + 1)*sin(x*_f_ + _e_)*cos(x*_f_ + _e_)/(2*a_*_f_*(a_ + _b_)*(p_ + 1)) + Int((a_ + _b_*sin(x*_f_ + _e_)**2)**(p_ + 1)*Simp(2*a_*(p_ + 1) - 2*_b_*(p_ + 2)*sin(x*_f_ + _e_)**2 + _b_*(2*p_ + 3), x), x)/(2*a_*(a_ + _b_)*(p_ + 1)),
+        replacement=-_b_*(a_ + _b_*sin(x*_f_ + _e_)**2)**(p_ + 1)*sin(x*_f_ + _e_)*cos(x*_f_ + _e_)/(2*a_*_f_*(a_ + _b_)*(p_ + 1)) + Int((a_ + _b_*sin(x*_f_ + _e_)**2)**(p_ + 1)*Simp(2*a_*(p_ + 1) + _b_*(2*p_ + 3) - 2*_b_*(p_ + 2)*sin(x*_f_ + _e_)**2, x), x)/(2*a_*(a_ + _b_)*(p_ + 1)),
         module_name='4.1.7 (d trig)^m (a+b (c sin)^n)^p',
         rule_number=16,
     ),

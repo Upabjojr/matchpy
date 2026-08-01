@@ -272,7 +272,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(_u_*(A_ + _B_*y_**n_)*(_a_ + _c_*w_**_n2_)**_p_, x),
         constraints=(FreeQ([_a_, _c_, A_, _B_, n_, _p_], x), EqQ(_n2_, 2*n_), EqQ(w_, y_), Not(FalseQ(DerivativeDivides(y_, _u_, x))),),
-        replacement=With({q: DerivativeDivides(y_, _u_, x)}, Star(q, Subst(Int((x**n_*_B_ + A_)*(x**(2*n_)*_c_ + _a_)**_p_, x), x, y_))),
+        replacement=With({q: DerivativeDivides(y_, _u_, x)}, Star(q, Subst(Int((x**(2*n_)*_c_ + _a_)**_p_*(x**n_*_B_ + A_), x), x, y_))),
         module_name='9.3 Miscellaneous integration rules',
         rule_number=21,
     ),

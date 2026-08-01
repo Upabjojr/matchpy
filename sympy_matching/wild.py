@@ -93,6 +93,29 @@ class WildSymbol(SympySymbol):
     def _hashable_content(self):
         return super()._hashable_content() + (self._wild_index,)
 
+    def sort_key(self, order=None):
+        """Canonical ordering key -- must SEPARATE wildcards that differ only in optionality.
+
+        SymPy's default key for a Symbol is built from its class and name, which are
+        identical for the plain and the optional wildcard of one name (``d_`` / ``_d_``).
+        With the keys tied, SymPy's stable sort falls back to the order the terms were
+        collected in, so the argument order of an ``Add``/``Mul`` holding both was an
+        artefact of how the expression was built. Code generation prints those
+        expressions, so the emitted source was NON-DETERMINISTIC: the same input gave
+        ``d_ + _d_*W`` on one run and ``_d_*W + d_`` on the next, and every
+        regeneration diff carried churn that could hide a real change (defects §30/§31).
+
+        The tie-break tag is a STRING -- sort keys are compared element-wise with
+        ``<``/``>``, and the raw ``IDENTITY_ELEMENT`` sentinel is not orderable.
+
+        NOTE: this deliberately does NOT touch ``_hashable_content``/equality --
+        making same-named wildcards compare equal collapses them at rule-construction
+        time and silently DESTROYED 120 generated rules when it was tried (§31).
+        """
+        optionality = '' if self._optional_value is None else repr(self._optional_value)
+        cls_key, (arg_count, args), exponent, coefficient = super().sort_key(order=order)
+        return cls_key, (arg_count, args + (optionality,)), exponent, coefficient
+
     @property
     def wildcard_name(self):
         """MatchPy variable name derived from the SymPy symbol name."""

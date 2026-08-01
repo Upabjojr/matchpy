@@ -480,7 +480,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_d_*InertSin(x*_f_ + _e_))**n_*(a_ + _b_*InertSin(x*_f_ + _e_))**m_, x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_, m_, n_], x), EqQ(a_**2 - _b_**2, 0), Not(IntegerQ(m_)), GtQ(a_, 0), GtQ(_d_/_b_, 0),),
-        replacement=-_b_*(_d_/_b_)**n_*Subst(Int((-x + a_)**n_*(-x + 2*a_)**(m_ + sympy.S(-1)/2)/sqrt(x), x), x, a_ - _b_*sin(x*_f_ + _e_))*cos(x*_f_ + _e_)/(_f_*sqrt(a_ - _b_*sin(x*_f_ + _e_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))),
+        replacement=-_b_*(_d_/_b_)**n_*Subst(Int((-x + 2*a_)**(m_ + sympy.S(-1)/2)*(-x + a_)**n_/sqrt(x), x), x, a_ - _b_*sin(x*_f_ + _e_))*cos(x*_f_ + _e_)/(_f_*sqrt(a_ - _b_*sin(x*_f_ + _e_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=52,
     ),
@@ -552,7 +552,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(sqrt(_d_*InertSin(x*_f_ + _e_))/(a_ + _b_*InertSin(x*_f_ + _e_))**(sympy.S(3)/2), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=-2*a_*_d_*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)) - _d_**2*Int(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2), x)/(a_**2 - _b_**2),
+        replacement=-2*a_*_d_*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))) - _d_**2*Int(sqrt(a_ + _b_*sin(x*_f_ + _e_))/(_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2), x)/(a_**2 - _b_**2),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=61,
     ),
@@ -600,7 +600,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(1/(sqrt(_d_*InertSin(x*_f_ + _e_))*(a_ + _b_*InertSin(x*_f_ + _e_))**(sympy.S(3)/2)), x),
         constraints=(FreeQ([a_, _b_, _d_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0),),
-        replacement=2*_b_*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*sqrt(a_ + _b_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)) + _d_*Int((a_*sin(x*_f_ + _e_) + _b_)/((_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))), x)/(a_**2 - _b_**2),
+        replacement=2*_b_*cos(x*_f_ + _e_)/(_f_*sqrt(_d_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))) + _d_*Int((a_*sin(x*_f_ + _e_) + _b_)/((_d_*sin(x*_f_ + _e_))**(sympy.S(3)/2)*sqrt(a_ + _b_*sin(x*_f_ + _e_))), x)/(a_**2 - _b_**2),
         module_name='4.1.2.1 (a+b sin)^m (c+d sin)^n',
         rule_number=67,
     ),

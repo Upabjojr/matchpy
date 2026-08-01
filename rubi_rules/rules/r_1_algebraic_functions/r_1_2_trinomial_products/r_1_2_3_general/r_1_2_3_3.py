@@ -233,7 +233,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**n_*_e_ + d_)**_q_*(x**n2_*_c_ + a_), x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_], x), EqQ(n2_, 2*n_), NeQ(a_*_e_**2 + _c_*d_**2, 0), IGtQ(_q_, 0),),
-        replacement=Int(ExpandIntegrand((x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_), x), x),
+        replacement=Int(ExpandIntegrand((x**(2*n_)*_c_ + a_)*(x**n_*_e_ + d_)**_q_, x), x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=18,
     ),
@@ -417,7 +417,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**n_*_e_ + d_)*(x**n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_], x), EqQ(n2_, 2*n_), ILtQ(p_, -1),),
-        replacement=-x*(x**n_*_e_ + d_)*(x**(2*n_)*_c_ + a_)**(p_ + 1)/(2*a_*n_*(p_ + 1)) + Int((x**(2*n_)*_c_ + a_)**(p_ + 1)*(x**n_*_e_*(2*n_*p_ + 3*n_ + 1) + d_*(2*n_*p_ + 2*n_ + 1)), x)/(2*a_*n_*(p_ + 1)),
+        replacement=-x*(x**(2*n_)*_c_ + a_)**(p_ + 1)*(x**n_*_e_ + d_)/(2*a_*n_*(p_ + 1)) + Int((x**(2*n_)*_c_ + a_)**(p_ + 1)*(x**n_*_e_*(2*n_*p_ + 3*n_ + 1) + d_*(2*n_*p_ + 2*n_ + 1)), x)/(2*a_*n_*(p_ + 1)),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=41,
     ),
@@ -433,7 +433,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**n_*_e_ + d_)*(x**n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_], x), EqQ(n2_, 2*n_),),
-        replacement=Int(ExpandIntegrand((x**n_*_e_ + d_)*(x**(2*n_)*_c_ + a_)**p_, x), x),
+        replacement=Int(ExpandIntegrand((x**(2*n_)*_c_ + a_)**p_*(x**n_*_e_ + d_), x), x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=43,
     ),
@@ -465,7 +465,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**n_*_e_ + d_)**q_*(x**n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_, p_, q_], x), EqQ(n2_, 2*n_), NeQ(a_*_e_**2 + _c_*d_**2, 0), Or(And(IntegersQ(p_, q_), Not(IntegerQ(n_))), IGtQ(p_, 0), And(IGtQ(q_, 0), Not(IntegerQ(n_)))),),
-        replacement=Int(ExpandIntegrand((x**n_*_e_ + d_)**q_*(x**(2*n_)*_c_ + a_)**p_, x), x),
+        replacement=Int(ExpandIntegrand((x**(2*n_)*_c_ + a_)**p_*(x**n_*_e_ + d_)**q_, x), x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=47,
     ),
@@ -489,7 +489,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**n_*_e_ + d_)**q_*(x**n2_*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_, p_, q_], x), EqQ(n2_, 2*n_),),
-        replacement=Unintegrable((x**n_*_e_ + d_)**q_*(x**(2*n_)*_c_ + a_)**p_, x),
+        replacement=Unintegrable((x**(2*n_)*_c_ + a_)**p_*(x**n_*_e_ + d_)**q_, x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=50,
     ),
@@ -505,7 +505,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((a_ + _c_*u_**n2_)**_p_*(d_ + _e_*u_**n_)**_q_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, n_, _p_, _q_], x), EqQ(n2_, 2*n_), LinearQ(u_, x), NeQ(u_, x),),
-        replacement=Subst(Int((x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_)**_p_, x), x, u_)/Coefficient(u_, x, 1),
+        replacement=Subst(Int((x**(2*n_)*_c_ + a_)**_p_*(x**n_*_e_ + d_)**_q_, x), x, u_)/Coefficient(u_, x, 1),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=52,
     ),
@@ -537,7 +537,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**_mn2_*_c_ + _a_)**_p_*(x**_n_*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _c_, d_, _e_, _n_, _q_], x), EqQ(_mn2_, -2*_n_), IntegerQ(_p_),),
-        replacement=Int((x**_n_*_e_ + d_)**_q_*(x**(2*_n_)*_a_ + _c_)**_p_/x**(2*_n_*_p_), x),
+        replacement=Int((x**(2*_n_)*_a_ + _c_)**_p_*(x**_n_*_e_ + d_)**_q_/x**(2*_n_*_p_), x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=56,
     ),
@@ -569,7 +569,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**_mn2_*_c_ + _a_)**p_*(x**_n_*_e_ + d_)**_q_, x),
         constraints=(FreeQ([_a_, _c_, d_, _e_, _n_, p_, _q_], x), EqQ(_mn2_, -2*_n_), Not(IntegerQ(p_)), Not(IntegerQ(_q_)), PosQ(_n_),),
-        replacement=x**(2*_n_*FracPart(p_))*(_a_ + _c_/x**(2*_n_))**FracPart(p_)*Int((x**_n_*_e_ + d_)**_q_*(x**(2*_n_)*_a_ + _c_)**p_/x**(2*_n_*p_), x)/(x**(2*_n_)*_a_ + _c_)**FracPart(p_),
+        replacement=x**(2*_n_*FracPart(p_))*(_a_ + _c_/x**(2*_n_))**FracPart(p_)*Int((x**(2*_n_)*_a_ + _c_)**p_*(x**_n_*_e_ + d_)**_q_/x**(2*_n_*p_), x)/(x**(2*_n_)*_a_ + _c_)**FracPart(p_),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=60,
     ),
@@ -657,7 +657,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x**_m_*_B_ + A_)*(x**n_*_e_ + d_)**_q_*(x**n2_*_c_ + a_)**_p_, x),
         constraints=(FreeQ([a_, _c_, d_, _e_, A_, _B_, _m_, n_, _p_, _q_], x), EqQ(n2_, 2*n_), EqQ(_m_ - n_ + 1, 0),),
-        replacement=A_*Int((x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_)**_p_, x) + _B_*Int(x**_m_*(x**n_*_e_ + d_)**_q_*(x**(2*n_)*_c_ + a_)**_p_, x),
+        replacement=A_*Int((x**(2*n_)*_c_ + a_)**_p_*(x**n_*_e_ + d_)**_q_, x) + _B_*Int(x**_m_*(x**(2*n_)*_c_ + a_)**_p_*(x**n_*_e_ + d_)**_q_, x),
         module_name='1.2.3.3 (d+e x^n)^q (a+b x^n+c x^(2 n))^p',
         rule_number=71,
     ),

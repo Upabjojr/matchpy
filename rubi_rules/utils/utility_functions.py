@@ -5979,55 +5979,65 @@ def eager_FunctionOfLog(u, *args):
 def eager_PowerVariableExpn(u, m, x):
     # If m is an integer, u is an expression of the form f((c*x)**n) and g=GCD(m,n)>1,
     # PowerVariableExpn(u,m,x) returns the list {x**(m/g)*f((c*x)**(n/g)),g,c}; else it returns False.
+    #
+    # Exact arithmetic: ``m/lst[0]`` was Python division, so Int[x^3 f(x^2)] built
+    # ``x**1.0`` -- a float exponent poisoning everything downstream. S(m) keeps it exact.
     if eager_IntegerQ(m):
-        lst = PowerVariableDegree(u, m, 1, x)
-        if not lst:
+        lst = PowerVariableDegree(u, m, S(1), x)
+        if lst is False:
             return False
-        else:
-            return [x**(m/lst[0])*PowerVariableSubst(u, lst[0], x), lst[0], lst[1]]
-    else:
-        return False
+        return [x**(S(m)/lst[0])*PowerVariableSubst(u, lst[0], x), lst[0], lst[1]]
+    return False
 
 def PowerVariableDegree(u, m, c, x):
+    """Rubi ``PowerVariableDegree[u,m,c,x]`` -- the running GCD of the powers of x in u.
+
+    Rubi's recursion THREADS the accumulator through the scan::
+
+        Catch[Module[{lst={m,c}},
+          Scan[Function[lst=PowerVariableDegree[#,lst[[1]],lst[[2]],x];
+                        If[AtomQ[lst],Throw[False]]], u];
+          lst]]
+
+    each argument refines ``lst`` and the NEXT argument starts from the refined value.
+    The port called every child with the ORIGINAL [m, c] and returned the LAST child's
+    result, so any x-free trailing argument (e.g. the exponent -1 of ``(1+W)**-1``)
+    reset the answer to the untouched [m, c]. Concretely,
+    ``PowerVariableDegree[1/(1+W(a x^2)), 4, 1, x]`` returned g=4 instead of
+    GCD(4,2)=2, the rule guard ``NeQ[lst[[2]], m+1]`` then saw 4==4 and rejected, and
+    the 9.3/9.4 "Int[x^m F(x^n)] -> 1/g Subst[...]" reduction NEVER fired -- which is
+    the root cause of the Int[x^3 W(a x^2)^2] wrong answer (RUBI_PORT_DEFECTS.md §27).
+    """
     if eager_FreeQ(u, x):
         return [m, c]
     if eager_AtomQ(u) or CalculusQ(u):
         return False
-    if eager_PowerQ(u):
-        if eager_FreeQ(u.base/x, x):
-            if ZeroQ(m) or m == u.exp and c == u.base/x:
-                return [u.exp, u.base/x]
-            if eager_IntegerQ(u.exp) and eager_IntegerQ(m) and eager_GCD(m, u.exp)>1 and c==u.base/x:
-                return [eager_GCD(m, u.exp), c]
-            else:
-                return False
-    lst = [m, c]
-    for i in u.args:
-        if PowerVariableDegree(i, lst[0], lst[1], x) == False:
-            return False
-        lst1 = PowerVariableDegree(i, lst[0], lst[1], x)
-    if not lst1:
+    if eager_PowerQ(u) and eager_FreeQ(u.base/x, x):
+        if ZeroQ(m) or (m == u.exp and c == u.base/x):
+            return [u.exp, u.base/x]
+        if eager_IntegerQ(u.exp) and eager_IntegerQ(m) and eager_GCD(m, u.exp) > 1 and c == u.base/x:
+            return [eager_GCD(m, u.exp), c]
         return False
-    else:
-        return lst1
+    lst = [m, c]
+    for arg in u.args:
+        lst = PowerVariableDegree(arg, lst[0], lst[1], x)
+        if lst is False:
+            return False
+    return lst
 
 def PowerVariableSubst(u, m, x):
+    """Rubi ``PowerVariableSubst[u,m,x]`` -- rewrite every ``(c x)^k`` in u as ``x^(k/m)``.
+
+    Rubi's general case is ``Map[Function[PowerVariableSubst[#,m,x]], u]`` -- over ANY
+    head. The port mapped only over Mul and Add and returned everything else unchanged,
+    so ``W(a x^2)`` (head LambertW) and any Power with a non-``c*x`` base survived
+    untouched and the substitution silently produced the wrong integrand.
+    """
     if eager_FreeQ(u, x) or eager_AtomQ(u) or CalculusQ(u):
         return u
-    if eager_PowerQ(u):
-        if eager_FreeQ(u.base/x, x):
-            return x**(u.exp/m)
-    if eager_ProductQ(u):
-        l = 1
-        for i in u.args:
-            l *= (PowerVariableSubst(i, m, x))
-        return l
-    if eager_SumQ(u):
-        l = 0
-        for i in u.args:
-            l += (PowerVariableSubst(i, m, x))
-        return l
-    return u
+    if eager_PowerQ(u) and eager_FreeQ(u.base/x, x):
+        return x**(u.exp/m)
+    return u.func(*[PowerVariableSubst(arg, m, x) for arg in u.args])
 
 def eager_EulerIntegrandQ(expr, x):
     a = Wild('a', exclude=[x])

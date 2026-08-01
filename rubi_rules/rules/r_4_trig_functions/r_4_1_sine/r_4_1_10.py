@@ -300,7 +300,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_ + _c_)**_m_/(a_ + _b_*InertSin(x*_f_ + _e_))**2, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_, _f_], x), NeQ(a_**2 - _b_**2, 0), IGtQ(_m_, 0),),
-        replacement=a_*Int((x*_d_ + _c_)**_m_/(a_ + _b_*sin(x*_f_ + _e_)), x)/(a_**2 - _b_**2) - _b_*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*cos(x*_f_ + _e_)/(a_ + _b_*sin(x*_f_ + _e_)), x)/(_f_*(a_**2 - _b_**2)) + _b_*(x*_d_ + _c_)**_m_*cos(x*_f_ + _e_)/(_f_*(a_ + _b_*sin(x*_f_ + _e_))*(a_**2 - _b_**2)),
+        replacement=a_*Int((x*_d_ + _c_)**_m_/(a_ + _b_*sin(x*_f_ + _e_)), x)/(a_**2 - _b_**2) - _b_*_d_*_m_*Int((x*_d_ + _c_)**(_m_ - 1)*cos(x*_f_ + _e_)/(a_ + _b_*sin(x*_f_ + _e_)), x)/(_f_*(a_**2 - _b_**2)) + _b_*(x*_d_ + _c_)**_m_*cos(x*_f_ + _e_)/(_f_*(a_**2 - _b_**2)*(a_ + _b_*sin(x*_f_ + _e_))),
         module_name='4.1.10 (c+d x)^m (a+b sin)^n',
         rule_number=29,
     ),

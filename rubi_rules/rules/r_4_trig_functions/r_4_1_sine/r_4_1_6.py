@@ -203,7 +203,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**(sympy.S(-3)/2), x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _e_], x), NeQ(a_**2 - _b_**2 - _c_**2, 0),),
-        replacement=Int(sqrt(a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(a_**2 - _b_**2 - _c_**2) + (-2*_b_*sin(x*_e_ + _d_) + 2*_c_*cos(x*_e_ + _d_))/(_e_*sqrt(a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(a_**2 - _b_**2 - _c_**2)),
+        replacement=Int(sqrt(a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(a_**2 - _b_**2 - _c_**2) + (-2*_b_*sin(x*_e_ + _d_) + 2*_c_*cos(x*_e_ + _d_))/(_e_*(a_**2 - _b_**2 - _c_**2)*sqrt(a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=17,
     ),
@@ -379,7 +379,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _B_*InertCos(x*_e_ + _d_) + _C_*InertSin(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_, _C_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), EqQ(_A_*_a_ - _B_*_b_ - _C_*_c_, 0),),
-        replacement=(_B_*_c_ - _C_*_b_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_) - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(_B_*_c_ - _C_*_b_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_) - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=39,
     ),
@@ -387,7 +387,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _C_*InertSin(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _C_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), EqQ(_A_*_a_ - _C_*_c_, 0),),
-        replacement=(-_A_*_b_*sin(x*_e_ + _d_) - _C_*_b_ - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(-_A_*_b_*sin(x*_e_ + _d_) - _C_*_b_ - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=40,
     ),
@@ -395,7 +395,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _B_*InertCos(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), EqQ(_A_*_a_ - _B_*_b_, 0),),
-        replacement=(_A_*_c_*cos(x*_e_ + _d_) + _B_*_c_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(_A_*_c_*cos(x*_e_ + _d_) + _B_*_c_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=41,
     ),
@@ -403,7 +403,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _B_*InertCos(x*_e_ + _d_) + _C_*InertSin(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_, _C_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), NeQ(_A_*_a_ - _B_*_b_ - _C_*_c_, 0),),
-        replacement=(_A_*_a_ - _B_*_b_ - _C_*_c_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (_B_*_c_ - _C_*_b_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_) - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(_A_*_a_ - _B_*_b_ - _C_*_c_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (_B_*_c_ - _C_*_b_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_) - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=42,
     ),
@@ -411,7 +411,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _C_*InertSin(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _C_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), NeQ(_A_*_a_ - _C_*_c_, 0),),
-        replacement=(_A_*_a_ - _C_*_c_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (-_A_*_b_*sin(x*_e_ + _d_) - _C_*_b_ - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(_A_*_a_ - _C_*_c_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (-_A_*_b_*sin(x*_e_ + _d_) - _C_*_b_ - (-_A_*_c_ + _C_*_a_)*cos(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=43,
     ),
@@ -419,7 +419,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((_A_ + _B_*InertCos(x*_e_ + _d_))/(_a_ + _b_*InertCos(x*_e_ + _d_) + _c_*InertSin(x*_e_ + _d_))**2, x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _A_, _B_], x), NeQ(_a_**2 - _b_**2 - _c_**2, 0), NeQ(_A_*_a_ - _B_*_b_, 0),),
-        replacement=(_A_*_a_ - _B_*_b_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (_A_*_c_*cos(x*_e_ + _d_) + _B_*_c_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_))/(_e_*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))*(_a_**2 - _b_**2 - _c_**2)),
+        replacement=(_A_*_a_ - _B_*_b_)*Int(1/(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_)), x)/(_a_**2 - _b_**2 - _c_**2) + (_A_*_c_*cos(x*_e_ + _d_) + _B_*_c_ + (-_A_*_b_ + _B_*_a_)*sin(x*_e_ + _d_))/(_e_*(_a_**2 - _b_**2 - _c_**2)*(_a_ + _b_*cos(x*_e_ + _d_) + _c_*sin(x*_e_ + _d_))),
         module_name='4.1.6 (a+b cos+c sin)^n',
         rule_number=44,
     ),

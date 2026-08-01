@@ -213,7 +213,7 @@ RULES = [
     ),
     # Rule 17
     SymPyReplacementPattern(
-        pattern=Int(_u_*(_e_*(x**_n_*_b_ + _a_)**_q_*(x**n_*_d_ + c_)**_r_)**p_, x),
+        pattern=Int(_u_*(_e_*(x**n_*_d_ + c_)**_r_*(x**_n_*_b_ + _a_)**_q_)**p_, x),
         constraints=(FreeQ([_a_, _b_, c_, _d_, _e_, _n_, p_, _q_, _r_], x),),
         replacement=Int(_u_*(x**_n_*_b_ + _a_)**(p_*_q_)*(x**_n_*_d_ + c_)**(p_*_r_), x)*Simp((_e_*(x**_n_*_b_ + _a_)**_q_*(x**_n_*_d_ + c_)**_r_)**p_/((x**_n_*_b_ + _a_)**(p_*_q_)*(x**_n_*_d_ + c_)**(p_*_r_))),
         module_name='1.3.4 Normalizing algebraic functions',

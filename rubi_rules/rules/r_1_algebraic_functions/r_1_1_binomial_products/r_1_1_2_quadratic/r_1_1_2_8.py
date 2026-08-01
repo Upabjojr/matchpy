@@ -807,7 +807,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_)**m_*(x*_d_ + c_)**n_/(x**2*_b_ + a_), x),
         constraints=(FreeQ([a_, _b_, c_, _d_, _e_], x), GtQ(n_, 1), GtQ(m_, 0), Not(IntegerQ(m_)), Not(IntegerQ(n_)),),
-        replacement=-Star(_e_/_b_, Int((x*_e_)**(m_ - 1)*(x*_d_ + c_)**(n_ - 2)*Simp(-x*(-a_*_d_**2 + _b_*c_**2) + 2*a_*c_*_d_, x)/(x**2*_b_ + a_), x)) + Star(_d_*_e_/_b_, Int((x*_e_)**(m_ - 1)*(x*_d_ + c_)**(n_ - 2)*(x*_d_ + 2*c_), x)),
+        replacement=-Star(_e_/_b_, Int((x*_e_)**(m_ - 1)*(x*_d_ + c_)**(n_ - 2)*Simp(-x*(-a_*_d_**2 + _b_*c_**2) + 2*a_*c_*_d_, x)/(x**2*_b_ + a_), x)) + Star(_d_*_e_/_b_, Int((x*_e_)**(m_ - 1)*(x*_d_ + 2*c_)*(x*_d_ + c_)**(n_ - 2), x)),
         module_name='1.1.2.8 (e x)^m (c+d x)^n (a+b x^2)^p',
         rule_number=92,
     ),

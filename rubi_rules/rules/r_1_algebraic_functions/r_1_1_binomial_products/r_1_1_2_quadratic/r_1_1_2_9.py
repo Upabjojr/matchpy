@@ -353,7 +353,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_e_ + _d_)*(x*_g_ + _f_)*(x**2*_c_ + a_)**p_, x),
         constraints=(FreeQ([a_, _c_, _d_, _e_, _f_, _g_, p_], x), EqQ(a_*_e_*_g_ - _c_*_d_*_f_*(2*p_ + 3), 0), NeQ(p_, -1),),
-        replacement=(x**2*_c_ + a_)**(p_ + 1)*(2*x*_e_*_g_*(p_ + 1) + (2*p_ + 3)*(_d_*_g_ + _e_*_f_))/(2*_c_*(p_ + 1)*(2*p_ + 3)),
+        replacement=(x**2*_c_ + a_)**(p_ + 1)*(2*x*_e_*_g_*(p_ + 1) + (2*p_ + 3)*(_d_*_g_ + _e_*_f_))/(2*_c_*(2*p_ + 3)*(p_ + 1)),
         module_name='1.1.2.9 (c+d x)^m (e+f x)^n (a+b x^2)^p',
         rule_number=35,
     ),

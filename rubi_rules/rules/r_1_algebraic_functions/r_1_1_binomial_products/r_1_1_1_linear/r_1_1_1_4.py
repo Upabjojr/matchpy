@@ -267,7 +267,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_b_ + _a_)**m_*sqrt(x*_f_ + _e_)*sqrt(x*_h_ + _g_)/sqrt(x*_d_ + _c_), x),
         constraints=(FreeQ([_a_, _b_, _c_, _d_, _e_, _f_, _g_, _h_, m_], x), IntegerQ(2*m_), LtQ(m_, -1),),
-        replacement=-Int((x*_b_ + _a_)**(m_ + 1)*Simp(x**2*_d_*_f_*_h_*(2*m_ + 5) + x*(2*_c_*_f_*_h_ + 2*_d_*(m_ + 2)*(_e_*_h_ + _f_*_g_)) + _c_*(_e_*_h_ + _f_*_g_) + _d_*_e_*_g_*(2*m_ + 3), x)/(sqrt(x*_d_ + _c_)*sqrt(x*_f_ + _e_)*sqrt(x*_h_ + _g_)), x)/((2*m_ + 2)*(-_a_*_d_ + _b_*_c_)) + (x*_b_ + _a_)**(m_ + 1)*sqrt(x*_d_ + _c_)*sqrt(x*_f_ + _e_)*sqrt(x*_h_ + _g_)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)),
+        replacement=(x*_b_ + _a_)**(m_ + 1)*sqrt(x*_d_ + _c_)*sqrt(x*_f_ + _e_)*sqrt(x*_h_ + _g_)/((m_ + 1)*(-_a_*_d_ + _b_*_c_)) - Int((x*_b_ + _a_)**(m_ + 1)*Simp(x**2*_d_*_f_*_h_*(2*m_ + 5) + x*(2*_c_*_f_*_h_ + 2*_d_*(m_ + 2)*(_e_*_h_ + _f_*_g_)) + _c_*(_e_*_h_ + _f_*_g_) + _d_*_e_*_g_*(2*m_ + 3), x)/(sqrt(x*_d_ + _c_)*sqrt(x*_f_ + _e_)*sqrt(x*_h_ + _g_)), x)/((2*m_ + 2)*(-_a_*_d_ + _b_*_c_)),
         module_name='1.1.1.4 (a+b x)^m (c+d x)^n (e+f x)^p (g+h x)^q',
         rule_number=24,
     ),

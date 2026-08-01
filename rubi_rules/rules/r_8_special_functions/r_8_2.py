@@ -379,7 +379,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int(x**m_*cos(x**2*_d_)*fresnelc(x*_b_), x),
         constraints=(FreeQ([_b_, _d_], x), EqQ(_d_**2, pi**2*_b_**4/4), ILtQ(m_, -2),),
-        replacement=x**(m_ + 1)*cos(x**2*_d_)*fresnelc(x*_b_)/(m_ + 1) - x**(m_ + 2)*_b_/((m_ + 2)*(2*m_ + 2)) - _b_*Int(x**(m_ + 1)*cos(2*x**2*_d_), x)/(2*m_ + 2) + 2*_d_*Int(x**(m_ + 2)*sin(x**2*_d_)*fresnelc(x*_b_), x)/(m_ + 1),
+        replacement=x**(m_ + 1)*cos(x**2*_d_)*fresnelc(x*_b_)/(m_ + 1) - x**(m_ + 2)*_b_/((2*m_ + 2)*(m_ + 2)) - _b_*Int(x**(m_ + 1)*cos(2*x**2*_d_), x)/(2*m_ + 2) + 2*_d_*Int(x**(m_ + 2)*sin(x**2*_d_)*fresnelc(x*_b_), x)/(m_ + 1),
         module_name='8.2 Fresnel integral functions',
         rule_number=40,
     ),

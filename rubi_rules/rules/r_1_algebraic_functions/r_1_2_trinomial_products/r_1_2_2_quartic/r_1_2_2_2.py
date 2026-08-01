@@ -96,7 +96,7 @@ RULES = [
     SymPyReplacementPattern(
         pattern=Int((x*_d_)**_m_*(x**4*_c_ + x**2*_b_ + a_)**p_, x),
         constraints=(FreeQ([a_, _b_, _c_, _d_, _m_, p_], x), EqQ(-4*a_*_c_ + _b_**2, 0), Not(IntegerQ(p_)), EqQ(_m_ + 4*p_ + 5, 0), NeQ(p_, sympy.S(-1)/2),),
-        replacement=-(x*_d_)**(_m_ + 1)*(x**2*_b_ + 2*a_)*(x**4*_c_ + x**2*_b_ + a_)**p_/(4*a_*_d_*(2*p_ + 1)) + (x*_d_)**(_m_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(4*a_*_d_*(p_ + 1)*(2*p_ + 1)),
+        replacement=-(x*_d_)**(_m_ + 1)*(x**2*_b_ + 2*a_)*(x**4*_c_ + x**2*_b_ + a_)**p_/(4*a_*_d_*(2*p_ + 1)) + (x*_d_)**(_m_ + 1)*(x**4*_c_ + x**2*_b_ + a_)**(p_ + 1)/(4*a_*_d_*(2*p_ + 1)*(p_ + 1)),
         module_name='1.2.2.2 (d x)^m (a+b x^2+c x^4)^p',
         rule_number=4,
     ),
