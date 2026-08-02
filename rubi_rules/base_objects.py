@@ -141,7 +141,10 @@ class _RubiIntegrator:
         # terminal, whichever rule happens to be yielded first.
         replacer = self._load_replacer(pattern)
         applied: list = []
-        budget = [50000]  # backstop against a rule set that never converges
+        # budget[0]: backstop against a rule set that never converges.
+        # budget[1]: the REVISIT cache -- form -> (result, blocked), or None while a
+        # fresh recomputation of that form is in flight (see `_dfs_match_int`).
+        budget = [50000, {}]
         result, _ = _dfs_reduce_int(
             sympy.sympify(expr), sympy.sympify(x), frozenset(), replacer, applied, budget, trace
         )
@@ -603,7 +606,33 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
     # Pow(E, ...) can match the exponential rule patterns; SymPy never does this.
     f = sympy.powsimp(f, combine='exp')
     if f in path:
-        return Int(f, x), True
+        # A revisit of a form on the current reduction path is only a TRUE cycle if
+        # computing that form again requires itself. Rubi has no path check at all:
+        # a partial-fraction split may legitimately reproduce an ancestor integral
+        # (e.g. `Int[u/(x(cx-1))] -> -Int[u/x] + c Int[u/(cx-1)]` where `Int[u/x]`
+        # is the ancestor), and that integral terminates via a DIFFERENT route (the
+        # log-rule chain with decreasing power). Blocking every revisit made the
+        # rule Rubi uses look like a cycle, and the Unintegrable cutoff then gave
+        # up -- `Int[(a+b atanh(c x^2))^2/x]` unsolved while Rubi solves it in 2.3 s.
+        #
+        # So: recompute the revisited form ONCE, fresh (empty path), memoised per
+        # top-level integrate() call in budget[1]. While the fresh computation is in
+        # flight its cache entry is None -- a nested revisit of the same form then
+        # IS a self-cycle and blocks, which also keeps the mutually-inverse rule
+        # pairs (complete-the-square vs ExpandToSum) from bouncing forever. The
+        # global step budget bounds everything else.
+        cache = budget[1] if len(budget) > 1 else None
+        if cache is None:
+            return Int(f, x), True
+        if f in cache:
+            cached = cache[f]
+            if cached is None:
+                return Int(f, x), True      # in flight -> genuine self-cycle
+            return cached
+        cache[f] = None
+        result = _dfs_match_int(f, x, frozenset(), replacer, applied, budget, trace)
+        cache[f] = result
+        return result
     if budget[0] <= 0:
         return Int(f, x), False
     budget[0] -= 1

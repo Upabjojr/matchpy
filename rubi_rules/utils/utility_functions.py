@@ -864,8 +864,12 @@ def eager_InverseFunctionFreeQ(u, x):
         if eager_InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
             return eager_FreeQ(u, x)
         else:
+            # Rubi recurses into every operand (Scan[... InverseFunctionFreeQ[#,x] ...]).
+            # This used to call ElementaryFunctionQ instead, which happily accepts
+            # ArcTanh etc. -- so e.g. InverseFunctionFreeQ[(a+b ArcTanh[c x])^2, x]
+            # was True and the 3.5 Log[u] IntHide rules misfired.
             for i in u.args:
-                if not ElementaryFunctionQ(i):
+                if not eager_InverseFunctionFreeQ(i, x):
                     return False
             return True
 

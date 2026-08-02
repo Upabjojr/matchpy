@@ -2929,6 +2929,14 @@ _MMA_PREDICATES = [
     (lambda: _U.eager_TrigHyperbolicFreeQ(sin(x), x), False),
     (lambda: _U.eager_InverseFunctionFreeQ(x**2, x), True),
     (lambda: _U.eager_InverseFunctionFreeQ(asin(x), x), False),
+    # Must recurse into args (Rubi Scans InverseFunctionFreeQ over the operands).
+    # Calling ElementaryFunctionQ on the args instead accepted (a+b*atanh(c*x))^2
+    # and made the 3.5 `Int[v Log[u]]` IntHide rules misfire, killing e.g.
+    # Int[(a+b ArcTanh[c x^2])^2/x] with a spurious Unintegrable.
+    (lambda: _U.eager_InverseFunctionFreeQ((a + b * atanh(c * x))**2 / (2 * b * c), x), False),
+    (lambda: _U.eager_InverseFunctionFreeQ(log(2 - 2 / (1 - c * x)), x), False),
+    (lambda: _U.eager_InverseFunctionFreeQ((a + b * x)**2 / (1 - c * x), x), True),
+    (lambda: _U.eager_InverseFunctionFreeQ(b * atanh(a), x), True),  # inverse fn but free of x
     (lambda: _U.eager_FunctionOfExponentialQ(exp(x) + exp(2 * x), x), True),
     (lambda: _U.eager_FunctionOfTrigOfLinearQ(sin(1 + 2 * x), x), True),
     (lambda: _U.eager_FunctionOfTrigOfLinearQ(x**2, x), False),
