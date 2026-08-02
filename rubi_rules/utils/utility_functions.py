@@ -5501,13 +5501,13 @@ def TrigReduce(i):
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                return i.subs(v*sin(a)*sin(b), v*S(1)/2*cos(a - b) - cos(a + b))
+                return i.subs(v*sin(a)*sin(b), v*S(1)/2*(cos(a - b) - cos(a + b)))
             Match = i.match(v*cos(a)*cos(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                return i.subs(v*cos(a)*cos(b), v*S(1)/2*cos(a + b) + cos(a - b))
+                return i.subs(v*cos(a)*cos(b), v*S(1)/2*(cos(a + b) + cos(a - b)))
             Match = i.match(v*sinh(a)*cosh(b))
             if Match:
                 a = Match[a]
@@ -5519,13 +5519,13 @@ def TrigReduce(i):
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                return i.subs(v*sinh(a)*sinh(b), v*S(1)/2*cosh(a - b) - cosh(a + b))
+                return i.subs(v*sinh(a)*sinh(b), v*S(1)/2*(cosh(a + b) - cosh(a - b)))
             Match = i.match(v*cosh(a)*cosh(b))
             if Match:
                 a = Match[a]
                 b = Match[b]
                 v = Match[v]
-                return i.subs(v*cosh(a)*cosh(b), v*S(1)/2*cosh(a + b) + cosh(a - b))
+                return i.subs(v*cosh(a)*cosh(b), v*S(1)/2*(cosh(a + b) + cosh(a - b)))
 
     if eager_PowerQ(i):
         if i.has(sin, sinh):

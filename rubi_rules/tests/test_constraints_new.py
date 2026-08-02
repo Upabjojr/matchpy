@@ -1016,3 +1016,30 @@ class TestExpensiveGuardDeferralPolicy:
         x = Symbol('x')
         assert _defer_expensive_guard(FreeQ(u_, x)) is False
         assert _defer_expensive_guard(IntegerQ(u_)) is False
+
+
+class TestPolynomialDivideKeepsTheSplit:
+    """`PolynomialDivide[u, v, x]` must return quotient + remainder/v AS A SUM.
+
+    The deferred node used to wrap its result in ``together(q + r/v)``, recombining
+    quotient and remainder over the common denominator -- exactly UNDOING the division
+    the firing rule exists to perform. `1.1.2.3#21` then handed the DFS back the same
+    rational function (numerator merely expanded), the search wandered into a
+    trinomial give-up, and ``Int[(a+b tan(c+d x)^2)^2]`` -- which Rubi solves in
+    0.2 s -- returned Unintegrable. Same recombination anti-pattern as the termwise
+    `apart` fix (defects §34/§35).
+    """
+
+    def test_node_returns_the_split_form(self):
+        from rubi_rules.utils.rubi_utils import PolynomialDivide
+        x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+        result = PolynomialDivide((a + b*x**2)**2, x**2 + 1, x).doit()
+        # a polynomial part plus a proper fraction -- NOT one combined quotient
+        assert result == b**2*x**2 + b*(2*a - b) + (a - b)**2/(x**2 + 1)
+
+    def test_node_agrees_with_the_eager_implementation(self):
+        from rubi_rules.utils.rubi_utils import PolynomialDivide
+        from rubi_rules.utils.utility_functions import eager_PolynomialDivide
+        x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
+        u, v = (a + b*x**2)**2, x**2 + 1
+        assert PolynomialDivide(u, v, x).doit() == eager_PolynomialDivide(u, v, x)

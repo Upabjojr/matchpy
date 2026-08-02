@@ -93,3 +93,43 @@ def test_predicate_selects_which_guards_defer():
     list(rep.matcher.match(to_matchpy_expression(x**3)))
     assert SpyConstraint.calls == ['pass_cheap'], \
         'only the non-deferred guard runs during enumeration'
+
+
+class TestAdditionOrderIsStored:
+    """`build_replacer` records each rule's addition index on the yielded callback.
+
+    A many-to-one matcher enumerates matches in an internal order; a consumer wanting
+    first-come-first-tried semantics (definition order IS priority, as in Mathematica's
+    DownValues) sorts candidates by `_rule_index` -- one attribute read, with the
+    caller controlling priority purely through the order it supplies the rules.
+    """
+
+    def _rules(self):
+        return [
+            SymPyReplacementPattern(pattern=x**m_, constraints=(),
+                                    replacement=Symbol(f'r{i}'),
+                                    module_name='ord', rule_number=i)
+            for i in range(3)
+        ]
+
+    def test_indices_follow_addition_order(self):
+        rep = build_replacer(self._rules())
+        matches = list(rep.matcher.match(to_matchpy_expression(x**3)))
+        indices = sorted(fn._rule_index for fn, _ in matches)
+        assert indices == [0, 1, 2]
+
+    def test_sorting_by_index_recovers_supply_order(self):
+        rep = build_replacer(self._rules())
+        matches = sorted(rep.matcher.match(to_matchpy_expression(x**3)),
+                         key=lambda rs: rs[0]._rule_index)
+        results = [fn(**subst)[0] for fn, subst in matches]
+        assert [str(r) for r in results] == ['r0', 'r1', 'r2']
+
+    def test_index_survives_the_deferred_guard_wrapper(self):
+        SpyConstraint.calls = []
+        rules = [SymPyReplacementPattern(
+            pattern=x**m_, constraints=(SpyConstraint(Symbol('pass_z')),),
+            replacement=Symbol('rz'), module_name='ord', rule_number=9)]
+        rep = build_replacer(rules, defer_constraint=lambda c: True)
+        [(fn, _)] = list(rep.matcher.match(to_matchpy_expression(x**2)))
+        assert fn._rule_index == 0

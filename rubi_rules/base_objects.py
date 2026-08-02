@@ -111,8 +111,14 @@ class _RubiIntegrator:
                     + traceback.format_exc()
                 )
 
-        rules = tuple(all_rules)
-        return rules
+        # Sort ONCE, at load time, into Rubi's rule order: by the Rubi.m load index of
+        # the module (see `_module_load_index`), then by rule number within the module.
+        # `build_replacer` records each rule's ADDITION index on the callback it yields
+        # (`_rule_index`), so match-time prioritisation is a single attribute read --
+        # no name parsing per candidate. Priority is decided here and only here.
+        all_rules.sort(key=lambda r: (_module_load_index(r.module_name),
+                                      r.rule_number))
+        return tuple(all_rules)
 
     def reset_cache(self):
         self._replacer_cache.clear()
@@ -327,9 +333,15 @@ for _i, _name in enumerate(RUBI_LOAD_ORDER):
 # (one rule at a time, first match wins; guards of later rules never run). Without
 # this, sorting the matcher's yields by priority exhausted the generator and paid
 # every catch-all's nested integration per candidate (RUBI_PORT_DEFECTS.md §33).
+# NOTE the trade-off measured on `(A+B x)(a+b x)^3 (d+e x)^3` (defects §37): guards
+# attached to the Pattern do not merely filter -- they PRUNE the commutative partition
+# search mid-enumeration. Deferring `PolynomialQuotient`/`PolynomialRemainder` (cheap
+# per call, high pruning value on multi-binomial products) forced full enumeration of
+# every binding first: 107.9 s deferred vs 5.2 s attached, a 20x tax. Only guards whose
+# single evaluation rivals an integration step belong here.
 EXPENSIVE_GUARD_HEADS = (
     'IntHide', 'DerivativeDivides', 'ExpandIntegrand', 'FunctionOfLinear',
-    'PolynomialQuotient', 'PolynomialRemainder', 'SubstForFractionalPower',
+    'SubstForFractionalPower',
     'InverseFunctionFreeQ', 'FunctionOfSquareRootOfQuadratic', 'SimplifyIntegrand',
     'NormalizeIntegrand', 'FunctionOfExponential', 'PowerVariableExpn',
 )
@@ -390,17 +402,19 @@ def _module_load_index(mod: str) -> tuple:
 def _rule_priority(replacement):
     """Sort key restoring Rubi's ordered first-match priority.
 
-    Rubi tries its rules in LOAD ORDER -- by file, then by position within the file (the
-    rule number). MatchPy instead yields matches in an internal hash order, so when
-    several rules match the same integrand the first *clean* result is arbitrary. That
-    silently picks the wrong rule when two rules both integrate cleanly but only the
-    earlier one is valid here -- e.g. the GCD reduction ``1.1.3.2:[16]`` (substitute
-    x^2, giving the real cubic result) MUST beat the root-sum ``1.1.3.2:[37]`` (whose
-    ``(-1)^(m/2)`` is imaginary for odd m) for ``Int[x/(a+b x^6)]``. Sorting the matches
-    by this key before trying them makes the first clean result the one Rubi would apply.
+    Rubi tries its rules in LOAD ORDER -- by file, then by position within the file
+    (the rule number). MatchPy instead yields matches in an internal hash order, so
+    when several rules match the same integrand the first *clean* result is arbitrary.
+    That silently picks the wrong rule when two rules both integrate cleanly but only
+    the earlier one is valid here -- e.g. the GCD reduction ``1.1.3.2:[16]`` MUST beat
+    the root-sum ``1.1.3.2:[37]`` for ``Int[x/(a+b x^6)]``.
+
+    `load_rule_patterns` sorts the rule list into Rubi's order once at load time, and
+    `build_replacer` records each rule's addition index on the callback it yields --
+    so the per-candidate key here is one attribute read. The fallback covers callbacks
+    from replacers built outside that path (they sort last, in yield order).
     """
-    mod, num = _rule_id(replacement)
-    return (_module_load_index(mod or ''), num if num is not None else 1 << 30)
+    return getattr(replacement, '_rule_index', 1 << 30)
 
 
 def _dfs_reduce_result(result, x, path, replacer, applied, budget, trace=None):

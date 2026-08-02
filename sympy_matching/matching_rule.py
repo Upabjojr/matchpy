@@ -365,7 +365,7 @@ def build_replacer(rules: List[SymPyReplacementPattern], defer_constraint=None) 
     only what is genuinely expensive.
     """
     replacer = ManyToOneReplacer()
-    for rule in rules:
+    for index, rule in enumerate(rules):
         matchpy_pattern_expr = to_matchpy_expression(rule.pattern)
         pattern_wilds = _collect_wild_symbols(rule.pattern)
         cheap, expensive = [], []
@@ -386,6 +386,13 @@ def build_replacer(rules: List[SymPyReplacementPattern], defer_constraint=None) 
                 for constraint in expensive
             ]
             replacement_fn = _wrap_with_deferred_guards(replacement_fn, deferred_checkers)
+        # The rule's ADDITION ORDER, exposed on the callback the matcher yields.
+        # A many-to-one matcher enumerates matches in an internal order; a consumer
+        # that wants first-come-first-tried semantics (a rule set where definition
+        # order IS priority, as in Mathematica's DownValues) can sort candidates by
+        # this index -- an attribute read, with no name parsing at match time. The
+        # caller controls priority entirely by the order it supplies the rules.
+        replacement_fn._rule_index = index
         replacer.add(ReplacementRule(pattern, replacement_fn))
     return replacer
 

@@ -507,6 +507,15 @@ def _eager_apart_impl(u, x):
     u = sympify(u)
     if not u.is_rational_function(x):
         return u
+    # A POLYNOMIAL's partial-fraction decomposition is the polynomial itself; return
+    # the EXPANDED form, which is what sympy's `apart` produced here all along. This
+    # must come before the termwise path: aparting polynomial addends one by one
+    # yields a half-collected mixture (35 terms for `(a+b x)(c+d x)^16` where the
+    # combined form gives 18 canonical monomials), and every extra non-canonical term
+    # becomes a full commutative-match DFS node downstream -- measured as a >6x
+    # slowdown on high-degree polynomial products.
+    if u.is_polynomial(x):
+        return u.expand()
     # TERMWISE over a sum. Partial-fraction decomposition is unique (polynomial part
     # plus proper fractions over the denominator-power basis), so aparting each addend
     # and letting Add collect like denominators yields the same decomposition as

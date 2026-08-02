@@ -33,6 +33,21 @@ def test_result_still_equals_the_input():
     assert simplify(together(eager_Apart(u, x)) - u) == 0
 
 
+def test_a_polynomial_returns_its_expanded_form():
+    """Partial fractions of a POLYNOMIAL is the polynomial itself, expanded.
+
+    This must short-circuit BEFORE the termwise path: aparting polynomial addends one
+    by one yields a half-collected mixture (35 terms for ``(a+b x)(c+d x)^16`` where
+    the combined form gives 18 canonical monomials), and every non-canonical term
+    becomes a full commutative-match DFS node downstream -- measured as a >6x slowdown
+    on high-degree polynomial products (defects §37)."""
+    from sympy import expand
+    u = (a + b*x)*(c + d*x)**3
+    assert eager_Apart(u, x) == expand(u)
+    v = b*(c + d*x)**3/d + (a*d - b*c)*(c + d*x)**2/d      # an Add of polynomials
+    assert eager_Apart(v, x) == expand(v)
+
+
 def test_non_rational_addends_pass_through():
     from sympy import sin
     u = sin(x) + 1/(x - 1)

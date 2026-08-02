@@ -597,9 +597,16 @@ class PolynomialDivide(MathematicaExpr):
         else:
             return self
         try:
-            q = sympy.quo(u, v, x)
-            r = sympy.rem(u, v, x)
-            return together(q + r / v)
+            # Delegate to the eager implementation and KEEP THE SUM SPLIT. This used to
+            # wrap the result in ``together(q + r/v)`` -- which recombines quotient and
+            # remainder over the common denominator, exactly UNDOING the division the
+            # rule fired to obtain. `1.1.2.3#21` then handed the DFS the same rational
+            # function it started from (numerator merely expanded), the search wandered
+            # into a trinomial give-up, and `Int[(a+b tan(c+d x)^2)^2]` -- which Rubi
+            # solves in 0.2 s -- came back Unintegrable. Same recombination anti-pattern
+            # as the termwise-apart fix (defects §34/§35).
+            from rubi_rules.utils.utility_functions import eager_PolynomialDivide
+            return eager_PolynomialDivide(u, v, x)
         except Exception:
             return self
 

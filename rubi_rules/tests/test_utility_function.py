@@ -2162,6 +2162,32 @@ def test_PowerVariableSubst_maps_over_any_head():
     assert PowerVariableSubst(sin(x**4), 2, x) == sin(x**2)
 
 
+def test_TrigReduce_product_to_sum_identities():
+    """Every product-to-sum branch must return an expression EQUAL to its input.
+
+    Four branches dropped the parentheses around the sum -- ``v/2*cos(a-b) - cos(a+b)``
+    instead of ``v/2*(cos(a-b) - cos(a+b))`` -- so the second term lost both the 1/2
+    and the ``v`` factor. Every integral routed through `ExpandTrigReduce` then came
+    back with one term at DOUBLE its correct coefficient:
+    ``Int[sin(a+b x)^3 sin(c+d x)]`` produced a numerically WRONG antiderivative
+    (residual 0.43), found by the fresh-seed corpus scan. The ``sinh*sinh`` branch
+    additionally used the CIRCULAR identity where the hyperbolic one differs in sign:
+    sinh(a)sinh(b) = (cosh(a+b) - cosh(a-b))/2. (defects §36)
+    """
+    from sympy import sinh, cosh, simplify
+    v = Symbol('v')
+    for u in (v*sin(a)*sin(b), v*cos(a)*cos(b), v*sin(a)*cos(b),
+              v*sinh(a)*sinh(b), v*cosh(a)*cosh(b), v*sinh(a)*cosh(b)):
+        assert simplify(TrigReduce(u) - u) == 0, u
+
+
+def test_ExpandTrigReduce_is_an_identity_transformation():
+    """The expansion may only REWRITE the integrand, never change its value."""
+    from sympy import simplify
+    u = sin(a + b*x)**3*sin(c + d*x)
+    assert simplify(eager_ExpandTrigReduce(u, x) - u) == 0
+
+
 def test_FunctionOfQ():
     assert eager_FunctionOfQ(x**2, sqrt(-exp(2*x**2) + 1)*exp(x**2),x)
     assert not eager_FunctionOfQ(S(x**3), x*2, x)
