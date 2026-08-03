@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""SymPy-native wildcard symbols for MatchPy patterns.
+"""SymPy-native wildcard symbols for OmniMatch patterns.
 
 `WildSymbol` behaves like a normal `sympy.Symbol` inside SymPy expression trees,
 so patterns can be written naturally with SymPy syntax. During conversion via
-`to_matchpy_expression`, it becomes the appropriate MatchPy wildcard.
+`to_omnimatch_expression`, it becomes the appropriate OmniMatch wildcard.
 
 Examples:
     a_ = WildSymbol('a_')
@@ -17,9 +17,9 @@ Examples:
 
 Naming convention:
     If the SymPy symbol name ends with a trailing underscore, that underscore is
-    stripped when deriving the MatchPy variable name. For example,
-    `WildSymbol('a_')` becomes a wildcard with MatchPy variable name `'a'`.
-    This makes SymPy-side names like `a_`, `b_`, `c_` line up with MatchPy
+    stripped when deriving the OmniMatch variable name. For example,
+    `WildSymbol('a_')` becomes a wildcard with OmniMatch variable name `'a'`.
+    This makes SymPy-side names like `a_`, `b_`, `c_` line up with OmniMatch
     constraint variables such as `FreeOf('a', 'x')`.
 """
 from sympy import Expr as SympyExpr
@@ -57,21 +57,21 @@ conversion time to the identity element of the enclosing SymPy operation
 # ─── WildSymbol ───────────────────────────────────────────────────────────────
 
 class WildSymbol(SympySymbol):
-    """A SymPy symbol that converts to a MatchPy wildcard.
+    """A SymPy symbol that converts to a OmniMatch wildcard.
 
     Parameters:
         name: SymPy-side symbol name. A trailing underscore is allowed and is
-            stripped from the MatchPy variable name.
-        optional_value: When not None, conversion uses MatchPy's optional
+            stripped from the OmniMatch variable name.
+        optional_value: When not None, conversion uses OmniMatch's optional
             wildcard semantics with this default value.  May be
             ``IDENTITY_ELEMENT`` for context-dependent defaults.
 
     Notes:
         * ``WildSymbol('a_')`` converts to ``Wildcard.dot('a')``
         * ``WildSymbol('a_', optional_value=1)`` converts to
-          ``Wildcard.optional('a', to_matchpy_expression(1))``
+          ``Wildcard.optional('a', to_omnimatch_expression(1))``
         * ``WildSymbol('a_', optional_value=IDENTITY_ELEMENT)`` converts to
-          ``Wildcard.optional('a', to_matchpy_expression(<identity>))`` where
+          ``Wildcard.optional('a', to_omnimatch_expression(<identity>))`` where
           ``<identity>`` is determined by the enclosing operation (0 for Add,
           1 for Mul).
     """
@@ -118,17 +118,17 @@ class WildSymbol(SympySymbol):
 
     @property
     def wildcard_name(self):
-        """MatchPy variable name derived from the SymPy symbol name."""
+        """OmniMatch variable name derived from the SymPy symbol name."""
         return self._wildcard_name
 
     @property
     def optional_value(self):
-        """Optional default value used when converting to MatchPy."""
+        """Optional default value used when converting to OmniMatch."""
         return self._optional_value
 
     @property
     def is_optional(self):
-        """Whether this symbol should convert to a MatchPy optional wildcard."""
+        """Whether this symbol should convert to a OmniMatch optional wildcard."""
         return self._optional_value is not None
 
 
@@ -160,9 +160,9 @@ class HeadRef(SympySymbol):
 class WildHeadApp(SympyExpr):
     """Pattern node: a wildcard function HEAD applied to arguments — ``F_[args]``.
 
-    Converts to a MatchPy ``Operation`` whose head is a ``WildcardOperationHead``,
+    Converts to a OmniMatch ``Operation`` whose head is a ``WildcardOperationHead``,
     so it matches an application of ANY function. The head is bound to the head
-    wildcard's name, and the arguments are matched by MatchPy in the normal way —
+    wildcard's name, and the arguments are matched by OmniMatch in the normal way —
     argument wildcards (and any constraints on them) therefore behave exactly as
     in an ordinary pattern.
     """
@@ -187,7 +187,7 @@ class WildHeadDeriv(SympyExpr):
     Rubi's derivative rules are written over an unknown function: ``f^(n)(x)``.
     In SymPy that subject is ``Derivative(f(x), (x, n))``; this node is the
     corresponding PATTERN, with the function ``f`` and the order ``n`` both
-    wildcards. It converts to the same MatchPy shape a real ``Derivative``
+    wildcards. It converts to the same OmniMatch shape a real ``Derivative``
     converts to, except that the inner application carries a
     ``WildcardOperationHead`` so ANY function matches (see :class:`WildHeadApp`).
 

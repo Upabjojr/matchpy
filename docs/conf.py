@@ -18,7 +18,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import datetime
-import matchpy
+import omnimatch
 
 # -- General configuration ------------------------------------------------
 
@@ -62,7 +62,7 @@ author = 'Manuel Krebber'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 # The full version, including alpha/beta/rc tags.
-release = matchpy.__version__
+release = omnimatch.__version__
 # The short X.Y version.
 version = '.'.join(release.split('.')[:2]) # The short X.Y version.
 
@@ -300,7 +300,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'matchpy', 'Pattern Matcher Documentation',
+    (master_doc, 'omnimatch', 'Pattern Matcher Documentation',
      [author], 1)
 ]
 

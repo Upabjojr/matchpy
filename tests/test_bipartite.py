@@ -6,7 +6,7 @@ import hypothesis.strategies as st
 from hypothesis import given
 import pytest
 
-from matchpy.matching.bipartite import BipartiteGraph, _DirectedMatchGraph, enum_maximum_matchings_iter
+from omnimatch.matching.bipartite import BipartiteGraph, _DirectedMatchGraph, enum_maximum_matchings_iter
 
 
 @st.composite

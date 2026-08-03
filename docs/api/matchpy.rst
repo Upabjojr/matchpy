@@ -1,4 +1,4 @@
-matchpy package
+omnimatch package
 ===============
 
 Subpackages
@@ -6,13 +6,13 @@ Subpackages
 
 .. toctree::
 
-    matchpy.expressions
-    matchpy.matching
+    omnimatch.expressions
+    omnimatch.matching
 
 Submodules
 ----------
 
 .. toctree::
 
-   matchpy.functions
-   matchpy.utils
+   omnimatch.functions
+   omnimatch.utils

@@ -5,12 +5,12 @@ These are constraints that are part of the standard Wolfram Mathematica
 language (not RUBI-specific). They are implemented as MathematicaConstraint
 subclasses for use in Rubi integration rule conditions.
 
-All constraints operate on SymPy expressions after conversion from MatchPy.
+All constraints operate on SymPy expressions after conversion from OmniMatch.
 """
 import sympy
 from sympy import Symbol
 
-from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.conversion import omnimatch_to_sympy
 from sympy_wolfram.constraints import MathematicaConstraint
 
 # FreeQ, IntegerQ, PositiveQ, MemberQ, NumberQ, AtomQ and PolynomialQ are standard
@@ -172,7 +172,7 @@ class MatchQ(MathematicaConstraint):
       match, stay free here, and are what the matching actually solves for.
 
     The distinction is simply whether the name was bound by the outer pattern, which
-    is what `_make_matchpy_constraint` uses to decide which variables to declare.
+    is what `_make_omnimatch_constraint` uses to decide which variables to declare.
     """
 
     # STRUCTURAL constraint: the pattern argument must stay an UNEVALUATED tree
@@ -198,22 +198,22 @@ def _pattern_matches(subject, pattern) -> bool:
     """True iff *subject* matches *pattern*, honouring a ``pattern /; test`` guard.
 
     Any wildcard still free in *pattern* is a MatchQ-local pattern variable (see
-    :class:`MatchQ`); MatchPy solves for those. A guard is evaluated once per
+    :class:`MatchQ`); OmniMatch solves for those. A guard is evaluated once per
     candidate match, with that match's bindings substituted in, so
     ``MatchQ[u, (c+d*x)^m /; FreeQ[{c,d,m},x]]`` accepts only matches whose c, d, m
     are actually free of x.
     """
-    from matchpy import match as _match
-    from matchpy.expressions.expressions import Pattern
-    from sympy_matching.conversion import to_matchpy_expression, matchpy_to_sympy
+    from omnimatch import match as _match
+    from omnimatch.expressions.expressions import Pattern
+    from sympy_matching.conversion import to_omnimatch_expression, omnimatch_to_sympy
 
     test = None
     if type(pattern).__name__ == 'Condition' and len(getattr(pattern, 'args', ())) == 2:
         pattern, test = pattern.args
 
     try:
-        subject_expr = to_matchpy_expression(subject)
-        pattern_expr = Pattern(to_matchpy_expression(pattern))
+        subject_expr = to_omnimatch_expression(subject)
+        pattern_expr = Pattern(to_omnimatch_expression(pattern))
     except Exception:
         return False
 
@@ -221,7 +221,7 @@ def _pattern_matches(subject, pattern) -> bool:
         for substitution in _match(subject_expr, pattern_expr):
             if test is None:
                 return True
-            bindings = {name: matchpy_to_sympy(value)
+            bindings = {name: omnimatch_to_sympy(value)
                         for name, value in substitution.items()}
             if _guard_holds(test, bindings):
                 return True
@@ -265,7 +265,7 @@ def _to_sympy(val):
     if isinstance(val, sympy.Basic):
         return val
     try:
-        return matchpy_to_sympy(val)
+        return omnimatch_to_sympy(val)
     except (TypeError, AttributeError):
         return sympy.sympify(val)
 

@@ -32,12 +32,12 @@ from sympy.core.parameters import _exp_is_pow
 from typing import Any, List, Tuple
 from pydantic import BaseModel
 
-from matchpy.expressions.expressions import OperationHead, Arity, to_matchpy_expression
-from matchpy.matching.many_to_one import ManyToOneReplacer
+from omnimatch.expressions.expressions import OperationHead, Arity, to_omnimatch_expression
+from omnimatch.matching.many_to_one import ManyToOneReplacer
 
-from sympy_matching.conversion import register_sympy_head, matchpy_to_sympy
+from sympy_matching.conversion import register_sympy_head, omnimatch_to_sympy
 
-# The generic SymPy -> matchpy pattern-matching-rule machinery lives in sympy_matching
+# The generic SymPy -> omnimatch pattern-matching-rule machinery lives in sympy_matching
 # now (it is not Rubi-specific -- see sympy_matching.matching_rule). Re-exported here so
 # the generated rules, codegen and tests keep importing `SymPyReplacementPattern` /
 # `build_tracing_replacer` / the private helpers from rubi_rules.base_objects unchanged.
@@ -45,7 +45,7 @@ from sympy_matching.matching_rule import (
     SymPyReplacementPattern,
     build_tracing_replacer,
     ENFORCE_MATCHQ,
-    _make_matchpy_constraint,
+    _make_omnimatch_constraint,
     _make_replacement_fn,
     _make_constraint_checker,
     _make_tracing_replacement_fn,
@@ -201,14 +201,14 @@ def _has_cannot_integrate(expr) -> bool:
     """True if `expr` carries a `CannotIntegrate` marker.
 
     Matched by head *name* for the same reason as in `_dfs_is_clean`: round-tripping
-    a replacement through MatchPy can turn the `rubi_utils.CannotIntegrate` node into
+    a replacement through OmniMatch can turn the `rubi_utils.CannotIntegrate` node into
     a plain undefined `Function('CannotIntegrate')`, which an isinstance check misses.
     """
     return any(type(a).__name__ == 'CannotIntegrate' for a in expr.atoms(sympy.Function))
 
 
-def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
-    mp_expr = to_matchpy_expression(Int(expr, x))
+def _omnimatch_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
+    mp_expr = to_omnimatch_expression(Int(expr, x))
     if seen is not None:
         seen.add(Int(expr, x))
     # Try the matching rules in the order the matcher yields them and apply the
@@ -223,13 +223,13 @@ def _matchpy_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneRep
             result_mp, matched_rule = replacement(**subst)
         except StopIteration:
             continue
-        result = matchpy_to_sympy(result_mp)
+        result = omnimatch_to_sympy(result_mp)
         if seen is not None:
             produced = [f for f in result.atoms(Int)]
             if produced and all(f in seen for f in produced):
                 continue  # cycle: only revisits already-integrated forms
         return result, matched_rule
-    return matchpy_to_sympy(mp_expr), []
+    return omnimatch_to_sympy(mp_expr), []
 
 
 def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOneReplacer, seen: set | None = None):
@@ -243,7 +243,7 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
         # by the time the matcher ran, the sum was already two separate integrals.
         # So offer the whole sum to the matcher first and only fall back to
         # splitting if that does not actually get us anywhere.
-        whole, whole_rules = _matchpy_integrate(expr, x, replacer, seen)
+        whole, whole_rules = _omnimatch_integrate(expr, x, replacer, seen)
         if whole_rules and not _has_cannot_integrate(whole):
             return whole, whole_rules
         addends, matched_rules = zip(*[_preprocess_integrate(t, x, replacer, seen) for t in expr.args])
@@ -256,7 +256,7 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
             core = x_factors[0] if len(x_factors) == 1 else sympy.Mul(*x_factors)
             integ, matched_rule = _preprocess_integrate(core, x, replacer, seen)
             return const * integ, matched_rule
-    return _matchpy_integrate(expr, x, replacer, seen)
+    return _omnimatch_integrate(expr, x, replacer, seen)
 
 
 # ── DFS integrator with path-aware cycle detection ───────────────────────────
@@ -264,7 +264,7 @@ def _preprocess_integrate(expr: sympy.Expr, x: sympy.Symbol, replacer: ManyToOne
 def _is_rubi_giveup(expr) -> bool:
     """True if `expr` carries Rubi's explicit give-up marker `Unintegrable`.
 
-    Matched by type NAME: round-tripping a rule's replacement through MatchPy can turn
+    Matched by type NAME: round-tripping a rule's replacement through OmniMatch can turn
     the `rubi_utils.Unintegrable` node into a plain undefined Function of the same name.
     """
     return any(type(a).__name__ == 'Unintegrable' for a in sympy.preorder_traversal(expr))
@@ -275,7 +275,7 @@ def _dfs_is_clean(expr) -> bool:
     `CannotIntegrate`/`Unintegrable` marker, and no degenerate `zoo`/`nan` value.
 
     The markers are matched by head *name*: round-tripping a rule's replacement through
-    MatchPy can turn the `rubi_utils` node into a plain undefined `Function` of the same
+    OmniMatch can turn the `rubi_utils` node into a plain undefined `Function` of the same
     name, so an isinstance/atoms check against the imported class misses it.
 
     A result containing `zoo` (ComplexInfinity) or `nan` is a degenerate evaluation (a
@@ -343,7 +343,7 @@ for _i, _name in enumerate(RUBI_LOAD_ORDER):
 # integrations (`IntHide` is literally `Int` with steps hidden), `DerivativeDivides`,
 # polynomial division, expression-wide rewrites. A constraint mentioning any of these
 # is DEFERRED by `build_replacer` (see `sympy_matching.matching_rule`): it is not
-# attached to the matchpy Pattern but evaluated at ATTEMPT time, in rule-priority
+# attached to the omnimatch Pattern but evaluated at ATTEMPT time, in rule-priority
 # order, only until the first winner -- which is Mathematica's own evaluation order
 # (one rule at a time, first match wins; guards of later rules never run). Without
 # this, sorting the matcher's yields by priority exhausted the generator and paid
@@ -418,7 +418,7 @@ def _rule_priority(replacement):
     """Sort key restoring Rubi's ordered first-match priority.
 
     Rubi tries its rules in LOAD ORDER -- by file, then by position within the file
-    (the rule number). MatchPy instead yields matches in an internal hash order, so
+    (the rule number). OmniMatch instead yields matches in an internal hash order, so
     when several rules match the same integrand the first *clean* result is arbitrary.
     That silently picks the wrong rule when two rules both integrate cleanly but only
     the earlier one is valid here -- e.g. the GCD reduction ``1.1.3.2:[16]`` MUST beat
@@ -454,7 +454,7 @@ def _collapse_resolved_substs(result):
 
     ``rubi_utils.Subst`` stays deferred while it wraps an unevaluated ``Int`` (so
     the substitution cannot capture the integral's bound variable); after the
-    round-trip through MatchPy it is a plain ``Function('Subst')`` node. Once the
+    round-trip through OmniMatch it is a plain ``Function('Subst')`` node. Once the
     enclosing reduction has turned that inner ``Int`` into an antiderivative
     ``G(x)``, apply the postponed substitution here — never before, or ``v`` (often
     containing ``x``, e.g. ``log(x)``) would capture the bound variable.
@@ -476,12 +476,12 @@ def _try_whole_sum_rule(f, x, replacer, trace=None, depth=0):
     one step, while anything that merely rewrites the sum into further integrals
     is better served by the term-by-term splitting the caller falls back to.
     """
-    for replacement, subst in replacer.matcher.match(to_matchpy_expression(Int(f, x))):
+    for replacement, subst in replacer.matcher.match(to_omnimatch_expression(Int(f, x))):
         try:
             result_mp, rule = replacement(**subst)
         except StopIteration:
             continue  # Condition failed -> no match
-        result = matchpy_to_sympy(result_mp)
+        result = omnimatch_to_sympy(result_mp)
         if _dfs_is_clean(result):
             if trace is not None:
                 trace.append({'depth': depth, 'integrand': Int(f, x),
@@ -667,7 +667,7 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
         return Int(f, x), False
     budget[0] -= 1
     new_path = path | {f}
-    mp_expr = to_matchpy_expression(Int(f, x))
+    mp_expr = to_omnimatch_expression(Int(f, x))
     depth = len(path)
 
     def _record(rule, status):
@@ -706,7 +706,7 @@ def _dfs_match_int(f, x, path, replacer, applied, budget, trace=None):
             _record(_rule_id(replacement), 'rejected (condition failed)')
             continue
         matched_any = True
-        result = matchpy_to_sympy(result_mp)
+        result = omnimatch_to_sympy(result_mp)
         local: list = []
         reduced, blocked = _dfs_reduce_result(result, x, new_path, replacer, local, budget, trace)
         if blocked:

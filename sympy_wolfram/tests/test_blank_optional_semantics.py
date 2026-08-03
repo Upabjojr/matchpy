@@ -28,10 +28,10 @@ never derived from this port's behaviour.
 import pytest
 from sympy import Symbol, sin, sqrt
 
-from matchpy import ManyToOneMatcher, Pattern
+from omnimatch import ManyToOneMatcher, Pattern
 
 from rubi_rules.base_objects import Int
-from sympy_matching.matching_rule import to_matchpy_expression
+from sympy_matching.matching_rule import to_omnimatch_expression
 from sympy_matching.wild import IDENTITY_ELEMENT, WildSymbol
 
 x = Symbol('x')
@@ -49,8 +49,8 @@ c_ = WildSymbol('c_')
 def matches(pattern, subject):
     """True if `pattern` matches `subject`, wrapped in Int so the rule machinery runs."""
     matcher = ManyToOneMatcher()
-    matcher.add(Pattern(to_matchpy_expression(Int(pattern, x))))
-    return bool(list(matcher.match(to_matchpy_expression(Int(subject, x)))))
+    matcher.add(Pattern(to_omnimatch_expression(Int(pattern, x))))
+    return bool(list(matcher.match(to_omnimatch_expression(Int(subject, x)))))
 
 
 # ── 1. an Optional Blank may be ABSENT, defaulting to the operation's identity ──
@@ -135,7 +135,7 @@ def test_one_plain_variable_used_twice_must_agree(label, subject, expected):
 
 # ── 4c. the shared NAME is what unifies the two slots -- in EVERY shape ───────
 # `d_` and `d_.` are one variable, and our translation gives them two DISTINCT SymPy
-# objects that share a matchpy variable NAME. These check that the unification is a
+# objects that share a omnimatch variable NAME. These check that the unification is a
 # property of the name and not an accident of one flat `Add`, so no explicit
 # `Eq(d_, _d_)` constraint is needed to hold the two slots together.
 @pytest.mark.parametrize('label, pattern, subject, expected', [
@@ -180,13 +180,13 @@ def test_rubi_8_9_rule_40_denominator_requires_one_d():
     import rubi_rules.rules.r_8_special_functions.r_8_9 as mod
     rule40 = next(r for r in mod.RULES if r.rule_number == 40)
     matcher = ManyToOneMatcher()
-    matcher.add(Pattern(to_matchpy_expression(rule40.pattern)))
+    matcher.add(Pattern(to_omnimatch_expression(rule40.pattern)))
 
     a, c = Symbol('a'), Symbol('c')
     lam = LambertW(a*x**2)
 
     def fires(integrand):
-        return bool(list(matcher.match(to_matchpy_expression(Int(integrand, x)))))
+        return bool(list(matcher.match(to_omnimatch_expression(Int(integrand, x)))))
 
     assert fires(x**3*lam**2/(5 + 5*lam)) is True     # d = 5
     assert fires(x**3*lam**2/(1 + lam)) is True       # d = 1, optional absent

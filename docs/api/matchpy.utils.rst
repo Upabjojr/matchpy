@@ -1,7 +1,7 @@
-matchpy.utils module
+omnimatch.utils module
 ====================
 
-.. automodule:: matchpy.utils
+.. automodule:: omnimatch.utils
     :members:
     :undoc-members:
     :show-inheritance:

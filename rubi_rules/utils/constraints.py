@@ -12,8 +12,8 @@ All concrete constraints inherit from ``MathematicaConstraint`` and must impleme
     .variables  -> Tuple[str, ...] of wildcard names they inspect
     .check(**kwargs) -> bool  receives matched SymPy expressions, returns bool
 
-These are used in SymPyReplacementPattern.constraints and get converted to MatchPy
-CustomConstraint objects by ``sympy_matching.matching_rule._make_matchpy_constraint``
+These are used in SymPyReplacementPattern.constraints and get converted to OmniMatch
+CustomConstraint objects by ``sympy_matching.matching_rule._make_omnimatch_constraint``
 (called from ``build_tracing_replacer``).
 
 ``MathematicaConstraint`` inherits from SymPy's Boolean (via

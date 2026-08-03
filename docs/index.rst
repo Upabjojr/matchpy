@@ -9,7 +9,7 @@ Table of Contents
    :titlesonly:
 
    example
-   api/matchpy
+   api/omnimatch
    glossary
 
 Indices and Tables

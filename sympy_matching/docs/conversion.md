@@ -1,7 +1,7 @@
-# Conversion: SymPy ⇄ MatchPy
+# Conversion: SymPy ⇄ OmniMatch
 
-How expressions cross between the two worlds: `to_matchpy_expression` /
-`matchpy_to_sympy`, the head registry (`SYMPY_NODES`, `register_sympy_head`), and how
+How expressions cross between the two worlds: `to_omnimatch_expression` /
+`omnimatch_to_sympy`, the head registry (`SYMPY_NODES`, `register_sympy_head`), and how
 to add support for a new function class. See also [`wildcards.md`](wildcards.md) for
 what happens to `WildSymbol`s during conversion.
 
@@ -9,8 +9,8 @@ Every example is a doctest, executed by `sympy_matching/tests/test_docs.py`.
 
 ```python
 >>> from sympy import Symbol, Function, sin
->>> from sympy_matching.matching_rule import to_matchpy_expression
->>> from sympy_matching.conversion import matchpy_to_sympy
+>>> from sympy_matching.matching_rule import to_omnimatch_expression
+>>> from sympy_matching.conversion import omnimatch_to_sympy
 >>> x = Symbol('x')
 
 ```
@@ -19,20 +19,20 @@ Every example is a doctest, executed by `sympy_matching/tests/test_docs.py`.
 
 ## 1. The round trip
 
-`to_matchpy_expression` maps a SymPy tree onto MatchPy `Operation`s; `matchpy_to_sympy`
+`to_omnimatch_expression` maps a SymPy tree onto OmniMatch `Operation`s; `omnimatch_to_sympy`
 maps back. The pair is a faithful round trip for every registered head:
 
 ```python
 >>> e = sin(x)**2 + 3*x
->>> mp = to_matchpy_expression(e)
+>>> mp = to_omnimatch_expression(e)
 >>> print(mp)
 Add(Mul(3, x), Pow(sin(x), 2))
->>> matchpy_to_sympy(mp) == e
+>>> omnimatch_to_sympy(mp) == e
 True
 
 ```
 
-`Add`, `Mul` and `Pow` are special: their MatchPy heads carry the algebraic properties
+`Add`, `Mul` and `Pow` are special: their OmniMatch heads carry the algebraic properties
 the matcher exploits — `Add`/`Mul` are commutative, associative and `one_identity`,
 which is what makes commutative matching and the optional-wildcard defaults of
 [`wildcards.md`](wildcards.md) §4 work.
@@ -73,7 +73,7 @@ generic path preserves it by name:
 
 ```python
 >>> f = Function('myfunc')
->>> matchpy_to_sympy(to_matchpy_expression(f(x))) == f(x)
+>>> omnimatch_to_sympy(to_omnimatch_expression(f(x))) == f(x)
 True
 
 ```
@@ -90,16 +90,16 @@ registration call. **Do this via `register_sympy_head` / the `SYMPY_NODES` table
 ad hoc** — so both directions of the mapping stay consistent:
 
 ```python
->>> from matchpy.expressions.expressions import OperationHead, Arity
+>>> from omnimatch.expressions.expressions import OperationHead, Arity
 >>> from sympy_matching.operations import register_sympy_head
 >>> class mystep(Function):
 ...     nargs = 1
 >>> MYSTEP = OperationHead(name='mystep', arity=Arity.unary)
 >>> register_sympy_head(mystep, MYSTEP)
->>> mp = to_matchpy_expression(mystep(x**2))
+>>> mp = to_omnimatch_expression(mystep(x**2))
 >>> print(mp)
 mystep(Pow(x, 2))
->>> matchpy_to_sympy(mp).func is mystep     # the CLASS survives, not just the name
+>>> omnimatch_to_sympy(mp).func is mystep     # the CLASS survives, not just the name
 True
 
 ```
@@ -107,11 +107,11 @@ True
 Patterns over the new head work immediately:
 
 ```python
->>> from matchpy import ManyToOneMatcher, Pattern
+>>> from omnimatch import ManyToOneMatcher, Pattern
 >>> from sympy_matching.wild import WildSymbol
 >>> u_ = WildSymbol('u')
 >>> m = ManyToOneMatcher()
->>> m.add(Pattern(to_matchpy_expression(mystep(u_))))
+>>> m.add(Pattern(to_omnimatch_expression(mystep(u_))))
 >>> bool(list(m.match(mp)))
 True
 
@@ -122,10 +122,10 @@ imperative `register_sympy_head` call — the table is the single place readers 
 see what is supported.
 
 Arity codes in the table: `'u'` unary, `'b'` binary, and so on; the registration loop
-translates them to MatchPy `Arity` values.
+translates them to OmniMatch `Arity` values.
 
 ## 5. Layering note
 
-This package depends only on `sympy` and `matchpy`. Higher layers (such as a Wolfram
+This package depends only on `sympy` and `omnimatch`. Higher layers (such as a Wolfram
 translation layer) register their own heads through exactly the mechanism in §4 — the
 registry is the extension point; nothing here knows about them.

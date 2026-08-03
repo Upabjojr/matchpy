@@ -2,12 +2,12 @@
 import pytest
 from types import ModuleType
 
-from matchpy.expressions.expressions import Wildcard, Operation
-from matchpy.matching.one_to_one import match as match_one_to_one
-from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.expressions.functions import preorder_iter
-from matchpy.matching.code_generation import CodeGenerator
-from matchpy.matching.json_serialization import to_json, from_json
+from omnimatch.expressions.expressions import Wildcard, Operation
+from omnimatch.matching.one_to_one import match as match_one_to_one
+from omnimatch.matching.many_to_one import ManyToOneMatcher
+from omnimatch.expressions.functions import preorder_iter
+from omnimatch.matching.code_generation import CodeGenerator
+from omnimatch.matching.json_serialization import to_json, from_json
 
 def pytest_configure():
     pytest.matcher = None
@@ -37,7 +37,7 @@ def match_many_to_one(expression, *patterns):
 
 GENERATED_TEMPLATE = '''
 # -*- coding: utf-8 -*-
-from matchpy import *
+from omnimatch import *
 from tests.common import *
 from tests.utils import *
 

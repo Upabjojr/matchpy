@@ -3,7 +3,7 @@
 
 This is layer-independent: it depends only on ``sympy`` and (lazily) on
 ``sympy_matching`` itself -- NOT on ``sympy_wolfram`` or ``rubi_rules``. It is the
-constraint half of the reusable "SymPy + WildSymbol -> matchpy ManyToOneReplacer"
+constraint half of the reusable "SymPy + WildSymbol -> omnimatch ManyToOneReplacer"
 machinery (see :mod:`sympy_matching.matching_rule`): any project can subclass
 :class:`SymPyMatchingConstraint`, implement :meth:`check`, and feed instances as
 rule guards without pulling in Wolfram/Rubi.
@@ -232,8 +232,8 @@ class SymPyMatchingConstraint(Boolean):
     """Abstract base class for a SymPy pattern-matching constraint (rule guard).
 
     A constraint receives the matched wildcard values (as SymPy expressions) via
-    :meth:`check` and returns a bool. It is deliberately independent of MatchPy
-    internals; conversion to a MatchPy ``CustomConstraint`` is handled by
+    :meth:`check` and returns a bool. It is deliberately independent of OmniMatch
+    internals; conversion to a OmniMatch ``CustomConstraint`` is handled by
     :func:`sympy_matching.matching_rule.build_tracing_replacer`.
 
     Subclasses MUST implement :meth:`check`. :attr:`variables` is auto-computed by
@@ -269,12 +269,12 @@ class SymPyMatchingConstraint(Boolean):
 
     @staticmethod
     def _to_sympy(val):
-        """Convert a value to a SymPy expression (handles MatchPy objects)."""
+        """Convert a value to a SymPy expression (handles OmniMatch objects)."""
         if isinstance(val, sympy.Basic):
             return val
         try:
-            from sympy_matching.conversion import matchpy_to_sympy
-            return matchpy_to_sympy(val)
+            from sympy_matching.conversion import omnimatch_to_sympy
+            return omnimatch_to_sympy(val)
         except (ImportError, TypeError, AttributeError):
             return sympy.sympify(val)
 

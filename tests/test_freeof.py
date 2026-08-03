@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Tests for the FreeOf constraint."""
 import pytest
-from matchpy.expressions.expressions import (
+from omnimatch.expressions.expressions import (
     Operation, NamedAtom, Wildcard, Pattern, Arity, OperationHead,
 )
-from matchpy.expressions.constraints import FreeOf
-from matchpy.matching.one_to_one import match as match_one_to_one
-from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.expressions.substitution import Substitution
+from omnimatch.expressions.constraints import FreeOf
+from omnimatch.matching.one_to_one import match as match_one_to_one
+from omnimatch.matching.many_to_one import ManyToOneMatcher
+from omnimatch.expressions.substitution import Substitution
 
 # ─── Test fixtures ────────────────────────────────────────────────────────────
 

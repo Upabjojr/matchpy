@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Generate MatchPy integration rules from the Rubi pre-computed JSON.
+"""Generate OmniMatch integration rules from the Rubi pre-computed JSON.
 
-Usage (from matchpy-wip/matchpy/ directory):
+Usage (from omnimatch-wip/omnimatch/ directory):
     python -B -m rubi_rules.codegen.generate [--json PATH] [--output-dir DIR] [--filter REGEX]
 
 The script reads the pre-computed fullformlist JSON produced from the Rubi
@@ -210,8 +210,8 @@ def _extract_fhw_from_pattern(pattern_ffl):
     """Rewrite every function-head wildcard ``F_[args...]`` in a pattern FFL into
     ``WildHeadApp[F_, args...]``.
 
-    MatchPy supports a WILDCARD OPERATION HEAD (see
-    ``matchpy.expressions.expressions.WildcardOperationHead``), so such a pattern
+    OmniMatch supports a WILDCARD OPERATION HEAD (see
+    ``omnimatch.expressions.expressions.WildcardOperationHead``), so such a pattern
     matches an application of ANY function, binding the head to ``F`` and matching
     the arguments normally -- argument wildcards and their constraints therefore
     behave exactly as in an ordinary pattern.
@@ -1118,7 +1118,7 @@ Max = Symbol('Max')
     def _apply_head_wildcards(integrand_ffl, result_ffl, conditions):
         """Rewrite function-head wildcards everywhere they occur in the rule.
 
-        ``F_[args]`` in the PATTERN becomes ``WildHeadApp[F_, args]``, which MatchPy
+        ``F_[args]`` in the PATTERN becomes ``WildHeadApp[F_, args]``, which OmniMatch
         matches with a wildcard operation head (any function matches, and F binds to
         the head). In the REPLACEMENT and the CONSTRAINTS the same head appears as a
         bare name, and becomes ``WFApply[F, args]``, which re-applies the bound head
@@ -1393,7 +1393,7 @@ def generate_all(json_path: Path, base_dir: Path,
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate MatchPy rules from Rubi fullformlist JSON'
+        description='Generate OmniMatch rules from Rubi fullformlist JSON'
     )
     parser.add_argument(
         '--json', type=Path, default=Path(DEFAULT_JSON),

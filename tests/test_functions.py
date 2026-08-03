@@ -4,11 +4,11 @@ import hypothesis.strategies as st
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.expressions import Arity, Operation, NamedAtom, Wildcard, Pattern
-from matchpy.functions import ReplacementRule, replace, replace_all, substitute, replace_many, is_match
-from matchpy.matching.one_to_one import match_anywhere
-from matchpy.matching.one_to_one import match as match_one_to_one
-from matchpy.matching.many_to_one import ManyToOneReplacer
+from omnimatch.expressions.expressions import Arity, Operation, NamedAtom, Wildcard, Pattern
+from omnimatch.functions import ReplacementRule, replace, replace_all, substitute, replace_many, is_match
+from omnimatch.matching.one_to_one import match_anywhere
+from omnimatch.matching.one_to_one import match as match_one_to_one
+from omnimatch.matching.many_to_one import ManyToOneReplacer
 from .common import *
 
 

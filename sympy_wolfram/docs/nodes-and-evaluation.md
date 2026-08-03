@@ -136,13 +136,13 @@ FreeQ([a, b], x)
 
 ```
 
-### Relation to `matchpy`'s `FreeOf`
+### Relation to `omnimatch`'s `FreeOf`
 
-`FreeOf` (in matchpy core) is the same predicate at the MatchPy-constraint level, and
+`FreeOf` (in omnimatch core) is the same predicate at the OmniMatch-constraint level, and
 deliberately accepts the same argument shapes — one variable or a list, names as
 strings or as objects. `FreeQ` is the Wolfram-named, SymPy-Boolean-valued layer over
 the idea; use it in `SymPyReplacementPattern` guards, and `FreeOf` when attaching
-constraints directly to a MatchPy `Pattern`.
+constraints directly to a OmniMatch `Pattern`.
 
 ## 4. Choosing the right tool
 

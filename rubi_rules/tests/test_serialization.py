@@ -17,10 +17,10 @@ import sympy
 from sympy import Symbol, Integer, Rational, log, sqrt, sin, cos, pi
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from sympy_matching.conversion import to_matchpy_expression, matchpy_to_sympy
+from sympy_matching.conversion import to_omnimatch_expression, omnimatch_to_sympy
 import sympy_matching  # registers json_ext handlers
 
-from matchpy.matching.json_serialization import serialize_wrapped_value, deserialize_wrapped_value
+from omnimatch.matching.json_serialization import serialize_wrapped_value, deserialize_wrapped_value
 from sympy_matching.json_ext import deserialize_sympy_expr
 
 from rubi_rules.base_objects import Int, SymPyReplacementPattern, _rubi_integrator, build_tracing_replacer
@@ -299,8 +299,8 @@ class TestFunctionalRoundtrip:
         rebuilt = self._deserialize_rules(loaded)
         replacer = build_tracing_replacer(rebuilt)
 
-        int_expr = to_matchpy_expression(Int(1/x, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
+        int_expr = to_omnimatch_expression(Int(1/x, x))
+        result = omnimatch_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - log(x)) == 0
 
     def test_power_rule_integrate(self, x, wild_symbols):
@@ -322,13 +322,13 @@ class TestFunctionalRoundtrip:
         replacer = build_tracing_replacer(rebuilt)
 
         # Test x^2
-        int_expr = to_matchpy_expression(Int(x**2, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
+        int_expr = to_omnimatch_expression(Int(x**2, x))
+        result = omnimatch_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - x**3/3) == 0
 
         # Test x^(1/2)
-        int_expr = to_matchpy_expression(Int(sqrt(x), x))
-        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
+        int_expr = to_omnimatch_expression(Int(sqrt(x), x))
+        result = omnimatch_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - 2*x**Rational(3, 2)/3) == 0
 
     def test_multiple_rules_integrate(self, x, wild_symbols):
@@ -360,15 +360,15 @@ class TestFunctionalRoundtrip:
         a, b = sympy.symbols('a b')
 
         # int 1/x = log(x)
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(1/x, x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(1/x, x)))[0])
         assert sympy.simplify(result - log(x)) == 0
 
         # int x^2 = x^3/3
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(x**2, x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(x**2, x)))[0])
         assert sympy.simplify(result - x**3/3) == 0
 
         # int 1/(a+bx) = log(a+bx)/b
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(1/(a + b*x), x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(1/(a + b*x), x)))[0])
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
     def test_loaded_rules_roundtrip(self, x):
@@ -405,13 +405,13 @@ class TestFunctionalRoundtrip:
         # Test integration
         a, b = sympy.symbols('a b')
 
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(1/x, x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(1/x, x)))[0])
         assert sympy.simplify(result - log(x)) == 0
 
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(x**2, x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(x**2, x)))[0])
         assert sympy.simplify(result - x**3/3) == 0
 
-        result = matchpy_to_sympy(replacer.replace(to_matchpy_expression(Int(1/(a + b*x), x)))[0])
+        result = omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(Int(1/(a + b*x), x)))[0])
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
 
@@ -465,8 +465,8 @@ class TestManyToOneReplacerSerialization:
 
     def _roundtrip_replacer(self, replacer):
         """Serialize and deserialize a replacer's matcher."""
-        from matchpy.matching.json_serialization import to_json, from_json
-        from matchpy.matching.many_to_one import ManyToOneReplacer
+        from omnimatch.matching.json_serialization import to_json, from_json
+        from omnimatch.matching.many_to_one import ManyToOneReplacer
         json_str = to_json(replacer.matcher)
         matcher2 = from_json(json_str)
         replacer2 = ManyToOneReplacer()
@@ -475,7 +475,7 @@ class TestManyToOneReplacerSerialization:
 
     def test_serialize_produces_valid_json(self, replacer_with_rules):
         """Serialization produces a valid JSON string with expected keys."""
-        from matchpy.matching.json_serialization import to_json
+        from omnimatch.matching.json_serialization import to_json
         json_str = to_json(replacer_with_rules.matcher)
         data = json.loads(json_str)
         assert 'patterns' in data
@@ -484,7 +484,7 @@ class TestManyToOneReplacerSerialization:
 
     def test_replacement_labels_serialized_as_replacement_fn(self, replacer_with_rules):
         """Labels are stored with _kind='replacement_fn'."""
-        from matchpy.matching.json_serialization import to_json
+        from omnimatch.matching.json_serialization import to_json
         data = json.loads(to_json(replacer_with_rules.matcher))
         for pat_data, label_data, ci in data['patterns']:
             assert label_data['_kind'] == 'replacement_fn'
@@ -504,44 +504,44 @@ class TestManyToOneReplacerSerialization:
     def test_roundtrip_integrate_1_over_x(self, x, replacer_with_rules):
         """After roundtrip, int 1/x dx = log(x)."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int(1/x, x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int(1/x, x))))
         assert sympy.simplify(result - log(x)) == 0
 
     def test_roundtrip_integrate_power(self, x, replacer_with_rules):
         """After roundtrip, int x^2 dx = x^3/3."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int(x**2, x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int(x**2, x))))
         assert sympy.simplify(result - x**3/3) == 0
 
     def test_roundtrip_integrate_sqrt(self, x, replacer_with_rules):
         """After roundtrip, int sqrt(x) dx = 2x^(3/2)/3."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int(sqrt(x), x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int(sqrt(x), x))))
         assert sympy.simplify(result - 2*x**Rational(3, 2)/3) == 0
 
     def test_roundtrip_integrate_linear(self, x, replacer_with_rules):
         """After roundtrip, int 1/(a+bx) dx = log(a+bx)/b."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
         a, b = sympy.symbols('a b')
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int(1/(a + b*x), x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int(1/(a + b*x), x))))
         assert sympy.simplify(result - log(a + b*x)/b) == 0
 
     def test_roundtrip_integrate_binomial_power(self, x, replacer_with_rules):
         """After roundtrip, int (a+bx)^2 dx = (a+bx)^3/(3b)."""
         replacer2, _ = self._roundtrip_replacer(replacer_with_rules)
         a, b = sympy.symbols('a b')
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int((a + b*x)**2, x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int((a + b*x)**2, x))))
         assert sympy.simplify(result - (a + b*x)**3/(3*b)) == 0
 
     def test_json_string_full_roundtrip(self, x, replacer_with_rules):
         """dumps -> loads -> deserialize produces working replacer."""
-        from matchpy.matching.json_serialization import to_json, from_json
-        from matchpy.matching.many_to_one import ManyToOneReplacer
+        from omnimatch.matching.json_serialization import to_json, from_json
+        from omnimatch.matching.many_to_one import ManyToOneReplacer
         json_str = to_json(replacer_with_rules.matcher)
         data = json.loads(json_str)
         json_str2 = json.dumps(data)
         matcher2 = from_json(json_str2)
         replacer2 = ManyToOneReplacer()
         replacer2.matcher = matcher2
-        result = matchpy_to_sympy(replacer2.replace(to_matchpy_expression(Int(x**2, x))))
+        result = omnimatch_to_sympy(replacer2.replace(to_omnimatch_expression(Int(x**2, x))))
         assert sympy.simplify(result - x**3/3) == 0

@@ -663,7 +663,7 @@ class TestPowerOfLinearMatchQ:
 # unrestricted. Two independent layers had to be fixed, and both are asserted here:
 #   1. check() now really matches;
 #   2. a constraint may only declare variables the PATTERN binds -- MatchQ's inner
-#      pattern variables are local to it, and declaring them made MatchPy's
+#      pattern variables are local to it, and declaring them made OmniMatch's
 #      CustomConstraint short-circuit to True on a KeyError, bypassing check()
 #      entirely (47 of 29154 constraints were in that state).
 # =============================================================================
@@ -738,16 +738,16 @@ class TestMatchQMatches:
 
 
 class TestConstraintVariablesAreRestrictedToThePattern:
-    """MatchPy's CustomConstraint returns True when a declared variable is missing
+    """OmniMatch's CustomConstraint returns True when a declared variable is missing
     from the match. Declaring a MatchQ-local variable therefore silenced the whole
     guard, so only pattern-bound variables may be declared."""
 
     def test_only_pattern_bound_variables_are_declared(self):
-        from rubi_rules.base_objects import _make_matchpy_constraint
+        from rubi_rules.base_objects import _make_omnimatch_constraint
         from rubi_rules.utils.constraints_wolfram import MatchQ
         from sympy_matching.wild import WildSymbol
         u_, local_ = WildSymbol('u'), WildSymbol('localvar')
-        cc = _make_matchpy_constraint(MatchQ(u_, local_ * Symbol('x')), {'u'})
+        cc = _make_omnimatch_constraint(MatchQ(u_, local_ * Symbol('x')), {'u'})
         assert set(cc._variables) == {'u'}          # 'localvar' must NOT be declared
 
 
@@ -770,7 +770,7 @@ class TestMatchQEnforcementIsGated:
         saved = mr.ENFORCE_MATCHQ
         mr.ENFORCE_MATCHQ = enforce
         try:
-            return mr._make_matchpy_constraint(constraint, {'u'})
+            return mr._make_omnimatch_constraint(constraint, {'u'})
         finally:
             mr.ENFORCE_MATCHQ = saved
 
@@ -780,27 +780,27 @@ class TestMatchQEnforcementIsGated:
         return MatchQ(WildSymbol('u'), Symbol('x') ** WildSymbol('m'))
 
     def test_default_is_permissive_for_a_requirement(self):
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         xx = Symbol('x')
         cc = self._cc(self._mq(), enforce=False)
         assert cc(Substitution({'u': sympy.cos(xx)})) is True    # not refused
 
     def test_default_is_permissive_for_an_exclusion(self):
         """A false positive here would REFUSE a rule, which is the harmful direction."""
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         xx = Symbol('x')
         cc = self._cc(sympy.Not(self._mq()), enforce=False)
         assert cc(Substitution({'u': xx ** 2})) is True
 
     def test_when_enforced_a_requirement_discriminates(self):
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         xx = Symbol('x')
         cc = self._cc(self._mq(), enforce=True)
         assert cc(Substitution({'u': xx ** 2})) is True
         assert cc(Substitution({'u': sympy.cos(xx)})) is False
 
     def test_when_enforced_an_exclusion_discriminates(self):
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         xx = Symbol('x')
         cc = self._cc(sympy.Not(self._mq()), enforce=True)
         assert cc(Substitution({'u': xx ** 2})) is False
@@ -808,7 +808,7 @@ class TestMatchQEnforcementIsGated:
 
     def test_a_non_matchq_constraint_is_unaffected_by_the_gate(self):
         """The gate must catch MatchQ only, never a neighbouring guard."""
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         from rubi_rules.utils.constraints_wolfram import FreeQ
         from sympy_matching.wild import WildSymbol
         xx = Symbol('x')
@@ -821,7 +821,7 @@ class TestGenericBooleanConstraintChecker:
     """Regression + design guard for a generic SymPy-Boolean rule guard -- a bare
     relational like ``Ne(GCD(m+1, n), 1)``, NOT a MathematicaConstraint.
 
-    Its variables are WildSymbols, which cross the SymPy<->MatchPy boundary as
+    Its variables are WildSymbols, which cross the SymPy<->OmniMatch boundary as
     Wildcards; a plain ``Symbol`` crosses as a ``SymbolWrapper`` CONSTANT. So the matcher
     returns the bound values by wildcard NAME, as ``SymbolWrapper``s (e.g.
     ``'m' -> SymbolWrapper(1)``). The checker must therefore resolve the guard's own
@@ -836,11 +836,11 @@ class TestGenericBooleanConstraintChecker:
     """
 
     def _checker(self, constraint):
-        from rubi_rules.base_objects import _make_matchpy_constraint
-        return _make_matchpy_constraint(constraint, {'m', 'n'})
+        from rubi_rules.base_objects import _make_omnimatch_constraint
+        return _make_omnimatch_constraint(constraint, {'m', 'n'})
 
     def test_ne_gcd_guard_evaluates_with_wildsymbols_and_deferred_node(self):
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         from rubi_rules.utils.rubi_utils import GCD
         m_, n_ = WildSymbol('m'), WildSymbol('n')
         cc = self._checker(sympy.Ne(GCD(m_ + 1, n_), 1))
@@ -852,11 +852,11 @@ class TestGenericBooleanConstraintChecker:
         assert cc(Substitution({'m': sympy.Integer(1), 'n': sympy.Integer(3)})) is False
 
     def test_guard_resolves_the_symbolwrapper_values_the_matcher_delivers(self):
-        """The bound values arrive as MatchPy ``SymbolWrapper`` constants (that is how the
+        """The bound values arrive as OmniMatch ``SymbolWrapper`` constants (that is how the
         matcher hands back what a Wildcard matched), NOT as bare SymPy numbers. The checker
         must unwrap them -- ``SymbolWrapper(1) -> Integer(1)`` -- before evaluating."""
-        from matchpy.expressions.substitution import Substitution
-        from matchpy.expressions.expressions import SymbolWrapper
+        from omnimatch.expressions.substitution import Substitution
+        from omnimatch.expressions.expressions import SymbolWrapper
         from rubi_rules.utils.rubi_utils import GCD
         m_, n_ = WildSymbol('m'), WildSymbol('n')
         cc = self._checker(sympy.Ne(GCD(m_ + 1, n_), 1))
@@ -876,7 +876,7 @@ class TestGenericBooleanConstraintChecker:
 
     def test_eq_guard_with_wildsymbol_still_works(self):
         """A plain Eq guard over a WildSymbol substitutes and evaluates too."""
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         n_ = WildSymbol('n')
         cc = self._checker(sympy.Eq(n_, 6))
         assert cc(Substitution({'n': sympy.Integer(6)})) is True
@@ -989,7 +989,7 @@ class TestExpensiveGuardDeferralPolicy:
 
     Guards that recursively invoke the integrator (`IntHide` is literally `Int` with
     steps hidden) or do heavy algebra must be DEFERRED to attempt time; with them
-    attached to the matchpy Pattern, sorting the matcher's yields by priority paid a
+    attached to the omnimatch Pattern, sorting the matcher's yields by priority paid a
     full sub-integration per catch-all candidate before the first (correct, cheap)
     rule was ever attempted -- `Int[(c+d x)^7/(a+b x)^7]` hung >120 s while its
     winning rule `1.1.1.2:[12]` sorted first the whole time (defects §33).

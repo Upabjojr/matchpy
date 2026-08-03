@@ -5,8 +5,8 @@ import itertools
 import pytest
 from multiset import Multiset
 
-from matchpy import match
-from matchpy.expressions.expressions import (Arity, Operation, NamedAtom, Wildcard, Expression, Pattern)
+from omnimatch import match
+from omnimatch.expressions.expressions import (Arity, Operation, NamedAtom, Wildcard, Expression, Pattern)
 
 from .common import *
 

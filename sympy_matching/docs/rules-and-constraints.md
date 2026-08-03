@@ -6,14 +6,14 @@ subclasses), and `build_replacer`. For the wildcard semantics underneath, see
 [`wildcards.md`](wildcards.md).
 
 Every example is a doctest, executed by `sympy_matching/tests/test_docs.py`, and uses
-only `sympy`, `matchpy` and `sympy_matching`.
+only `sympy`, `omnimatch` and `sympy_matching`.
 
 ```python
 >>> from sympy import Symbol, Ne, sin, cos
 >>> from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
 >>> from sympy_matching.matching_rule import (
-...     SymPyReplacementPattern, build_replacer, to_matchpy_expression)
->>> from sympy_matching.conversion import matchpy_to_sympy
+...     SymPyReplacementPattern, build_replacer, to_omnimatch_expression)
+>>> from sympy_matching.conversion import omnimatch_to_sympy
 >>> x = Symbol('x')
 
 ```
@@ -44,7 +44,7 @@ only `sympy`, `matchpy` and `sympy_matching`.
 
 ## 2. `build_replacer` and applying rules
 
-`build_replacer` compiles a list of rules into a MatchPy `ManyToOneReplacer` — one
+`build_replacer` compiles a list of rules into a OmniMatch `ManyToOneReplacer` — one
 discrimination net that matches all patterns simultaneously, which is what makes rule
 sets of thousands of patterns practical (see "One matcher, all rules at once" in
 [`../README.md`](../README.md) for the algorithm and a demonstration). Build it once
@@ -53,16 +53,16 @@ subjects.
 
 ```python
 >>> replacer = build_replacer([power_rule])
->>> result, fired = replacer.replace(to_matchpy_expression(x**3))
->>> matchpy_to_sympy(result)
+>>> result, fired = replacer.replace(to_omnimatch_expression(x**3))
+>>> omnimatch_to_sympy(result)
 x**4/4
 >>> fired
 ('docs example', 1)
 
 ```
 
-The replacer works on MatchPy expressions; convert on the way in with
-`to_matchpy_expression` and back with `matchpy_to_sympy`
+The replacer works on OmniMatch expressions; convert on the way in with
+`to_omnimatch_expression` and back with `omnimatch_to_sympy`
 (see [`conversion.md`](conversion.md)).
 
 A guard rejection means *no match* — the expression comes back untouched rather than
@@ -70,7 +70,7 @@ rewritten into something invalid. Here `m = -1` matches structurally but would d
 by zero, and `Ne(m_, -1)` blocks it:
 
 ```python
->>> matchpy_to_sympy(replacer.replace(to_matchpy_expression(x**-1)))
+>>> omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(x**-1)))
 1/x
 
 ```
@@ -95,9 +95,9 @@ ones).
 ...     module_name='docs example', rule_number=2,
 ... )
 >>> rep = build_replacer([guarded])
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(5*x))[0])
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(5*x))[0])
 5
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(-2*x)))   # Gt fails -> no match
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(-2*x)))   # Gt fails -> no match
 -2*x
 
 ```
@@ -110,7 +110,7 @@ the objects carrying them — the same argument shapes as higher-layer predicate
 on it:
 
 ```python
->>> from matchpy.expressions.constraints import FreeOf
+>>> from omnimatch.expressions.constraints import FreeOf
 >>> a_ = WildSymbol('a')
 >>> FreeOf('a', 'x').variables
 frozenset({'a'})
@@ -119,7 +119,7 @@ True
 
 ```
 
-`FreeOf` attaches to the MatchPy `Pattern` (it is a MatchPy-level constraint); inside a
+`FreeOf` attaches to the OmniMatch `Pattern` (it is a OmniMatch-level constraint); inside a
 `SymPyReplacementPattern` the same effect is usually obtained with a predicate-style
 constraint from a higher layer, or a custom one (§4).
 
@@ -127,7 +127,7 @@ constraint from a higher layer, or a custom one (§4).
 
 Subclass and implement `check(**bindings)`; the bound wildcards arrive as keyword
 arguments named after their `wildcard_name`. The values come straight from the matcher
-(so, inside a replacer, in MatchPy form) — resolve them through the base-class helpers
+(so, inside a replacer, in OmniMatch form) — resolve them through the base-class helpers
 `_resolve_all` (convert every binding to SymPy) and `_resolve` (look an argument up in
 the resolved bindings), which every shipped constraint uses. `variables` is derived
 automatically from the constraint's arguments.
@@ -170,9 +170,9 @@ Used in a rule:
 ...     module_name='docs example', rule_number=3,
 ... )
 >>> rep = build_replacer([even_rule])
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(x**4))[0])
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(x**4))[0])
 sq**2
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(x**3)))   # odd -> no match
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(x**3)))   # odd -> no match
 x**3
 
 ```
@@ -191,9 +191,9 @@ decided by matching, then by the guards:
 ...     power_rule,
 ... ]
 >>> rep = build_replacer(rules)
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(sin(x)**2 + cos(x)**2))[0])
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(sin(x)**2 + cos(x)**2))[0])
 one
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(x**5))[0])
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(x**5))[0])
 x**6/6
 
 ```
@@ -204,7 +204,7 @@ x**6/6
   `constraints` and `replacement` refer to the same variable
   (see [`wildcards.md`](wildcards.md) §3).
 * **Resolve bindings through the base class.** Inside a replacer, `check` receives
-  MatchPy-form values; `self._resolve_all` / `self._resolve` convert them to SymPy
+  OmniMatch-form values; `self._resolve_all` / `self._resolve` convert them to SymPy
   uniformly (and also make the constraint work when called directly with SymPy
   values, as in the doctests above).
 * **Rejection is silent by design.** A failed guard is "no match", not an error — a

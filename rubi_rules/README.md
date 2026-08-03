@@ -1,7 +1,7 @@
 # rubi_rules
 
 Symbolic integration for SymPy using the [Rubi](https://rulebasedintegration.org/)
-rule set (Rule-Based Integration), matched with MatchPy.
+rule set (Rule-Based Integration), matched with OmniMatch.
 
 The public entry point is **`rubi_integrate`**.
 
@@ -120,7 +120,7 @@ rubi_integrate(1/x, x,      pattern='r_1_algebraic_functions/**')
 Rubi's `.m` rules are translated by `codegen/generate.py` into Python
 `SymPyReplacementPattern` objects under `rules/` (auto-generated — do not edit). Each rule
 is a SymPy pattern + constraints + replacement. `rubi_integrate` converts the
-integral to a MatchPy expression, matches rules, and applies replacements,
+integral to a OmniMatch expression, matches rules, and applies replacements,
 reducing `Int(...)` nodes depth-first until the integral is solved. Rule match
 order is **not** significant — the search prefers a fully-integrated result over a
 `CannotIntegrate`/residual-`Int` one regardless of which rule matches first.

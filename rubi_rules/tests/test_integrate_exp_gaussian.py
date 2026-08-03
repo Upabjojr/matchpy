@@ -343,8 +343,8 @@ _NO_CRASH_INTEGRANDS = [
     exp(x + exp(x)),
     exp(exp(x)),
     # csc(a+b x)^2/(c+d x): a DeactivateTrig rule's replacement embeds If[MatchQ[f,
-    # f1*Complex(0,j)], ...]. The MatchQ-local wildcards f1/j reached matchpy_to_sympy as
-    # raw Wildcards -> SympifyError. Real fix: matchpy_to_sympy converts them to
+    # f1*Complex(0,j)], ...]. The MatchQ-local wildcards f1/j reached omnimatch_to_sympy as
+    # raw Wildcards -> SympifyError. Real fix: omnimatch_to_sympy converts them to
     # WildSymbols and If.doit EVALUATES the MatchQ (as Wolfram does; b/d real -> False ->
     # else branch), resolving them -> clean Unintegrable (Rubi returns Defer[Int] too).
     sympy.csc(_a + _b*x)**2/(_c + _d*x),

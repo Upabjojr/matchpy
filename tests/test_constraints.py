@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from matchpy.expressions.constraints import Constraint, CustomConstraint, EqualVariablesConstraint
+from omnimatch.expressions.constraints import Constraint, CustomConstraint, EqualVariablesConstraint
 
 
 class DummyConstraint(Constraint):

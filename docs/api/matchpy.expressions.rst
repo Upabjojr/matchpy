@@ -1,4 +1,4 @@
-matchpy.expressions package
+omnimatch.expressions package
 ===========================
 
 Submodules
@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   matchpy.expressions.constraints
-   matchpy.expressions.expressions
-   matchpy.expressions.functions
-   matchpy.expressions.substitution
+   omnimatch.expressions.constraints
+   omnimatch.expressions.expressions
+   omnimatch.expressions.functions
+   omnimatch.expressions.substitution

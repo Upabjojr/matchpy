@@ -3510,15 +3510,15 @@ def test_DeactivateTrig_sech_becomes_inert_sec_of_imaginary_argument():
 
 
 def test_inert_trig_heads_are_distinct_from_active():
-    """Inert markers must NOT share a MatchPy head with the active SymPy functions.
+    """Inert markers must NOT share a OmniMatch head with the active SymPy functions.
     Rubi's trig rules are inert and match only after DeactivateTrig; an inert leaf
     has to stay a distinct head so it can never masquerade as a solved active
     result. (Supersedes the old head-registration approach.)"""
     from rubi_rules.utils.utility_functions import InertSec
-    from sympy_matching.conversion import to_matchpy_expression
+    from sympy_matching.conversion import to_omnimatch_expression
     import sympy as _sp
     xx = Symbol('x')
-    assert to_matchpy_expression(InertSec(xx)).head != to_matchpy_expression(_sp.sec(xx)).head
+    assert to_omnimatch_expression(InertSec(xx)).head != to_omnimatch_expression(_sp.sec(xx)).head
 
 
 def test_deactivation_dispatch_solves_cofunction_integrals():

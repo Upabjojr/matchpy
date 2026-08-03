@@ -47,7 +47,7 @@ x + 1
 | `d_.` | `Optional[Pattern[d, Blank[]]]` | `_d_` — `WildSymbol('d', optional_value=IDENTITY_ELEMENT)` |
 
 Note the naming convention: the **plain** Blank becomes `d_` (trailing underscore) and
-the **Optional** Blank becomes `_d_` (leading *and* trailing). Both carry the MatchPy
+the **Optional** Blank becomes `_d_` (leading *and* trailing). Both carry the OmniMatch
 variable name `d`, which is what unifies them — see `sympy_matching/README.md` §2.
 
 ```python
@@ -180,16 +180,16 @@ Mathematica's own answers for `MatchQ[..., d + d_.*W]`:
 
 ```python
 >>> from sympy import Symbol
->>> from matchpy import ManyToOneMatcher, Pattern
->>> from sympy_matching.matching_rule import to_matchpy_expression
+>>> from omnimatch import ManyToOneMatcher, Pattern
+>>> from sympy_matching.matching_rule import to_omnimatch_expression
 >>> x, W, d = Symbol('x'), Symbol('W'), Symbol('d')
 >>> ns = {}
 >>> code, _, _ = ffl_to_sympy_code(['Plus', 'd', ['Times', optional, 'W']], namespace=ns)
 >>> pattern = eval(code, ns)
 >>> def matches(pat, subject):
 ...     m = ManyToOneMatcher()
-...     m.add(Pattern(to_matchpy_expression(pat)))
-...     return bool(list(m.match(to_matchpy_expression(subject))))
+...     m.add(Pattern(to_omnimatch_expression(pat)))
+...     return bool(list(m.match(to_omnimatch_expression(subject))))
 >>> matches(pattern, d + d*W)      # Mathematica: True
 True
 >>> matches(pattern, 5 + 5*W)      # Mathematica: False -- literal d is not 5
@@ -205,7 +205,7 @@ True
 
 A rule that fires where Mathematica's would not produces a *wrong antiderivative*, not
 an error — the replacement derived for one shape gets applied to another. The three
-forms therefore have to stay distinct all the way from `FullForm` to the MatchPy
+forms therefore have to stay distinct all the way from `FullForm` to the OmniMatch
 pattern, which is why they are pinned by tests at both layers:
 
 * `sympy_wolfram/tests/test_blank_optional_semantics.py` — 37 cases, every expected

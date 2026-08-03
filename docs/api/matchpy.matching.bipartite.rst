@@ -1,7 +1,7 @@
-matchpy.matching.bipartite module
+omnimatch.matching.bipartite module
 =================================
 
-.. automodule:: matchpy.matching.bipartite
+.. automodule:: omnimatch.matching.bipartite
     :members:
     :undoc-members:
     :show-inheritance:

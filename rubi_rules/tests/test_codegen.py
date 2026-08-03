@@ -472,7 +472,7 @@ class TestStableRuleNumbering:
 
 # ---------------------------------------------------------------------------
 # Function-head wildcards: F_[args] -> WildHeadApp[F_, args] (pattern) and
-# F[args] -> WFApply[F, args] (replacement). MatchPy matches the wildcard head
+# F[args] -> WFApply[F, args] (replacement). OmniMatch matches the wildcard head
 # natively, so no constraint or post-hoc decomposition is involved.
 # ---------------------------------------------------------------------------
 from rubi_rules.codegen.generate import (

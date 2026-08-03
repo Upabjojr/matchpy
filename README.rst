@@ -1,34 +1,35 @@
-MatchPy
-=======
+OmniMatch
+=========
 
-MatchPy is a library for pattern matching on symbolic expressions in Python.
+OmniMatch is a library for pattern matching on symbolic expressions in Python.
+It began as a fork of `MatchPy <https://github.com/HPAC/matchpy>`_ by Manuel Krebber
+and has since diverged (renamed API, typed expression models, SymPy integration layers).
 
 **Work in progress**
-
-|pypi| |conda| |coverage| |build| |docs| |joss| |doi|
 
 Installation
 ------------
 
-MatchPy is available via `PyPI <https://pypi.python.org/pypi/matchpy>`_, and for Conda via `conda-forge <https://anaconda.org/conda-forge/matchpy>`_. It can be installed with ``pip install matchpy`` or ``conda install -c conda-forge matchpy``.
+OmniMatch is vendored as part of this repository and is not published on PyPI.
+Install the repository in editable mode (``pip install -e .``) to use it.
 
 Overview
 --------
 
-This package implements `pattern matching <https://en.wikipedia.org/wiki/Pattern_matching>`_ in Python. Pattern matching is a powerful tool for symbolic computations, operating on symbolic expressions. Given a pattern and an expression (which is usually called *subject*), the goal of pattern matching is to find a substitution for all the variables in the pattern such that the pattern becomes the subject. As an example, consider the pattern ``f(x)``, where ``f`` is a function and ``x`` is a variable, and the subject ``f(a)``, where ``a`` is a constant symbol. Then the substitution that replaces ``x`` with ``a`` is a match. MatchPy supports associative and/or commutative function symbols, as well as sequence variables, similar to pattern matching in `Mathematica <https://reference.wolfram.com/language/guide/Patterns.html>`_. 
+This package implements `pattern matching <https://en.wikipedia.org/wiki/Pattern_matching>`_ in Python. Pattern matching is a powerful tool for symbolic computations, operating on symbolic expressions. Given a pattern and an expression (which is usually called *subject*), the goal of pattern matching is to find a substitution for all the variables in the pattern such that the pattern becomes the subject. As an example, consider the pattern ``f(x)``, where ``f`` is a function and ``x`` is a variable, and the subject ``f(a)``, where ``a`` is a constant symbol. Then the substitution that replaces ``x`` with ``a`` is a match. OmniMatch supports associative and/or commutative function symbols, as well as sequence variables, similar to pattern matching in `Mathematica <https://reference.wolfram.com/language/guide/Patterns.html>`_. 
 
-A detailed example of how to use MatchPy can be found `here <https://matchpy.readthedocs.io/en/latest/example.html>`_.
+A detailed example of how to use OmniMatch can be found in ``docs/example.rst``.
 
-MatchPy supports both one-to-one and many-to-one pattern matching. The latter makes use of similarities between patterns to efficiently find matches for multiple patterns at the same time.
+OmniMatch supports both one-to-one and many-to-one pattern matching. The latter makes use of similarities between patterns to efficiently find matches for multiple patterns at the same time.
 
-A list of publications about MatchPy can be found `below <Publications_>`_.
+A list of publications about OmniMatch can be found `below <Publications_>`_.
 
 Expressions
 ...........
 
 Expressions are tree-like data structures, consisting of operations (functions, internal nodes) and symbols (constants, leaves):
 
->>> from matchpy import Operation, NamedAtom, Arity
+>>> from omnimatch import Operation, NamedAtom, Arity
 >>> f = Operation.new('f', Arity.binary)
 >>> a = NamedAtom('a')
 >>> print(f(a, a))
@@ -36,7 +37,7 @@ f(a, a)
 
 Patterns are expressions which may contain wildcards (variables):
 
->>> from matchpy import Pattern, Wildcard
+>>> from omnimatch import Pattern, Wildcard
 >>> x = Wildcard.dot('x')
 >>> print(Pattern(f(a, x)))
 f(a, x_)
@@ -55,9 +56,9 @@ y: f(_, a)
 Pattern Matching
 ................
 
-Given a pattern and an expression (which is usually called subject), the idea of pattern matching is to find a substitution that maps wildcards to expressions such that the pattern becomes the subject. In MatchPy, a substitution is a dict that maps variable names to expressions.
+Given a pattern and an expression (which is usually called subject), the idea of pattern matching is to find a substitution that maps wildcards to expressions such that the pattern becomes the subject. In OmniMatch, a substitution is a dict that maps variable names to expressions.
 
->>> from matchpy import match
+>>> from omnimatch import match
 >>> y = Wildcard.dot('y')
 >>> b = NamedAtom('b')
 >>> subject = f(a, b)
@@ -68,7 +69,7 @@ Given a pattern and an expression (which is usually called subject), the idea of
 
 Applying the substitution to the pattern results in the original expression.
 
->>> from matchpy import substitute
+>>> from omnimatch import substitute
 >>> print(substitute(pattern, substitution))
 f(a, b)
 
@@ -87,7 +88,7 @@ Sequence wildcards are wildcards that can match a sequence of expressions instea
 Associativity and Commutativity
 ...............................
 
-MatchPy natively supports associative and/or commutative operations. Nested associative operators are automatically flattened, the operands in commutative operations are sorted:
+OmniMatch natively supports associative and/or commutative operations. Nested associative operators are automatically flattened, the operands in commutative operations are sorted:
 
 >>> g = Operation.new('g', Arity.variadic, associative=True, commutative=True)
 >>> print(g(a, g(b, a)))
@@ -108,7 +109,7 @@ Associativity and commutativity is also considered for pattern matching:
 Many-to-One Matching
 ....................
 
-When a fixed set of patterns is matched repeatedly against different subjects, matching can be sped up significantly by using many-to-one matching. The idea of many-to-one matching is to construct an automaton-like data structure (similar to a decision tree) that exploits similarities between patterns. In MatchPy this is the `ManyToOneMatcher <https://matchpy.readthedocs.io/en/latest/api/matchpy.matching.many_to_one.html>`_, which supports associative and/or commutative matching with sequence variables. (An older syntactic-only ``DiscriminationNet`` has been removed from this fork.)
+When a fixed set of patterns is matched repeatedly against different subjects, matching can be sped up significantly by using many-to-one matching. The idea of many-to-one matching is to construct an automaton-like data structure (similar to a decision tree) that exploits similarities between patterns. In OmniMatch this is the ``ManyToOneMatcher``, which supports associative and/or commutative matching with sequence variables. (An older syntactic-only ``DiscriminationNet`` has been removed from this fork.)
 
 >>> pattern1 = Pattern(f(a, x))
 >>> pattern2 = Pattern(f(y, b))
@@ -123,7 +124,7 @@ f(y_, b) matched with {y ↦ a}
 Roadmap
 -------
 
-Besides the existing features, we plan on adding the following to MatchPy:
+Besides the existing features, we plan on adding the following to OmniMatch:
 
 - Support for Mathematica's ``Alternatives``: For example ``f(a | b)`` would match either ``f(a)`` or ``f(b)``.
 - Support for Mathematica's ``Repeated``: For example ``f(a..)`` would match ``f(a)``, ``f(a, a)``, ``f(a, a, a)``, etc.
@@ -132,10 +133,10 @@ Besides the existing features, we plan on adding the following to MatchPy:
   ``f((a a)..)`` would match any ``f`` with an even number of ``a`` arguments.
 - All these additional pattern features need to be supported in the ``ManyToOneMatcher`` as well.
 - Better integration with existing types such as ``dict``.
-- Code generation for both one-to-one and many-to-one matching. There is already an experimental implementation, but it still has some dependencies on MatchPy which can probably be removed.
+- Code generation for both one-to-one and many-to-one matching. There is already an experimental implementation, but it still has some dependencies on OmniMatch which can probably be removed.
 - Improving the documentation with more examples.
 - Better test coverage with more randomized tests.
-- Implementation of the matching algorithms in a lower-level language, for example C, both for performance and to make MatchPy's functionality available in other languages.
+- Implementation of the matching algorithms in a lower-level language, for example C, both for performance and to make OmniMatch's functionality available in other languages.
 
 Contributing
 ------------
@@ -154,7 +155,7 @@ If you have any questions or need help with setting things up, please open an is
 Publications
 ------------
 
-| `MatchPy: Pattern Matching in Python <http://joss.theoj.org/papers/10.21105/joss.00670>`_
+| `OmniMatch: Pattern Matching in Python <http://joss.theoj.org/papers/10.21105/joss.00670>`_
 | Manuel Krebber and Henrik Barthels
 | Journal of Open Source Software, Volume 3(26), pp. 2, June 2018.
 |
@@ -164,7 +165,7 @@ Publications
 | Proceedings of the 7th Workshop on Python for High-Performance and Scientific Computing, November 2017.
 |
 
-| `MatchPy: A Pattern Matching Library <http://conference.scipy.org/proceedings/scipy2017/manuel_krebber.html>`_
+| `OmniMatch: A Pattern Matching Library <http://conference.scipy.org/proceedings/scipy2017/manuel_krebber.html>`_
 | Manuel Krebber, Henrik Barthels and Paolo Bientinesi
 | Proceedings of the 15th Python in Science Conference, July 2017.
 |
@@ -174,7 +175,7 @@ Publications
 | Master Thesis, RWTH Aachen University, May 2017
 |
 
-If you want to cite MatchPy, please reference the JOSS paper::
+If you want to cite OmniMatch, please reference the JOSS paper::
 
     @article{krebber2018,
         author    = {Manuel Krebber and Henrik Barthels},
@@ -189,30 +190,3 @@ If you want to cite MatchPy, please reference the JOSS paper::
         web       = "http://joss.theoj.org/papers/10.21105/joss.00670",
     }
 
-.. |pypi| image:: https://img.shields.io/pypi/v/matchpy.svg?style=flat
-    :target: https://pypi.org/project/matchpy/
-    :alt: Latest version released on PyPi
-
-.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/matchpy.svg
-    :target: https://anaconda.org/conda-forge/matchpy
-    :alt: Latest version released via conda-forge
-
-.. |coverage| image:: https://coveralls.io/repos/github/HPAC/matchpy/badge.svg?branch=master
-    :target: https://coveralls.io/github/HPAC/matchpy?branch=master
-    :alt: Test coverage
-
-.. |build| image:: https://travis-ci.org/HPAC/matchpy.svg?branch=master
-    :target: https://travis-ci.org/HPAC/matchpy
-    :alt: Build status of the master branch
-
-.. |docs| image:: https://readthedocs.org/projects/matchpy/badge/?version=latest
-    :target: https://matchpy.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
-    
-.. |joss| image:: http://joss.theoj.org/papers/e456bc05880b533652980aee6550a3cb/status.svg
-    :target: http://joss.theoj.org/papers/e456bc05880b533652980aee6550a3cb
-    :alt: The Journal of Open Source Software
-    
-.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.1294930.svg
-   :target: https://doi.org/10.5281/zenodo.1294930
-   :alt: Digital Object Identifier

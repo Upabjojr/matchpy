@@ -19,7 +19,7 @@ import importlib
 import sympy
 from sympy.core.basic import Basic as SympyBasic
 
-from matchpy.matching.json_serialization import (
+from omnimatch.matching.json_serialization import (
     serialize_wrapped_value,
     deserialize_wrapped_value,
     register_wrapped_value_deserializer,

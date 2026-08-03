@@ -1,8 +1,8 @@
-# `sympy_matching` — SymPy expressions as MatchPy patterns
+# `sympy_matching` — SymPy expressions as OmniMatch patterns
 
-Write MatchPy patterns using ordinary SymPy syntax, and match **an entire rule set in
+Write OmniMatch patterns using ordinary SymPy syntax, and match **an entire rule set in
 one pass**. A `WildSymbol` behaves like a normal `Symbol` inside a SymPy tree and
-becomes a MatchPy wildcard on conversion, so patterns can be built, manipulated and
+becomes a OmniMatch wildcard on conversion, so patterns can be built, manipulated and
 printed with the usual SymPy machinery; the rules built from them are then compiled
 *once* into a single many-to-one matcher and applied together — the design that keeps
 rule sets of thousands of patterns practical (§ "One matcher, all rules at once").
@@ -21,7 +21,7 @@ the subject. That costs one full traversal *per rule*, every time — hopeless w
 rule set has thousands of entries and the rewrite system probes candidates millions of
 times.
 
-MatchPy's `ManyToOneMatcher` (Krebber's many-to-one algorithm) is the reason this
+OmniMatch's `ManyToOneMatcher` (Krebber's many-to-one algorithm) is the reason this
 package exists. Patterns are **loaded once** into a single discrimination-net-style
 matcher that shares their common structure; matching a subject then walks subject and
 net together, so **one traversal reports every pattern that matches, with its
@@ -30,15 +30,15 @@ per rule.
 
 ```python
 >>> from sympy import Symbol, sin
->>> from matchpy import ManyToOneMatcher, Pattern
+>>> from omnimatch import ManyToOneMatcher, Pattern
 >>> from sympy_matching.wild import WildSymbol
->>> from sympy_matching.matching_rule import to_matchpy_expression
+>>> from sympy_matching.matching_rule import to_omnimatch_expression
 >>> x = Symbol('x')
 >>> u_, b_ = WildSymbol('u'), WildSymbol('b')
 >>> matcher = ManyToOneMatcher()
 >>> for pat in (sin(u_)**2, sin(x)**2, b_*sin(u_), u_ + b_):     # load once...
-...     matcher.add(Pattern(to_matchpy_expression(pat)))
->>> hits = list(matcher.match(to_matchpy_expression(sin(x)**2)))  # ...match ALL at once
+...     matcher.add(Pattern(to_omnimatch_expression(pat)))
+>>> hits = list(matcher.match(to_omnimatch_expression(sin(x)**2)))  # ...match ALL at once
 >>> len(hits)
 2
 >>> sorted(str(pattern) for pattern, bindings in hits)
@@ -82,7 +82,7 @@ A pattern leaf is one of three things:
 ```
 
 Naming convention: a trailing underscore in the SymPy name is stripped when deriving the
-MatchPy variable name, so `WildSymbol('d_')` and `WildSymbol('d')` are the same variable.
+OmniMatch variable name, so `WildSymbol('d_')` and `WildSymbol('d')` are the same variable.
 The codebase writes plain wildcards as `d_` and optional ones as `_d_`.
 
 ```python
@@ -95,7 +95,7 @@ The codebase writes plain wildcards as `d_` and optional ones as `_d_`.
 
 ## 2. The wildcard's identity is its NAME
 
-**This is the key idea of the package.** A `WildSymbol` converts to a MatchPy wildcard
+**This is the key idea of the package.** A `WildSymbol` converts to a OmniMatch wildcard
 named after its `wildcard_name`. Two `WildSymbol` objects carrying the same name are
 therefore *one pattern variable*, even when they are different SymPy objects — which
 they must be when they differ in optionality.
@@ -103,7 +103,7 @@ they must be when they differ in optionality.
 ```python
 >>> d_ == _d_                                 # different SymPy objects...
 False
->>> d_.wildcard_name == _d_.wildcard_name     # ...one matchpy variable
+>>> d_.wildcard_name == _d_.wildcard_name     # ...one omnimatch variable
 True
 
 ```
@@ -114,13 +114,13 @@ No explicit `Eq(d_, _d_)` constraint is needed.
 The helper used below:
 
 ```python
->>> from matchpy import ManyToOneMatcher, Pattern
->>> from sympy_matching.matching_rule import to_matchpy_expression
+>>> from omnimatch import ManyToOneMatcher, Pattern
+>>> from sympy_matching.matching_rule import to_omnimatch_expression
 >>> x = Symbol('x')
 >>> def matches(pattern, subject):
 ...     m = ManyToOneMatcher()
-...     m.add(Pattern(to_matchpy_expression(pattern)))
-...     return bool(list(m.match(to_matchpy_expression(subject))))
+...     m.add(Pattern(to_omnimatch_expression(pattern)))
+...     return bool(list(m.match(to_omnimatch_expression(subject))))
 
 ```
 
@@ -289,8 +289,8 @@ contains an atom of that name anywhere in its tree. It is the constraint you rea
 constantly when writing rules over a distinguished variable.
 
 ```python
->>> from matchpy import Pattern, is_match, Wildcard, Operation, Arity, NamedAtom
->>> from matchpy.expressions.constraints import FreeOf
+>>> from omnimatch import Pattern, is_match, Wildcard, Operation, Arity, NamedAtom
+>>> from omnimatch.expressions.constraints import FreeOf
 >>> f = Operation.new('f', Arity.binary)
 >>> x_, y_ = Wildcard.dot('x'), Wildcard.dot('y')
 >>> pattern = Pattern(f(x_, y_), FreeOf('y', 'x'))       # y must not contain 'x'
@@ -351,7 +351,7 @@ a logarithm and `x**(m+1)/(m+1)` would divide by zero:
 ```python
 >>> from sympy import Ne
 >>> from sympy_matching.matching_rule import SymPyReplacementPattern, build_replacer
->>> from sympy_matching.conversion import matchpy_to_sympy
+>>> from sympy_matching.conversion import omnimatch_to_sympy
 >>> m_ = WildSymbol('m')
 >>> power_rule = SymPyReplacementPattern(
 ...     pattern=x**m_,
@@ -361,8 +361,8 @@ a logarithm and `x**(m+1)/(m+1)` would divide by zero:
 ...     rule_number=1,
 ... )
 >>> replacer = build_replacer([power_rule])
->>> rewritten, fired = replacer.replace(to_matchpy_expression(x**3))
->>> matchpy_to_sympy(rewritten)
+>>> rewritten, fired = replacer.replace(to_omnimatch_expression(x**3))
+>>> omnimatch_to_sympy(rewritten)
 x**4/4
 >>> fired
 ('doc example', 1)
@@ -374,7 +374,7 @@ matches, but the constraint rejects it, so the integral comes back untouched ins
 being rewritten to a division by zero:
 
 ```python
->>> matchpy_to_sympy(replacer.replace(to_matchpy_expression(x**-1)))
+>>> omnimatch_to_sympy(replacer.replace(to_omnimatch_expression(x**-1)))
 1/x
 
 ```
@@ -424,7 +424,7 @@ example `sympy_wolfram` supplies a Wolfram-named `FreeQ` over the same idea.
 ## 8. Assembling a rule
 
 `SymPyReplacementPattern` bundles a pattern, its constraints and its replacement;
-`build_replacer` compiles a list of them into a MatchPy `ManyToOneReplacer` — the
+`build_replacer` compiles a list of them into a OmniMatch `ManyToOneReplacer` — the
 load-once, match-all-at-once machinery from the top of this document, with the
 replacement and constraint plumbing attached. Build it **once** for a rule set and
 reuse it for every subject; do not rebuild per query, or the amortisation that makes
@@ -442,7 +442,7 @@ many-to-one matching fast is thrown away. Constraints are ordinary SymPy Boolean
 ...     rule_number=1,
 ... )
 >>> replacer = build_replacer([rule])
->>> len(list(replacer.matcher.match(to_matchpy_expression(x**3))))
+>>> len(list(replacer.matcher.match(to_omnimatch_expression(x**3))))
 1
 
 ```

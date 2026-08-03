@@ -2,7 +2,7 @@
 """Tests for Rubi integration rules.
 
 Tests the full pipeline:
-    SymPy rule definitions -> MatchPy patterns -> pattern matching -> replacement -> SymPy result
+    SymPy rule definitions -> OmniMatch patterns -> pattern matching -> replacement -> SymPy result
 """
 import sys
 import os
@@ -13,7 +13,7 @@ from sympy import Symbol, Integer, Rational, log, sqrt, pi, oo
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
-from sympy_matching.conversion import to_matchpy_expression, matchpy_to_sympy
+from sympy_matching.conversion import to_omnimatch_expression, omnimatch_to_sympy
 from rubi_rules.base_objects import Int, SymPyReplacementPattern, build_tracing_replacer
 from rubi_rules.utils import FreeQ, NeQ, IntegerQ
 
@@ -34,9 +34,9 @@ def x():
 
 def _helper_rubi_integrate(replacer, expr, x):
     """Use Rubi replacer to integrate expr w.r.t. x."""
-    int_expr = to_matchpy_expression(Int(expr, x))
+    int_expr = to_omnimatch_expression(Int(expr, x))
     result = replacer.replace(int_expr)[0]
-    return matchpy_to_sympy(result)
+    return omnimatch_to_sympy(result)
 
 
 # --- Test: Rule loading and replacer construction ---
@@ -145,6 +145,6 @@ class TestManualRules:
             rule_number=1,
         )
         replacer = build_tracing_replacer([rule])
-        int_expr = to_matchpy_expression(Int(x**5, x))
-        result = matchpy_to_sympy(replacer.replace(int_expr)[0])
+        int_expr = to_omnimatch_expression(Int(x**5, x))
+        result = omnimatch_to_sympy(replacer.replace(int_expr)[0])
         assert sympy.simplify(result - x**6/6) == 0

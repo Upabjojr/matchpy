@@ -5,7 +5,7 @@ The GENERIC constraint base -- :class:`~sympy_matching.constraint.SymPyMatchingC
 -- and its helpers (``_normalize_constraint_arg``, ``_collect_wildcards_from_args``,
 ``_resolve_with_substitution``) live in ``sympy_matching`` now, since they are not
 Wolfram-specific: they are the constraint half of the reusable "SymPy + WildSymbol ->
-matchpy ManyToOneReplacer" machinery.
+omnimatch ManyToOneReplacer" machinery.
 
 ``MathematicaConstraint`` here is a THIN Wolfram-layer subclass that merely adds the
 :class:`~sympy_wolfram.objects.MathematicaExpr` node identity on top of

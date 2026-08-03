@@ -1,1 +1,1 @@
-# Tests for the sympy_matching MatchPy integration package.
+# Tests for the sympy_matching OmniMatch integration package.

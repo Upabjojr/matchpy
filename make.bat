@@ -15,11 +15,11 @@ goto :eof
 goto :eof
 
 :test
-	py.test tests\ --doctest-modules matchpy\ README.rst docs\example.rst
+	py.test tests\ --doctest-modules omnimatch\ README.rst docs\example.rst
 goto :eof
 
 :doctest
-	py.test --doctest-modules -k "not tests" matchpy\ README.rst docs\example.rst
+	py.test --doctest-modules -k "not tests" omnimatch\ README.rst docs\example.rst
 goto :eof
 
 :check
@@ -27,16 +27,16 @@ goto :eof
 goto :eof
 
 :lint
-	pylint --reports=no matchpy
+	pylint --reports=no omnimatch
 goto :eof
 
 :coverage
-	py.test --cov=matchpy --cov-report html --cov-report term tests\
+	py.test --cov=omnimatch --cov-report html --cov-report term tests\
 goto :eof
 
 :apidocs
 	rmdir /s /q docs\api
-	sphinx-apidoc -e -T -o docs\api matchpy
+	sphinx-apidoc -e -T -o docs\api omnimatch
 goto :docs
 
 :docs

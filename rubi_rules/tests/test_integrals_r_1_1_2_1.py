@@ -19,7 +19,7 @@ from sympy import (
     atan, atanh, asinh, asin, diff,
 )
 
-from rubi_rules.base_objects import _matchpy_integrate, Int, build_tracing_replacer
+from rubi_rules.base_objects import _omnimatch_integrate, Int, build_tracing_replacer
 
 
 # ---------------------------------------------------------------------------
@@ -46,13 +46,13 @@ x = Symbol('x')
 
 def _integrate(expr, replacer):
     """Integrate expr w.r.t. x using the provided replacer."""
-    return _matchpy_integrate(expr, x, replacer)[0]
+    return _omnimatch_integrate(expr, x, replacer)[0]
 
 
 def _to_real_sympy(expr):
-    """Recursively replace MatchPy-roundtripped function classes with real SymPy ones.
+    """Recursively replace OmniMatch-roundtripped function classes with real SymPy ones.
 
-    The matchpy_to_sympy conversion can produce function objects (e.g. atan)
+    The omnimatch_to_sympy conversion can produce function objects (e.g. atan)
     that print identically but are not ``is``-identical to the canonical SymPy
     classes, preventing simplification and differentiation.  This helper
     reconstructs the expression using the real SymPy functions.

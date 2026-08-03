@@ -217,19 +217,19 @@ def test_eager_Simplify():
 
 def test_eager_FreeQ():
     """FreeQ is a standard Wolfram predicate lifted here from rubi_rules; a list is free
-    iff every element is. It accepts either SymPy or match-bound MatchPy values."""
+    iff every element is. It accepts either SymPy or match-bound OmniMatch values."""
     a, b, y = sympy.symbols('a b y')
     assert fe.eager_FreeQ(a + b * y, x) is True          # no x
     assert fe.eager_FreeQ(a + b * x, x) is False         # contains x
     assert fe.eager_FreeQ([a, b, y], x) is True          # all free
     assert fe.eager_FreeQ([a, b * x], x) is False        # one contains x
-    # matchpy SymbolWrapper coerces to its sympy value
-    from matchpy.expressions.expressions import SymbolWrapper
+    # omnimatch SymbolWrapper coerces to its sympy value
+    from omnimatch.expressions.expressions import SymbolWrapper
     assert fe.eager_FreeQ(SymbolWrapper(a), x) is True
 
 
 def test_freeq_lifted_and_reexported():
-    """FreeQ (and its matchpy->sympy helper _ensure_sympy) live in sympy_wolfram now;
+    """FreeQ (and its omnimatch->sympy helper _ensure_sympy) live in sympy_wolfram now;
     rubi_rules re-exports the SAME objects, and the Rubi FreeQ constraint delegates here."""
     import importlib
     uf = importlib.import_module('rubi_rules.utils.utility_functions')

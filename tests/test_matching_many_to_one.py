@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import NamedAtom, Pattern, Operation, Arity, Wildcard
-from matchpy.matching.many_to_one import ManyToOneMatcher
+from omnimatch.expressions.constraints import CustomConstraint
+from omnimatch.expressions.expressions import NamedAtom, Pattern, Operation, Arity, Wildcard
+from omnimatch.matching.many_to_one import ManyToOneMatcher
 from .common import *
 from .utils import MockConstraint
 

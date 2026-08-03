@@ -2,15 +2,15 @@
 import pytest
 from types import ModuleType
 
-from matchpy.expressions.expressions import Pattern
-from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.matching.code_generation import CodeGenerator
+from omnimatch.expressions.expressions import Pattern
+from omnimatch.matching.many_to_one import ManyToOneMatcher
+from omnimatch.matching.code_generation import CodeGenerator
 
 from .test_matching import PARAM_MATCHES, PARAM_PATTERNS
 
 GENERATED_TEMPLATE = '''
 # -*- coding: utf-8 -*-
-from matchpy import *
+from omnimatch import *
 from tests.common import *
 from tests.utils import *
 

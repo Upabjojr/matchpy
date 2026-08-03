@@ -74,7 +74,7 @@ from sympy.utilities.iterables import flatten
 from sympy.core.random import randint
 
 from sympy_matching import WildSymbol, IDENTITY_ELEMENT
-from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.conversion import omnimatch_to_sympy
 
 # Self-contained Wolfram-standard eager helpers now live in sympy_wolfram (the
 # correct layer direction: rubi_rules -> sympy_wolfram). Imported here so the many
@@ -97,15 +97,15 @@ from sympy_wolfram.functions_eager import (
 )
 
 
-from matchpy import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_matchpy_expression, \
-    to_matchpy_expression
-from matchpy import is_match, replace_all
-from matchpy import match as matchpy_match
-from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
+from omnimatch import Arity, Operation, CustomConstraint, Pattern, ReplacementRule, ManyToOneReplacer, from_omnimatch_expression, \
+    to_omnimatch_expression
+from omnimatch import is_match, replace_all
+from omnimatch import match as omnimatch_match
+from omnimatch.expressions.expressions import SymbolWrapper as _OmniMatchSymbolWrapper
 
 
 # _ensure_sympy and FreeQ moved to sympy_wolfram.functions_eager (imported above):
-# FreeQ is a standard Wolfram predicate and _ensure_sympy is the generic matchpy->sympy
+# FreeQ is a standard Wolfram predicate and _ensure_sympy is the generic omnimatch->sympy
 # coercion it needs -- neither is Rubi-specific.
 
 
@@ -121,13 +121,13 @@ def _patched_custom_constraint_call(func):
 
 
 def _ReplacementRuleWrapped(pattern, replacement):
-    """Wrap replacement function to auto-convert matchpy objects to SymPy."""
+    """Wrap replacement function to auto-convert omnimatch objects to SymPy."""
     def wrapped(**kwargs):
         converted = {k: _ensure_sympy(v) for k, v in kwargs.items()}
         result = replacement(**converted)
-        # Ensure result is a matchpy Expression for replace_all
-        if not isinstance(result, (Operation, _MatchPySymbolWrapper)):
-            result = to_matchpy_expression(result)
+        # Ensure result is a omnimatch Expression for replace_all
+        if not isinstance(result, (Operation, _OmniMatchSymbolWrapper)):
+            result = to_omnimatch_expression(result)
         return result
     wrapped.__name__ = getattr(replacement, '__name__', 'replacement')
     wrapped.__qualname__ = getattr(replacement, '__qualname__', 'replacement')
@@ -141,7 +141,7 @@ UtilityOp = Operation.new(
 
 
 def UtilityOperator(*args):
-    return UtilityOp(*(to_matchpy_expression(arg) for arg in args))
+    return UtilityOp(*(to_omnimatch_expression(arg) for arg in args))
 
 
 A_, B_, C_, F_, G_, a_, b_, c_, d_, e_, f_, g_, h_, i_, j_, k_, l_, m_, \
@@ -1783,15 +1783,15 @@ def eager_NonfreeFactors(u, x):
 def RemoveContentAux(expr, x):
     # An expression free of x has no x-content to strip; Rubi returns it unchanged
     # (e.g. RemoveContent[2*a+4*b, x] reduces to RemoveContentAux[1, x] -> 1).
-    # Guarding here also avoids feeding a bare atom to the matchpy replacer, which
-    # would mis-bind it and raise (matchpy Symbol has no .is_Add).
+    # Guarding here also avoids feeding a bare atom to the omnimatch replacer, which
+    # would mis-bind it and raise (omnimatch Symbol has no .is_Add).
     expr = sympify(expr)
     if not expr.has(x):
         return expr
     result = RemoveContentAux_replacer.replace(UtilityOperator(expr, x))
     if isinstance(result, Operation) and result.head == UtilityOp:
         return expr
-    return matchpy_to_sympy(result)
+    return omnimatch_to_sympy(result)
 
 def RemoveContent(u, x):
     v = eager_NonfreeFactors(u, x)
@@ -2399,7 +2399,7 @@ def eager_RationalFunctionExpand(expr, x):
     if isinstance(result, Operation) and result.head == UtilityOp:
         res = expr
     else:
-        res = matchpy_to_sympy(result)
+        res = omnimatch_to_sympy(result)
     return res
 
 
@@ -2444,7 +2444,7 @@ def eager_ExpandIntegrand(expr, x, extra=None):
         if isinstance(result, Operation) and result.head == UtilityOp:
             res = expr
         else:
-            res = matchpy_to_sympy(result)
+            res = omnimatch_to_sympy(result)
         return res
 
 
@@ -4719,11 +4719,11 @@ def _umatch(u, pat, plain=(), nonunit=()):
        (``(b_+v_)`` matched a Times, so the rewrite rebuilt its own input) and behind
        ``GeneralizedBinomialMatchQ`` answering False where Rubi answers True.
 
-    matchpy models this natively -- ``Wildcard.dot()`` is ``a_`` and
+    omnimatch models this natively -- ``Wildcard.dot()`` is ``a_`` and
     ``Wildcard.optional(name, default)`` is ``a_.`` -- and moving these clauses onto
-    matchpy would enforce it structurally rather than by convention. That is the right
+    omnimatch would enforce it structurally rather than by convention. That is the right
     long-term shape; it is not done here because ``FixInertTrigFunction`` alone is 61
-    clauses on a hot path (~20-30 ms/call already), and matchpy's commutative matcher
+    clauses on a hot path (~20-30 ms/call already), and omnimatch's commutative matcher
     is what blows up exponentially in ``FixSimplify``. Until then this choke point
     gives the same guarantee at no runtime cost: to fix one of the remaining sites,
     add ``plain=(...)`` to its ``_umatch`` call.
@@ -6185,8 +6185,8 @@ def eager_DerivativeDivides(y, u, x):
     guards re-evaluate it on identical (y, u, x) triples throughout the DFS -- profiling
     showed ~15ms per call, a third of a slow integral's runtime.
     """
-    from matchpy import is_match
-    pattern0 = Pattern(to_matchpy_expression(_a_*x), _patched_custom_constraint_call(lambda a : eager_FreeQ(a, x)))
+    from omnimatch import is_match
+    pattern0 = Pattern(to_omnimatch_expression(_a_*x), _patched_custom_constraint_call(lambda a : eager_FreeQ(a, x)))
 
     def f1(y, u, x):
         if eager_PolynomialQ(y, x):
@@ -7070,7 +7070,7 @@ def SimpFixFactor(expr, x):
     result = SimpFixFactor_replacer.replace(UtilityOperator(expr, x))
     if isinstance(result, Operation) and result.head == UtilityOp:
         return expr
-    return matchpy_to_sympy(result)
+    return omnimatch_to_sympy(result)
 
 
 def _FixSimplify():
@@ -7356,17 +7356,17 @@ def _fixsimplify_scalar(expr):
     # (the final ``u_ -> u`` fall-through) unwrapped the root and forced a SECOND
     # full-tree pass of all 22 rules over every node. Trying the rules once at
     # the root is provably equivalent and skips both scans; when nothing fires we
-    # return the ORIGINAL SymPy object, avoiding the matchpy->sympy reconversion.
+    # return the ORIGINAL SymPy object, avoiding the omnimatch->sympy reconversion.
     # (Profiled at 60% of the runtime of rational-function integrals with two
     # symbolic quadratics: PosQ -> TogetherSimplify -> FixSimplify on every large
     # coefficient the DFS produces.)
     subject = UtilityOperator(expr)
     for pattern, replacement in FixSimplify_rules[:-1]:  # last rule is the identity fall-through
         try:
-            subst = next(iter(matchpy_match(subject, pattern)))
+            subst = next(iter(omnimatch_match(subject, pattern)))
         except StopIteration:
             continue
-        return matchpy_to_sympy(replacement(**subst))
+        return omnimatch_to_sympy(replacement(**subst))
     return expr
 
 
@@ -7410,7 +7410,7 @@ def SimplifyAntiderivativeSum(expr, x):
     result = SimplifyAntiderivativeSum_replacer.replace(UtilityOperator(expr, x))
     if isinstance(result, Operation) and result.head == UtilityOp:
         return expr
-    return matchpy_to_sympy(result)
+    return omnimatch_to_sympy(result)
 
 
 def _SimplifyAntiderivative():
@@ -7569,7 +7569,7 @@ def SimplifyAntiderivative(expr, x):
             return SimplifyAntiderivativeSum(Add(*[SimplifyAntiderivative(i, x) for i in u.args]), x)
         return u
     else:
-        return matchpy_to_sympy(result)
+        return omnimatch_to_sympy(result)
 
 
 def _TrigSimplifyAux():
@@ -7702,7 +7702,7 @@ def TrigSimplifyAux(expr):
     result = TrigSimplifyAux_replacer.replace(UtilityOperator(expr))
     if isinstance(result, Operation) and result.head == UtilityOp:
         return expr
-    return matchpy_to_sympy(result)
+    return omnimatch_to_sympy(result)
 
 def Cancel(expr):
     return cancel(expr)

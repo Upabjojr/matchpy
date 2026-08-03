@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import Wildcard
-from matchpy.matching._common import CommutativePatternsParts
+from omnimatch.expressions.constraints import CustomConstraint
+from omnimatch.expressions.expressions import Wildcard
+from omnimatch.matching._common import CommutativePatternsParts
 from .common import *
 
 constr1 = CustomConstraint(lambda x, y: x == y)

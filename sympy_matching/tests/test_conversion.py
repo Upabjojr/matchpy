@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Tests for SymPy ↔ MatchPy expression conversion."""
+"""Tests for SymPy ↔ OmniMatch expression conversion."""
 import sys
 import os
 import importlib
@@ -10,8 +10,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 import sympy
 from sympy import symbols, sin, cos, tan, exp, log, Eq, Integer, Rational, S
 
-from matchpy.expressions.expressions import Operation, NamedAtom, SymbolWrapper, to_matchpy_expression
-from sympy_matching import to_matchpy_expression, matchpy_to_sympy
+from omnimatch.expressions.expressions import Operation, NamedAtom, SymbolWrapper, to_omnimatch_expression
+from sympy_matching import to_omnimatch_expression, omnimatch_to_sympy
 from sympy_matching.operations import (
     ADD, MUL, POW, SIN, COS, TAN, EXP, LOG, EQUALITY,
     SYMPY_NODES, SYMPY_FUNC_TO_HEAD,
@@ -108,7 +108,7 @@ def _build_roundtrip_cases():
 # ─── Test cases ───────────────────────────────────────────────────────────────
 
 CASES = [
-    # Structural (SymPy expr, expected MatchPy expr)
+    # Structural (SymPy expr, expected OmniMatch expr)
     (x, SymbolWrapper(x)),
     (Integer(42), SymbolWrapper(Integer(42))),
     (Integer(-3), SymbolWrapper(Integer(-3))),
@@ -144,31 +144,31 @@ ROUNDTRIP_CASES = _build_roundtrip_cases()
 
 class TestConversions:
 
-    # ── Structural: verify exact MatchPy tree shape ───────────────────────────
+    # ── Structural: verify exact OmniMatch tree shape ───────────────────────────
 
-    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
-    def test_convert_sympy_to_matchpy(self, expr_sympy, expr_matchpy):
-        expr_matchpy_converted = to_matchpy_expression(expr_sympy)
-        assert expr_matchpy_converted == expr_matchpy
-        if isinstance(expr_matchpy, Operation):
-            assert isinstance(expr_matchpy_converted, Operation)
-            assert expr_matchpy_converted.head == expr_matchpy.head
-            assert len(expr_matchpy_converted.operands) == len(expr_matchpy.operands)
-        if isinstance(expr_matchpy, SymbolWrapper):
-            assert isinstance(expr_matchpy_converted, SymbolWrapper)
-            assert expr_matchpy_converted.value == expr_matchpy.value
-            assert expr_matchpy_converted.name == expr_matchpy.name
+    @pytest.mark.parametrize("expr_sympy,expr_omnimatch", CASES, ids=CASE_IDS)
+    def test_convert_sympy_to_omnimatch(self, expr_sympy, expr_omnimatch):
+        expr_omnimatch_converted = to_omnimatch_expression(expr_sympy)
+        assert expr_omnimatch_converted == expr_omnimatch
+        if isinstance(expr_omnimatch, Operation):
+            assert isinstance(expr_omnimatch_converted, Operation)
+            assert expr_omnimatch_converted.head == expr_omnimatch.head
+            assert len(expr_omnimatch_converted.operands) == len(expr_omnimatch.operands)
+        if isinstance(expr_omnimatch, SymbolWrapper):
+            assert isinstance(expr_omnimatch_converted, SymbolWrapper)
+            assert expr_omnimatch_converted.value == expr_omnimatch.value
+            assert expr_omnimatch_converted.name == expr_omnimatch.name
 
-    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
-    def test_convert_matchpy_to_sympy(self, expr_sympy, expr_matchpy):
-        expr_sympy_converted = matchpy_to_sympy(expr_matchpy)
+    @pytest.mark.parametrize("expr_sympy,expr_omnimatch", CASES, ids=CASE_IDS)
+    def test_convert_omnimatch_to_sympy(self, expr_sympy, expr_omnimatch):
+        expr_sympy_converted = omnimatch_to_sympy(expr_omnimatch)
         assert expr_sympy_converted == expr_sympy
 
-    @pytest.mark.parametrize("expr_sympy,expr_matchpy", CASES, ids=CASE_IDS)
-    def test_roundtrip_structural(self, expr_sympy, expr_matchpy):
-        """SymPy → MatchPy → SymPy preserves expressions (structural cases)."""
-        mp_expr = to_matchpy_expression(expr_sympy)
-        result = matchpy_to_sympy(mp_expr)
+    @pytest.mark.parametrize("expr_sympy,expr_omnimatch", CASES, ids=CASE_IDS)
+    def test_roundtrip_structural(self, expr_sympy, expr_omnimatch):
+        """SymPy → OmniMatch → SymPy preserves expressions (structural cases)."""
+        mp_expr = to_omnimatch_expression(expr_sympy)
+        result = omnimatch_to_sympy(mp_expr)
         if isinstance(expr_sympy, sympy.Eq):
             assert result == expr_sympy
         else:
@@ -178,27 +178,27 @@ class TestConversions:
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_roundtrip(self, expr):
-        """SymPy → MatchPy → SymPy roundtrip for every registered node."""
-        mp_expr = to_matchpy_expression(expr)
-        result = matchpy_to_sympy(mp_expr)
+        """SymPy → OmniMatch → SymPy roundtrip for every registered node."""
+        mp_expr = to_omnimatch_expression(expr)
+        result = omnimatch_to_sympy(mp_expr)
         assert result == expr
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_produces_operation(self, expr):
-        """to_matchpy_expression produces an Operation for non-atom function calls."""
-        mp_expr = to_matchpy_expression(expr)
+        """to_omnimatch_expression produces an Operation for non-atom function calls."""
+        mp_expr = to_omnimatch_expression(expr)
         assert isinstance(mp_expr, Operation)
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_head_is_registered(self, expr):
         """Top-level head belongs to the registered set."""
-        mp_expr = to_matchpy_expression(expr)
+        mp_expr = to_omnimatch_expression(expr)
         assert mp_expr.head in SYMPY_FUNC_TO_HEAD.values()
 
     @pytest.mark.parametrize("expr", ROUNDTRIP_CASES)
     def test_dispatch_is_direct(self, expr):
         """Singledispatch routes directly, not through the SympyBasic fallback."""
-        handler = to_matchpy_expression.dispatch(type(expr))
+        handler = to_omnimatch_expression.dispatch(type(expr))
         assert 'basic' not in handler.__name__.lower(), (
             f"{type(expr).__name__} falls through to the generic handler"
         )
@@ -209,22 +209,22 @@ class TestConversions:
 
     def test_hyper_roundtrip(self):
         expr = hyper((S(1), S(2)), (S(3),), x)
-        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
+        assert omnimatch_to_sympy(to_omnimatch_expression(expr)) == expr
 
     def test_meijerg_roundtrip(self):
         expr = meijerg((S(1),), (S(2),), (S(3),), (S(4),), x)
-        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
+        assert omnimatch_to_sympy(to_omnimatch_expression(expr)) == expr
 
     @pytest.mark.xfail(reason="Piecewise uses ExprCondPair internally")
     def test_piecewise_roundtrip(self):
         from sympy.functions.elementary.piecewise import Piecewise
         expr = Piecewise((x, x > 0), (S(0), True))
-        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
+        assert omnimatch_to_sympy(to_omnimatch_expression(expr)) == expr
 
 
 # ── hyper / meijerg / appellf1 round-trip ────────────────────────────────────
 # These special functions store their parameter lists in TupleArg containers.
-# matchpy_to_sympy used to rebuild them as cls(*args), passing the TupleArg back
+# omnimatch_to_sympy used to rebuild them as cls(*args), passing the TupleArg back
 # in, which the constructor rejects (hyper does Tuple(*ap) -> TypeError). The fix
 # unwraps TupleArg operands to plain tuples. Regression guard for the crash that
 # broke sqrt(a+b*x)/x, 1/(x*sqrt(a+b*x)), x^k/(a+b*x)^(3/2), ... integration.
@@ -232,19 +232,19 @@ class TestConversions:
 def test_hyper_roundtrip():
     a, b, c, w = symbols('a b c w')
     h = hyper((a, b), (c,), w)
-    assert matchpy_to_sympy(to_matchpy_expression(h)) == h
+    assert omnimatch_to_sympy(to_omnimatch_expression(h)) == h
 
 
 def test_meijerg_roundtrip():
     a, b, c, d, w = symbols('a b c d w')
     g = meijerg(((a,), (b,)), ((c,), (d,)), w)
-    assert matchpy_to_sympy(to_matchpy_expression(g)) == g
+    assert omnimatch_to_sympy(to_omnimatch_expression(g)) == g
 
 
 def test_appellf1_roundtrip():
     a, b1, b2, c, x1, y1 = symbols('a b1 b2 c x1 y1')
     f = appellf1(a, b1, b2, c, x1, y1)
-    assert matchpy_to_sympy(to_matchpy_expression(f)) == f
+    assert omnimatch_to_sympy(to_omnimatch_expression(f)) == f
 
 
 class TestSympyTupleHead:
@@ -257,35 +257,35 @@ class TestSympyTupleHead:
 
     def test_roundtrips_as_a_real_sympy_tuple(self):
         t = sympy.Tuple(x, S(1))
-        rt = matchpy_to_sympy(to_matchpy_expression(t))
+        rt = omnimatch_to_sympy(to_omnimatch_expression(t))
         assert rt == t
         assert type(rt) is sympy.Tuple
 
     def test_a_plain_python_tuple_still_roundtrips_separately(self):
         """TUPLE_HEAD ('tuple') and the new TUPLE head ('Tuple') must not collide."""
-        rt = matchpy_to_sympy(to_matchpy_expression((x, S(1))))
+        rt = omnimatch_to_sympy(to_omnimatch_expression((x, S(1))))
         assert rt == (x, S(1))
         assert type(rt) is tuple
 
     def test_the_two_heads_are_distinct(self):
         from sympy_matching.conversion import TUPLE_HEAD
-        assert to_matchpy_expression(sympy.Tuple(x)).head != TUPLE_HEAD
-        assert to_matchpy_expression((x,)).head == TUPLE_HEAD
+        assert to_omnimatch_expression(sympy.Tuple(x)).head != TUPLE_HEAD
+        assert to_omnimatch_expression((x,)).head == TUPLE_HEAD
 
     def test_nested_inside_a_derivative_survives(self):
         f = sympy.Function('f')
         d = sympy.Derivative(f(x), (x, 3))
-        assert matchpy_to_sympy(to_matchpy_expression(d)) == d
+        assert omnimatch_to_sympy(to_omnimatch_expression(d)) == d
 
     def test_rebuilding_from_args_is_identity_after_a_roundtrip(self):
         """The exact traversal (TrigSimplifyRecur) that used to corrupt Derivative."""
         f = sympy.Function('f')
         d = sympy.Derivative(f(x), (x, 2))
-        rebuilt_args = [matchpy_to_sympy(to_matchpy_expression(a)) for a in d.args]
+        rebuilt_args = [omnimatch_to_sympy(to_omnimatch_expression(a)) for a in d.args]
         assert d.func(*rebuilt_args) == d
 
     def test_hyper_tuplearg_is_not_captured_by_the_tuple_registration(self):
         """TupleArg subclasses Tuple; head lookup is by EXACT type, so hyper keeps
         its own handling and still roundtrips."""
         expr = hyper((S(1), S(2)), (S(3),), x)
-        assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
+        assert omnimatch_to_sympy(to_omnimatch_expression(expr)) == expr

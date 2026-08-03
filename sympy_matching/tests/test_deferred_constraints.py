@@ -2,7 +2,7 @@
 """`build_replacer(defer_constraint=...)`: guards deferred to attempt time.
 
 Consumers that sort the matcher's yields by rule priority EXHAUST the match generator,
-and matchpy evaluates Pattern-attached constraints for EVERY candidate during
+and omnimatch evaluates Pattern-attached constraints for EVERY candidate during
 enumeration. A guard that is itself expensive (in a rewrite system: one that
 recursively invokes the system) then runs once per candidate before the first rule is
 ever attempted. `defer_constraint` moves selected guards into the replacement
@@ -16,7 +16,7 @@ from sympy import Symbol
 
 from sympy_matching.constraint import SymPyMatchingConstraint
 from sympy_matching.matching_rule import (
-    SymPyReplacementPattern, build_replacer, to_matchpy_expression)
+    SymPyReplacementPattern, build_replacer, to_omnimatch_expression)
 from sympy_matching.wild import WildSymbol
 
 x = Symbol('x')
@@ -45,7 +45,7 @@ def _rule(tag):
 def test_without_deferral_the_guard_runs_during_enumeration():
     SpyConstraint.calls = []
     rep = build_replacer([_rule('pass_a')])
-    list(rep.matcher.match(to_matchpy_expression(x**3)))   # enumerate ONLY
+    list(rep.matcher.match(to_omnimatch_expression(x**3)))   # enumerate ONLY
     assert SpyConstraint.calls == ['pass_a'], \
         'a Pattern-attached guard is evaluated by match() itself'
 
@@ -53,7 +53,7 @@ def test_without_deferral_the_guard_runs_during_enumeration():
 def test_deferred_guard_does_not_run_during_enumeration():
     SpyConstraint.calls = []
     rep = build_replacer([_rule('pass_a')], defer_constraint=lambda c: True)
-    matches = list(rep.matcher.match(to_matchpy_expression(x**3)))
+    matches = list(rep.matcher.match(to_omnimatch_expression(x**3)))
     assert SpyConstraint.calls == [], 'deferred guards must not run during match()'
     assert len(matches) == 1, 'the candidate is still yielded'
 
@@ -61,7 +61,7 @@ def test_deferred_guard_does_not_run_during_enumeration():
 def test_deferred_guard_runs_at_attempt_time_and_passes():
     SpyConstraint.calls = []
     rep = build_replacer([_rule('pass_a')], defer_constraint=lambda c: True)
-    [(replacement, subst)] = list(rep.matcher.match(to_matchpy_expression(x**3)))
+    [(replacement, subst)] = list(rep.matcher.match(to_omnimatch_expression(x**3)))
     result = replacement(**subst)
     assert SpyConstraint.calls == ['pass_a']
     assert result is not None
@@ -72,7 +72,7 @@ def test_failing_deferred_guard_raises_stop_iteration():
     already treats it as 'try the next candidate'."""
     SpyConstraint.calls = []
     rep = build_replacer([_rule('fail_b')], defer_constraint=lambda c: True)
-    [(replacement, subst)] = list(rep.matcher.match(to_matchpy_expression(x**3)))
+    [(replacement, subst)] = list(rep.matcher.match(to_omnimatch_expression(x**3)))
     with pytest.raises(StopIteration):
         replacement(**subst)
     assert SpyConstraint.calls == ['fail_b']
@@ -90,7 +90,7 @@ def test_predicate_selects_which_guards_defer():
     )
     rep = build_replacer([rule],
                          defer_constraint=lambda c: 'costly' in str(c))
-    list(rep.matcher.match(to_matchpy_expression(x**3)))
+    list(rep.matcher.match(to_omnimatch_expression(x**3)))
     assert SpyConstraint.calls == ['pass_cheap'], \
         'only the non-deferred guard runs during enumeration'
 
@@ -114,13 +114,13 @@ class TestAdditionOrderIsStored:
 
     def test_indices_follow_addition_order(self):
         rep = build_replacer(self._rules())
-        matches = list(rep.matcher.match(to_matchpy_expression(x**3)))
+        matches = list(rep.matcher.match(to_omnimatch_expression(x**3)))
         indices = sorted(fn._rule_index for fn, _ in matches)
         assert indices == [0, 1, 2]
 
     def test_sorting_by_index_recovers_supply_order(self):
         rep = build_replacer(self._rules())
-        matches = sorted(rep.matcher.match(to_matchpy_expression(x**3)),
+        matches = sorted(rep.matcher.match(to_omnimatch_expression(x**3)),
                          key=lambda rs: rs[0]._rule_index)
         results = [fn(**subst)[0] for fn, subst in matches]
         assert [str(r) for r in results] == ['r0', 'r1', 'r2']
@@ -131,5 +131,5 @@ class TestAdditionOrderIsStored:
             pattern=x**m_, constraints=(SpyConstraint(Symbol('pass_z')),),
             replacement=Symbol('rz'), module_name='ord', rule_number=9)]
         rep = build_replacer(rules, defer_constraint=lambda c: True)
-        [(fn, _)] = list(rep.matcher.match(to_matchpy_expression(x**2)))
+        [(fn, _)] = list(rep.matcher.match(to_omnimatch_expression(x**2)))
         assert fn._rule_index == 0

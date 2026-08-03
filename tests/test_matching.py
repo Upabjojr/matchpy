@@ -4,11 +4,11 @@ import hypothesis.strategies as st
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.constraints import CustomConstraint
-from matchpy.expressions.expressions import NamedAtom, Wildcard, Pattern
-from matchpy.expressions.functions import get_variables
-from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.functions import substitute
+from omnimatch.expressions.constraints import CustomConstraint
+from omnimatch.expressions.expressions import NamedAtom, Wildcard, Pattern
+from omnimatch.expressions.functions import get_variables
+from omnimatch.matching.many_to_one import ManyToOneMatcher
+from omnimatch.functions import substitute
 from .utils import MockConstraint, assert_match_as_expected
 from .common import *
 
@@ -940,9 +940,9 @@ class TestBipartiteMembershipHoisting:
 
     def test_commutative_matching_still_matches(self):
         """End-to-end guard on the rewritten loop."""
-        from matchpy.expressions.expressions import Operation, OperationHead, Arity, Wildcard
-        from matchpy.matching.many_to_one import ManyToOneMatcher
-        from matchpy.expressions.expressions import Pattern, SymbolWrapper
+        from omnimatch.expressions.expressions import Operation, OperationHead, Arity, Wildcard
+        from omnimatch.matching.many_to_one import ManyToOneMatcher
+        from omnimatch.expressions.expressions import Pattern, SymbolWrapper
         head = OperationHead(name='f', arity=Arity.variadic, commutative=True)
         x_, y_ = Wildcard.dot('x'), Wildcard.dot('y')
         matcher = ManyToOneMatcher()
@@ -987,7 +987,7 @@ class TestCommutativeMatchLoopInvariants:
 
     def test_dict_key_view_difference_equals_set_difference(self):
         """`diff` is computed from dict key views instead of building two sets."""
-        from matchpy.expressions.substitution import Substitution
+        from omnimatch.expressions.substitution import Substitution
         old = Substitution({'a': 1, 'b': 2})
         new = Substitution({'a': 1, 'b': 2, 'c': 3, 'd': 4})
         assert (new.keys() - old.keys()) == (set(new.keys()) - set(old.keys()))
@@ -1006,9 +1006,9 @@ class TestCommutativeMatchLoopInvariants:
     def test_commutative_backtracking_still_yields_every_match(self):
         """End-to-end: state must be fully restored between matches, or later
         alternatives silently disappear."""
-        from matchpy.expressions.expressions import (
+        from omnimatch.expressions.expressions import (
             Operation, OperationHead, Arity, Wildcard, Pattern, SymbolWrapper)
-        from matchpy.matching.many_to_one import ManyToOneMatcher
+        from omnimatch.matching.many_to_one import ManyToOneMatcher
         head = OperationHead(name='g', arity=Arity.variadic, commutative=True)
         matcher = ManyToOneMatcher()
         matcher.add(Pattern(Operation(head, Wildcard.dot('u'), Wildcard.dot('v'))), label='p')

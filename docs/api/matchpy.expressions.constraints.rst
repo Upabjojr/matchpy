@@ -1,7 +1,7 @@
-matchpy.expressions.constraints module
+omnimatch.expressions.constraints module
 ======================================
 
-.. automodule:: matchpy.expressions.constraints
+.. automodule:: omnimatch.expressions.constraints
     :members:
     :undoc-members:
     :show-inheritance:

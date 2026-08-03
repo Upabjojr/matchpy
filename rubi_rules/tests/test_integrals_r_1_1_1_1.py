@@ -16,7 +16,7 @@ import pytest
 import sympy
 from sympy import Symbol, Integer, Rational, log, sqrt, simplify, S
 
-from rubi_rules.base_objects import _matchpy_integrate, _rubi_integrator, build_tracing_replacer
+from rubi_rules.base_objects import _omnimatch_integrate, _rubi_integrator, build_tracing_replacer
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ a, b, m, n = sympy.symbols('a b m n')
 
 def _integrate(expr, replacer):
     """Integrate expr w.r.t. x using the provided replacer."""
-    return _matchpy_integrate(expr, x, replacer)[0]
+    return _omnimatch_integrate(expr, x, replacer)[0]
 
 
 # ---------------------------------------------------------------------------

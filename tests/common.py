@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from matchpy.expressions.expressions import (
+from omnimatch.expressions.expressions import (
     Arity, Operation, NamedAtom, Wildcard, make_dot_variable, make_plus_variable, make_star_variable
 )
 

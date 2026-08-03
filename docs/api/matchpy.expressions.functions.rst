@@ -1,7 +1,7 @@
-matchpy.expressions.functions module
+omnimatch.expressions.functions module
 ====================================
 
-.. automodule:: matchpy.expressions.functions
+.. automodule:: omnimatch.expressions.functions
     :members:
     :undoc-members:
     :show-inheritance:

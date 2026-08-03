@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Reusable SymPy -> matchpy pattern-matching-rule machinery.
+"""Reusable SymPy -> omnimatch pattern-matching-rule machinery.
 
 Everything needed to turn a set of rules -- each a SymPy *pattern*, a SymPy
 *replacement*, and SymPy *constraints*, all written with ordinary SymPy objects
-mixed with :class:`~sympy_matching.wild.WildSymbol` -- into a matchpy
-:class:`~matchpy.matching.many_to_one.ManyToOneReplacer`. Depends ONLY on
-``matchpy`` and ``sympy_matching`` (NOT on ``sympy_wolfram`` or ``rubi_rules``),
+mixed with :class:`~sympy_matching.wild.WildSymbol` -- into a omnimatch
+:class:`~omnimatch.matching.many_to_one.ManyToOneReplacer`. Depends ONLY on
+``omnimatch`` and ``sympy_matching`` (NOT on ``sympy_wolfram`` or ``rubi_rules``),
 so any matcher (integration, equation/ODE solving, term rewriting, ...) can reuse it.
 
 - :class:`SymPyReplacementPattern` -- one (pattern, constraints, replacement) rule.
@@ -13,8 +13,8 @@ so any matcher (integration, equation/ODE solving, term rewriting, ...) can reus
   ManyToOneReplacer from rules; each
   replacement returns ``(result, (rule.module_name, rule.rule_number))`` so the
   firing rule can be traced.
-- The private helpers lambdify the SymPy replacement into a matchpy replacement
-  callback and translate SymPy/logic constraints into matchpy ``CustomConstraint``s.
+- The private helpers lambdify the SymPy replacement into a omnimatch replacement
+  callback and translate SymPy/logic constraints into omnimatch ``CustomConstraint``s.
 
 History: lifted out of ``rubi_rules.base_objects`` (was Rubi-specific by location
 only), where it was called ``RubiRulePattern``/``SympyMatchingRule``.
@@ -26,12 +26,12 @@ from typing import Any, List, Tuple
 import sympy
 from pydantic import BaseModel
 
-from matchpy.expressions.expressions import Pattern, to_matchpy_expression
-from matchpy.expressions.constraints import CustomConstraint
-from matchpy.matching.many_to_one import ManyToOneReplacer
-from matchpy.functions import ReplacementRule
+from omnimatch.expressions.expressions import Pattern, to_omnimatch_expression
+from omnimatch.expressions.constraints import CustomConstraint
+from omnimatch.matching.many_to_one import ManyToOneReplacer
+from omnimatch.functions import ReplacementRule
 
-from sympy_matching.conversion import matchpy_to_sympy
+from sympy_matching.conversion import omnimatch_to_sympy
 from sympy_matching.wild import WildSymbol
 from sympy_matching.constraint import SymPyMatchingConstraint, _resolve_with_substitution
 
@@ -70,8 +70,8 @@ def _make_replacement_fn(replacement_expr, rule):
     # captured by a local that happens to share its name.
     def _replacement(**match_dict):
         sympy_subs = {}
-        for name, matchpy_val in match_dict.items():
-            sympy_subs[name] = matchpy_to_sympy(matchpy_val)
+        for name, omnimatch_val in match_dict.items():
+            sympy_subs[name] = omnimatch_to_sympy(omnimatch_val)
         result = replacement_expr
         for ws in _collect_wild_symbols(replacement_expr).values():
             if ws.wildcard_name in sympy_subs:
@@ -82,7 +82,7 @@ def _make_replacement_fn(replacement_expr, rule):
         # skipped, matching Mathematica's Condition semantics.
         if hasattr(result, 'doit'):
             result = result.doit()
-        return to_matchpy_expression(result)
+        return to_omnimatch_expression(result)
 
     _replacement.__qualname__ = f"{rule.module_name}:[{rule.rule_number}]"
     _replacement.__module__ = ""
@@ -102,7 +102,7 @@ def _extract_wild_names(constraint_obj):
     The walk must therefore be GENERIC over ``.args``. An earlier version knew
     only about Not/Or/And and ``.variables``, so it walked straight past the
     ``If`` wrapper above and reported that the guard used no wildcards at all --
-    whereupon :func:`_make_matchpy_constraint` dropped it and the rule ran
+    whereupon :func:`_make_omnimatch_constraint` dropped it and the rule ran
     unguarded. Seven Rubi rules were affected.
     """
     names: set = set()
@@ -226,14 +226,14 @@ def _make_constraint_checker(constraint_obj, variables):
     # _resolve_with_substitution, keyed by wildcard_name.
     #
     # Why the dedicated path: the guard's variables are WildSymbols, which cross the
-    # sympy<->matchpy boundary as Wildcards; a plain Symbol crosses as a SymbolWrapper
+    # sympy<->omnimatch boundary as Wildcards; a plain Symbol crosses as a SymbolWrapper
     # CONSTANT. So the matcher hands back values by wildcard NAME (as SymbolWrappers,
     # e.g. 'm' -> SymbolWrapper(1)), never as an object equal to a Symbol('m') or even a
     # freshly built WildSymbol('m') (a WildSymbol is instance-unique). The only sound move
     # is to xreplace the guard's OWN wildcard instances, matched by name, with the match
     # values converted back to SymPy -- exactly what _resolve_with_substitution does.
     def check_boolean_guard(**kwargs):
-        substitution = {name: matchpy_to_sympy(kwargs[name])
+        substitution = {name: omnimatch_to_sympy(kwargs[name])
                         for name in variables if name in kwargs}
         result = _resolve_with_substitution(constraint_obj, substitution)
         # A bare relational leaves any deferred node (GCD, Denominator, ...) unevaluated
@@ -247,15 +247,15 @@ def _make_constraint_checker(constraint_obj, variables):
     return check_boolean_guard
 
 
-def _make_matchpy_constraint(constraint_obj, pattern_wilds):
-    """Convert a SymPy-level constraint into a MatchPy ``CustomConstraint``.
+def _make_omnimatch_constraint(constraint_obj, pattern_wilds):
+    """Convert a SymPy-level constraint into a OmniMatch ``CustomConstraint``.
 
     ``pattern_wilds`` is the mapping of wildcard names the PATTERN binds (from
-    :func:`_collect_wild_symbols`); only those may be declared to MatchPy.
+    :func:`_collect_wild_symbols`); only those may be declared to OmniMatch.
     Handles SymPyMatchingConstraint, Not/Or/And wrappers, and generic SymPy Booleans.
     """
     # A constraint may mention variables the PATTERN does not bind (MatchQ scopes its
-    # inner pattern's variables to itself). MatchPy can only supply what it matched, and
+    # inner pattern's variables to itself). OmniMatch can only supply what it matched, and
     # CustomConstraint.__call__ silently returns True when a declared variable is missing
     # -- so declaring them made the whole guard a no-op. Declare only what the pattern
     # binds; the rest stay free variables inside the constraint.
@@ -286,7 +286,7 @@ def _make_matchpy_constraint(constraint_obj, pattern_wilds):
 
     checker = _make_constraint_checker(constraint_obj, variables)
 
-    # Build a lambda with proper parameter names for MatchPy introspection. The
+    # Build a lambda with proper parameter names for OmniMatch introspection. The
     # SOURCE only depends on the variable-name tuple, so the compile step is cached
     # (parsing 29k+ tiny lambdas was ~1s of Rubi matcher construction); only the
     # cheap eval-of-code-object binding the concrete checker runs per rule.
@@ -313,7 +313,7 @@ def _make_tracing_replacement_fn(replacement_expr, rule):
     _replacement.__module__ = base_replacement.__module__
     # Expose the SymPy replacement expression explicitly so serialization does not have
     # to guess at closure cell order. Attribute name kept as `_rubi_replacement_expr`
-    # because matchpy's json_serialization reads exactly that name.
+    # because omnimatch's json_serialization reads exactly that name.
     _replacement._rubi_replacement_expr = replacement_expr
     return _replacement
 
@@ -339,19 +339,19 @@ def _wrap_with_deferred_guards(replacement_fn, deferred_checkers):
 
 
 def build_replacer(rules: List[SymPyReplacementPattern], defer_constraint=None) -> ManyToOneReplacer:
-    """Assemble a matchpy ManyToOneReplacer from SymPyReplacementPattern objects.
+    """Assemble a omnimatch ManyToOneReplacer from SymPyReplacementPattern objects.
 
-    Each rule's SymPy pattern/constraints/replacement are converted to matchpy form;
+    Each rule's SymPy pattern/constraints/replacement are converted to omnimatch form;
     the replacement callback returns ``(result, (module_name, rule_number))`` so the
     firing rule can always be traced. (Historic alias: ``build_tracing_replacer``.)
 
     ``defer_constraint`` is an optional predicate over a rule constraint. A constraint
-    for which it returns True is NOT attached to the matchpy Pattern; it is deferred
+    for which it returns True is NOT attached to the omnimatch Pattern; it is deferred
     into the replacement callback and evaluated at ATTEMPT time, raising StopIteration
     on failure (the ordinary "condition failed" signal).
 
     Why a caller might want this: consumers that sort the matcher's yields by rule
-    priority EXHAUST the match generator, and matchpy evaluates Pattern-attached
+    priority EXHAUST the match generator, and omnimatch evaluates Pattern-attached
     constraints for EVERY candidate during enumeration. A guard whose evaluation is
     itself expensive (in a rewrite system: one that recursively invokes the system)
     then runs once per candidate before the first rule is ever attempted. Deferring
@@ -366,18 +366,18 @@ def build_replacer(rules: List[SymPyReplacementPattern], defer_constraint=None) 
     """
     replacer = ManyToOneReplacer()
     for index, rule in enumerate(rules):
-        matchpy_pattern_expr = to_matchpy_expression(rule.pattern)
+        omnimatch_pattern_expr = to_omnimatch_expression(rule.pattern)
         pattern_wilds = _collect_wild_symbols(rule.pattern)
         cheap, expensive = [], []
         for constraint in rule.constraints:
             target = expensive if (defer_constraint is not None
                                    and defer_constraint(constraint)) else cheap
             target.append(constraint)
-        matchpy_constraints = [
-            _make_matchpy_constraint(constraint, pattern_wilds)
+        omnimatch_constraints = [
+            _make_omnimatch_constraint(constraint, pattern_wilds)
             for constraint in cheap
         ]
-        pattern = Pattern(matchpy_pattern_expr, *matchpy_constraints)
+        pattern = Pattern(omnimatch_pattern_expr, *omnimatch_constraints)
         replacement_fn = _make_tracing_replacement_fn(rule.replacement, rule)
         if expensive:
             variables = set(pattern_wilds)

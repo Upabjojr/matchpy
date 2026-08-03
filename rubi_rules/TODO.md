@@ -51,7 +51,7 @@ form and the integration loops.
   is kept only as a fallback. So rule `[11]` (→ `Erf`) beats rule `[43]`'s
   `CannotIntegrate` regardless of yield order.
 - **`CannotIntegrate` detected by head name** (`_dfs_is_clean`): round-tripping a
-  rule's replacement through MatchPy turns `rubi_utils.CannotIntegrate` into a
+  rule's replacement through OmniMatch turns `rubi_utils.CannotIntegrate` into a
   plain `Function('CannotIntegrate')`, so an isinstance/atoms check against the
   imported class misses it — this was the bug that made the first DFS still return
   `CannotIntegrate`.
@@ -72,7 +72,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [X] rubi_integrate(sin(x), sin(x)) returns correctly sin(x)**2/2, but rubi_integrate(x*sin(x), sin(x))
       probably returns an incorrect result, it should rather raise an exception and tell the user to use a solver to replace the variable u=sin(x)
       (i.e. allow complex expressions to be integration variables only if the integrand depends trivially on them, in the example before all instances of variable x get replaced with a simple u=sin(x) substitution)
-- [ ] Use MatchPy codegen to generate a static decision tree for all rules. Is it correct?
+- [ ] Use OmniMatch codegen to generate a static decision tree for all rules. Is it correct?
       Can we reduce it to a reasonable size?
 - [ ] do we even need to be able to serialize ManyToOneMatcher to JSON?
 - [X] clean up `ffl_to_sympy_code_short`: it should accept
@@ -90,13 +90,13 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] code generator for rubi_rules/rules/** should avoid creating Symbol('...') objects in the code... just define them at the start of the file.
 - [ ] move more stuff unrelated to rubi_rules/ to sympy_wolfram/
 - [ ] restructure sympy_wolfram/ to clearly separate the parser, the interpreter and the implemented mathematica objects.
-- [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in MatchPy-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
+- [ ] loading Rubi rules from SymPy is very expensive... but what about writing them directly in OmniMatch-like syntax? After loading the rules one could just create the same rules with `to_expression(pattern)`
 - [ ] rename `to_expression` (and also get rid of `from_expression`)
 - [ ] should not depend on SymPy (maybe with some exceptions)
 - [X] remove "fixed_var" from sympy_wolfram/
 - [X] SymPy parser has been updated to correctly handle "Derivative" nodes.
 - [ ] (solved?) rubi_integrate(exp(x)*cos(x)*x, x, return_matched_rules=True)
-- [ ] create sympy_to_matchpy and matchpy_to_sympy function, and _sympy_to_matchpy / _matchpy_to_sympy that are single dispatched.
+- [ ] create sympy_to_omnimatch and omnimatch_to_sympy function, and _sympy_to_omnimatch / _omnimatch_to_sympy that are single dispatched.
 - [X] rename_scoped_locals: shouldn't this act entirely inside the With, Module, Block inside sympy_wolfram/? Why is it imported in rubi_rules/? Maybe these constructs should instead replace their binding symbols with Dummy variables.
 
 - [ ] are there memory leaks?
@@ -105,8 +105,8 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] remove not used variables from generated rules.
 - [X] RubiConstraint ==> rename and make it a subtype of MathematicaExpr? (done: renamed to MathematicaConstraint, now a subclass of (MathematicaExpr, SymPyMatchingConstraint) in sympy_wolfram/constraints.py)
 - [X] should MathematicaConstraint and the logic to build constraints based on SymPy expressions be moved to sympy_matching/ ? e.g. create the replacement lambda which is currently done in rubi_rules/ ? Maybe even SymPyReplacementPattern should be renamed and moved to sympy_matching/ ? (done: generic base SymPyMatchingConstraint + SymPyReplacementPattern live in sympy_matching/; MathematicaConstraint moved to sympy_wolfram/; SymPyReplacementPattern is now an alias of SymPyReplacementPattern)
-- [ ] FreeQ in MatchPy should be removed, it's a duplicate of the other FreeQ. (partially done: renamed to FreeOf, not removed)
-- [ ] rename MatchPy classes that have a naming conflict with SymPy classes.
+- [ ] FreeQ in OmniMatch should be removed, it's a duplicate of the other FreeQ. (partially done: renamed to FreeOf, not removed)
+- [ ] rename OmniMatch classes that have a naming conflict with SymPy classes.
 - [ ] use Fable for more thorough investigation of failures difficult to detect reported in this TODO file.
 - [X] name conflict of utility and eager functions: prepend eager_ to their names (done: eager functions are eager_<Name>; deferred classes keep the bare name)
 - [X] all stuff managing rules and creating replacement pattern should be moved to sympy_matching/ (maybe even constraints, MathematicaConstraint, which should then be renamed). Rule pattern matching should be generically used by SymPy, independently of Wolfram and Rubi. (done: sympy_matching/matching_rule.py + constraint.py, no Wolfram/Rubi dependency)

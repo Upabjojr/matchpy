@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from matchpy.matching.hopcroft_karp import HopcroftKarp
+from omnimatch.matching.hopcroft_karp import HopcroftKarp
 
 
 class TestHopcroftKarp:

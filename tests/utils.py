@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from pydantic import ConfigDict, Field, PrivateAttr
-from matchpy.expressions.constraints import Constraint
-from matchpy.expressions.substitution import Substitution
-from matchpy.expressions.expressions import Pattern
+from omnimatch.expressions.constraints import Constraint
+from omnimatch.expressions.substitution import Substitution
+from omnimatch.expressions.expressions import Pattern
 
 
 class MockConstraint(Constraint):

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""The reusable SymPy -> matchpy rule machinery works with ONLY matchpy + sympy_matching.
+"""The reusable SymPy -> omnimatch rule machinery works with ONLY omnimatch + sympy_matching.
 
 This is the acceptance test for the refactor that lifted ``SymPyReplacementPattern`` /
 ``SymPyMatchingConstraint`` / ``build_tracing_replacer`` out of rubi_rules/sympy_wolfram:
 a caller can define pattern-matching rules over ordinary SymPy expressions mixed with
-``WildSymbol`` -- with custom constraints -- and build a working matchpy
+``WildSymbol`` -- with custom constraints -- and build a working omnimatch
 ``ManyToOneReplacer``, importing NOTHING from ``sympy_wolfram`` or ``rubi_rules``.
 """
 import ast
@@ -13,14 +13,14 @@ import importlib
 import sympy
 from sympy import Symbol, Integer, sin, cos
 
-# Only matchpy + sympy_matching -- no sympy_wolfram, no rubi_rules.
+# Only omnimatch + sympy_matching -- no sympy_wolfram, no rubi_rules.
 from sympy_matching import (
     WildSymbol,
     SymPyReplacementPattern,
     SymPyMatchingConstraint,
     build_tracing_replacer,
-    to_matchpy_expression,
-    matchpy_to_sympy,
+    to_omnimatch_expression,
+    omnimatch_to_sympy,
 )
 
 
@@ -39,10 +39,10 @@ def _apply_first(replacer, subject_expr):
     """Mirror how a matcher uses the tracing replacer: take the first match, run its
     replacement callback (which returns ``(result, trace_label)``), return the SymPy
     result and the trace label -- or ``(None, None)`` if nothing matched."""
-    mp = to_matchpy_expression(subject_expr)
+    mp = to_omnimatch_expression(subject_expr)
     for replacement, subst in replacer.matcher.match(mp):
         result_mp, label = replacement(**subst)
-        return matchpy_to_sympy(result_mp), label
+        return omnimatch_to_sympy(result_mp), label
     return None, None
 
 
@@ -108,31 +108,31 @@ def test_constraint_is_sympy_boolean_and_composes():
     assert c.check(a=Symbol('y')) is False
 
 
-def test_matchpy_to_sympy_is_extensible_via_singledispatch():
-    """matchpy_to_sympy is a singledispatch function: an external library can
-    register a converter for its own MatchPy node type without touching this one."""
+def test_omnimatch_to_sympy_is_extensible_via_singledispatch():
+    """omnimatch_to_sympy is a singledispatch function: an external library can
+    register a converter for its own OmniMatch node type without touching this one."""
     import functools
-    assert hasattr(matchpy_to_sympy, 'register')     # singledispatch API
-    assert hasattr(matchpy_to_sympy, 'dispatch')
+    assert hasattr(omnimatch_to_sympy, 'register')     # singledispatch API
+    assert hasattr(omnimatch_to_sympy, 'dispatch')
 
-    class _FakeNode:                                  # not a matchpy Expression at all
+    class _FakeNode:                                  # not a omnimatch Expression at all
         pass
 
-    @matchpy_to_sympy.register(_FakeNode)
+    @omnimatch_to_sympy.register(_FakeNode)
     def _convert_fake(node):
         return sympy.Symbol('converted_fake')
 
     try:
-        assert matchpy_to_sympy(_FakeNode()) == sympy.Symbol('converted_fake')
+        assert omnimatch_to_sympy(_FakeNode()) == sympy.Symbol('converted_fake')
     finally:
         # singledispatch has no unregister; point the type at the fallback instead
-        matchpy_to_sympy.register(_FakeNode)(lambda n: n)
+        omnimatch_to_sympy.register(_FakeNode)(lambda n: n)
 
 
 def test_register_head_converter_extension_point():
     """Operations with unregistered heads dispatch through the public head-name
     registry -- an external library can claim a head name."""
-    from matchpy.expressions.expressions import Operation, OperationHead
+    from omnimatch.expressions.expressions import Operation, OperationHead
     from sympy_matching import register_head_converter
     from sympy_matching.conversion import _HEAD_NAME_CONVERTERS
 
@@ -142,15 +142,15 @@ def test_register_head_converter_extension_point():
 
     try:
         head = OperationHead(name='MyExternalHead')
-        mp = Operation(head, to_matchpy_expression(sympy.Integer(2)), to_matchpy_expression(sympy.Integer(3)))
-        assert matchpy_to_sympy(mp) == sympy.Symbol('external') + 5
+        mp = Operation(head, to_omnimatch_expression(sympy.Integer(2)), to_omnimatch_expression(sympy.Integer(3)))
+        assert omnimatch_to_sympy(mp) == sympy.Symbol('external') + 5
     finally:
         del _HEAD_NAME_CONVERTERS['MyExternalHead']
 
 
 def test_json_deserializer_registration_is_public():
     """JSON wrapped-value round-trip for a custom tag via the public register API."""
-    from matchpy.matching.json_serialization import (
+    from omnimatch.matching.json_serialization import (
         serialize_wrapped_value, deserialize_wrapped_value, register_wrapped_value_deserializer,
     )
 
@@ -172,18 +172,18 @@ def test_json_deserializer_registration_is_public():
 
 
 def test_conversion_round_trip():
-    """to_matchpy_expression / matchpy_to_sympy round-trip a SymPy expression."""
+    """to_omnimatch_expression / omnimatch_to_sympy round-trip a SymPy expression."""
     x = sympy.Symbol('x')
     expr = sympy.sin(x) + sympy.Integer(2)
-    assert matchpy_to_sympy(to_matchpy_expression(expr)) == expr
+    assert omnimatch_to_sympy(to_omnimatch_expression(expr)) == expr
 
 
 def test_from_expression_is_generic_not_sympy():
-    """matchpy's from_matchpy_expression stays domain-agnostic: NamedAtom -> its NAME (str),
-    while matchpy_to_sympy maps the same node to a sympy.Symbol. The two reverse
+    """omnimatch's from_omnimatch_expression stays domain-agnostic: NamedAtom -> its NAME (str),
+    while omnimatch_to_sympy maps the same node to a sympy.Symbol. The two reverse
     functions are deliberately distinct dispatches."""
-    from matchpy.expressions.expressions import from_matchpy_expression, NamedAtom
+    from omnimatch.expressions.expressions import from_omnimatch_expression, NamedAtom
     atom = NamedAtom('q')
-    assert from_matchpy_expression(atom) == 'q'
-    assert matchpy_to_sympy(atom) == sympy.Symbol('q')
-    assert from_matchpy_expression is not matchpy_to_sympy
+    assert from_omnimatch_expression(atom) == 'q'
+    assert omnimatch_to_sympy(atom) == sympy.Symbol('q')
+    assert from_omnimatch_expression is not omnimatch_to_sympy

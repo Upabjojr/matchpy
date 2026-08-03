@@ -5,7 +5,7 @@ These are constraints defined by the RUBI (Rule-Based Integrator) project
 that are NOT part of standard Wolfram Mathematica. They are implemented as
 MathematicaConstraint subclasses for use in Rubi integration rule conditions.
 
-All constraints operate on SymPy expressions after conversion from MatchPy.
+All constraints operate on SymPy expressions after conversion from OmniMatch.
 
 Reference: Rubi/Rubi/IntegrationUtilityFunctions.m
 """

@@ -8,7 +8,7 @@ transposition, and inversion.
 
 Lets start by importing everything we need:
 
->>> from matchpy import *
+>>> from omnimatch import *
 
 Symbols
 -------

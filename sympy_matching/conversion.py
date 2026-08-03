@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Singledispatch registrations for converting between SymPy and MatchPy expressions.
+"""Singledispatch registrations for converting between SymPy and OmniMatch expressions.
 
-Importing this module registers the converters with matchpy's to_matchpy_expression
-and from_matchpy_expression singledispatch functions.
+Importing this module registers the converters with omnimatch's to_omnimatch_expression
+and from_omnimatch_expression singledispatch functions.
 
 The conversion is table-driven: SYMPY_NODES in operations.py defines all
 supported SymPy types; a for-loop here registers singledispatch handlers
-for both directions (to_matchpy_expression and from_matchpy_expression).
+for both directions (to_omnimatch_expression and from_omnimatch_expression).
 
 Special cases (Add, Mul, Pow) that need IDENTITY_ELEMENT resolution are
 still handled by explicit handlers.
@@ -14,13 +14,13 @@ still handled by explicit handlers.
 Usage:
     import sympy_matching.conversion  # registers dispatchers as side-effect
 
-    from matchpy import to_matchpy_expression, from_matchpy_expression
+    from omnimatch import to_omnimatch_expression, from_omnimatch_expression
     import sympy
 
     x = sympy.Symbol('x')
     expr = sympy.sin(x) + 1
-    mp_expr = to_matchpy_expression(expr)       # MatchPy expression tree
-    sp_expr = from_matchpy_expression(mp_expr)  # back to SymPy/Python
+    mp_expr = to_omnimatch_expression(expr)       # OmniMatch expression tree
+    sp_expr = from_omnimatch_expression(mp_expr)  # back to SymPy/Python
 
 """
 import sys
@@ -39,9 +39,9 @@ from sympy import (
 )
 from sympy.core.basic import Basic as SympyBasic
 
-from matchpy.expressions.expressions import (
+from omnimatch.expressions.expressions import (
     Expression, Operation, OperationHead, NamedAtom, SymbolWrapper, Wildcard,
-    WildcardOperationHead, to_matchpy_expression, from_matchpy_expression,
+    WildcardOperationHead, to_omnimatch_expression, from_omnimatch_expression,
     LIST_HEAD, TUPLE_HEAD,
 )
 from .wild import (WildSymbol, IDENTITY_ELEMENT, HeadRef, WildHeadApp,
@@ -73,7 +73,7 @@ def _convert_operand(arg, parent_sympy_type):
     """Convert a SymPy sub-expression, resolving IDENTITY_ELEMENT for WildSymbols.
 
     If `arg` is a WildSymbol whose optional_value is IDENTITY_ELEMENT, it is
-    converted to a MatchPy optional wildcard whose default is the identity
+    converted to a OmniMatch optional wildcard whose default is the identity
     element of `parent_sympy_type` (e.g. 0 for Add, 1 for Mul).
     """
     if isinstance(arg, WildSymbol) and arg.optional_value is IDENTITY_ELEMENT:
@@ -83,23 +83,23 @@ def _convert_operand(arg, parent_sympy_type):
                 f"IDENTITY_ELEMENT used inside {parent_sympy_type.__name__} which has "
                 f"no registered identity element.  Use an explicit optional_value instead."
             )
-        return Wildcard.optional(arg.wildcard_name, to_matchpy_expression(identity))
-    return to_matchpy_expression(arg)
+        return Wildcard.optional(arg.wildcard_name, to_omnimatch_expression(identity))
+    return to_omnimatch_expression(arg)
 
 
-# ─── to_matchpy_expression: SymPy → MatchPy (special cases) ──────────────────────────
+# ─── to_omnimatch_expression: SymPy → OmniMatch (special cases) ──────────────────────────
 
-@to_matchpy_expression.register(SympyNumber)
+@to_omnimatch_expression.register(SympyNumber)
 def _sympy_number_to_expression(obj: SympyNumber) -> Expression:
-    """Convert SymPy numbers to MatchPy SymbolWrappers for lossless roundtrip."""
+    """Convert SymPy numbers to OmniMatch SymbolWrappers for lossless roundtrip."""
     return SymbolWrapper(obj)
 
 
-@to_matchpy_expression.register(WildSymbol)
+@to_omnimatch_expression.register(WildSymbol)
 def _wild_symbol_to_expression(obj: WildSymbol) -> Expression:
-    """Convert WildSymbol to the corresponding MatchPy wildcard.
+    """Convert WildSymbol to the corresponding OmniMatch wildcard.
 
-    If `optional_value` is set, emit a MatchPy optional wildcard carrying the
+    If `optional_value` is set, emit a OmniMatch optional wildcard carrying the
     converted default value. Otherwise emit a standard dot wildcard.
     Plain Python numerics are coerced to SymPy types for lossless roundtrip.
     """
@@ -111,21 +111,21 @@ def _wild_symbol_to_expression(obj: WildSymbol) -> Expression:
             val = sympy.Integer(val)
         elif isinstance(val, float):
             val = sympy.Float(val)
-        return Wildcard.optional(obj.wildcard_name, to_matchpy_expression(val))
+        return Wildcard.optional(obj.wildcard_name, to_omnimatch_expression(val))
     return Wildcard.dot(obj.wildcard_name)
 
 
-@to_matchpy_expression.register(WildHeadApp)
+@to_omnimatch_expression.register(WildHeadApp)
 def _wild_head_app_to_expression(obj: 'WildHeadApp') -> Expression:
-    """Convert ``F_[args]`` into a MatchPy Operation with a WILDCARD head.
+    """Convert ``F_[args]`` into a OmniMatch Operation with a WILDCARD head.
 
-    The resulting operation matches an application of ANY function: MatchPy binds
+    The resulting operation matches an application of ANY function: OmniMatch binds
     the subject's head to the head wildcard's name and matches the operands
     against the converted arguments in the usual way.
     """
     head = WildcardOperationHead(name='__any__',
                                  variable_name=obj.head_wild.wildcard_name)
-    return Operation(head, *[to_matchpy_expression(a) for a in obj.applied_args])
+    return Operation(head, *[to_omnimatch_expression(a) for a in obj.applied_args])
 
 
 # `Derivative`/`Tuple` have no dedicated head registration, so a real
@@ -138,61 +138,61 @@ _DERIVATIVE_HEAD = OperationHead(name='Derivative')
 _TUPLE_OP_HEAD = OperationHead(name='Tuple')
 
 
-@to_matchpy_expression.register(WildHeadDeriv)
+@to_omnimatch_expression.register(WildHeadDeriv)
 def _wild_head_deriv_to_expression(obj: 'WildHeadDeriv') -> Expression:
-    """Convert ``Derivative[n_][f_][x_]`` into the MatchPy shape of a SymPy
+    """Convert ``Derivative[n_][f_][x_]`` into the OmniMatch shape of a SymPy
     ``Derivative`` whose differentiated function has a WILDCARD head."""
-    var = to_matchpy_expression(obj.var)
+    var = to_omnimatch_expression(obj.var)
     inner = Operation(
         WildcardOperationHead(name='__any__',
                               variable_name=obj.head_wild.wildcard_name),
         var)
     return Operation(_DERIVATIVE_HEAD, inner,
-                     Operation(_TUPLE_OP_HEAD, var, to_matchpy_expression(obj.order)))
+                     Operation(_TUPLE_OP_HEAD, var, to_omnimatch_expression(obj.order)))
 
 
-@to_matchpy_expression.register(SympySymbol)
+@to_omnimatch_expression.register(SympySymbol)
 def _sympy_symbol_to_expression(obj: SympySymbol) -> Expression:
-    """Convert SymPy Symbol to MatchPy SymbolWrapper wrapping the original object."""
+    """Convert SymPy Symbol to OmniMatch SymbolWrapper wrapping the original object."""
     return SymbolWrapper(obj)
 
 
-@to_matchpy_expression.register(SympyAdd)
+@to_omnimatch_expression.register(SympyAdd)
 def _sympy_add_to_expression(obj: SympyAdd) -> Expression:
-    """Convert SymPy Add to MatchPy Operation with ADD head."""
+    """Convert SymPy Add to OmniMatch Operation with ADD head."""
     operands = [_convert_operand(arg, SympyAdd) for arg in obj.args]
     return Operation(ADD, *operands)
 
 
-@to_matchpy_expression.register(SympyMul)
+@to_omnimatch_expression.register(SympyMul)
 def _sympy_mul_to_expression(obj: SympyMul) -> Expression:
-    """Convert SymPy Mul to MatchPy Operation with MUL head."""
+    """Convert SymPy Mul to OmniMatch Operation with MUL head."""
     operands = [_convert_operand(arg, SympyMul) for arg in obj.args]
     return Operation(MUL, *operands)
 
 
-@to_matchpy_expression.register(SympyPow)
+@to_omnimatch_expression.register(SympyPow)
 def _sympy_pow_to_expression(obj: SympyPow) -> Expression:
-    """Convert SymPy Pow to MatchPy Operation with POW head.
+    """Convert SymPy Pow to OmniMatch Operation with POW head.
 
     IDENTITY_ELEMENT is resolved only for the exponent (second arg),
     since x**1 = x is the relevant identity for Pow.
     """
     base, exp = obj.args
-    return Operation(POW, to_matchpy_expression(base), _convert_operand(exp, SympyPow))
+    return Operation(POW, to_omnimatch_expression(base), _convert_operand(exp, SympyPow))
 
 
-# ─── to_matchpy_expression: loop-based registration for all table-driven nodes ───────
+# ─── to_omnimatch_expression: loop-based registration for all table-driven nodes ───────
 
 def _make_to_expression_converter(head):
-    """Factory: create a to_matchpy_expression handler for a given OperationHead."""
+    """Factory: create a to_omnimatch_expression handler for a given OperationHead."""
     def _converter(obj) -> Expression:
-        operands = [to_matchpy_expression(arg) for arg in obj.args]
+        operands = [to_omnimatch_expression(arg) for arg in obj.args]
         return Operation(head, *operands)
     return _converter
 
 
-# Register to_matchpy_expression for every SymPy class in SYMPY_FUNC_TO_HEAD that
+# Register to_omnimatch_expression for every SymPy class in SYMPY_FUNC_TO_HEAD that
 # doesn't already have a specific handler (Add, Mul, Pow, Number, Symbol).
 _SPECIAL_TYPES = {SympyAdd, SympyMul, SympyPow, SympyNumber, SympySymbol, WildSymbol}
 
@@ -201,12 +201,12 @@ for _sympy_cls, _head in list(SYMPY_FUNC_TO_HEAD.items()):
         continue
     if not isinstance(_sympy_cls, type):
         continue  # skip helper functions (e.g. sqrt) that aren't real classes
-    to_matchpy_expression.register(_sympy_cls)(_make_to_expression_converter(_head))
+    to_omnimatch_expression.register(_sympy_cls)(_make_to_expression_converter(_head))
 
 
 # ─── Fallback for other SymPy Basic types ─────────────────────────────────────
 
-@to_matchpy_expression.register(SympyBasic)
+@to_omnimatch_expression.register(SympyBasic)
 def _sympy_basic_to_expression(obj: SympyBasic) -> Expression:
     """Fallback: convert unknown SymPy expression via its args."""
     if obj.is_Atom:
@@ -215,19 +215,19 @@ def _sympy_basic_to_expression(obj: SympyBasic) -> Expression:
     obj_type = type(obj)
     if obj_type in SYMPY_FUNC_TO_HEAD:
         head = SYMPY_FUNC_TO_HEAD[obj_type]
-        operands = [to_matchpy_expression(arg) for arg in obj.args]
+        operands = [to_omnimatch_expression(arg) for arg in obj.args]
         return Operation(head, *operands)
 
-    from matchpy.expressions.expressions import OperationHead, Arity
+    from omnimatch.expressions.expressions import OperationHead, Arity
     head = OperationHead(name=obj_type.__name__, arity=Arity.variadic)
-    operands = [to_matchpy_expression(arg) for arg in obj.args]
+    operands = [to_omnimatch_expression(arg) for arg in obj.args]
     return Operation(head, *operands)
 
 
-# ─── from_matchpy_expression: MatchPy → SymPy / Python ───────────────────────────────
+# ─── from_omnimatch_expression: OmniMatch → SymPy / Python ───────────────────────────────
 
 def _head_to_sympy(head: OperationHead) -> HeadRef:
-    """Map a matched MatchPy ``OperationHead`` to a substitutable SymPy ``HeadRef``.
+    """Map a matched OmniMatch ``OperationHead`` to a substitutable SymPy ``HeadRef``.
 
     A wildcard operation head binds to an ``OperationHead`` (matcher metadata, not
     an expression). It must NEVER reach SymPy as-is -- arithmetic on it raises
@@ -241,7 +241,7 @@ def _head_to_sympy(head: OperationHead) -> HeadRef:
     return HeadRef(func)
 
 
-@from_matchpy_expression.register(SymbolWrapper)
+@from_omnimatch_expression.register(SymbolWrapper)
 def _symbol_wrapper_from_expression(expr: SymbolWrapper):
     """Lossless conversion: unwrap the original SymPy object directly.
 
@@ -267,10 +267,10 @@ def _unwrap_tuplearg(v):
     return v
 
 
-# ─── matchpy_to_sympy: singledispatch by MatchPy node type ────────────────────
+# ─── omnimatch_to_sympy: singledispatch by OmniMatch node type ────────────────────
 #
-# Extensibility (mirrors the to_matchpy_expression direction):
-#   * per-NODE-TYPE:  @matchpy_to_sympy.register(MyMatchpyType)
+# Extensibility (mirrors the to_omnimatch_expression direction):
+#   * per-NODE-TYPE:  @omnimatch_to_sympy.register(MyOmnimatchType)
 #   * per-HEAD-NAME:  @register_head_converter('MyHead') for Operations whose head
 #     has no registered SymPy class (see HEAD_TO_SYMPY_FUNC); the converter
 #     receives the already-converted operand list.
@@ -297,23 +297,23 @@ def register_head_converter(head_name: str, fn=None):
 
 
 @singledispatch
-def matchpy_to_sympy(expr):
-    """Convert a MatchPy expression tree back to a SymPy expression.
+def omnimatch_to_sympy(expr):
+    """Convert a OmniMatch expression tree back to a SymPy expression.
 
-    Singledispatch — register handlers for new MatchPy node types with
-    ``@matchpy_to_sympy.register(Type)``, and converters for unregistered
+    Singledispatch — register handlers for new OmniMatch node types with
+    ``@omnimatch_to_sympy.register(Type)``, and converters for unregistered
     operation heads with :func:`register_head_converter`. Unknown nodes fall
-    back to matchpy's generic :func:`from_matchpy_expression`.
+    back to omnimatch's generic :func:`from_omnimatch_expression`.
     """
-    return from_matchpy_expression(expr)
+    return from_omnimatch_expression(expr)
 
 
-@matchpy_to_sympy.register(Operation)
+@omnimatch_to_sympy.register(Operation)
 def _operation_to_sympy(expr):
     head = expr.head
     if head in HEAD_TO_SYMPY_FUNC:
         sympy_class = HEAD_TO_SYMPY_FUNC[head]
-        args = [matchpy_to_sympy(op) for op in expr.operands]
+        args = [omnimatch_to_sympy(op) for op in expr.operands]
         # POW with one_identity=True: a 1-arg Operation(POW, base) represents
         # base**1 = base.  SympyPow(base) would raise TypeError, so unwrap.
         if sympy_class is SympyPow and len(args) == 1:
@@ -325,7 +325,7 @@ def _operation_to_sympy(expr):
         # recursively, since meijerg nests them (((a,),(b,)), ...).
         args = [_unwrap_tuplearg(a) for a in args]
         return sympy_class(*args)
-    args = [matchpy_to_sympy(op) for op in expr.operands]
+    args = [omnimatch_to_sympy(op) for op in expr.operands]
     converter = _HEAD_NAME_CONVERTERS.get(head.name)
     if converter is not None:
         result = converter(args)
@@ -368,7 +368,7 @@ def _derivative_head_to_sympy(args):
         return NotImplemented
 
 
-@matchpy_to_sympy.register(SymbolWrapper)
+@omnimatch_to_sympy.register(SymbolWrapper)
 def _symbol_wrapper_to_sympy(expr):
     # A wildcard operation head binds to an OperationHead; it must never reach
     # SymPy raw (arithmetic on it raises TypeError) -- see _head_to_sympy.
@@ -378,12 +378,12 @@ def _symbol_wrapper_to_sympy(expr):
     return value
 
 
-@matchpy_to_sympy.register(Wildcard)
+@omnimatch_to_sympy.register(Wildcard)
 def _wildcard_to_sympy(expr):
     # An unbound wildcard reaching here is a pattern variable LOCAL to a MatchQ
     # embedded in a rule's REPLACEMENT, e.g. If[MatchQ[f, f1*Complex(0, j)], ...]:
     # f1/j/e1 are NOT bound by the outer rule match, only by the MatchQ's own pattern
-    # matching WHEN that MatchQ runs. matchpy_to_sympy runs BEFORE the replacement's
+    # matching WHEN that MatchQ runs. omnimatch_to_sympy runs BEFORE the replacement's
     # .doit(), so at this instant the wildcard is legitimately still free -- convert it
     # to a WildSymbol so the round-trip does not crash (SympifyError: Wildcard.dot).
     # `If.doit()` then evaluates the MatchQ (see sympy_wolfram.objects.If.doit), which
@@ -394,9 +394,9 @@ def _wildcard_to_sympy(expr):
     # discarding wildcard-laden results downstream.
     if getattr(expr, 'variable_name', None):
         return WildSymbol(expr.variable_name)
-    return from_matchpy_expression(expr)
+    return from_omnimatch_expression(expr)
 
 
-@matchpy_to_sympy.register(NamedAtom)
+@omnimatch_to_sympy.register(NamedAtom)
 def _named_atom_to_sympy(expr):
     return SympySymbol(expr.name)

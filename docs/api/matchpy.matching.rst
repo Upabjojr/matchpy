@@ -1,4 +1,4 @@
-matchpy.matching package
+omnimatch.matching package
 ========================
 
 Submodules
@@ -6,7 +6,7 @@ Submodules
 
 .. toctree::
 
-   matchpy.matching.bipartite
-   matchpy.matching.many_to_one
-   matchpy.matching.one_to_one
-   matchpy.matching.syntactic
+   omnimatch.matching.bipartite
+   omnimatch.matching.many_to_one
+   omnimatch.matching.one_to_one
+   omnimatch.matching.syntactic

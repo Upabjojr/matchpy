@@ -37,25 +37,25 @@ from sympy.polys.polyerrors import (
     BasePolynomialError,
 )
 
-# MatchPy is a lower layer, so these are safe module-level imports; they back the
-# matchpy->sympy coercion used by FreeQ (see _ensure_sympy).
-from matchpy.expressions.expressions import Operation as _MatchPyOperation
-from matchpy.expressions.expressions import SymbolWrapper as _MatchPySymbolWrapper
+# OmniMatch is a lower layer, so these are safe module-level imports; they back the
+# omnimatch->sympy coercion used by FreeQ (see _ensure_sympy).
+from omnimatch.expressions.expressions import Operation as _OmniMatchOperation
+from omnimatch.expressions.expressions import SymbolWrapper as _OmniMatchSymbolWrapper
 
 
 def _ensure_sympy(expr):
-    """Coerce a MatchPy expression to SymPy if needed; SymPy objects pass through.
+    """Coerce a OmniMatch expression to SymPy if needed; SymPy objects pass through.
 
-    A ``SymbolWrapper`` unwraps to the SymPy value it carries; a MatchPy ``Operation``
+    A ``SymbolWrapper`` unwraps to the SymPy value it carries; a OmniMatch ``Operation``
     is converted structurally via ``sympy_matching``. This is the bridge that lets the
-    Wolfram-standard predicates below accept either a match-bound MatchPy value or a
+    Wolfram-standard predicates below accept either a match-bound OmniMatch value or a
     plain SymPy expression.
     """
-    if isinstance(expr, _MatchPySymbolWrapper):
+    if isinstance(expr, _OmniMatchSymbolWrapper):
         return expr.value
-    if isinstance(expr, _MatchPyOperation):
-        from sympy_matching.conversion import matchpy_to_sympy   # lazy: avoids any load-order edge
-        return matchpy_to_sympy(expr)
+    if isinstance(expr, _OmniMatchOperation):
+        from sympy_matching.conversion import omnimatch_to_sympy   # lazy: avoids any load-order edge
+        return omnimatch_to_sympy(expr)
     return expr
 
 
@@ -64,7 +64,7 @@ def eager_FreeQ(nodes, var):
     in ``expr``. A list/tuple of ``nodes`` is free iff *every* element is.
 
     This is a standard Wolfram-library predicate (not Rubi-specific): its body is
-    ``expr.has(var)`` over SymPy, with the matchpy->sympy coercion handled by
+    ``expr.has(var)`` over SymPy, with the omnimatch->sympy coercion handled by
     :func:`_ensure_sympy`. The ``FreeQ`` *constraint* class in
     ``sympy_wolfram.constraints_wolfram`` (re-exported by
     ``rubi_rules.utils.constraints_wolfram``) delegates here.

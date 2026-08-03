@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import pytest
 from multiset import Multiset
 
-from matchpy.expressions.substitution import Substitution
+from omnimatch.expressions.substitution import Substitution
 from .common import *
 
 

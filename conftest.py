@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from matchpy.expressions.expressions import Operation, NamedAtom, Arity, Wildcard, make_dot_variable, make_star_variable, make_plus_variable
-import matchpy
+from omnimatch.expressions.expressions import Operation, NamedAtom, Arity, Wildcard, make_dot_variable, make_star_variable, make_plus_variable
+import omnimatch
 
 @pytest.fixture(autouse=True)
 def add_default_expressions(doctest_namespace):
@@ -17,5 +17,5 @@ def add_default_expressions(doctest_namespace):
     doctest_namespace['___'] = Wildcard.star()
     doctest_namespace['__name__'] = '__main__'
 
-    for name in matchpy.__all__:
-        doctest_namespace[name] = getattr(matchpy, name)
+    for name in omnimatch.__all__:
+        doctest_namespace[name] = getattr(omnimatch, name)

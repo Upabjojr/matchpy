@@ -19,11 +19,11 @@ import itertools
 
 import pytest
 
-from matchpy.expressions.expressions import (
+from omnimatch.expressions.expressions import (
     Arity, Operation, OperationHead, Pattern, NamedAtom, Wildcard,
     WildcardOperationHead,
 )
-from matchpy.matching.many_to_one import ManyToOneMatcher
+from omnimatch.matching.many_to_one import ManyToOneMatcher
 
 # ── a spread of concrete heads ───────────────────────────────────────────────
 SIN = OperationHead(name='SIN', arity=Arity.unary)

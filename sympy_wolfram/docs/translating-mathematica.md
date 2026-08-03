@@ -88,7 +88,7 @@ on — see the README's `d`/`d_`/`d_.` discussion):
 
 ```
 
-The two `d` wildcards are distinct SymPy objects sharing one MatchPy variable name —
+The two `d` wildcards are distinct SymPy objects sharing one OmniMatch variable name —
 `sympy_matching` unifies them by name at match time
 ([`wildcards.md`](../../sympy_matching/docs/wildcards.md) §3).
 
@@ -147,14 +147,14 @@ These SymPy objects drop straight into the `sympy_matching` rule machinery
 
 ```python
 >>> from sympy_matching.matching_rule import (
-...     SymPyReplacementPattern, build_replacer, to_matchpy_expression)
->>> from sympy_matching.conversion import matchpy_to_sympy
+...     SymPyReplacementPattern, build_replacer, to_omnimatch_expression)
+>>> from sympy_matching.conversion import omnimatch_to_sympy
 >>> from sympy import Ne
 >>> rule = SymPyReplacementPattern(
 ...     pattern=pattern, constraints=(Ne(ns['_m_'], -1),), replacement=replacement,
 ...     module_name='docs example', rule_number=1)
 >>> rep = build_replacer([rule])
->>> matchpy_to_sympy(rep.replace(to_matchpy_expression(x**3))[0])
+>>> omnimatch_to_sympy(rep.replace(to_omnimatch_expression(x**3))[0])
 x**4/4
 
 ```

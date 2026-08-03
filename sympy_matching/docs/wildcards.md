@@ -6,18 +6,18 @@ For the package overview see [`../README.md`](../README.md); for rules and const
 see [`rules-and-constraints.md`](rules-and-constraints.md).
 
 Every example is a doctest, executed by `sympy_matching/tests/test_docs.py`. Examples
-use only `sympy`, `matchpy` and `sympy_matching` — this package does not depend on any
+use only `sympy`, `omnimatch` and `sympy_matching` — this package does not depend on any
 higher layer.
 
 ```python
 >>> from sympy import Symbol
->>> from matchpy import ManyToOneMatcher, Pattern
+>>> from omnimatch import ManyToOneMatcher, Pattern
 >>> from sympy_matching.wild import WildSymbol, IDENTITY_ELEMENT
->>> from sympy_matching.matching_rule import to_matchpy_expression
+>>> from sympy_matching.matching_rule import to_omnimatch_expression
 >>> def matches(pattern, subject):
 ...     m = ManyToOneMatcher()
-...     m.add(Pattern(to_matchpy_expression(pattern)))
-...     return bool(list(m.match(to_matchpy_expression(subject))))
+...     m.add(Pattern(to_omnimatch_expression(pattern)))
+...     return bool(list(m.match(to_omnimatch_expression(subject))))
 >>> x, W, y = Symbol('x'), Symbol('W'), Symbol('y')
 
 ```
@@ -45,12 +45,12 @@ True
 
 ```
 
-The wildcard nature only takes effect at conversion time (`to_matchpy_expression`),
-when each `WildSymbol` becomes a MatchPy wildcard.
+The wildcard nature only takes effect at conversion time (`to_omnimatch_expression`),
+when each `WildSymbol` becomes a OmniMatch wildcard.
 
 ## 2. Naming convention
 
-A single trailing underscore in the SymPy name is stripped to obtain the MatchPy
+A single trailing underscore in the SymPy name is stripped to obtain the OmniMatch
 variable name, so `WildSymbol('d_')` and `WildSymbol('d')` denote the same variable.
 The codebase convention is:
 
@@ -69,7 +69,7 @@ True
 
 ## 3. Identity is the NAME — two objects, one variable
 
-A `WildSymbol` converts to a MatchPy wildcard **named after its `wildcard_name`**.
+A `WildSymbol` converts to a OmniMatch wildcard **named after its `wildcard_name`**.
 Two `WildSymbol` objects carrying the same name are one pattern variable, even though
 they are distinct SymPy objects — and they *must* be distinct objects whenever they
 differ in optionality (§4).
@@ -79,7 +79,7 @@ differ in optionality (§4).
 >>> _d_ = WildSymbol('d', optional_value=IDENTITY_ELEMENT)
 >>> d_ == _d_          # distinct SymPy objects...
 False
->>> d_.wildcard_name == _d_.wildcard_name    # ...one matchpy variable
+>>> d_.wildcard_name == _d_.wildcard_name    # ...one omnimatch variable
 True
 
 ```

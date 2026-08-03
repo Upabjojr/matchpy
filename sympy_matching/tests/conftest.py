@@ -2,7 +2,7 @@
 """Fixtures for running sympy_matching tests in multiple matching modes.
 
 Modes:
-  - one-to-one: matchpy.matching.one_to_one.match
+  - one-to-one: omnimatch.matching.one_to_one.match
   - many-to-one: ManyToOneMatcher
   - generated: CodeGenerator-produced code
   - json-roundtrip: ManyToOneMatcher serialized/deserialized via JSON
@@ -15,12 +15,12 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from matchpy.expressions.expressions import Wildcard, Operation
-from matchpy.matching.one_to_one import match as match_one_to_one
-from matchpy.matching.many_to_one import ManyToOneMatcher
-from matchpy.matching.code_generation import CodeGenerator
-from matchpy.matching.json_serialization import to_json, from_json
-from matchpy.expressions.functions import preorder_iter
+from omnimatch.expressions.expressions import Wildcard, Operation
+from omnimatch.matching.one_to_one import match as match_one_to_one
+from omnimatch.matching.many_to_one import ManyToOneMatcher
+from omnimatch.matching.code_generation import CodeGenerator
+from omnimatch.matching.json_serialization import to_json, from_json
+from omnimatch.expressions.functions import preorder_iter
 
 import sympy_matching  # ensure json_ext is registered
 
@@ -57,9 +57,9 @@ def match_many_to_one(expression, *patterns):
 
 GENERATED_TEMPLATE = """
 # -*- coding: utf-8 -*-
-from matchpy import *
-from matchpy.expressions.expressions import OperationHead, Arity, SymbolWrapper
-from matchpy.expressions.expressions import Operation
+from omnimatch import *
+from omnimatch.expressions.expressions import OperationHead, Arity, SymbolWrapper
+from omnimatch.expressions.expressions import Operation
 from collections import deque
 
 {global_code}

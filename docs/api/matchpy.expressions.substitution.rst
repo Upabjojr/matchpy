@@ -1,7 +1,7 @@
-matchpy.expressions.substitution module
+omnimatch.expressions.substitution module
 =======================================
 
-.. automodule:: matchpy.expressions.substitution
+.. automodule:: omnimatch.expressions.substitution
     :members:
     :undoc-members:
     :show-inheritance:

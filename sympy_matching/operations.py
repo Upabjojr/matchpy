@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""MatchPy OperationHead definitions for SymPy expression types.
+"""OmniMatch OperationHead definitions for SymPy expression types.
 
-Defines a master table (SYMPY_NODES) of all supported SymPy <-> MatchPy mappings.
+Defines a master table (SYMPY_NODES) of all supported SymPy <-> OmniMatch mappings.
 A for-loop generates OperationHeads and registers bidirectional mappings.
 
 Special heads (ADD, MUL, POW) with commutative/associative/one_identity
@@ -16,7 +16,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from matchpy.expressions.expressions import OperationHead, Arity
+from omnimatch.expressions.expressions import OperationHead, Arity
 
 # ─── Mapping from SymPy function classes to OperationHeads ────────────────────
 SYMPY_FUNC_TO_HEAD = {}
@@ -50,7 +50,7 @@ MUL = OperationHead(
 POW = OperationHead(
     name='Pow',
     arity=Arity.variadic,  # variadic required so one_identity can collapse POW(x) -> x
-    one_identity=True,     # MatchPy treats SymbolWrapper(x) as POW(x) during matching,
+    one_identity=True,     # OmniMatch treats SymbolWrapper(x) as POW(x) during matching,
                            # enabling optional exponent wildcards to fire for bare bases.
 )
 
@@ -212,7 +212,7 @@ SYMPY_NODES = [
     ('sympy.functions.special.polynomials', 'hermite', 'b'),
     ('sympy.functions.special.polynomials', 'laguerre', 'b'),
 ]
-"""Master table of SymPy function -> MatchPy head registrations.
+"""Master table of SymPy function -> OmniMatch head registrations.
 
 Each entry is (module_path, class_name, arity_code) where arity_code is:
   'u' = unary, 'b' = binary, 'v' = variadic.
