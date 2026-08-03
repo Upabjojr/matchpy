@@ -2040,7 +2040,9 @@ def test_GeneralizedTrinomialQ():
 def test_SubstForFractionalPowerOfQuotientOfLinears():
     """Rubi IntegrationUtilityFunctions.m:1801 — returns {v, n, (a+b x)/(c+d x), b c-a d}.
     Expected values cross-checked against real Rubi on Mathematica 12.2."""
-    assert eager_SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(b - d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
+    # Denominator sign is presentation-only: the factor is SQUARED, and the faithful
+    # (non-factoring) Together now canonicalises it as (-b + d x^2)^2.
+    assert eager_SubstForFractionalPowerOfQuotientOfLinears(((a + b*x)/(c + d*x))**(S(3)/2), x) == [x**4/(-b + d*x**2)**2, 2, (a + b*x)/(c + d*x), -a*d + b*c]
     assert eager_SubstForFractionalPowerOfQuotientOfLinears(((1 + x)/(1 - x))**(S(1)/2), x) == [x**2/(x**2 + 1)**2, 2, (1 + x)/(1 - x), 2]
     assert eager_SubstForFractionalPowerOfQuotientOfLinears(((1 + x)/(1 - x))**(S(1)/3), x) == [x**3/(x**3 + 1)**2, 3, (1 + x)/(1 - x), 2]
     assert eager_SubstForFractionalPowerOfQuotientOfLinears(x*((a + b*x)/(c + d*x))**(S(1)/2), x) == [x**2*(-a + c*x**2)/(b - d*x**2)**3, 2, (a + b*x)/(c + d*x), -a*d + b*c]
@@ -3532,3 +3534,38 @@ def test_deactivation_dispatch_solves_cofunction_integrals():
     for u in (cos(xx)**2, cosh(xx)**2, sech(c + d*xx)**2/(a + b*sech(c + d*xx)**2)):
         r = rubi_integrate(u, xx)
         assert 'CannotIntegrate' not in str(r) and not r.has(_Int), u
+
+
+def test_smartapart_association_list_keeps_gensym_kernel_pairs():
+    """SmartApart hides x-free radical kernels behind gensyms before Apart and
+    restores them afterwards. Rubi's association list holds {gensym, kernel} PAIRS;
+    a mis-port stored bare kernels, so KernelSubst mistook a kernel's BASE for the
+    gensym and substituted its EXPONENT -- the bare -1 in `-(-1)^(1/3) b^(1/3)`
+    became 1/3, corrupting partial fractions over the factored cubic a x^3 + b and
+    producing a wrong antiderivative for x^2 log(c (a+b/x^3)^p)/(d+e x)."""
+    from sympy import Integer, Rational, N
+    from rubi_rules.utils.utility_functions import (
+        MakeAssocList, GensymSubst, KernelSubst, SmartApart, eager_ExpandIntegrand)
+    xx, a, b, d, e = symbols('x a b d e')
+    F1 = a**Rational(1, 3)*xx + b**Rational(1, 3)
+    F2 = a**Rational(1, 3)*xx + Integer(-1)**Rational(2, 3)*b**Rational(1, 3)
+    F3 = a**Rational(1, 3)*xx - Integer(-1)**Rational(1, 3)*b**Rational(1, 3)
+    rfx = 1/F1 + 1/F2 + 1/F3
+
+    alst = MakeAssocList(rfx, xx)
+    # pairs, one per distinct kernel, and no duplicates
+    assert all(len(entry) == 2 for entry in alst)
+    kernels = [kernel for _, kernel in alst]
+    assert len(kernels) == len(set(kernels))
+    # the substitution actually replaces the kernels and inverts exactly
+    g = GensymSubst(rfx, xx, alst)
+    assert g != rfx
+    assert KernelSubst(g, xx, alst) == rfx
+
+    # end-to-end: SmartApart and the two-arg ExpandIntegrand preserve the value
+    subs = {a: Rational(5, 4), b: Rational(2, 3), d: Rational(7, 5), e: Rational(9, 4)}
+    w = SmartApart(rfx, xx)
+    assert abs(N((w - rfx).subs(subs).subs(xx, Rational(3, 7)), 25)) < 1e-20
+    L = log(d + e*xx)
+    u2 = eager_ExpandIntegrand(L, rfx, xx)
+    assert abs(N((u2 - L*rfx).subs(subs).subs(xx, Rational(3, 7)), 25)) < 1e-20

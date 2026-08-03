@@ -1276,6 +1276,26 @@ def eager_NiceSqrtQ(u):
     return eager_Not(eager_NegativeQ(u)) and NiceSqrtAuxQ(u)
 
 def eager_Together(u):
+    # Mathematica's Together leaves denominator-free expressions untouched
+    # (Together[(x+1)^2] = (x+1)^2, Together[a x + a] = a x + a): only expressions
+    # with a denominator get combined and cancelled. This used factor(u)
+    # unconditionally, so every Together-based guard (PosQ via TogetherSimplify, ...)
+    # FACTORED whatever a wildcard bound to -- fatal inside commutative match
+    # enumeration, where degree-~300 chunks of the expanded (a x^2 + b x^27)^12
+    # were factored per candidate partition (py-spy: dmp factorization leaves under
+    # check_constraint). For genuine fractions the factor() behaviour is kept: it
+    # combines over a common denominator AND cancels, with the factored-denominator
+    # presentation the rest of the port expects from Rubi's Together.
+    # Denominator-free: Mathematica still pulls the CONTENT out of sums --
+    # Together[6x+9] = 3(2x+3), Together[a^3+3a^2 b x+3a b^2 x^2] = a(a^2+...) --
+    # which RemoveContent and PolynomialDivide rely on. sympy's factor_terms does
+    # exactly that (content extraction, no factorization).
+    u = S(u)
+    if not u.is_Atom and u.as_numer_denom()[1] == S.One:
+        try:
+            return factor_terms(u)
+        except (AttributeError, TypeError):
+            return u
     return factor(u)
 
 def _cmp_gt0(val):
@@ -1615,6 +1635,11 @@ def NonnumericFactors(u):
 def MakeAssocList(u, x, alst=None):
     # (* MakeAssocList[u,x,alst] returns an association list of gensymed symbols with the nonatomic
     # parameters of a u that are not integer powers, products or sums. *)
+    # Rubi stores {gensym, kernel} PAIRS (Append[alst, {Unique["Rubi"], u}]); an earlier
+    # port dropped the pair, so GensymSubst never substituted anything and KernelSubst
+    # mistook a kernel's BASE for the gensym and substituted its EXPONENT -- turning the
+    # bare -1 in `-(-1)^(1/3) b^(1/3)` into 1/3 and corrupting partial fractions of
+    # cubics (wrong antiderivative for e.g. x^2 log(c (a+b/x^3)^p)/(d+e x)).
     if alst is None:
         alst = []
     if eager_AtomQ(u):
@@ -1624,25 +1649,15 @@ def MakeAssocList(u, x, alst=None):
     elif eager_ProductQ(u) or eager_SumQ(u):
         return MakeAssocList(eager_Rest(u), x, MakeAssocList(eager_First(u), x, alst))
     elif eager_FreeQ(u, x):
-        tmp = []
-        for i in alst:
-            if eager_PowerQ(i):
-                if i.exp == u:
-                    tmp.append(i)
-                    break
-            elif len(i.args) > 1: # make sure args has length > 1, else causes index error some times
-                if i.args[1] == u:
-                    tmp.append(i)
-                    break
-        if tmp == []:
-            alst.append(u)
+        if not any(kernel == u for _, kernel in alst):
+            alst.append((Dummy('rubikern'), u))
         return alst
     return alst
 
 def GensymSubst(u, x, alst=None):
     # (* GensymSubst[u,x,alst] returns u with the kernels in alst free of x replaced by gensymed names. *)
     if alst is None:
-        alst =[]
+        alst = []
     if eager_AtomQ(u):
         return u
     elif eager_IntegerPowerQ(u):
@@ -1650,35 +1665,19 @@ def GensymSubst(u, x, alst=None):
     elif eager_ProductQ(u) or eager_SumQ(u):
         return u.func(*[GensymSubst(i, x, alst) for i in u.args])
     elif eager_FreeQ(u, x):
-        tmp = []
-        for i in alst:
-            if eager_PowerQ(i):
-                if i.exp == u:
-                    tmp.append(i)
-                    break
-
-            elif len(i.args) > 1: # make sure args has length > 1, else causes index error some times
-                if i.args[1] == u:
-                    tmp.append(i)
-                    break
-        if tmp == []:
-            return u
-        return tmp[0][0]
+        for sym, kernel in alst:
+            if kernel == u:
+                return sym
+        return u
     return u
 
 def KernelSubst(u, x, alst):
     # (* KernelSubst[u,x,alst] returns u with the gensymed names in alst replaced by kernels free of x. *)
     if eager_AtomQ(u):
-        tmp = []
-        for i in alst:
-            if i.args[0] == u:
-                tmp.append(i)
-                break
-        if tmp == []:
-            return u
-        elif len(tmp[0].args) > 1: # make sure args has length > 1, else causes index error some times
-            return tmp[0].args[1]
-
+        for sym, kernel in alst:
+            if sym == u:
+                return kernel
+        return u
     elif eager_IntegerPowerQ(u):
         tmp = KernelSubst(u.base, x, alst)
         if u.exp < 0 and ZeroQ(tmp):
@@ -1976,6 +1975,13 @@ def eager_Coeff(expr, form, n=1):
     else:
         coef1 = eager_Coefficient(expr, form, n)
         coef2 = eager_Coefficient(eager_Together(expr), form, n)
+        # Structurally equal coefficients need no Simplify -- the full
+        # simplify(coef1 - coef2) below is brutally expensive on the nested-radical
+        # coefficients partial fractions produce (py-spy: dominant cost of the
+        # 1/((a+c x^4)(d+e x)^2) hang), and in the common case the two extractions
+        # agree exactly.
+        if coef1 == coef2:
+            return coef1
         if eager_Simplify(coef1 - coef2) == 0:
             return coef1
         else:

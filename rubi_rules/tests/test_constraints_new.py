@@ -1034,8 +1034,11 @@ class TestPolynomialDivideKeepsTheSplit:
         from rubi_rules.utils.rubi_utils import PolynomialDivide
         x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
         result = PolynomialDivide((a + b*x**2)**2, x**2 + 1, x).doit()
-        # a polynomial part plus a proper fraction -- NOT one combined quotient
-        assert result == b**2*x**2 + b*(2*a - b) + (a - b)**2/(x**2 + 1)
+        # a polynomial part plus a proper fraction -- NOT one combined quotient.
+        # The remainder numerator stays EXPANDED: Mathematica's Together (now
+        # ported faithfully, without the old full-factor behaviour) leaves a
+        # content-free sum alone -- Together[a^2-2ab+b^2] does not factor it.
+        assert result == b**2*x**2 + b*(2*a - b) + (a**2 - 2*a*b + b**2)/(x**2 + 1)
 
     def test_node_agrees_with_the_eager_implementation(self):
         from rubi_rules.utils.rubi_utils import PolynomialDivide

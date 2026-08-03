@@ -194,6 +194,22 @@ def test_eager_Exponent_is_rational_function_faithful():
     assert fe.eager_Exponent(x ** (-3), x) == -3
 
 
+def test_eager_Exponent_power_form():
+    """A power ``form`` counts by exponent RATIO, as in Mathematica:
+    Exponent[x^6, x^2] == 3, Exponent[x^5, x^2] == 5/2, Exponent[x, Sqrt[x]] == 2.
+    Counting only exact-base factors returned 1 for Exponent[5x^6+3x^4+x^2+4, x^2],
+    which silently failed every ``Expon[..., x^2] > 1`` guard and disabled the
+    even-polynomial rule family (1.2.2.5-7): plain rational integrands like
+    x^2 (5x^6+3x^4+x^2+4)/(x^4+3x^2+2)^3 fell through to the Unintegrable catch-all."""
+    poly = 5 * x ** 6 + 3 * x ** 4 + x ** 2 + 4
+    assert fe.eager_Exponent(poly, x ** 2) == 3
+    assert fe.eager_Exponent(x ** 2 * poly, x ** 2) == 4
+    assert fe.eager_Exponent(x ** 5, x ** 2) == S(5) / 2
+    assert fe.eager_Exponent(x, x ** 2) == S(1) / 2
+    assert fe.eager_Exponent(x, sympy.sqrt(x)) == 2
+    assert fe.eager_Exponent(S(4), x ** 2) == 0
+
+
 def test_eager_Simplify():
     assert fe.eager_Simplify(sin(x) ** 2 + cos(x) ** 2) == 1
     assert fe.eager_Simplify((x ** 3 + x ** 2 - x - 1) / (x ** 2 + 2 * x + 1)) == x - 1
@@ -738,3 +754,24 @@ def test_rewrite_matches_mathematica_numerically(head, args, expected_re, expect
     for got, want, part in ((got_re, expected_re, 'Re'), (got_im, expected_im, 'Im')):
         assert abs(got - want) <= 1e-9 * max(1.0, abs(got), abs(want)), (
             f'{part} of {head}{args} -> {rewritten}: got {got!r}, Mathematica gives {want!r}')
+
+
+def test_polynomial_remainder_nonmonomial_small_denominator():
+    """The fraction-field (Laurent) reduction must work for SMALL non-monomial
+    denominators: Rubi's 1.1.2.8 #86 With-block computes
+    PolynomialQuotient[x^3/(c+d x), a+b x^2, x], and refusing the reduction there
+    returned garbage e/f coefficients -- Int[x^3/((a+x)(b^2+x^2)^2)] (and every
+    integral reduced to it, e.g. tanh^3/(a+b sinh)) came back WRONG. The blow-up
+    guard (§42) must only refuse LARGE non-monomial denominators (the nonsense
+    candidate bindings commutative enumeration feeds guards, e.g. deg-8 den vs a
+    symbolic quartic)."""
+    from sympy_wolfram.functions_eager import eager_PolynomialRemainder
+    xx, a, b, c, d = sympy.symbols('x a b c d')
+    # small non-monomial den: full reduction mod a+b x^2 -> a LINEAR e + f*x form
+    r = eager_PolynomialRemainder(xx ** 3 / (c + d * xx), a + b * xx ** 2, xx)
+    assert sympy.degree(sympy.fraction(sympy.together(r))[0], xx) <= 1
+    assert not sympy.fraction(sympy.together(r))[1].has(xx)
+    # large non-monomial den (the §42 bomb shape): returned unreduced, instantly
+    p_bomb = (xx ** 4 - 5 * xx ** 2 + 4) ** -2
+    q_bomb = -d - c * xx + d * xx * (xx ** 3 - 2 * xx ** 2 + 2)
+    assert eager_PolynomialRemainder(p_bomb, q_bomb, xx) == p_bomb

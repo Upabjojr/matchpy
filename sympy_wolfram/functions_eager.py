@@ -129,13 +129,26 @@ def eager_LeafCount(expr):
 def _term_exponent(term, form):
     """Power of ``form`` in a single multiplicative ``term`` (form itself -> 1,
     ``form**e`` -> e, any other factor -> 0, even one that merely contains ``form``
-    like ``sin(form)`` -- exactly as Mathematica treats it)."""
+    like ``sin(form)`` -- exactly as Mathematica treats it).
+
+    When ``form`` is itself a power (``x**2``, ``Sqrt[x]``), a factor sharing its
+    BASE counts with the exponent RATIO, as in Mathematica: ``Exponent[x^6, x^2]``
+    is 3 and ``Exponent[x^5, x^2]`` is 5/2. Counting only exact-base matches here
+    returned 1 for ``Exponent[5x^6+3x^4+x^2+4, x^2]``, silently failing every
+    ``Expon[..., x^2] > 1`` guard -- which disabled the whole even-polynomial rule
+    family (1.2.2.5-7) and sent plain rational integrands like
+    ``x^2 (5x^6+3x^4+x^2+4)/(x^4+3x^2+2)^3`` to the Unintegrable catch-all."""
     e = S.Zero
+    form_base, form_exp = (form.base, form.exp) if form.is_Pow else (form, S.One)
     for f in Mul.make_args(term):
         if f == form:
             e += 1
         elif f.is_Pow and f.base == form:
             e += f.exp
+        elif form.is_Pow and f == form_base:
+            e += 1/form_exp
+        elif form.is_Pow and f.is_Pow and f.base == form_base:
+            e += f.exp/form_exp
     return e
 
 
@@ -216,6 +229,19 @@ def _eager_simplify_impl(expr):
                         res = ft
                 except (AttributeError, TypeError, PolynomialError):
                     pass
+                # Mathematica's Simplify also FACTORS when that shrinks the tree
+                # (Simplify[x^2+4x+4] = (x+2)^2 -- Rt/TogetherSimplify rely on this
+                # to recognise perfect powers under radicals). Unconditional
+                # factorization is exactly the guard-evaluation bomb that hung
+                # (a x^2 + b x^27)^12 (degree-~300 chunks factored per commutative
+                # match candidate), so only attempt it on small expressions.
+                if res.count_ops() <= 64:
+                    try:
+                        fa = sympy.factor(res)
+                        if fa.count_ops() < res.count_ops():
+                            res = fa
+                    except (AttributeError, TypeError, PolynomialError):
+                        pass
                 # Like Mathematica's Simplify, never return a LARGER form than the
                 # input: cancel expands products of sums ((x^2+3)^2 -> quartic),
                 # which is only an improvement when it actually shrinks the tree
@@ -701,6 +727,39 @@ def _is_rational_in(p, x):
 def _polynomial_remainder_impl(p, q, x):
     if _is_rational_in(p, x):
         num, den = fraction(together(p))
+        # If den shares a factor with q there is no finite reduction: remainder 0
+        # (the quotient absorbs everything; cross-checked vs real Rubi). The gcd is
+        # cheap; test it FIRST so the answer for this case never depends on the
+        # expensive path below.
+        try:
+            if sympy.gcd(den, q, x).has(x):
+                return S.Zero
+        except BasePolynomialError:
+            pass
+        # For a COPRIME denominator the fraction-field reduction is legitimate --
+        # Rubi rules feed rational dividends both as `Pq*(c x)^m` with m < 0
+        # (monomial den, any degree) and as `x^m (c+d x)^n` with n < 0 (small
+        # non-monomial den; e.g. 1.1.2.8 #86's With computes
+        # PolynomialQuotient[x^3/(c+d x), a+b x^2, x], and refusing it returned
+        # garbage e/f coefficients -> wrong antiderivative for
+        # Int[x^3/((a+x)(b^2+x^2)^2)] and everything reduced to it, e.g.
+        # tanh^3/(a+b sinh)). But an UNBOUNDED invert is the §42 guard-time bomb:
+        # commutative enumeration offers guards nonsense bindings like
+        # Pq = (x^4-5x^2+4)^-2 (deg 8) against a symbolic quartic BEFORE the same
+        # rule's FreeQ/PolyQ can prune them -- Mathematica never evaluates those
+        # (its conditions short-circuit left to right) -- and that inversion ran
+        # 90 s in the coefficient fraction field, hash-seed dependent. So gate by
+        # SHAPE: monomial den of any degree, or combined degree small enough for
+        # every legitimate rule shape (bomb: 8+4=12). Everything else returns p
+        # unreduced, which is exactly "the guard is never evaluated": the
+        # polynomial guards on the same rule reject the candidate anyway.
+        try:
+            den_poly = Poly(den, x)
+            allowed = den_poly.is_monomial or den_poly.degree() + Poly(q, x).degree() <= 8
+        except BasePolynomialError:
+            allowed = False
+        if not allowed:
+            return p
         try:
             den_inv = invert(Poly(den, x), Poly(q, x)).as_expr()
             return rem(num * den_inv, q, x)

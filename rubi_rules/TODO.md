@@ -120,6 +120,7 @@ failures. Regression test: `tests/test_integrate_exp_gaussian.py`.
 - [ ] rename SymPyMatchingConstraint to SymPyConstraint, RewriteConstraint, MatchingConstraint? Probably better not. (MAYBE: SymPyMatchingConstraint)
 - [ ] optimize FreeOf in matchPy, and make it not a constraint? Link FreeQ to FreeOf ?
 - [ ] rule numbers should be sequential
+- [ ] rubi_test_suite in a separate folder (together with its generator), also update the translation rules with the new logic applied to rubi_rules/
 
 Strange warning:
 
