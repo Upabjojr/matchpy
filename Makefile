@@ -25,7 +25,7 @@ coverage:
 
 api-docs:
 	rmdir docs/api
-	sphinx-apidoc -n -e -T -o docs/api omnimatch
+	sphinx-apidoc -e -T -o docs/api omnimatch
 	make docs
 
 doc:
