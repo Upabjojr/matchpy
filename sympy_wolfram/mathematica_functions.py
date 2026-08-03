@@ -101,6 +101,16 @@ class ReplaceAll(MathematicaExpr):
         if isinstance(rule, Rule):
             lhs, rhs = rule.args
             return expr.subs(lhs, rhs)
+        # Mathematica also accepts a LIST of rules ({aa->a, bb->b, ...}), applied
+        # simultaneously in one pass. This branch used to fall through and return
+        # expr UNCHANGED, so rules built on the Module[{aa,bb,cc}, ...
+        # ReplaceAll[..., {aa->a, bb->b, cc->c}]] idiom (e.g. 1.2.2.3 #86) leaked
+        # their scoped dummies straight into the antiderivative.
+        if isinstance(rule, (List, list, tuple)):
+            items = rule.args if isinstance(rule, List) else rule
+            pairs = [tuple(r.args) for r in items if isinstance(r, Rule)]
+            if pairs and len(pairs) == len(list(items)):
+                return expr.subs(pairs, simultaneous=True)
         return expr
 
 

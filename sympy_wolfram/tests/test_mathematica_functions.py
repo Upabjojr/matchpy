@@ -775,3 +775,18 @@ def test_polynomial_remainder_nonmonomial_small_denominator():
     p_bomb = (xx ** 4 - 5 * xx ** 2 + 4) ** -2
     q_bomb = -d - c * xx + d * xx * (xx ** 3 - 2 * xx ** 2 + 2)
     assert eager_PolynomialRemainder(p_bomb, q_bomb, xx) == p_bomb
+
+
+def test_replaceall_accepts_a_list_of_rules():
+    """Mathematica's ReplaceAll takes either one Rule or a LIST of rules applied
+    simultaneously. The list branch used to return the expression UNCHANGED, so
+    the Module[{aa,bb,cc}, ... ReplaceAll[..., {aa->a, bb->b, cc->c}]] idiom
+    (1.2.2.3 #86 and friends) leaked its scoped dummies into antiderivatives."""
+    aa, bb = sympy.symbols('aa bb')
+    e = aa ** 2 + bb
+    assert mf.ReplaceAll(e, mf.Rule(aa, Integer(3))).doit() == 9 + bb
+    out = mf.ReplaceAll(e, mf.List(mf.Rule(aa, Integer(3)), mf.Rule(bb, Integer(4)))).doit()
+    assert out == 13
+    # simultaneous, not sequential: aa->bb, bb->aa swaps rather than chains
+    swapped = mf.ReplaceAll(aa - bb, mf.List(mf.Rule(aa, bb), mf.Rule(bb, aa))).doit()
+    assert swapped == bb - aa

@@ -22,3 +22,13 @@ Usage:
     rules = load_rule_patterns('r_1_algebraic_functions/r_1_1_binomial_products/**')
     replacer = build_tracing_replacer(rules)
 """
+import sys
+
+# Python 3.11+ caps int->str conversion at 4300 digits as a DoS guard. Rubi
+# reduction chains legitimately build much larger exact integer coefficients
+# (a runaway (a+b sin^4)^p chain crashed mid-DFS when matchpy's commutative
+# operand sort str()-ified one), and Mathematica has no such limit -- a huge
+# chain should run into the step budget or the caller's timeout, not a
+# ValueError from the printer. Lift the cap for the whole process.
+if hasattr(sys, 'set_int_max_str_digits'):
+    sys.set_int_max_str_digits(0)

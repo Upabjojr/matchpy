@@ -309,6 +309,18 @@ def _assert_no_leaked_wildcards(expr, rule):
             f"pattern wildcard(s) {leaked} survived into a matched/reduced result from "
             f"rule {rule}: a predicate condition (MatchQ/EqQ/...) embedded in the "
             f"replacement was not evaluated at fire time. result={expr}")
+    # A Dummy in a result is the SCOPED-LOCAL analogue of a wildcard leak: With/
+    # Module alpha-rename their locals to Dummies, and every rule that uses the
+    # Module[{aa,bb,cc}, ... ReplaceAll[..., {aa->a,...}]] idiom must substitute
+    # them all back. ReplaceAll silently dropping a LIST of rules leaked _aa/_bb/
+    # _cc into an antiderivative (1.2.2.3 #86) and the wildcard check above could
+    # not see it -- they are ordinary Dummies, not pattern wildcards.
+    dummy_leaked = sorted({s.name for s in expr.free_symbols if s.is_Dummy})
+    if dummy_leaked:
+        raise RuntimeError(
+            f"scoped local(s) {dummy_leaked} survived into a matched/reduced result "
+            f"from rule {rule}: a With/Module local was never resolved (unevaluated "
+            f"ReplaceAll or similar). result={expr}")
 
 
 from rubi_rules.rule_order import (  # noqa: E402
@@ -567,7 +579,25 @@ def _try_deactivate_trig(f, x, path, replacer, budget, trace):
     reduced, blocked = _dfs_reduce_int(inert, x, path, replacer, local, budget, trace)
     if not blocked and _dfs_is_clean(reduced):
         return eager_ActivateTrig(reduced), local
-    # Second chance: the generated inert corpus is CSC-PRIMARY -- its 4.5 binomial
+    # Second chance: canonicalise pure negative powers of inert heads to their
+    # reciprocal heads (1/InertSin^2 -> InertCsc^2). The rule corpus, like Rubi's
+    # own, writes those patterns over csc/sec/cot, while Rubi's half-angle rules
+    # emit Sin[...]^(2n) with n<0 -- without this bridge Int[(c+dx)^2/(a+a cos)]
+    # and x/Sqrt[a+a cos] dead-ended in Unintegrable. It runs as a RETRY, not
+    # unconditionally: the §44 gate showed the normalised form diverts a couple of
+    # previously-working mixed sec/cos chains onto routes that stall, so the raw
+    # deactivated form keeps first shot at its established routes.
+    from rubi_rules.utils.inert_functions import fix_reciprocal_inert_powers
+    try:
+        fixed = fix_reciprocal_inert_powers(inert)
+    except Exception:
+        fixed = inert
+    if fixed != inert:
+        local1: list = []
+        reduced1, blocked1 = _dfs_reduce_int(fixed, x, path, replacer, local1, budget, trace)
+        if not blocked1 and _dfs_is_clean(reduced1):
+            return eager_ActivateTrig(reduced1), local1
+    # Third chance: the generated inert corpus is CSC-PRIMARY -- its 4.5 binomial
     # rules exist only over InertCsc (mixed rules pair InertCos/InertCot WITH
     # InertCsc), but UnifyInertTrigFunction (faithful to real Rubi, whose corpus has
     # both halves) can emit bare sec/cos/cot forms no rule matches -- e.g.

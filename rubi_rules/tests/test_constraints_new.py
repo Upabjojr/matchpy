@@ -1046,3 +1046,34 @@ class TestPolynomialDivideKeepsTheSplit:
         x, a, b = Symbol('x'), Symbol('a'), Symbol('b')
         u, v = (a + b*x**2)**2, x**2 + 1
         assert PolynomialDivide(u, v, x).doit() == eager_PolynomialDivide(u, v, x)
+
+
+class TestReciprocalInertPowersNormalise:
+    """Pure negative powers of inert trig heads must become their reciprocal heads
+    at deactivation time (1/InertSin^2 -> InertCsc^2): the rule corpus, like
+    Rubi's own, patterns on csc/sec/cot, while Rubi's half-angle rules emit
+    Sin[...]^(2n) with n < 0. Without the bridge, Int[(c+dx)^2/(a+a cos)] and
+    x/Sqrt[a+a cos] dead-ended in Unintegrable (defects §44)."""
+
+    def test_helper_rewrites_bare_negative_powers_only(self):
+        from sympy import Symbol
+        from rubi_rules.utils.inert_functions import (
+            InertSin, InertCsc, InertCos, InertSec, fix_reciprocal_inert_powers)
+        v = Symbol('v')
+        a, c, d = Symbol('a'), Symbol('c'), Symbol('d')
+        u = (c + d*v)**2/InertSin(v)**2
+        assert fix_reciprocal_inert_powers(u) == (c + d*v)**2*InertCsc(v)**2
+        assert fix_reciprocal_inert_powers(1/InertCos(v)) == InertSec(v)
+        # composite bases stay untouched (wildcard exponents bind those)
+        w = (a + InertSin(v))**-2
+        assert fix_reciprocal_inert_powers(w) == w
+        # positive powers stay untouched
+        assert fix_reciprocal_inert_powers(InertSin(v)**3) == InertSin(v)**3
+
+    def test_half_angle_chain_solves(self):
+        from sympy import Symbol, cos, sqrt, diff, N, Rational
+        from rubi_rules.base_objects import rubi_integrate, Int as _Int
+        xx, a, c, d = Symbol('x'), Symbol('a'), Symbol('c'), Symbol('d')
+        g = xx/sqrt(a*cos(c + d*xx) + a)
+        r = rubi_integrate(g, xx)
+        assert not r.has(_Int) and 'Unintegrable' not in str(r)
