@@ -883,7 +883,8 @@ def parse_rubi_loaded_basenames(json_path) -> "set | None":
     return loaded or None
 
 
-def group_entries_by_output(entries: List[dict], loaded_basenames=None) -> Dict[str, dict]:
+def group_entries_by_output(entries: List[dict], loaded_basenames=None,
+                            keep_unloaded: bool = False) -> Dict[str, dict]:
     """Group JSON entries by output path, merging expressions for duplicates.
 
     The output path is derived from the SECTION NUMBER alone, so an obsolete
@@ -914,15 +915,24 @@ def group_entries_by_output(entries: List[dict], loaded_basenames=None) -> Dict[
             any_loaded = any(n in loaded_basenames for n in names)
             for e, n in zip(group, names):
                 if any_loaded and n not in loaded_basenames:
-                    # SEGREGATE, do not drop: the extra rules are kept as a
-                    # last-resort module of their own (the 9.4 precedent), in a
-                    # sibling `..._unloaded.py` whose module_name carries the
-                    # `(unloaded)` marker that _module_load_index sends straight
-                    # to the tier-1 fallback -- so they can never pre-empt a
-                    # rule Rubi actually loads, but remain available.
-                    print(f"  [segregate unloaded] {n}.m -> {out[:-3]}_unloaded.py")
-                    unloaded_reroute[id(e)] = (out[:-3] + '_unloaded.py',
-                                               '(unloaded) ' + n)
+                    # An obsolete duplicate that would merge into a module Rubi
+                    # actually loads. Default: SKIP it -- verified directly on
+                    # the reference installation (ssh pi, DownValues served from
+                    # the Rubi.m-built .mx image) that real Rubi never loads
+                    # these files, and answers for formula-discriminating
+                    # integrals match the loaded-only rule set. With
+                    # --keep-unloaded the entry is instead segregated into a
+                    # sibling `..._unloaded.py` whose `(unloaded)` module-name
+                    # prefix sends it to the tier-1 priority fallback (the 9.4
+                    # last-resort precedent) -- available, never pre-empting.
+                    if not keep_unloaded:
+                        print(f"  [skip unloaded] {n}.m  (not in Rubi.m LoadRules; "
+                              f"merges with a loaded file)")
+                        unloaded_reroute[id(e)] = None
+                    else:
+                        print(f"  [segregate unloaded] {n}.m -> {out[:-3]}_unloaded.py")
+                        unloaded_reroute[id(e)] = (out[:-3] + '_unloaded.py',
+                                                   '(unloaded) ' + n)
     groups: Dict[str, dict] = {}
     for entry in entries:
         fpath = entry.get('file', '')
@@ -933,7 +943,10 @@ def group_entries_by_output(entries: List[dict], loaded_basenames=None) -> Dict[
             continue
         forced_desc = None
         if id(entry) in unloaded_reroute:
-            out, forced_desc = unloaded_reroute[id(entry)]
+            routed = unloaded_reroute[id(entry)]
+            if routed is None:
+                continue
+            out, forced_desc = routed
         if out not in groups:
             rel = fpath.replace('\\', '/')
             if 'IntegrationRules/' in rel:
@@ -1389,7 +1402,8 @@ Max = Symbol('Max')
 # =============================================================================
 
 def generate_all(json_path: Path, base_dir: Path,
-                 section_filter: Optional[str] = None) -> None:
+                 section_filter: Optional[str] = None,
+                 keep_unloaded: bool = False) -> None:
     """Generate all rule modules from the JSON."""
     print(f"Loading JSON from: {json_path}")
     entries = load_json_entries(json_path)
@@ -1398,7 +1412,7 @@ def generate_all(json_path: Path, base_dir: Path,
         print(f'Rubi.m LoadRules parsed: {len(loaded)} rule files')
     else:
         print('WARNING: Rubi.m not found next to the JSON -- obsolete-file filtering OFF')
-    groups  = group_entries_by_output(entries, loaded)
+    groups  = group_entries_by_output(entries, loaded, keep_unloaded)
 
     filter_re = re.compile(section_filter) if section_filter else None
     translator = RubiRuleTranslator()
@@ -1474,6 +1488,12 @@ def main():
         help='Base output directory (default: rubi_rules/ sibling of codegen/)'
     )
     parser.add_argument(
+        '--keep-unloaded', action='store_true',
+        help='Also emit obsolete duplicate rule files (absent from Rubi.m '
+             'LoadRules) as segregated tier-1 `*_unloaded.py` modules instead '
+             'of skipping them (default: skip)'
+    )
+    parser.add_argument(
         '--filter', '-f', default=None, metavar='REGEX',
         help='Only generate output paths matching this regex '
              '(e.g. "r_1_1_1" or "algebraic")'
@@ -1487,7 +1507,8 @@ def main():
     base_dir = args.output_dir or Path(os.path.dirname(os.path.dirname(__file__)))
     print(f"Output dir: {base_dir}")
 
-    generate_all(args.json, base_dir, section_filter=args.filter)
+    generate_all(args.json, base_dir, section_filter=args.filter,
+                 keep_unloaded=args.keep_unloaded)
 
 
 if __name__ == '__main__':
