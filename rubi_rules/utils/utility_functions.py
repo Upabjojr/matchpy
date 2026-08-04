@@ -65,6 +65,7 @@ from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed, NotInvertible, GeneratorsNeeded)
 from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree, invert)
 from sympy.sets.sets import FiniteSet
+from sympy.simplify.fu import TR8, hyper_as_trig
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import fraction, simplify, cancel, powsimp, nsimplify
@@ -515,12 +516,75 @@ def eager_Coefficient(expr, var, n=1):
         if expr == 0 or n in (zoo, oo):
             return 0
         expr = expand(expr)
-        if isinstance(n, (int, Integer)):
-            return expr.coeff(var, n)
-        else:
-            return expr.coeff(var**n)
+        if _has_nonmonomial_denominator(expr, var):
+            # A Mathematica coefficient must itself be free of var, so a
+            # NON-MONOMIAL denominator in var disqualifies the term entirely:
+            # Coefficient[(a+b x)/(c+d x), x, 1] is 0, not b/(c+d x), and
+            # Coefficient[x^2/(1+x), x, 2] is 0, not 1/(1+x). Only the constant
+            # term survives, as constant-of-numerator over constant-of-denominator
+            # (Coefficient[1/(a+b x), x, 0] = 1/a). Verified against Mathematica
+            # 12.2 -- see RUBI_PORT_DEFECTS.md 48.
+            # A MONOMIAL denominator is a genuine Laurent polynomial and keeps the
+            # ordinary path: Coefficient[a/x+b, x, -1] is a.
+            if n != 0:
+                return S.Zero
+            num, den = fraction(sym_together(expr))
+            den0 = expand(den).coeff(var, 0)
+            if den0 != 0:
+                return _monomial_coefficient(expand(num), var, S.Zero)/den0
+            return S.Zero
+        return _monomial_coefficient(expr, var, sympify(n))
 
     return Util_Coefficient(expr, var, n)
+
+
+def _monomial_coefficient(expr, var, n):
+    """Mathematica ``Coefficient``: bucket each term by its EXPLICIT power of var.
+
+    Mathematica reads a term's degree off its bare ``var**k`` factor only; every
+    other factor -- including one that contains var opaquely, like ``Sin[x]``,
+    ``Log[x]`` or ``Sqrt[c+d x]`` -- is just part of the coefficient. So
+    ``Coefficient[Sin[x]+x, x, 0]`` is ``Sin[x]`` and ``Coefficient[x Sin[x], x, 1]``
+    is ``Sin[x]``.
+
+    SymPy's ``.coeff(var, 0)`` instead DROPS any term mentioning var, so all three
+    of those came back 0 here.
+    """
+    total = S.Zero
+    for term in Add.make_args(expr):
+        deg = S.Zero
+        rest = []
+        for factor_ in Mul.make_args(term):
+            if factor_ == var:
+                deg += 1
+            elif factor_.is_Pow and factor_.base == var and factor_.exp.is_number:
+                deg += factor_.exp
+            else:
+                rest.append(factor_)
+        if deg == n:
+            total += Mul(*rest)
+    return total
+
+
+def _is_monomial_in(base, var):
+    """True when ``base`` is a bare monomial in ``var`` (``x``, ``a*x``, ``x**2``)."""
+    _, dep = base.as_independent(var, as_Add=False)
+    return dep is S.One or dep == var or (dep.is_Pow and dep.base == var)
+
+
+def _has_nonmonomial_denominator(expr, var):
+    """True when some term of ``expr`` divides by a non-monomial function of ``var``.
+
+    Cheap structural scan: it must stay off the hot path for the overwhelmingly
+    common polynomial case, so this looks at negative-exponent factors directly
+    rather than calling ``together``.
+    """
+    for term in Add.make_args(expr):
+        for factor_ in Mul.make_args(term):
+            if (factor_.is_Pow and factor_.exp.is_number and factor_.exp.is_negative
+                    and factor_.base.has(var) and not _is_monomial_in(factor_.base, var)):
+                return True
+    return False
 
 # Denominator moved to sympy_wolfram.functions_eager (imported above), paired with the
 # recursive Numerator; both bodies are pure SymPy (Simplify/together/fraction).
@@ -1276,27 +1340,47 @@ def eager_NiceSqrtQ(u):
     return eager_Not(eager_NegativeQ(u)) and NiceSqrtAuxQ(u)
 
 def eager_Together(u):
-    # Mathematica's Together leaves denominator-free expressions untouched
-    # (Together[(x+1)^2] = (x+1)^2, Together[a x + a] = a x + a): only expressions
-    # with a denominator get combined and cancelled. This used factor(u)
-    # unconditionally, so every Together-based guard (PosQ via TogetherSimplify, ...)
-    # FACTORED whatever a wildcard bound to -- fatal inside commutative match
-    # enumeration, where degree-~300 chunks of the expanded (a x^2 + b x^27)^12
-    # were factored per candidate partition (py-spy: dmp factorization leaves under
-    # check_constraint). For genuine fractions the factor() behaviour is kept: it
-    # combines over a common denominator AND cancels, with the factored-denominator
-    # presentation the rest of the port expects from Rubi's Together.
-    # Denominator-free: Mathematica still pulls the CONTENT out of sums --
-    # Together[6x+9] = 3(2x+3), Together[a^3+3a^2 b x+3a b^2 x^2] = a(a^2+...) --
-    # which RemoveContent and PolynomialDivide rely on. sympy's factor_terms does
-    # exactly that (content extraction, no factorization).
+    # This must never FACTOR: an unconditional factor(u) made every Together-based
+    # guard (PosQ via TogetherSimplify, ...) factor whatever a wildcard bound to,
+    # which is fatal inside commutative match enumeration -- degree-~300 chunks of
+    # the expanded (a x^2 + b x^27)^12 were factored per candidate partition
+    # (py-spy: dmp factorization leaves under check_constraint).
+    # The content Mathematica pulls out is NUMERIC ONLY -- verified on Mathematica
+    # 12.2 (RUBI_PORT_DEFECTS.md 49). factor_terms also extracts SYMBOLIC content,
+    # which Together never does:
+    #     Together[x^2+2x]      = 2x + x^2        (we gave x(2+x))
+    #     Together[a x + a y]   = a x + a y       (we gave a(x+y))
+    #     Together[6a x^2+9a x] = 3(3a x+2a x^2)  (numeric 3 out, a and x left in)
+    # and a genuine fraction is combined+cancelled but its NUMERATOR is left
+    # expanded, not factored:
+    #     Together[x^2/4+x/2+1/4] = (1+2x+x^2)/4  (we gave (1+x)^2/4)
+    # A product or power is structural and Together leaves it alone
+    # (Together[(1+x)^2] = (1+x)^2), so only a Sum gets its numerator expanded.
     u = S(u)
-    if not u.is_Atom and u.as_numer_denom()[1] == S.One:
-        try:
-            return factor_terms(u)
-        except (AttributeError, TypeError):
-            return u
-    return factor(u)
+    if u.is_Atom:
+        return u
+    try:
+        if u.is_Add:
+            # A Sum is combined over the common denominator (including a purely
+            # NUMERIC one -- Together[x/2+y/3] = (3x+2y)/6, which factor() alone
+            # leaves untouched) and then cancelled. cancel() expands the
+            # denominator, so restore the factored presentation Rubi's Together
+            # output has.
+            num, den = fraction(cancel(sym_together(u)))
+            num = expand(num)
+            if den != S.One:
+                den = factor(den)
+        else:
+            # A product or power is already a single fraction: factor() cancels it
+            # without expanding the structure Mathematica preserves here
+            # (Together[(1+x)^2] = (1+x)^2, Together[(x^2-1)/(x-1)] = 1+x).
+            num, den = fraction(factor(u))
+        content, primitive = num.as_content_primitive()
+        if content is not S.One and primitive.is_Add:
+            num = _keep_coeff(content, primitive)
+        return num if den == S.One else num/den
+    except (AttributeError, TypeError, ValueError, PolynomialError):
+        return u
 
 def _cmp_gt0(val):
     """``val > 0`` guarded against a NaN / non-real comparison.
@@ -5485,70 +5569,38 @@ def TrigReduce(i):
     sin(x) + cos(2*x)/2 + 1/2
 
     """
-    if eager_SumQ(i):
-        t = 0
-        for k in i.args:
-            t += TrigReduce(k)
-        return t
-    if eager_ProductQ(i):
-        if any(eager_PowerQ(k) for k in i.args):
-            if (i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
-                return i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
-            else:
-                return i.rewrite((sin, sinh), sym_exp).rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, sin)
-        else:
-            a = Wild('a')
-            b = Wild('b')
-            v = Wild('v')
-            Match = i.match(v*sin(a)*cos(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*sin(a)*cos(b), v*S(1)/2*(sin(a + b) + sin(a - b)))
-            Match = i.match(v*sin(a)*sin(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*sin(a)*sin(b), v*S(1)/2*(cos(a - b) - cos(a + b)))
-            Match = i.match(v*cos(a)*cos(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*cos(a)*cos(b), v*S(1)/2*(cos(a + b) + cos(a - b)))
-            Match = i.match(v*sinh(a)*cosh(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*sinh(a)*cosh(b), v*S(1)/2*(sinh(a + b) + sinh(a - b)))
-            Match = i.match(v*sinh(a)*sinh(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*sinh(a)*sinh(b), v*S(1)/2*(cosh(a + b) - cosh(a - b)))
-            Match = i.match(v*cosh(a)*cosh(b))
-            if Match:
-                a = Match[a]
-                b = Match[b]
-                v = Match[v]
-                return i.subs(v*cosh(a)*cosh(b), v*S(1)/2*(cosh(a + b) + cosh(a - b)))
+    # This used to rewrite through exponentials and finish with .simplify(). Two
+    # ways that diverged from Mathematica, both verified against TrigReduce in
+    # Mathematica 12.2 (RUBI_PORT_DEFECTS.md 47):
+    #  * .simplify() RE-COLLAPSES the reduced form, so TrigReduce[Sinh[x]^2] came
+    #    back as Sinh[x]^2 rather than (Cosh[2x]-1)/2 -- every hyperbolic
+    #    product/power was returned untouched. ExpandTrigReduce then handed rules
+    #    like 6.7.9's Int[Sinh[v]^p Sinh[w]^q] back the integrand they fired on.
+    #  * .expand() on the exponential form SPLITS a combined argument
+    #    (exp(4a+4bx) -> exp(4a) exp(4bx)), so Sin[a+b x]^2 Cos[a+b x]^2 reduced to
+    #    Sin[4a] Sin[4bx]/8 - Cos[4a] Cos[4bx]/8 + 1/8 instead of 1/8 - Cos[4a+4bx]/8.
+    #    Value-equal, but the split form matches no rule pattern.
+    # TR8 is the product-to-sum transform itself; it only descends one level
+    # (Sin[x]^4 stops at Cos[2x]^2/4-...), so iterate it to a fixed point.
+    i = sympify(i)
 
-    if eager_PowerQ(i):
-        if i.has(sin, sinh):
-            if (i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin)).has(I, cosh, sinh):
-                return i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin).simplify()
-            else:
-                return i.rewrite((sin, sinh), sym_exp).expand().rewrite(sym_exp, sin)
-        if i.has(cos, cosh):
-            if (i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos)).has(I, cosh, sinh):
-                return i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos).simplify()
-            else:
-                return i.rewrite((cos, cosh), sym_exp).expand().rewrite(sym_exp, cos)
-    return i
+    def _reduce(e):
+        cur = e
+        for _ in range(8):
+            nxt = expand(TR8(cur))
+            if nxt == cur:
+                break
+            cur = nxt
+        return cur
+
+    try:
+        if i.has(sinh, cosh, tanh, coth):
+            # TR8 is circular-only; hyper_as_trig is SymPy's standard bridge.
+            circular, back = hyper_as_trig(i)
+            return back(_reduce(circular))
+        return _reduce(i)
+    except (AttributeError, TypeError, ValueError, PolynomialError):
+        return i
 
 def eager_FunctionOfTrig(u, *args):
     # If u is a function of trig functions of v where v is a linear function of x,

@@ -790,3 +790,32 @@ def test_replaceall_accepts_a_list_of_rules():
     # simultaneous, not sequential: aa->bb, bb->aa swaps rather than chains
     swapped = mf.ReplaceAll(aa - bb, mf.List(mf.Rule(aa, bb), mf.Rule(bb, aa))).doit()
     assert swapped == bb - aa
+
+
+@pytest.mark.parametrize('imin, imax, want', [
+    # Mathematica steps the iterator by 1 starting EXACTLY at imin and stops at the
+    # last value <= imax: only the UPPER bound truncates. Values read off
+    # Mathematica 12.2 (RUBI_PORT_DEFECTS.md 50) -- rounding imin up gives 6 for the
+    # half-integer case, which is what this port used to return.
+    (0, sympy.Rational(11, 3), 6),          # k = 0,1,2,3
+    (sympy.Rational(1, 2), sympy.Rational(7, 2), 8),   # k = 1/2,3/2,5/2,7/2
+    (0, 3, 6),
+    (1, 4, 10),
+    (0, -1, 0),                             # empty range
+])
+def test_Sum_iterates_like_mathematica(imin, imax, want):
+    k = Symbol('k')
+    got = mf.Sum(k, mf.List(k, imin, imax)).doit()
+    assert got == Integer(want)
+
+
+def test_Sum_fractional_upper_bound_expands():
+    """Mathematica: Sum[x^(3k), {k, 0, 11/3}] = 1 + x^3 + x^6 + x^9.
+
+    sympy.Sum leaves a fractional-bound sum UNEVALUATED, which is how a Rubi rule
+    ended up carrying an unexpanded Sum (and its loose iterator) into a result.
+    """
+    x, k = Symbol('x'), Symbol('k')
+    got = mf.Sum(x**(3*k), mf.List(k, 0, sympy.Rational(11, 3))).doit()
+    assert sympy.expand(got - (1 + x**3 + x**6 + x**9)) == 0
+    assert k not in got.free_symbols

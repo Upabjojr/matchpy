@@ -25,6 +25,10 @@ from sympy import Expr, Integer, S
 from sympy_wolfram.objects import List, MathematicaExpr
 from sympy_wolfram import functions_eager as _eager
 
+# Above this many terms, expanding a Sum term-by-term costs more than it buys;
+# hand it back to sympy.Sum, which can still find a closed form.
+_SUM_EXPANSION_LIMIT = 200
+
 
 # ---------------------------------------------------------------------------
 # Bucket A — evaluation depends solely on SymPy.
@@ -114,6 +118,32 @@ class ReplaceAll(MathematicaExpr):
         return expr
 
 
+def _expand_sum(expr, limits):
+    """Mathematica ``Sum`` over CONCRETE bounds, or None if they are not concrete.
+
+    Mathematica steps the iterator by 1 starting EXACTLY at ``imin`` and stops at
+    the last value <= ``imax``; the lower bound is NOT rounded. Verified on
+    Mathematica 12.2: ``Sum[k,{k,1/2,7/2}]`` = 8 (k = 1/2,3/2,5/2,7/2) -- rounding
+    imin up would give 6 -- and ``Sum[x^(3k),{k,0,11/3}]`` = 1+x^3+x^6+x^9.
+    sympy.Sum leaves any fractional-bound sum unevaluated, so expand explicitly.
+    """
+    if not (isinstance(limits, List) and len(limits.args) == 3):
+        return None
+    i, imin, imax = limits.args
+    if not (getattr(imin, "is_number", False) and getattr(imax, "is_number", False)):
+        return None
+    try:
+        steps = sympy.floor(imax - imin)
+        if steps.is_negative:
+            return S.Zero
+        count = int(steps)
+    except (TypeError, ValueError):
+        return None
+    if count > _SUM_EXPANSION_LIMIT:
+        return sympy.Sum(expr, (i, imin, imin + count)).doit()
+    return sympy.Add(*[expr.subs(i, imin + t) for t in range(count + 1)])
+
+
 class SumWolfram(MathematicaExpr):
     """Mathematica Sum[expr, {i, imin, imax}] — symbolic summation.
 
@@ -131,23 +161,20 @@ class SumWolfram(MathematicaExpr):
         # documented floor/ceil handling now actually runs for these rules.
         if isinstance(limits, (list, tuple)):
             limits = List(*limits)
+        # NOTE: do NOT expand here. Rubi's `Module[{k,u}, u = f[k]; Sum[u,{k,1,n}]]`
+        # idiom builds the Sum while its summand is still the bare local `u`; the
+        # binding arrives afterwards from the enclosing Set. Expanding at
+        # construction would sum `u` with itself n times and lose the iterator
+        # (verified against Mathematica in test_compound_set_scoping_matches_mathematica).
         return Expr.__new__(cls, sympy.sympify(expr), limits)
 
     def _evaluate(self, **kwargs):
         expr, limits = self.args
+        expanded = _expand_sum(expr, limits)
+        if expanded is not None:
+            return expanded
         if isinstance(limits, List) and len(limits.args) == 3:
             i, imin, imax = limits.args
-            # Mathematica ``Sum`` iterates ``i`` in unit steps from ``imin``, stopping
-            # at the largest value <= ``imax``. So a non-integer bound truncates toward
-            # the interior (imax -> floor, imin -> ceiling). The binomial-Pq rules
-            # (e.g. r_1_1_2_12) build limits like (q-r)/n = 5/4, and sympy.Sum leaves a
-            # fractional-bound sum UNEVALUATED -- a symbolic Sum that then drives
-            # simplify() into unbounded recursion (crashed (x^4+1)/(x^8+1)). Floor/ceil
-            # the concrete bounds so the sum actually expands to its finite terms.
-            if getattr(imax, "is_number", False) and imax.is_integer is False:
-                imax = sympy.floor(imax)
-            if getattr(imin, "is_number", False) and imin.is_integer is False:
-                imin = sympy.ceiling(imin)
             return sympy.Sum(expr, (i, imin, imax)).doit()
         return sympy.Sum(expr, limits)
 

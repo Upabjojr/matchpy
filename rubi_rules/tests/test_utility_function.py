@@ -707,9 +707,18 @@ def test_PolynomialDivide():
     assert eager_PolynomialDivide((a*c - b*c*x)**2, (a + b*x)**2, x) == -4*a*b*c**2*x/(a + b*x)**2 + c**2
     assert eager_PolynomialDivide(x + x**2, x, x) == x + 1
     assert eager_PolynomialDivide((1 + x)**3, (1 + x)**2, x) == x + 1
-    assert eager_PolynomialDivide((a + b*x)**3, x**3, x) == a*(a**2 + 3*a*b*x + 3*b**2*x**2)/x**3 + b**3
+    # Cross-checked on Rubi 4.17.3.0 / Mathematica 12.2:
+    #   PolynomialDivide[(a+b x)^3, x^3, x] = b^3 + (a^3+3a^2 b x+3a b^2 x^2)/x^3
+    # The numerator keeps its `a` -- Together extracts NUMERIC content only, so the
+    # old expectation (a factored out) encoded the pre-defect-49 Together.
+    assert eager_PolynomialDivide((a + b*x)**3, x**3, x) == (a**3 + 3*a**2*b*x + 3*a*b**2*x**2)/x**3 + b**3
     assert eager_PolynomialDivide(x**3*(a + b*x), S(1), x) == b*x**4 + a*x**3
-    assert eager_PolynomialDivide(x**6, (a + b*x)**2, x) == -a**5*(5*a + 6*b*x)/(b**6*(a + b*x)**2) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
+    # Rubi 4.17.3.0 returns the numerator unfactored here too. Its FullForm is
+    #   Times[-1, Power[b,-6], Power[Plus[a,b x],-2], Plus[5a^6, 6a^5 b x]]
+    # -- the -1 is NOT distributed into the Plus (Mathematica only absorbs a bare
+    # -1 when the Plus is the sole other factor). Hence the extra parentheses:
+    # `-(A)/(d)` would distribute the sign and build the wrong structure.
+    assert eager_PolynomialDivide(x**6, (a + b*x)**2, x) == -((5*a**6 + 6*a**5*b*x)/(b**6*(a + b*x)**2)) + 5*a**4/b**6 - 4*a**3*x/b**5 + 3*a**2*x**2/b**4 - 2*a*x**3/b**3 + x**4/b**2
 
 def test_MatchQ():
     a_ = Wild('a', exclude=[x])
@@ -3569,3 +3578,114 @@ def test_smartapart_association_list_keeps_gensym_kernel_pairs():
     L = log(d + e*xx)
     u2 = eager_ExpandIntegrand(L, rfx, xx)
     assert abs(N((u2 - L*rfx).subs(subs).subs(xx, Rational(3, 7)), 25)) < 1e-20
+
+
+_x, _y, _a, _b, _c, _d = symbols('x y a b c d')
+
+# Mathematica keeps `Times[2, Plus[a, 2 b]]` unflattened, and so does our Together
+# (via _keep_coeff). A plain Python literal `2*(a + 2*b)` DISTRIBUTES, so it cannot
+# express the expected structure -- build it the same way the function does.
+from sympy.core.mul import _keep_coeff as _kc
+
+# ---------------------------------------------------------------------------
+# Mathematica 12.2 / Rubi 4.17.3.0 cross-verified values for the functions
+# corrected in RUBI_PORT_DEFECTS.md 47-49. Every expected value below was read
+# off real Mathematica on the Pi, not derived from the port.
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize('src, want', [
+    # TrigReduce must COMBINE arguments and must reduce hyperbolics. The old
+    # implementation returned every hyperbolic power unchanged (.simplify()
+    # re-collapsed it) and split combined arguments via .expand().
+    (cos(_x)**2, (1 + cos(2*_x))/2),
+    (sin(_x)**2, (1 - cos(2*_x))/2),
+    (sin(_x)*cos(_x), sin(2*_x)/2),
+    (sin(_x)**4, (3 - 4*cos(2*_x) + cos(4*_x))/8),
+    (sin(_x)**5, (10*sin(_x) - 5*sin(3*_x) + sin(5*_x))/16),
+    (cos(_x)**6, (10 + 15*cos(2*_x) + 6*cos(4*_x) + cos(6*_x))/32),
+    (sinh(_x)**2, (-1 + cosh(2*_x))/2),
+    (cosh(_x)**2, (1 + cosh(2*_x))/2),
+    (cosh(_x)**4, (3 + 4*cosh(2*_x) + cosh(4*_x))/8),
+    (sinh(_x)**3, (-3*sinh(_x) + sinh(3*_x))/4),
+    (sinh(_x)*cosh(_x), sinh(2*_x)/2),
+    (cosh(_x)**2*sinh(_x)**2, (-1 + cosh(4*_x))/8),
+    (cos(_x)*sin(_x)*sin(2*_x), (1 - cos(4*_x))/4),
+    (cos(_x)**3*sin(_x)**3, (3*sin(2*_x) - sin(6*_x))/32),
+])
+def test_TrigReduce_matches_mathematica(src, want):
+    from sympy import expand
+    # Structural comparison after expand(): both sides are sums of single-argument
+    # trig terms, and a VALUE check would pass an untouched input unchanged.
+    assert expand(TrigReduce(src)) == expand(want)
+
+
+def test_TrigReduce_combines_arguments_not_splits_them():
+    """Mathematica: TrigReduce[Sin[a+b x]^2 Cos[a+b x]^2] = (1 - Cos[4a+4b x])/8.
+
+    Rewriting through exponentials and calling .expand() split exp(4a+4b x) into
+    exp(4a) exp(4b x), producing a value-equal answer that matches no rule pattern.
+    """
+    from sympy import expand
+    got = TrigReduce(sin(_a + _b*_x)**2*cos(_a + _b*_x)**2)
+    assert expand(got) == expand(Rational(1, 8) - cos(4*_a + 4*_b*_x)/8)
+
+
+@pytest.mark.parametrize('expr, n, want', [
+    # A Mathematica coefficient is FREE OF x, so a non-monomial denominator in x
+    # disqualifies the term; only the constant term survives, as
+    # constant-of-numerator / constant-of-denominator.
+    ((_a + _b*_x)/(_c + _d*_x), 1, S.Zero),
+    ((_a + _b*_x)/(_c + _d*_x), 2, S.Zero),
+    ((_a + _b*_x)/(_c + _d*_x), 0, _a/_c),
+    (1/(_a + _b*_x), 0, 1/_a),
+    (1/(_a + _b*_x), 1, S.Zero),
+    (_x**2/(1 + _x), 2, S.Zero),
+    (_b*_x/(_c + _d*_x), 1, S.Zero),
+    (1/(1 + _x**2), 0, S.One),
+    # A MONOMIAL denominator is a genuine Laurent polynomial and keeps working.
+    (_a/_x + _b, -1, _a),
+    (_a/_x + _b, 0, _b),
+    (_a/_x**2 + _b*_x, -2, _a),
+    # Non-rational x-dependence is an OPAQUE coefficient of degree 0, not dropped.
+    (sin(_x) + _x, 0, sin(_x)),
+    (_x*sin(_x), 1, sin(_x)),
+    (_x*sin(_x), 0, S.Zero),
+    (_a*log(_x) + _b*_x, 0, _a*log(_x)),
+    (_a*sqrt(_c + _d*_x) + _b*_x, 0, _a*sqrt(_c + _d*_x)),
+    (_a*sqrt(_c + _d*_x) + _b*_x, 1, _b),
+    (sqrt(_x) + _x, Rational(1, 2), S.One),
+])
+def test_Coefficient_matches_mathematica(expr, n, want):
+    from sympy import simplify
+    assert simplify(eager_Coefficient(expr, _x, S(n)) - want) == 0
+
+
+@pytest.mark.parametrize('expr, want', [
+    # Together extracts NUMERIC content only -- symbolic content is ContentFactor's
+    # job, a different Rubi function. Compared structurally: a value check cannot
+    # tell a factored answer from an unfactored one.
+    (_x**2 + 2*_x, _x**2 + 2*_x),
+    (_a*_x + _a*_y, _a*_x + _a*_y),
+    (_a*_x**2 + _a*_x, _a*_x + _a*_x**2),
+    (_x**3 + _x**2, _x**2 + _x**3),
+    (_a**3 + 3*_a**2*_b*_x + 3*_a*_b**2*_x**2, _a**3 + 3*_a**2*_b*_x + 3*_a*_b**2*_x**2),
+    (_a**2 - _b**2, _a**2 - _b**2),
+    # ... but numeric content IS pulled out
+    (2*_a + 4*_b, _kc(S(2), _a + 2*_b)),
+    (4*_x**2 - 4, _kc(S(4), _x**2 - 1)),
+    # a Sum is combined over the common denominator -- including a purely NUMERIC
+    # one, which factor() alone leaves untouched -- with the numerator expanded
+    (_x/2 + _y/3, _kc(Rational(1, 6), 3*_x + 2*_y)),
+    (_x**2/4 + _x/2 + Rational(1, 4), _kc(Rational(1, 4), _x**2 + 2*_x + 1)),
+    (_a + _b*_x + (_a + _b*_x)**2, _a + _a**2 + _b*_x + 2*_a*_b*_x + _b**2*_x**2),
+    # products and powers are structural: Together leaves them alone
+    ((1 + _x)**2, (1 + _x)**2),
+    (_x*(_x + 1), _x*(1 + _x)),
+    (_a*(_x + 1)**2, _a*(1 + _x)**2),
+    # genuine fractions are cancelled
+    ((_x**2 - 1)/(_x - 1), 1 + _x),
+    ((4*_x**2 - 4)/(2*_x + 2), _kc(S(2), _x - 1)),
+    (S(6)/(2*_x + 4), 3/(2 + _x)),
+])
+def test_Together_matches_mathematica(expr, want):
+    assert eager_Together(expr) == want
