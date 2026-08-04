@@ -861,8 +861,68 @@ def strip_unused_imports(paths: List[Path]) -> Tuple[int, str]:
     return changed, f'{changed} module(s) had unused imports removed'
 
 
-def group_entries_by_output(entries: List[dict]) -> Dict[str, dict]:
-    """Group JSON entries by output path, merging expressions for duplicates."""
+def parse_rubi_loaded_basenames(json_path) -> "set | None":
+    """The set of rule-file basenames Rubi.m actually loads, or None if unknown.
+
+    Parsed from ``<json_dir>/Rubi/Rubi.m``'s ``LoadRules[FileNameJoin[{...}]]``
+    calls (200 in Rubi 4.17.3.0). The checkout's rule DIRECTORIES also contain
+    obsolete duplicate files from older numberings (no .nb companion, absent
+    from LoadRules) -- e.g. BOTH ``1.2.1.3 ... (f+g x) ...m`` (old) and
+    ``1.2.1.3 ... (f+g x)^n ...m`` (current).
+    """
+    import re as _re
+    rubi_m = os.path.join(os.path.dirname(str(json_path)), 'Rubi', 'Rubi.m')
+    if not os.path.exists(rubi_m):
+        return None
+    text = open(rubi_m, encoding='utf-8', errors='replace').read()
+    loaded = set()
+    for m in _re.finditer(r'LoadRules\[FileNameJoin\[\{([^\]]+)\}\]\]', text):
+        parts = [p.strip().strip('"') for p in m.group(1).split(',')]
+        if parts and not parts[-1].startswith('fileName'):
+            loaded.add(parts[-1])
+    return loaded or None
+
+
+def group_entries_by_output(entries: List[dict], loaded_basenames=None) -> Dict[str, dict]:
+    """Group JSON entries by output path, merging expressions for duplicates.
+
+    The output path is derived from the SECTION NUMBER alone, so an obsolete
+    duplicate file merges into the same module as the current one -- with its
+    rules interleaved and the module_name taken from whichever file came first.
+    That both scrambled rule priority (RUBI_PORT_DEFECTS.md 52: the merged
+    1.2.1.3 module took the obsolete title, matched nothing in the load order,
+    and its whole 195-rule family sorted behind the 9.x catch-alls) and mixed
+    formula GENERATIONS (29 same-pattern/different-replacement pairs at one
+    priority slot from the obsolete 1.2.1.5 duplicate of 1.2.1.4).
+
+    So: when a group draws from BOTH loaded and not-loaded source files, the
+    not-loaded ones are dropped. A group whose ONLY sources are not-loaded is
+    kept -- those become the deliberate tier-1 last-resort modules (9.2/9.4
+    alternates etc.; deleting them loses integrals they alone can do).
+    """
+    unloaded_reroute = {}
+    if loaded_basenames:
+        by_out: Dict[str, list] = {}
+        for entry in entries:
+            out = _make_output_path(entry.get('file', ''))
+            if out is not None:
+                by_out.setdefault(out, []).append(entry)
+        for out, group in by_out.items():
+            names = [os.path.basename(e.get('file', ''))[:-2]
+                     if e.get('file', '').endswith('.m') else os.path.basename(e.get('file', ''))
+                     for e in group]
+            any_loaded = any(n in loaded_basenames for n in names)
+            for e, n in zip(group, names):
+                if any_loaded and n not in loaded_basenames:
+                    # SEGREGATE, do not drop: the extra rules are kept as a
+                    # last-resort module of their own (the 9.4 precedent), in a
+                    # sibling `..._unloaded.py` whose module_name carries the
+                    # `(unloaded)` marker that _module_load_index sends straight
+                    # to the tier-1 fallback -- so they can never pre-empt a
+                    # rule Rubi actually loads, but remain available.
+                    print(f"  [segregate unloaded] {n}.m -> {out[:-3]}_unloaded.py")
+                    unloaded_reroute[id(e)] = (out[:-3] + '_unloaded.py',
+                                               '(unloaded) ' + n)
     groups: Dict[str, dict] = {}
     for entry in entries:
         fpath = entry.get('file', '')
@@ -871,12 +931,17 @@ def group_entries_by_output(entries: List[dict]) -> Dict[str, dict]:
         out   = _make_output_path(fpath)
         if out is None or (not exprs and not err):
             continue
+        forced_desc = None
+        if id(entry) in unloaded_reroute:
+            out, forced_desc = unloaded_reroute[id(entry)]
         if out not in groups:
             rel = fpath.replace('\\', '/')
             if 'IntegrationRules/' in rel:
                 rel = rel.split('IntegrationRules/', 1)[1]
             desc = rel.rsplit('/', 1)[-1] if '/' in rel else rel
             desc = re.sub(r'\.m$', '', desc)
+            if forced_desc is not None:
+                desc = forced_desc
             groups[out] = {
                 'expressions': [],
                 'source_files': [],
@@ -1328,7 +1393,12 @@ def generate_all(json_path: Path, base_dir: Path,
     """Generate all rule modules from the JSON."""
     print(f"Loading JSON from: {json_path}")
     entries = load_json_entries(json_path)
-    groups  = group_entries_by_output(entries)
+    loaded  = parse_rubi_loaded_basenames(json_path)
+    if loaded:
+        print(f'Rubi.m LoadRules parsed: {len(loaded)} rule files')
+    else:
+        print('WARNING: Rubi.m not found next to the JSON -- obsolete-file filtering OFF')
+    groups  = group_entries_by_output(entries, loaded)
 
     filter_re = re.compile(section_filter) if section_filter else None
     translator = RubiRuleTranslator()
