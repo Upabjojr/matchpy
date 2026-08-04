@@ -4036,3 +4036,35 @@ def test_FunctionOfTanWeight_matches_mathematica(expr, want):
 def test_AllNegTermQ_matches_mathematica(expr, want):
     assert AllNegTermQ(expr) == want
 
+
+
+def test_ordering_predicates_fold_with_together_like_rubi():
+    """Rubi's GtQ/LtQ/GeQ/LeQ decide via ``N[Together[u]]``: a side that
+    Together collapses to an explicit real number compares numerically; any
+    symbolic residue means False. All values verified on Rubi 4.17.3.0.
+
+    The motivating value is rule 1.1.1.3 #70's guard after one #71
+    normalisation -- ``Together`` gives exactly 1, so GtQ is True; comparing
+    the raw expression is undecidable, and answering False there left #71
+    re-normalising forever (Int[(a + b Sinh Cosh)^m] hung >90 s where Rubi
+    needs 0.8 s). See RUBI_PORT_DEFECTS.md 52.
+    """
+    from sympy import I as _I
+    val = 1/(a/(a + _I*b/2) + _I*b/(2*a + _I*b))   # Together -> 1
+    assert Greater(val, 0) is True
+    assert GreaterEqual(val, 1) is True
+    assert LessEqual(val, 1) is True
+    assert Less(val, 2) is True
+    assert Less(val, 1) is False
+    # Mathematica's Together also CANCELS (defect 49): (a^2+2ab+b^2)/(a+b)^2 -> 1
+    assert Greater((a**2 + 2*a*b + b**2)/(a + b)**2, 0) is True
+    assert GreaterEqual((a**2 + 2*a*b + b**2)/(a + b)**2, 1) is True
+    # symbolic residue -> False, exactly like Rubi
+    assert Greater(a, 0) is False
+    assert Greater(1/(1/a + 1/b), 0) is False
+    assert Less(a, 0) is False
+    # explicit complex -> False
+    assert Greater(_I, 0) is False
+    # plain numbers keep working
+    assert Greater(2, 1) is True
+    assert Less(-1, S(1)/2, 1) is True

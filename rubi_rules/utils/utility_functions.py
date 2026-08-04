@@ -653,53 +653,89 @@ def Csch(u):
 def Coth(u):
     return coth(u)
 
-def LessEqual(*args):
+def _rubi_real_number(u):
+    """Rubi's comparison fold: the explicit real number ``u`` reduces to, else None.
+
+    Every Rubi ordering predicate (``GtQ``/``LtQ``/``GeQ``/``LeQ``, which the
+    Less/Greater helpers below implement) decides via
+    ``RealNumberQ[u]`` or ``With[{un = N[Together[u]]}, Head[un] === Real]`` --
+    i.e. a side that is not ALREADY an explicit real number is passed through
+    ``Together`` and numerically evaluated, and only an explicit real survives.
+    The raw-comparison shortcut alone missed exactly the values Together
+    collapses: rule 1.1.1.3 #70's guard ``GtQ[b/(b*e - a*f), 0]`` sees
+    ``1/(a/(a + I b/2) + I b/(2a + I b))`` -- Together gives 1, so Rubi says
+    True, while the raw sympy comparison is undecidable and the port said
+    False. #70 (the AppellF1 close) then never fired while #71 (the
+    normalisation that MADE that value) kept re-firing, nesting coefficients
+    forever with no detectable cycle: `Int[(a + b Sinh Cosh)^m]` hung >90 s
+    where Rubi finishes in 0.8 s (RUBI_PORT_DEFECTS.md 52).
+
+    The op-count cap is a §40-style hot-path protection: these run inside
+    commutative match enumeration, and sympy's together() on a huge chunk is
+    not the O(fast) that Mathematica's Together is. A >1000-op coefficient
+    expression that folds to an explicit real is not a case the rule corpus
+    produces.
+    """
+    u = S(u)
+    if u.is_Number:
+        return u if u.is_extended_real else None
+    if u.count_ops() > 1000:
+        return None
+    try:
+        # Mathematica's Together both combines AND cancels (defect 49) --
+        # GtQ[(a^2+2ab+b^2)/(a+b)^2, 0] is True in Rubi because Together gives 1.
+        # sympy's together() only combines, so run cancel() over it.
+        un = cancel(sym_together(u))
+        if un.is_Number:
+            return un if un.is_extended_real else None
+        f = un.evalf(15)
+        if f.is_Number and f.is_extended_real:
+            return f
+    except Exception:
+        pass
+    return None
+
+
+def _rubi_compare(args, raw_op, num_op):
+    """Chain comparison with Rubi's ``N[Together[...]]`` fold as the fallback.
+
+    ``raw_op(a, b)`` is the sympy relational (kept first: it is fast and lets
+    assumption-carrying symbols decide); when it cannot prove the relation,
+    both sides are folded with :func:`_rubi_real_number` and compared
+    numerically, exactly as Rubi's GtQ/LtQ/GeQ/LeQ do. Anything still
+    undecided is False (Mathematica leaves the relation unevaluated, so the
+    predicate is not provably true).
+    """
     for i in range(0, len(args) - 1):
+        u, v = args[i], args[i + 1]
         try:
-            if (args[i] > args[i + 1]) != False:
+            if raw_op(u, v) == True:  # noqa: E712  (sympy ternary logic)
+                continue
+        except (NotImplementedError, TypeError):
+            pass
+        un = _rubi_real_number(u)
+        vn = _rubi_real_number(v)
+        if un is None or vn is None:
+            return False
+        try:
+            if not num_op(un, vn):
                 return False
-        except (IndexError, NotImplementedError, TypeError):
-            # TypeError: sympy raises on an ordering comparison of a non-real
-            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
-            # the predicate is not provably true -> False (as for the other cases).
+        except TypeError:
             return False
     return True
+
+
+def LessEqual(*args):
+    return _rubi_compare(args, lambda a, b: a <= b, lambda a, b: a <= b)
 
 def Less(*args):
-    for i in range(0, len(args) - 1):
-        try:
-            if (args[i] >= args[i + 1]) != False:
-                return False
-        except (IndexError, NotImplementedError, TypeError):
-            # TypeError: sympy raises on an ordering comparison of a non-real
-            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
-            # the predicate is not provably true -> False (as for the other cases).
-            return False
-    return True
+    return _rubi_compare(args, lambda a, b: a < b, lambda a, b: a < b)
 
 def Greater(*args):
-    for i in range(0, len(args) - 1):
-        try:
-            if (args[i] <= args[i + 1]) != False:
-                return False
-        except (IndexError, NotImplementedError, TypeError):
-            # TypeError: sympy raises on an ordering comparison of a non-real
-            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
-            # the predicate is not provably true -> False (as for the other cases).
-            return False
-    return True
+    return _rubi_compare(args, lambda a, b: a > b, lambda a, b: a > b)
 
 def GreaterEqual(*args):
-    for i in range(0, len(args) - 1):
-        try:
-            if (args[i] < args[i + 1]) != False:
-                return False
-        except (IndexError, NotImplementedError, TypeError):
-            # TypeError: sympy raises on an ordering comparison of a non-real
-            # (e.g. -2*I). Mathematica leaves Less/Greater unevaluated there, so
-            # the predicate is not provably true -> False (as for the other cases).
-            return False
-    return True
+    return _rubi_compare(args, lambda a, b: a >= b, lambda a, b: a >= b)
 
 def eager_FractionQ(*args):
     """

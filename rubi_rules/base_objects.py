@@ -338,6 +338,22 @@ _TITLE_INDEX = {}
 for _i, _name in enumerate(RUBI_LOAD_ORDER):
     _TITLE_INDEX.setdefault(_module_title(_name), _i)
 
+# Generated modules whose name matches NEITHER a load-list entry nor any entry's
+# title, but which ARE (or contain) a module Rubi loads. The codegen merges rule
+# files that share a section slug -- `r_1_2_1_3.py` says
+# `# Source: "1.2.1.3 ... (f+g x) ...m", "1.2.1.3 ... (f+g x)^n ...m"` -- and the
+# merged module took its `module_name` from the OBSOLETE first file (an old
+# duplicate in the checkout with no .nb companion, never loaded by Rubi.m). The
+# name then resolved to the tier-1 fallback below, which sorts after EVERY module
+# Rubi loads: all 195 rules of the family -- including the whole
+# `(d+e x)^m (f+g x) (a+b x+c x^2)^p` reduction chain Rubi uses for
+# `Int[(b+2c x) Sqrt[a+b x+c x^2]/(d+e x)^(7/2)]` (rules 1235/1243/1275) -- lost
+# to the 9.x catch-alls and the integral hung (RUBI_PORT_DEFECTS.md 52).
+_MODULE_NAME_ALIASES = {
+    '1.2.1.3 (d+e x)^m (f+g x) (a+b x+c x^2)^p':
+        '1.2.1.3 (d+e x)^m (f+g x)^n (a+b x+c x^2)^p',
+}
+
 
 # Guard heads whose evaluation is comparable to a full integration step -- nested
 # integrations (`IntHide` is literally `Int` with steps hidden), `DerivativeDivides`,
@@ -396,6 +412,7 @@ def _module_load_index(mod: str) -> tuple:
     modules; the remaining 6 have no counterpart in this Rubi and keep a section-number
     ordering placed AFTER every module Rubi actually loads.
     """
+    mod = _MODULE_NAME_ALIASES.get(mod, mod)
     if mod not in NOT_IN_RUBI_LOAD_LIST:
         idx = _LOAD_INDEX.get(mod)
         if idx is None:
