@@ -174,6 +174,14 @@ class SumWolfram(MathematicaExpr):
         if expanded is not None:
             return expanded
         if isinstance(limits, List) and len(limits.args) == 3:
+            # Bounds still symbolic -- hand to sympy.Sum as before. NOTE this is
+            # irreversible for the rules whose bound is an `Expon[...]` that later
+            # resolves to a FRACTION: sympy.Sum leaves a fractional-bound sum
+            # unevaluated forever and its iterator leaks (rule 9.3 #67, still open
+            # -- RUBI_PORT_DEFECTS.md 50). Keeping the node deferred instead fixes
+            # that, but only works if the node survives the matcher round trip,
+            # and registering its head to achieve that regresses performance
+            # badly (measured: one integral test file 2min -> >500s).
             i, imin, imax = limits.args
             return sympy.Sum(expr, (i, imin, imax)).doit()
         return sympy.Sum(expr, limits)
