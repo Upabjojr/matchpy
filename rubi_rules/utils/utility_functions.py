@@ -995,16 +995,47 @@ def eager_EqQ(u, v):
     return ZeroQ(u - v)
 
 def eager_FractionalPowerFreeQ(u):
+    """Rubi ``FractionalPowerFreeQ[u]`` -- u contains no fractional power of a
+    COMPOUND expression.
+
+        If[AtomQ[u], True,
+          If[FractionalPowerQ[u] && !AtomQ[u[[1]]], False,
+            Catch[Scan[If[FractionalPowerFreeQ[#],Null,Throw[False]]&, u]; True]]]
+
+    Two clauses were missing. (1) Rubi only rejects a fractional power whose BASE
+    is non-atomic, so ``FractionalPowerFreeQ[x^(2/3)]`` is True in Rubi and was
+    False here. (2) The recursion branch was absent entirely, so every input that
+    was neither an atom nor a fractional power fell off the end and returned
+    ``None`` -- falsy, hence indistinguishable from False at a call site, but
+    meaning "no answer": ``FractionalPowerFreeQ[a+b x]`` returned None where Rubi
+    returns True. This is a guard (constraints_rubi.FractionalPowerFreeQ), so the
+    rules using it could never fire. Verified against Rubi 4.17.3.0.
+    """
     if eager_AtomQ(u):
         return True
-    elif eager_FractionalPowerQ(u):
+    if eager_FractionalPowerQ(u) and not eager_AtomQ(u.args[0]):
         return False
+    for i in u.args:
+        if not eager_FractionalPowerFreeQ(i):
+            return False
+    return True
 
 def eager_ComplexFreeQ(u):
-    if eager_AtomQ(u) and eager_Not(eager_ComplexNumberQ(u)):
-        return True
-    else:
-         return False
+    """Rubi ``ComplexFreeQ[u]`` -- u contains no explicit complex number.
+
+        If[AtomQ[u], !ComplexNumberQ[u],
+           Scan[If[ComplexFreeQ[#],Null,Return[False]]&, u] === Null]
+
+    The recursion was missing: the old body answered False for EVERY non-atom, so
+    the guard was unsatisfiable for any compound expression -- which is every real
+    integrand. Rubi gives ComplexFreeQ[a+b x] = True.
+    """
+    if eager_AtomQ(u):
+        return not eager_ComplexNumberQ(u)
+    for i in u.args:
+        if not eager_ComplexFreeQ(i):
+            return False
+    return True
 
 # PolynomialQ moved to sympy_wolfram.functions_eager (standard Wolfram predicate,
 # no Rubi coupling); imported at the top of this module.

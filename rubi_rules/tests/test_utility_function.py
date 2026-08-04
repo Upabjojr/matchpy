@@ -578,12 +578,39 @@ def test_SquareFreeFactorTest():
     assert SquareFreeFactorTest(x**5 - x**3 - x**2 + 1, x) == (x**3 + 2*x**2 + 2*x + 1)*(x - 1)**2
 
 def test_ComplexFreeQ():
+    # Values read off Rubi 4.17.3.0 / Mathematica 12.2. Rubi RECURSES into a
+    # compound expression; the old body answered False for every non-atom, so
+    # this guard was unsatisfiable for any real integrand.
     assert eager_ComplexFreeQ(a)
     assert not eager_ComplexFreeQ(a + 2*I)
+    assert eager_ComplexFreeQ(a + b*x)
+    assert eager_ComplexFreeQ(sin(x))
+    assert eager_ComplexFreeQ(x**2 + 1)
+    assert eager_ComplexFreeQ(S(5))
+    assert not eager_ComplexFreeQ(I)
+    assert not eager_ComplexFreeQ(1 + 2*I)
+    assert not eager_ComplexFreeQ(a + I*b)
+    assert not eager_ComplexFreeQ((a + I)*x)
+    assert not eager_ComplexFreeQ(log(I*x))
 
 def test_FractionalPowerFreeQ():
-    assert not eager_FractionalPowerFreeQ(x**(S(2)/3))
+    # Rubi rejects a fractional power only when its BASE is non-atomic, and
+    # recurses otherwise -- so x^(2/3) is FREE (True) while Sqrt[a+x] is not.
+    # All values verified against Rubi 4.17.3.0.
     assert eager_FractionalPowerFreeQ(x)
+    assert eager_FractionalPowerFreeQ(S(5))
+    assert eager_FractionalPowerFreeQ(x**(S(2)/3))
+    assert eager_FractionalPowerFreeQ(sqrt(x))
+    assert eager_FractionalPowerFreeQ(x**2)
+    assert eager_FractionalPowerFreeQ(a + b*x)
+    assert eager_FractionalPowerFreeQ(a + x**(S(1)/3))
+    assert eager_FractionalPowerFreeQ(1/sqrt(x))
+    assert not eager_FractionalPowerFreeQ((a + x)**(S(1)/3))
+    assert not eager_FractionalPowerFreeQ(sqrt(a + x))
+    assert not eager_FractionalPowerFreeQ(x*sqrt(a + x))
+    assert not eager_FractionalPowerFreeQ(sin(sqrt(a + x)))
+    assert not eager_FractionalPowerFreeQ((a*b)**(S(1)/2))
+    assert not eager_FractionalPowerFreeQ(1/sqrt(a + x))
 
 # ExponentList is Rubi-specific and stays here; Exponent itself moved to
 # sympy_wolfram (behaviour tested in test_mathematica_functions.py).
@@ -3689,3 +3716,323 @@ def test_Coefficient_matches_mathematica(expr, n, want):
 ])
 def test_Together_matches_mathematica(expr, want):
     assert eager_Together(expr) == want
+
+
+# ---------------------------------------------------------------------------
+# Hyperbolic / trig recognisers, cross-checked against Rubi 4.17.3.0.
+#
+# NOTE the argument is `a + b*x`, NOT `log(x)` as the older tests use: Mathematica
+# AUTO-EVALUATES Sinh[Log[x]] to (x^2-1)/(2x), so a log(x) witness asks Rubi a
+# completely different question and can never validate these predicates. Inputs
+# below walk each branch of the Rubi source (integer vs non-integer quotient of
+# the argument, odd vs even power, product and sum branches).
+# Tanh[v]*Coth[v] is deliberately absent: Mathematica simplifies it to 1 on input.
+# ---------------------------------------------------------------------------
+
+_HV = a + b*x
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), True),
+    (cosh(a + b*x), False),
+    (tanh(a + b*x), False),
+    (coth(a + b*x), False),
+    (sech(a + b*x), False),
+    (csch(a + b*x), True),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), True),
+    (sinh(3*a + 3*b*x), True),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, True),
+    (cosh(a + b*x)**2, True),
+    (tanh(a + b*x)**2, True),
+    (sinh(a + b*x)**3, True),
+    (cosh(a + b*x)**3, False),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), True),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), True),
+    (sqrt(sinh(a + b*x)), True),
+    (x*sinh(a + b*x), False),
+])
+def test_FunctionOfSinhQ_matches_mathematica(expr, want):
+    assert FunctionOfSinhQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), False),
+    (cosh(a + b*x), True),
+    (tanh(a + b*x), False),
+    (coth(a + b*x), False),
+    (sech(a + b*x), True),
+    (csch(a + b*x), False),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), True),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), True),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, True),
+    (cosh(a + b*x)**2, True),
+    (tanh(a + b*x)**2, True),
+    (sinh(a + b*x)**3, False),
+    (cosh(a + b*x)**3, True),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), True),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), False),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), False),
+    (sqrt(sinh(a + b*x)), False),
+    (x*sinh(a + b*x), False),
+])
+def test_FunctionOfCoshQ_matches_mathematica(expr, want):
+    assert FunctionOfCoshQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), False),
+    (cosh(a + b*x), False),
+    (tanh(a + b*x), True),
+    (coth(a + b*x), True),
+    (sech(a + b*x), False),
+    (csch(a + b*x), False),
+    (sinh(2*a + 2*b*x), True),
+    (cosh(2*a + 2*b*x), True),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, True),
+    (cosh(a + b*x)**2, True),
+    (tanh(a + b*x)**2, True),
+    (sinh(a + b*x)**3, False),
+    (cosh(a + b*x)**3, False),
+    (sinh(a + b*x)*cosh(a + b*x), True),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), False),
+    (c + sinh(2*a + 2*b*x), True),
+    (cos(sinh(a + b*x)), False),
+    (sqrt(sinh(a + b*x)), False),
+    (x*sinh(a + b*x), False),
+])
+def test_FunctionOfTanhQ_matches_mathematica(expr, want):
+    assert FunctionOfTanhQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), True),
+    (cosh(a + b*x), False),
+    (tanh(a + b*x), False),
+    (coth(a + b*x), False),
+    (sech(a + b*x), False),
+    (csch(a + b*x), True),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), False),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, True),
+    (cosh(a + b*x)**2, False),
+    (tanh(a + b*x)**2, False),
+    (sinh(a + b*x)**3, True),
+    (cosh(a + b*x)**3, False),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), True),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), True),
+    (sqrt(sinh(a + b*x)), True),
+    (x*sinh(a + b*x), False),
+])
+def test_PureFunctionOfSinhQ_matches_mathematica(expr, want):
+    assert PureFunctionOfSinhQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), False),
+    (cosh(a + b*x), True),
+    (tanh(a + b*x), False),
+    (coth(a + b*x), False),
+    (sech(a + b*x), True),
+    (csch(a + b*x), False),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), False),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, False),
+    (cosh(a + b*x)**2, True),
+    (tanh(a + b*x)**2, False),
+    (sinh(a + b*x)**3, False),
+    (cosh(a + b*x)**3, True),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), False),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), False),
+    (sqrt(sinh(a + b*x)), False),
+    (x*sinh(a + b*x), False),
+])
+def test_PureFunctionOfCoshQ_matches_mathematica(expr, want):
+    assert PureFunctionOfCoshQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), False),
+    (cosh(a + b*x), False),
+    (tanh(a + b*x), True),
+    (coth(a + b*x), True),
+    (sech(a + b*x), False),
+    (csch(a + b*x), False),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), False),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, False),
+    (cosh(a + b*x)**2, False),
+    (tanh(a + b*x)**2, True),
+    (sinh(a + b*x)**3, False),
+    (cosh(a + b*x)**3, False),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), False),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), False),
+    (sqrt(sinh(a + b*x)), False),
+    (x*sinh(a + b*x), False),
+])
+def test_PureFunctionOfTanhQ_matches_mathematica(expr, want):
+    assert PureFunctionOfTanhQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, True),
+    (x, False),
+    (sinh(a + b*x), False),
+    (cosh(a + b*x), False),
+    (tanh(a + b*x), False),
+    (coth(a + b*x), True),
+    (sech(a + b*x), False),
+    (csch(a + b*x), False),
+    (sinh(2*a + 2*b*x), False),
+    (cosh(2*a + 2*b*x), False),
+    (sinh(3*a + 3*b*x), False),
+    (cosh(3*a + 3*b*x), False),
+    (sinh(a/2 + b*x/2), False),
+    (sinh(a + b*x)**2, False),
+    (cosh(a + b*x)**2, False),
+    (tanh(a + b*x)**2, False),
+    (sinh(a + b*x)**3, False),
+    (cosh(a + b*x)**3, False),
+    (sinh(a + b*x)*cosh(a + b*x), False),
+    (sinh(a + b*x)**2*cosh(a + b*x), False),
+    (sinh(a + b*x) + cosh(a + b*x), False),
+    (c*sinh(a + b*x), False),
+    (c + sinh(2*a + 2*b*x), False),
+    (cos(sinh(a + b*x)), False),
+    (sqrt(sinh(a + b*x)), False),
+    (x*sinh(a + b*x), False),
+])
+def test_PureFunctionOfCothQ_matches_mathematica(expr, want):
+    assert PureFunctionOfCothQ(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, 0),
+    (x, 0),
+    (sinh(a + b*x), 0),
+    (cosh(a + b*x), 0),
+    (tanh(a + b*x), 1),
+    (coth(a + b*x), -1),
+    (sech(a + b*x), 0),
+    (csch(a + b*x), 0),
+    (sinh(2*a + 2*b*x), 0),
+    (cosh(2*a + 2*b*x), 0),
+    (sinh(3*a + 3*b*x), 0),
+    (cosh(3*a + 3*b*x), 0),
+    (sinh(a/2 + b*x/2), 0),
+    (sinh(a + b*x)**2, -1),
+    (cosh(a + b*x)**2, 1),
+    (tanh(a + b*x)**2, 1),
+    (sinh(a + b*x)**3, 0),
+    (cosh(a + b*x)**3, 0),
+    (sinh(a + b*x)*cosh(a + b*x), 0),
+    (sinh(a + b*x)**2*cosh(a + b*x), 0),
+    (sinh(a + b*x) + cosh(a + b*x), 0),
+    (c*sinh(a + b*x), 0),
+    (c + sinh(2*a + 2*b*x), 0),
+    (cos(sinh(a + b*x)), 0),
+    (sqrt(sinh(a + b*x)), 0),
+    (x*sinh(a + b*x), 0),
+])
+def test_FunctionOfTanhWeight_matches_mathematica(expr, want):
+    assert FunctionOfTanhWeight(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (a, 0),
+    (x, 0),
+    (sin(a + b*x), 0),
+    (cos(a + b*x), 0),
+    (tan(a + b*x), 1),
+    (cot(a + b*x), -1),
+    (sec(a + b*x), 0),
+    (csc(a + b*x), 0),
+    (sin(2*a + 2*b*x), 0),
+    (cos(2*a + 2*b*x), 0),
+    (sin(3*a + 3*b*x), 0),
+    (sin(a + b*x)**2, -1),
+    (cos(a + b*x)**2, 1),
+    (tan(a + b*x)**2, 1),
+    (sin(a + b*x)**3, 0),
+    (sin(a + b*x)*cos(a + b*x), 0),
+    (sin(a + b*x) + cos(a + b*x), 0),
+    (c*sin(a + b*x), 0),
+    (tan(a + b*x)*cot(a + b*x), 0),
+    (sqrt(sin(a + b*x)), 0),
+])
+def test_FunctionOfTanWeight_matches_mathematica(expr, want):
+    assert FunctionOfTanWeight(expr, _HV, _x) == want
+
+
+@pytest.mark.parametrize('expr, want', [
+    (-a, True),
+    (a, False),
+    (-a - b, True),
+    (a - b, False),
+    (-a + b, False),
+    (-a - b - c, True),
+    (-a**3, True),
+    (a**2, False),
+    ((-a - b)**3, True),
+    ((-a - b)**2, False),
+    (-x, True),
+    (-2*x, True),
+    (S(-3), True),
+    (S(3), False),
+    (-a*b, True),
+    (-a - b, True),
+    (-sqrt(a), True),
+])
+def test_AllNegTermQ_matches_mathematica(expr, want):
+    assert AllNegTermQ(expr) == want
+

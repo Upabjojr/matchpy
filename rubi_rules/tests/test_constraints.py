@@ -502,8 +502,12 @@ class TestComplexFreeQ:
     """Tests for ComplexFreeQ constraint."""
 
     def test_complex_free(self):
+        # Rubi RECURSES into a compound expression, so a complex-free sum is
+        # complex-free. Verified on Rubi 4.17.3.0: ComplexFreeQ[x+1] = True.
+        # The old expectation (False) encoded a port bug that answered False for
+        # every non-atom -- see RUBI_PORT_DEFECTS.md 51.
         c = ComplexFreeQ('u')
-        assert c.check(u=x + 1) == False
+        assert c.check(u=x + 1) == True
         assert c.check(u=x) == True
         assert c.check(u=Integer(5)) == True
 
